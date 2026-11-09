@@ -669,6 +669,8 @@
     .welcome-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 1rem; background: rgba(37, 50, 43, .48); backdrop-filter: blur(5px); }
     .welcome-overlay.hidden, .tour-overlay.hidden { display: none; }
     .welcome-card { position: relative; width: min(100%, 620px); max-height: calc(100vh - 2rem); overflow: auto; padding: clamp(1.4rem, 4vw, 2.5rem); background: #fffefa; color: #293330; border: 1px solid #dce4dc; border-radius: 20px; box-shadow: 0 20px 60px rgba(23, 38, 29, .25); }
+    .welcome-close { position: absolute; top: .85rem; right: .85rem; width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; border: 1px solid #dce4dc; background: #f5f4ef; color: #5b6b61; font-size: 1rem; font-weight: 700; line-height: 1; cursor: pointer; }
+    .welcome-close:hover { background: #e2eee5; color: #293330; }
     .welcome-card h2 { font-size: clamp(1.5rem, 4vw, 2rem); font-weight: 800; letter-spacing: -.035em; }
     .welcome-card p { color: #5b6b61; line-height: 1.5; }
     .welcome-actions { display: grid; gap: .6rem; margin-top: 1.3rem; }
@@ -724,6 +726,7 @@
 
   <div id="welcomeOverlay" class="welcome-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="welcome-card">
+      <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
       <p>La solution tout-en-un pour gérer vos évaluations!</p>
       <div class="welcome-actions">
@@ -841,10 +844,6 @@
           <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" title="Basculer en plein écran">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
             <span id="fullscreenBtnLabel">Plein écran</span>
-          </button>
-
-          <button id="btnOpenNewTab" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" title="Ouvrir l'application en pleine page dans un nouvel onglet">
-            <span>Pleine page ↗</span>
           </button>
         </div>
       </div>
@@ -3224,7 +3223,7 @@
       delete appState.groupStore[groupId];
       appState.students = next.students;
       appState.terms = next.terms;
-      appState.selectedStudentId = next.students.some(s => s.id === next.selectedStudentId) ? next.selectedStudentId : (next.students[0] ? next.students[0].id : null);
+      appState.selectedStudentId = null;
       appState.activeGroupId = groupId;
       applyActiveSubjects(appState);
       if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0].id;
@@ -3421,9 +3420,7 @@
       imported.activeView = ['viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'].includes(imported.activeView)
         ? imported.activeView
         : 'viewGradebook';
-      imported.selectedStudentId = imported.students.some(st => st.id === imported.selectedStudentId)
-        ? imported.selectedStudentId
-        : imported.students[0]?.id || null;
+      imported.selectedStudentId = null;
       imported.tagCategories = Array.isArray(imported.tagCategories)
         ? imported.tagCategories
         : JSON.parse(JSON.stringify(PIA_TAG_CATEGORIES));
@@ -3495,9 +3492,7 @@
         session.savedDraftSnapshot = getCurrentObservationSessionSnapshot(session);
 
         subData.currentObsSession = session;
-        if (focusStudentId) {
-          appState.selectedStudentId = focusStudentId;
-        }
+        appState.selectedStudentId = focusStudentId || null;
         appState.activeView = 'viewQuickObs';
         showToast(`Modification de "${asg.title}"`);
         renderAll();
@@ -3506,14 +3501,13 @@
     }
 
     function startNewVisualTraceSession() {
-      const selectedStudent = appState.students.find(student => student.id === appState.selectedStudentId) || appState.students[0];
-      if (!selectedStudent) {
+      if (!appState.students.length) {
         showToast('Ajoutez d’abord un élève et choisissez son niveau.');
         navigateToView('viewStudents');
         return;
       }
-      if (!getStudentCycle(selectedStudent.gradeLevel)) {
-        showToast('Choisissez le niveau de cet élève avant de créer une grille.');
+      if (!appState.students.some(student => getStudentCycle(student.gradeLevel))) {
+        showToast('Choisissez le niveau d’au moins un élève avant de créer une grille.');
         navigateToView('viewStudents');
         return;
       }
@@ -3523,6 +3517,7 @@
         const subData = termData.subjectData[sub.id];
         subData.currentObsSession = createBlankObsSession(appState.students);
         subData.currentObsSession.savedDraftSnapshot = getCurrentObservationSessionSnapshot(subData.currentObsSession);
+        appState.selectedStudentId = null;
         appState.activeView = 'viewQuickObs';
         renderAll();
         observationDraftBaseline = subData.currentObsSession.savedDraftSnapshot;
@@ -3742,6 +3737,7 @@
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
           competencyPanelOpen = false;
         }
+        appState.selectedStudentId = null;
         if (updateState) updateState();
         appState.activeView = viewId;
         renderAll();
@@ -4544,7 +4540,7 @@
       headerRow.querySelectorAll('[data-edit-trace-hdr]').forEach(btn => {
         btn.addEventListener('click', () => {
           const asgId = btn.getAttribute('data-edit-trace-hdr');
-          openVisualTraceForEditing(asgId, appState.selectedStudentId);
+          openVisualTraceForEditing(asgId, null);
         });
       });
 
@@ -4586,6 +4582,12 @@
 
       // Manual weight change listeners
       headerRow.querySelectorAll('[data-weight-asg]').forEach(inp => {
+        inp.addEventListener('keydown', ev => {
+          if (ev.key === 'Enter') {
+            ev.preventDefault();
+            inp.blur();
+          }
+        });
         inp.addEventListener('input', (e) => {
           const asgId = inp.getAttribute('data-weight-asg');
           const target = subData.assignments.find(a => a.id === asgId);
@@ -4956,13 +4958,10 @@
       const sub = getCurrentSubjectConfig();
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
-      const st = appState.students.find(s => s.id === appState.selectedStudentId) || appState.students[0];
-      if (!st) return;
-      appState.selectedStudentId = st.id;
-      const rec = subData.studentRecords[st.id];
+      const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
 
       document.getElementById('baremeSubjectLabel').textContent = `${sub.shortName} (Étape ${appState.activeTerm})`;
-      document.getElementById('baremeCurrentStudentName').textContent = st.name;
+      document.getElementById('baremeCurrentStudentName').textContent = st ? st.name : 'Sélectionner un nom';
 
       const pillsContainer = document.getElementById('baremeStudentPills');
       pillsContainer.innerHTML = '';
@@ -4973,7 +4972,7 @@
           stuRec.baremeOverrideCode,
           BAREME_ECOLE_ROWS.length
         );
-        const isSel = student.id === st.id;
+        const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = isSel
@@ -4994,6 +4993,20 @@
         pillsContainer.appendChild(btn);
       });
 
+      if (!st) {
+        ['A', 'B', 'C', 'D', 'E'].forEach(fam => {
+          const el = document.getElementById(`colCountBareme_${fam}`);
+          if (el) el.textContent = '0';
+        });
+        document.getElementById('baremeMajorityExplanation').textContent = appState.students.length
+          ? 'Sélectionner un nom ci-dessus pour remplir le barème.'
+          : 'Ajoutez d’abord un élève dans la liste d’élèves.';
+        document.getElementById('baremeFineGradeButtons').innerHTML = '';
+        document.getElementById('baremeMatrixBody').innerHTML =
+          '<tr><td colspan="6" class="p-6 text-center text-sm font-semibold text-slate-600 bg-slate-50">Sélectionner un nom ci-dessus pour afficher le barème de l’élève.</td></tr>';
+        return;
+      }
+      const rec = subData.studentRecords[st.id];
       const res = computeMajorityFromChecked(
         rec.baremeChecked,
         rec.baremeOverrideCode,
@@ -5087,18 +5100,19 @@
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
       const session = subData.currentObsSession;
-      const st = appState.students.find(s => s.id === appState.selectedStudentId) || appState.students[0];
-      if (!st) return;
-      appState.selectedStudentId = st.id;
-      const draft = session.studentDrafts[st.id];
-      draft.gradeLevel = getObservationDraftGradeLevel(draft, st, session);
-      const cycle = getStudentCycle(draft.gradeLevel);
-      const criteria = getCriteriaForGradeLevel(sub, draft.gradeLevel);
+      const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
+      const draft = st ? session.studentDrafts[st.id] : null;
+      if (st && draft) {
+        draft.gradeLevel = getObservationDraftGradeLevel(draft, st, session);
+      }
+      const cycle = st && draft ? getStudentCycle(draft.gradeLevel) : null;
+      const criteria = st && draft ? getCriteriaForGradeLevel(sub, draft.gradeLevel) : [];
 
       document.getElementById('qoSubjectBadge').textContent = `${sub.fullName} • Étape ${appState.activeTerm}`;
-      document.getElementById('sgCurrentStudentName').textContent =
-        `${st.name} — ${GRADE_LEVEL_LABELS[draft.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}`;
-      document.getElementById('qoBottomStudentName').textContent = st.name;
+      document.getElementById('sgCurrentStudentName').textContent = st
+        ? `${st.name} — ${GRADE_LEVEL_LABELS[draft.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}`
+        : 'Sélectionner un nom';
+      document.getElementById('qoBottomStudentName').textContent = st ? st.name : 'Sélectionner un nom';
       const sgLink = document.getElementById('sgSourceLink');
       if (sgLink) sgLink.href = sub.refUrl;
       const modeBadge = document.getElementById('qoEditModeBadge');
@@ -5174,7 +5188,7 @@
         const d = session.studentDrafts[student.id];
         const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
         const stuRes = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
-        const isSel = student.id === st.id;
+        const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = isSel
@@ -5199,6 +5213,62 @@
         });
         stuGrid.appendChild(btn);
       });
+
+      if (!st) {
+        document.getElementById('sgMajorityExplanation').textContent = 'Sélectionner un nom ci-dessus pour remplir la grille d’évaluation.';
+        document.getElementById('sgMatrixBody').innerHTML =
+          '<tr><td colspan="6" class="p-6 text-center text-sm font-semibold text-slate-600 bg-slate-50">Sélectionner un nom ci-dessus pour afficher et remplir la grille d’évaluation de l’élève.</td></tr>';
+        document.getElementById('qoGradePills').innerHTML =
+          '<div class="col-span-full text-xs text-slate-500 py-1">Sélectionner un nom pour ajuster la note.</div>';
+        const selCountElEmpty = document.getElementById('qoSelectedTagsCount');
+        if (selCountElEmpty) selCountElEmpty.textContent = '0 sélectionné(s)';
+        const catTabsEmpty = document.getElementById('qoCategoryTabs');
+        if (catTabsEmpty) catTabsEmpty.innerHTML = '';
+        document.getElementById('qoQuickTags').innerHTML =
+          '<div class="text-xs text-slate-500">Sélectionner un nom pour cocher des observations.</div>';
+        const activeStripEmpty = document.getElementById('qoActiveStudentTagsStrip');
+        if (activeStripEmpty) activeStripEmpty.innerHTML = '';
+        const commInputEmpty = document.getElementById('qoCommentInput');
+        if (commInputEmpty) {
+          commInputEmpty.value = '';
+          commInputEmpty.disabled = true;
+          commInputEmpty.placeholder = 'Sélectionner un nom pour noter vos observations...';
+        }
+        const previewElEmpty = document.getElementById('qoSessionPreviewList');
+        previewElEmpty.innerHTML = '';
+        appState.students.forEach(student => {
+          const d = session.studentDrafts[student.id];
+          const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
+          const r = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
+          const row = document.createElement('div');
+          row.className = 'py-2 px-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 rounded';
+          row.innerHTML = `
+            <div class="truncate">
+              <span class="font-bold text-slate-900">${escapeHtml(student.name)}</span>
+              ${d.tags.length > 0 ? `<span class="text-[10px] text-indigo-600 ml-1">(${d.tags.map(escapeHtml).join(', ')})</span>` : ''}
+              ${d.comment ? `<div class="text-[11px] text-slate-500 italic truncate">"${escapeHtml(d.comment)}"</div>` : ''}
+            </div>
+            <div class="flex-shrink-0">
+              ${r.isNotEvaluated
+                ? `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold text-xs">N/A — coté</span>`
+                : r.hasFinalGrade
+                ? `<span class="px-2 py-0.5 rounded border text-xs font-extrabold ${getBadgeColorClasses(r.code)}">${r.code} (${r.pct}%)</span>`
+                : r.hasData
+                  ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-xs">En cours (${r.total}/${getScoredObservableCriteria(studentCriteria).length})</span>`
+                  : r.hasEvidence
+                    ? `<span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold text-xs">Rétroaction</span>`
+                    : `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-400 font-bold text-xs">- (N/A)</span>`
+              }
+            </div>
+          `;
+          row.addEventListener('click', () => {
+            appState.selectedStudentId = student.id;
+            renderQuickObsView();
+          });
+          previewElEmpty.appendChild(row);
+        });
+        return;
+      }
 
       // 2. Compute the current student's live mark from the selected rubric statements
       const res = computeObservableResult(draft.checked, draft.overrideCode, criteria, draft.notEvaluated);
@@ -5396,8 +5466,12 @@
 
       // 6. Comment textarea for current student
       const commInput = document.getElementById('qoCommentInput');
-      if (commInput && document.activeElement !== commInput) {
-        commInput.value = draft.comment || '';
+      if (commInput) {
+        commInput.disabled = false;
+        commInput.placeholder = 'Notez vos observations pour cet élève...';
+        if (document.activeElement !== commInput) {
+          commInput.value = draft.comment || '';
+        }
       }
 
       // 7. Render Session Preview List
@@ -5798,6 +5872,12 @@
             st.name = [st.firstName, st.lastName].filter(Boolean).join(' ');
             renderGradebookView();
           });
+          input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              input.blur();
+            }
+          });
           input.addEventListener('blur', () => {
             if (!firstNameInput.value.trim()) {
               firstNameInput.value = st.firstName || st.name;
@@ -5869,6 +5949,12 @@
           st.customAdapt = e.target.value;
           renderGradebookView();
         });
+        customInput.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            customInput.blur();
+          }
+        });
         pillsWrap.appendChild(customInput);
 
         left.appendChild(pillsWrap);
@@ -5894,7 +5980,7 @@
           }
           appState.students = appState.students.filter(s => s.id !== st.id);
           if (appState.selectedStudentId === st.id) {
-            appState.selectedStudentId = appState.students[0]?.id || null;
+            appState.selectedStudentId = null;
           }
           Object.values(appState.terms).forEach(term => {
             SUBJECTS_CONFIG.forEach(sub => {
@@ -5922,18 +6008,18 @@
       const container = document.getElementById('grReportContent');
       if (!band || !container) return;
 
-      const st = appState.students.find(s => s.id === appState.selectedStudentId) || appState.students[0];
-      if (!st) {
+      if (!appState.students.length) {
         band.innerHTML = '';
         container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600">Ajoutez un élève pour consulter sa synthèse.</div>';
         return;
       }
-      appState.selectedStudentId = st.id;
+
+      const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
 
       // 1. Render Student Band (2 rows of 5 students)
       band.innerHTML = '';
       appState.students.forEach(student => {
-        const isSel = student.id === st.id;
+        const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = isSel
@@ -5946,6 +6032,11 @@
         });
         band.appendChild(btn);
       });
+
+      if (!st) {
+        container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm font-semibold text-slate-600">Sélectionner un nom ci-dessus pour afficher la synthèse de l’élève.</div>';
+        return;
+      }
 
       // 2. Gather grade data across the three terms and all subjects
       const subjectRows = [];
@@ -6929,10 +7020,8 @@
         const req = docEl.requestFullscreen || docEl.webkitRequestFullscreen || docEl.msRequestFullscreen;
         if (req) {
           req.call(docEl).catch(() => {
-            openFullPageInNewTab();
+            showToast("Le mode plein écran n’est pas autorisé dans ce cadre.");
           });
-        } else {
-          openFullPageInNewTab();
         }
       } else {
         const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
@@ -7049,6 +7138,10 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('welcomeClose').addEventListener('click', hideWelcome);
+      document.getElementById('welcomeOverlay').addEventListener('click', event => {
+        if (event.target.id === 'welcomeOverlay') hideWelcome();
+      });
       document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
       document.getElementById('welcomeTutorial').addEventListener('click', startTutorial);
       document.getElementById('welcomeLoad').addEventListener('click', () => {
@@ -7089,6 +7182,11 @@
         if (event.target.id === 'modalUnsavedObservation') closeObservationWarning(true);
       });
       document.addEventListener('keydown', event => {
+        const welcome = document.getElementById('welcomeOverlay');
+        if (event.key === 'Escape' && welcome && !welcome.classList.contains('hidden')) {
+          hideWelcome();
+          return;
+        }
         const modal = document.getElementById('modalUnsavedObservation');
         if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
           closeObservationWarning(true);
@@ -7117,9 +7215,8 @@
         window.print();
       });
 
-      // Fullscreen & Google Sites Pop-out
+      // Fullscreen
       document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreenOrPopout);
-      document.getElementById('btnOpenNewTab').addEventListener('click', openFullPageInNewTab);
       document.addEventListener('fullscreenchange', () => {
         const lbl = document.getElementById('fullscreenBtnLabel');
         if (lbl) {
@@ -7197,6 +7294,18 @@
       document.getElementById('btnCloseModalAssignment').addEventListener('click', closeAsgModal);
       document.getElementById('btnCancelModalAssignment').addEventListener('click', closeAsgModal);
 
+      ['inputAssignmentTitle', 'inputAssignmentOutOf', 'inputAssignmentDate'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              document.getElementById('btnConfirmAddAssignment').click();
+            }
+          });
+        }
+      });
+
       document.getElementById('btnConfirmAddAssignment').addEventListener('click', () => {
         const titleIn = document.getElementById('inputAssignmentTitle');
         const title = titleIn.value.trim();
@@ -7240,8 +7349,13 @@
 
       // Reset buttons for Barème & Visual Trace Session
       document.getElementById('btnClearStudentBareme').addEventListener('click', () => {
+        if (!appState.selectedStudentId) {
+          showToast('Sélectionner un nom d’abord');
+          return;
+        }
         const termData = getActiveTermData();
         const rec = termData.subjectData[appState.activeSubjectId].studentRecords[appState.selectedStudentId];
+        if (!rec) return;
         rec.baremeChecked = [];
         rec.baremeOverrideCode = null;
         notifyUpdate('Barème réinitialisé');
@@ -7249,6 +7363,10 @@
       });
 
       document.getElementById('btnClearCurrentStudentObs').addEventListener('click', () => {
+        if (!appState.selectedStudentId) {
+          showToast('Sélectionner un nom d’abord');
+          return;
+        }
         const termData = getActiveTermData();
         const session = termData.subjectData[appState.activeSubjectId].currentObsSession;
         session.studentDrafts[appState.selectedStudentId] = {
@@ -7266,6 +7384,12 @@
       document.getElementById('qoSessionTitleInput').addEventListener('input', (e) => {
         const termData = getActiveTermData();
         termData.subjectData[appState.activeSubjectId].currentObsSession.title = e.target.value;
+      });
+      document.getElementById('qoSessionTitleInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.target.blur();
+        }
       });
 
       document.getElementById('qoCommentInput').addEventListener('input', (e) => {
@@ -7363,7 +7487,17 @@
       document.getElementById('btnGroupClose').addEventListener('click', cancelGroupModal);
       document.getElementById('btnGroupCancel').addEventListener('click', cancelGroupModal);
       document.getElementById('btnGroupSave').addEventListener('click', saveGroupModal);
-      document.getElementById('groupNameInput').addEventListener('keydown', e => { if (e.key === 'Enter') saveGroupModal(); });
+      ['groupNameInput', 'groupLevelSelect', 'groupCopySelect'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              saveGroupModal();
+            }
+          });
+        }
+      });
       document.getElementById('headerGroupSelect').addEventListener('change', e => switchGroup(e.target.value));
 
       // Add Student
@@ -7411,12 +7545,25 @@
             }
           });
         });
-        appState.selectedStudentId = newId;
+        appState.selectedStudentId = null;
         appState.activeView = 'viewStudents';
         nameIn.value = '';
         lastNameIn.value = '';
         notifyUpdate(`Élève ${name} ajouté(e)`);
         renderAll();
+        nameIn.focus();
+      });
+
+      ['newStudentName', 'newStudentLastName'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              document.getElementById('btnAddStudent').click();
+            }
+          });
+        }
       });
 
       // Excel Export
@@ -7514,9 +7661,15 @@
         gbFilter = e.target.value;
         renderGradebookView();
       });
+      document.getElementById('gbStudentSearch').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+      });
       document.getElementById('studentSearch').addEventListener('input', e => {
         stFilter = e.target.value;
         renderStudentsView();
+      });
+      document.getElementById('studentSearch').addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
       });
       let studentSortKey = '';
       let studentSortDirection = 1;
