@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carnet de notes - 2026/2027</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5.5.14" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.1.18"></script>
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
   <script src="echelles-niveaux.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1497,8 +1500,82 @@
       display: none !important;
     }
   </style>
+  <style id="design-refonte">
+    html.design-studio {
+      --studio-bg: #f3f5f4;
+      --studio-surface: #fff;
+      --studio-surface-soft: #f7f9f8;
+      --studio-border: #e1e8e4;
+      --studio-border-strong: #cad7d0;
+      --studio-text: #1b3028;
+      --studio-text-muted: #52675d;
+      --studio-accent: #28644d;
+      --studio-accent-deep: #1f503d;
+      --studio-accent-soft: #e7f2eb;
+      --studio-shadow-sm: 0 1px 3px rgba(28, 54, 41, .05);
+      --studio-shadow-md: 0 8px 24px rgba(28, 54, 41, .06);
+      --studio-radius-xl: 14px;
+    }
+    html.design-studio body { background: var(--studio-bg) !important; padding-top: 0; }
+    .version-bar {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; justify-content: center; gap: .75rem;
+      min-height: 48px; padding: .5rem 1rem;
+      background: #19382c; color: #fff; font-size: .75rem; font-weight: 600;
+    }
+    .version-bar button {
+      min-height: 32px; padding: .35rem .75rem; border: 1px solid #a6c1b2;
+      border-radius: 8px; background: #fff; color: #19382c; font-weight: 700;
+      cursor: pointer;
+    }
+    .version-bar button:hover { background: #e8f3ec; }
+    .version-bar button:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .version-frame {
+      position: fixed; z-index: 150; inset: var(--version-bar-height, 48px) 0 0;
+      width: 100%; height: calc(100% - var(--version-bar-height, 48px)); border: 0; background: #fff;
+    }
+    .version-frame[hidden] { display: none; }
+    html.design-studio header { top: var(--version-bar-height, 48px); background: #fff !important; backdrop-filter: none !important; }
+    html.design-studio header > div:last-child { background: #f8faf9 !important; }
+    html.design-studio .brand-title { color: #19382c !important; }
+    html.design-studio header span.brand-title {
+      font-size: .75rem !important; color: #285d48 !important;
+      background: #e7f2eb !important; border-color: #d3e6da !important;
+    }
+    html.design-studio .gradebook-atmosphere,
+    html.design-studio .global-report-atmosphere,
+    html.design-studio .student-manager-atmosphere,
+    html.design-studio .studio-only-atmosphere,
+    html.design-studio .empty-roster-visual img { display: none !important; }
+    html.design-studio .gradebook-toolbar,
+    html.design-studio .global-report-toolbar,
+    html.design-studio .student-manager-card,
+    html.design-studio .studio-hero-card,
+    html.design-studio #emptyRosterNotice:not(.hidden) {
+      background: #fff !important; border: 1px solid var(--studio-border) !important;
+    }
+    html.design-studio .kpi-strip > div { border-top: 1px solid var(--studio-border) !important; }
+    html.design-studio #subjectTabsContainer > button { border-radius: 9px !important; box-shadow: none !important; }
+    html.design-studio #subjectTabsContainer > button[aria-pressed="true"] { background: #285d48 !important; border-color: #285d48 !important; box-shadow: none !important; }
+    html.design-studio #subjectSubTabsContainer { border-radius: 10px !important; }
+    .welcome-card { border-radius: 16px; }
+    .welcome-actions button { padding: 1rem; }
+    .trend-badge svg { width: 14px; height: 14px; }
+    @media (max-width: 640px) { html.design-studio header { top: 0; } }
+    @media (max-width: 480px) {
+      .version-bar { justify-content: space-between; gap: .5rem; }
+      .version-bar button { font-size: .7rem; }
+    }
+    @media print { .version-bar, .version-frame { display: none !important; } html.design-studio header { top: 0; } }
+  </style>
 </head>
 <body class="min-h-screen flex flex-col">
+
+  <div class="version-bar no-print" role="region" aria-label="Comparaison des versions">
+    <span id="versionLabel">Nouveau design</span>
+    <button id="versionToggle" class="btn btn-sm" type="button" aria-controls="versionFrame" aria-expanded="false">Voir la version actuelle</button>
+  </div>
+  <iframe id="versionFrame" class="version-frame no-print" title="Version actuelle du carnet de notes" hidden></iframe>
 
   <div id="welcomeOverlay" class="welcome-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
     <div class="welcome-card">
@@ -1506,9 +1583,9 @@
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
       <p>La solution tout-en-un pour gérer vos évaluations!</p>
       <div class="welcome-actions">
-        <button id="welcomeLoad" class="primary" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
-        <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
-        <button id="welcomeTutorial" type="button" disabled><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5.5C7 4 9.5 4 12 6v14c-2.5-2-5-2-8-.5zM20 5.5C17 4 14.5 4 12 6v14c2.5-2 5-2 8-.5z"/></svg></span>Découvrir le tutoriel<span class="construction">En construction</span></span><span>Découvrez les principales fonctionnalités.</span></button>
+        <button id="welcomeLoad" class="primary" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><i data-lucide="folder-open" aria-hidden="true"></i></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
+        <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><i data-lucide="user-round-plus" aria-hidden="true"></i></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
+        <button id="welcomeTutorial" type="button" disabled><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><i data-lucide="book-open" aria-hidden="true"></i></span>Découvrir le tutoriel<span class="construction">En construction</span></span><span>Découvrez les principales fonctionnalités.</span></button>
       </div>
     </div>
   </div>
@@ -1542,7 +1619,7 @@
         <!-- ÉTAPE 1, 2, 3 + BULLETIN GLOBAL -->
         <div class="flex flex-wrap items-center gap-2 sm:mr-6">
           <button id="btnNavStudentsTop" type="button" class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 flex items-center gap-1" title="Gérer les élèves, leur niveau et leurs adaptations">
-            <svg class="hdr-ico ico-students" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.2" cy="9.2" r="2.4"/><path d="M16.5 14.6c2.6.2 4.5 2 4.5 4.9"/></svg>
+            <i data-lucide="users" class="hdr-ico ico-students" aria-hidden="true"></i>
             <span>Élèves</span>
             <span id="headerStudentCount" class="rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold">0</span>
           </button>
@@ -1563,36 +1640,36 @@
       <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-800/90">
         <div class="flex flex-wrap items-center gap-1.5">
           <button id="btnExportExcel" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-2xs cursor-pointer" title="Télécharger tout le carnet formaté en fichier Excel (.xlsx)">
-            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 10h17M3.5 15h17M10 4v16"/></svg>
+            <i data-lucide="table-2" class="hdr-ico" aria-hidden="true"></i>
             <span>Exporter Excel (.xlsx)</span>
           </button>
 
           <button id="btnExportJSON" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Télécharger un fichier de sauvegarde (.json)">
-            <svg class="hdr-ico ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7.5" y="13" width="9" height="6" rx="1"/></svg>
+            <i data-lucide="save" class="hdr-ico ico-save" aria-hidden="true"></i>
             <span>Sauvegarder</span>
           </button>
           <label for="inputImportJSON" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Charger un fichier de sauvegarde (.json)">
-            <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
+            <i data-lucide="folder-open" class="hdr-ico ico-load" aria-hidden="true"></i>
             <span>Charger</span>
             <input id="inputImportJSON" type="file" accept=".json" class="hidden" />
           </label>
 
           <button id="btnPrintView" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Imprimer la grille ou vue actuelle">
-            <svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
+            <i data-lucide="printer" class="hdr-ico ico-print" aria-hidden="true"></i>
             <span>Imprimer</span>
           </button>
         </div>
 
         <div class="flex flex-wrap items-center gap-1.5">
           <button id="btnUndo" type="button" class="hdr-icobtn" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+            <i data-lucide="undo-2" aria-hidden="true"></i>
           </button>
           <button id="btnRedo" type="button" class="hdr-icobtn" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+            <i data-lucide="redo-2" aria-hidden="true"></i>
           </button>
           <div class="relative">
             <button id="btnSettings" type="button" class="hdr-icobtn" title="Options" aria-label="Options" aria-haspopup="true" aria-expanded="false">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+              <i data-lucide="settings" aria-hidden="true"></i>
             </button>
             <div id="settingsPanel" class="hidden" role="dialog" aria-label="Options">
               <div class="sp-title">Groupes modèles</div>
@@ -1629,7 +1706,7 @@
           </div>
           <span class="hdr-sep" aria-hidden="true"></span>
           <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" title="Basculer en plein écran">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            <i data-lucide="maximize-2" class="w-3.5 h-3.5" aria-hidden="true"></i>
             <span id="fullscreenBtnLabel">Plein écran</span>
           </button>
         </div>
@@ -1662,14 +1739,7 @@
         </div>
         <div class="empty-roster-visual flex items-center justify-end pr-6" aria-hidden="true">
           <img id="emptyRosterAtmosphere" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
-          <svg class="w-28 h-28 text-slate-700 opacity-15" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="22" y="16" width="66" height="88" rx="6"/>
-            <line x1="34" y1="16" x2="34" y2="104"/>
-            <line x1="44" y1="36" x2="74" y2="36"/>
-            <line x1="44" y1="50" x2="74" y2="50"/>
-            <line x1="44" y1="64" x2="64" y2="64"/>
-            <path d="M78 78l18-18 8 8-18 18-10 2z"/>
-          </svg>
+          <i data-lucide="notebook-pen" class="w-28 h-28 text-slate-700 opacity-15" aria-hidden="true"></i>
         </div>
       </div>
       <!-- Compact Toolbar -->
@@ -1683,7 +1753,7 @@
         <div class="flex flex-wrap items-center gap-2 no-print">
           <div id="gbLevelFilterBar" class="hidden gb-level-seg" role="group" aria-label="Filtrer le carnet par niveau"></div>
           <label class="search-box" title="Chercher un élève (touche /)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            <i data-lucide="search" aria-hidden="true"></i>
             <input id="gbStudentSearch" type="search" placeholder="Chercher un élève…" autocomplete="off" aria-label="Chercher un élève">
           </label>
           <span id="weightWarningBanner" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-800 border border-red-300">
@@ -1874,7 +1944,7 @@
         <div class="bg-indigo-950 text-white rounded-xl p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div class="space-y-0.5">
             <div class="flex items-center gap-2 flex-wrap">
-              <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer la grille d’évaluation" aria-label="Imprimer la grille d’évaluation"><svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
+              <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer la grille d’évaluation" aria-label="Imprimer la grille d’évaluation"><i data-lucide="printer" class="hdr-ico ico-print" aria-hidden="true"></i></button>
               <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Grille d’évaluation — <span id="sgCurrentStudentName" class="text-white font-bold">Élève</span></span>
               <a id="sgSourceLink" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-300 underline no-print">Cadre d’évaluation MEQ ↗</a>
               <a id="sgCssmbLink" href="https://sre.servicescsmb.com/disciplines/" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-300 underline no-print">Ressources SRÉ CSSMB ↗</a>
@@ -2005,7 +2075,7 @@
 
           <div class="flex flex-wrap items-center gap-2">
             <label class="search-box">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <i data-lucide="search" aria-hidden="true"></i>
               <input id="studentSearch" type="search" placeholder="Chercher…" autocomplete="off" aria-label="Chercher un élève dans la liste">
             </label>
             <button id="btnSortAZ" type="button" class="sort-btn" title="Trier par prénom">Prénom <span aria-hidden="true">↓</span></button>
@@ -2089,7 +2159,7 @@
             <button id="btnGrPrevStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève précédent">← Préc.</button>
             <button id="btnGrNextStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève suivant">Suiv. →</button>
             <button id="btnPrintGlobalReport" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white cursor-pointer flex items-center gap-1.5" title="Imprimer le bilan annuel sur 1 page portrait">
-              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <i data-lucide="printer" class="w-3.5 h-3.5" aria-hidden="true"></i>
               <span>Imprimer la synthèse</span>
             </button>
           </div>
@@ -2112,7 +2182,7 @@
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-4">
       <div class="flex items-start gap-3">
         <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800" aria-hidden="true">
-          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.9 18.5A1.7 1.7 0 0 0 3.4 21h17.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.9a1.95 1.95 0 0 0-3.4 0Z"/></svg>
+          <i data-lucide="triangle-alert" class="h-5 w-5" aria-hidden="true"></i>
         </span>
         <div class="space-y-1">
           <h3 id="unsavedObservationTitle" class="text-base font-bold text-slate-900">Trace non enregistrée au carnet</h3>
@@ -2261,7 +2331,7 @@
           </select>
         </div>
         <button id="btnCbAutoSynthesize" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer flex items-center gap-1.5" title="Rédige un paragraphe cohérent selon la note, le barème et les observations de l’élève">
-          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <i data-lucide="pencil" class="w-3.5 h-3.5" aria-hidden="true"></i>
           <span>Synthèse selon le dossier</span>
         </button>
       </div>
@@ -6675,7 +6745,7 @@
         const multiWeightSubHtml = '';
         th.innerHTML = `
           <div class="flex items-center justify-center gap-1 px-1">
-            <button type="button" data-title-view="${asg.id}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <button type="button" data-title-view="${asg.id}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><i data-lucide="pencil" class="asg-title-pencil" width="11" height="11" aria-hidden="true"></i></button>
             <textarea rows="1" data-title-asg="${asg.id}" placeholder="Nom du travail..." class="${asg.title && asg.title.trim() ? 'hidden ' : ''}w-36 resize-none overflow-hidden leading-tight bg-white text-slate-800 text-center text-[11px] font-bold px-1.5 py-0.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400" title="Cliquez pour renommer ce travail ou cette trace">${escapeHtml(asg.title)}</textarea>
             <button type="button" data-del-asg="${asg.id}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" title="Supprimer cette colonne">✕</button>
           </div>
@@ -7233,7 +7303,7 @@
         btnCb.className = 'btn-open-cb no-print';
         btnCb.title = 'Banque et synthèse de commentaires (sans répétition du prénom)';
         btnCb.setAttribute('aria-label', `Ouvrir la banque de commentaires pour ${st.name}`);
-        btnCb.innerHTML = `<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>`;
+        btnCb.innerHTML = `<i data-lucide="message-square-text" class="w-3.5 h-3.5" aria-hidden="true"></i>`;
         btnCb.addEventListener('click', () => {
           openCommentBankModal(st.id, sub.id, appState.activeTerm);
         });
@@ -9234,7 +9304,7 @@
             </span>
             <span class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
               ${studentCycle ? escapeHtml(CYCLE_LABELS[studentCycle]) : 'Cycle à préciser'}
-              <svg class="competency-chevron h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 7.5 5 5 5-5"/></svg>
+              <i data-lucide="chevron-down" class="competency-chevron h-4 w-4" aria-hidden="true"></i>
             </span>
           </summary>
           <div class="p-4 border-t border-slate-200 space-y-3">
@@ -9284,13 +9354,13 @@
         const titleAttr = trailParts.length ? ` title="Trajectoire : ${trailParts.join(' → ')}"` : '';
         if (deltaVal === null) return '<span class="text-slate-400">—</span>';
         if (deltaVal >= 3) {
-          return `<span class="trend-badge trend-up" data-num="1"${titleAttr}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 11.5 12.5 4.5M12.5 4.5H6.5M12.5 4.5v6"/></svg>+${deltaVal} %</span>`;
+          return `<span class="trend-badge trend-up" data-num="1"${titleAttr}><i data-lucide="trending-up" aria-hidden="true"></i>+${deltaVal} %</span>`;
         }
         if (deltaVal <= -3) {
-          return `<span class="trend-badge trend-down" data-num="1"${titleAttr}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 4.5 12.5 11.5M12.5 11.5H6.5M12.5 11.5v-6"/></svg>${deltaVal} %</span>`;
+          return `<span class="trend-badge trend-down" data-num="1"${titleAttr}><i data-lucide="trending-down" aria-hidden="true"></i>${deltaVal} %</span>`;
         }
         const sign = deltaVal > 0 ? `+${deltaVal}` : `${deltaVal}`;
-        return `<span class="trend-badge trend-flat" data-num="1"${titleAttr}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8h10M9.5 4.5 13 8l-3.5 3.5"/></svg>${sign} %</span>`;
+        return `<span class="trend-badge trend-flat" data-num="1"${titleAttr}><i data-lucide="arrow-right" aria-hidden="true"></i>${sign} %</span>`;
       };
 
       const chartBarsHtml = subjectRows.map(r => {
@@ -10166,16 +10236,17 @@
       window.addEventListener('scroll', positionTour, true);
       document.addEventListener('keydown', event => {
         if (event.key !== 'Tab') return;
+        if (!document.getElementById('versionFrame').hidden) return;
         const modal = ['welcomeOverlay', 'tutorialOverlay'].map(id => document.getElementById(id))
           .find(el => !el.classList.contains('hidden'));
         if (!modal) return;
-        const buttons = [...modal.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
+        const buttons = [document.getElementById('versionToggle'), ...modal.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
         const first = buttons[0];
         const last = buttons[buttons.length - 1];
-        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+        if (event.shiftKey && (document.activeElement === first || (!modal.contains(document.activeElement) && document.activeElement !== first))) {
           event.preventDefault();
           last.focus();
-        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
+        } else if (!event.shiftKey && (document.activeElement === last || (!modal.contains(document.activeElement) && document.activeElement !== first))) {
           event.preventDefault();
           first.focus();
         }
@@ -10187,6 +10258,7 @@
       });
       document.addEventListener('keydown', event => {
         const welcome = document.getElementById('welcomeOverlay');
+        if (!document.getElementById('versionFrame').hidden) return;
         if (event.key === 'Escape' && welcome && !welcome.classList.contains('hidden')) {
           hideWelcome();
           return;
@@ -10923,6 +10995,42 @@
           event.returnValue = '';
         }
       });
+    });
+  </script>
+  <script>
+    window.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('versionToggle');
+      const frame = document.getElementById('versionFrame');
+      const label = document.getElementById('versionLabel');
+      const bar = document.querySelector('.version-bar');
+      const background = [...document.body.children].filter(element => element !== bar && element !== frame && !element.inert);
+      new ResizeObserver(() => {
+        document.documentElement.style.setProperty('--version-bar-height', `${bar.offsetHeight}px`);
+      }).observe(bar);
+      toggle.addEventListener('click', () => {
+        const showOriginal = frame.hidden;
+        if (showOriginal && !frame.hasAttribute('src')) frame.src = 'index.backup-avant-design.html';
+        frame.hidden = !showOriginal;
+        background.forEach(element => { element.inert = showOriginal; });
+        toggle.setAttribute('aria-expanded', String(showOriginal));
+        toggle.textContent = showOriginal ? 'Revenir au nouveau design' : 'Voir la version actuelle';
+        label.textContent = showOriginal ? 'Version actuelle · données non partagées' : 'Nouveau design';
+      });
+
+      if (!window.lucide) {
+        console.error('Les icônes Lucide n’ont pas pu être chargées.');
+        return;
+      }
+      const renderIcons = () => window.lucide.createIcons();
+      renderIcons();
+      let scheduled = false;
+      new MutationObserver(records => {
+        if (scheduled || !records.some(record => [...record.addedNodes].some(node =>
+          node.nodeType === Node.ELEMENT_NODE && (node.matches('i[data-lucide]') || node.querySelector('i[data-lucide]'))
+        ))) return;
+        scheduled = true;
+        requestAnimationFrame(() => { scheduled = false; renderIcons(); });
+      }).observe(document.body, { childList: true, subtree: true });
     });
   </script>
 </body>
