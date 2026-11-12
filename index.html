@@ -185,7 +185,7 @@
     #btnCommitObsSessionToGradebook:hover { background: #244b36; }
     @media (min-width: 1200px) {
       #viewQuickObs:not(.hidden) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
-      #viewQuickObs > .studio-hero-card { grid-column: 1 / -1; }
+      #viewQuickObs > .studio-hero-card, #viewQuickObs > #qoStudentBox { grid-column: 1 / -1; }
     }
     @media print {
       .no-print { display: none !important; }
@@ -411,6 +411,8 @@
     #viewQuickObs .border-amber-200 { border-color: #e3dfd2 !important; }
     #viewQuickObs .bg-indigo-500 { background: var(--brand) !important; }
     #viewQuickObs .ring-indigo-500 { --tw-ring-color: rgba(100, 127, 114, .35) !important; }
+    #viewQuickObs > div { border: 1px solid #c3ccc4; box-shadow: 0 1px 4px rgba(37, 50, 43, .09); }
+    html.theme-dark #viewQuickObs > div { border-color: #4a5a50; }
     #baremeFineGradeButtons button.is-selected { outline: 2px solid var(--brand-deep); outline-offset: 2px; }
     main button:not([class*="rounded-full"]) { border-radius: 8px; }
     .gradebook-toolbar {
@@ -597,6 +599,20 @@
       #compPrintSheet .cps-note { font-size: 9px; color: #777; margin-top: 10px; }
     }
     #toastNotification { background: #344a40 !important; border-color: #344a40 !important; }
+    #studentPrintSheet { display: none; }
+    @page studentlist { size: portrait; margin: 12mm; }
+    @media print {
+      body.print-students > *:not(#studentPrintSheet) { display: none !important; }
+      body.print-students #studentPrintSheet { display: block !important; page: studentlist; color: #222; font-family: inherit; }
+      #studentPrintSheet h1 { font-size: 18px; font-weight: 700; margin: 0 0 8px; text-align: left; }
+      #studentPrintSheet table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+      #studentPrintSheet th, #studentPrintSheet td { border: 1px solid #9aa39d; padding: 0 5px; }
+      #studentPrintSheet th { height: 24mm; border-bottom: 2px solid #555; }
+      #studentPrintSheet th.sps-name { width: 52mm; text-align: left; vertical-align: bottom; font-size: 10px; font-weight: 600; color: #777; padding-bottom: 3px; }
+      #studentPrintSheet td.sps-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #studentPrintSheet td.sps-name small { margin-left: 6px; font-size: 8.5px; color: #8a918c; }
+      #studentPrintSheet tr { break-inside: avoid; }
+    }
     #toastIcon { display: none; }
     #modalAddAssignment > div, #modalUnsavedObservation > div { border-color: var(--line) !important; box-shadow: 0 24px 80px rgba(40, 48, 42, .15) !important; }
     #modalUnsavedObservation { background-color: rgba(36, 44, 40, .52) !important; }
@@ -773,6 +789,41 @@
     .grade-picker-btn.is-current { outline: 2px solid var(--brand-deep); outline-offset: 1px; }
     .grade-picker-auto { grid-column: span 3; padding: 4px 0; border-radius: 7px; font-size: 11px; font-weight: 700; color: var(--muted); background: #f1f2ed; cursor: pointer; }
     .grade-picker-auto:hover { background: #e7ebe4; color: var(--ink); }
+    .mouse-bar { position: fixed; z-index: 90; display: flex; flex-wrap: wrap; align-items: center; gap: 3px; max-width: calc(100vw - 16px); padding: 5px; background: #fffefa; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(40, 52, 46, .22); animation: pickerIn .1s ease-out; }
+    .mouse-bar button { padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 700; color: var(--brand-deep); background: #f1f2ed; cursor: pointer; white-space: nowrap; }
+    .mouse-bar button:hover { background: #e2eee5; }
+    .mouse-bar button.is-current { outline: 2px solid var(--brand-deep); outline-offset: 1px; }
+    .gb-sort-btn { display: inline-flex; vertical-align: middle; margin-left: .35rem; padding: 2px; border-radius: 6px; color: #aab5ad; cursor: pointer; }
+    .gb-sort-btn:hover, .gb-sort-btn.is-active { color: #fff; background: rgba(255, 255, 255, .14); }
+    .gb-sort-btn svg { width: 13px; height: 13px; }
+    html.theme-dark .mouse-bar { background: var(--surface); border-color: var(--line); }
+    html.theme-dark .mouse-bar button { background: #2a3b31; color: var(--ink); }
+    @media print {
+      body.print-gradebook main > section:not(#viewGradebook),
+      body.print-gradebook #emptyRosterNotice,
+      body.print-gradebook .gradebook-atmosphere,
+      body.print-gradebook #gradebookHeaderRow th:nth-last-child(3),
+      body.print-gradebook #gradebookBody td:nth-last-child(3),
+      body.print-gradebook #gradebookHeaderRow th:nth-last-child(1),
+      body.print-gradebook #gradebookBody td:nth-last-child(1),
+      body.print-bareme main > section:not(#viewBareme),
+      body.print-bareme #viewBareme .no-print { display: none !important; }
+      body.print-gradebook main, body.print-bareme main { padding: 0 !important; max-width: 100% !important; }
+      body.print-gradebook .gradebook-toolbar, body.print-bareme .studio-hero-card { border: 0 !important; box-shadow: none !important; padding: 0 0 6px !important; background: #fff !important; }
+      body.print-gradebook #gradebookScrollContainer { overflow: visible !important; }
+      body.print-gradebook table { min-width: 0 !important; width: 100%; font-size: 10px; }
+      body.print-gradebook thead tr, body.print-gradebook thead th, body.print-gradebook #gradebookBody tr, body.print-gradebook #gradebookBody td { background: #fff !important; color: #222 !important; position: static !important; }
+      body.print-gradebook thead th { border-bottom: 2px solid #555; text-transform: none; letter-spacing: 0; }
+      body.print-gradebook #gradebookBody td { border-bottom: 1px solid #ccc; }
+      body.print-gradebook tr { break-inside: avoid; }
+      body.print-gradebook input { border: 0 !important; background: transparent !important; }
+      body.print-gradebook .asg-title-pencil, body.print-gradebook .weight-tools { display: none !important; }
+      body.print-bareme #viewBareme .bg-slate-900 { background: #fff !important; color: #222 !important; border: 1px solid #ccc; }
+      body.print-bareme #viewBareme .bg-slate-900 * { color: #222 !important; }
+      body.print-bareme tr { break-inside: avoid; }
+      #printMeta { display: none; }
+      body.print-gradebook #printMeta, body.print-bareme #printMeta { display: block; font-size: 11px; color: #555; margin: 0 0 6px; }
+    }
     @keyframes pickerIn { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
     .asg-pct { font-size: 12px; font-weight: 800; color: var(--ink); min-width: 2.6rem; text-align: left; }
     body.reduce-motion *, body.reduce-motion *::before, body.reduce-motion *::after { animation: none !important; transition: none !important; }
@@ -818,6 +869,10 @@
       body.print-observation-grid #viewQuickObs:not(.hidden) { display: block; }
       body.print-observation-grid .rubric-stmt-btn[class*="stmt-checked-"] { border: 2px solid #222 !important; }
       body.print-observation-grid .rubric-stmt-btn[class*="stmt-checked-"] > span:first-child { color: #222 !important; background: #fff !important; border-color: #222 !important; }
+      body.print-observation-grid.print-observation-blank .rubric-stmt-btn[class*="stmt-checked-"] { border: 1px solid #cbd5e1 !important; background: #fff !important; font-weight: 400 !important; }
+      body.print-observation-grid.print-observation-blank .rubric-stmt-btn[class*="stmt-checked-"] > span:first-child { color: transparent !important; border-color: #cbd5e1 !important; }
+      body.print-observation-grid.print-observation-blank #sgCurrentStudentName { font-size: 0; }
+      body.print-observation-grid.print-observation-blank #sgCurrentStudentName::after { content: "\00a0"; display: inline-block; min-width: 18rem; border-bottom: 1px solid #222; font-size: 12px; }
     }
     #toastNotification { z-index: 125; }
     .tour-overlay { position: fixed; inset: 0; z-index: 110; pointer-events: auto; }
@@ -1728,6 +1783,7 @@
 
   <!-- MAIN CONTENT AREA -->
   <main class="site-layout flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-4 space-y-4">
+    <div id="printMeta" aria-hidden="true"></div>
 
     <!-- VIEW 1: CARNET & TRAVAUX (ONLY ELEMENT THAT SCROLLS HORIZONTALLY AS WORKS ARE ADDED) -->
     <section id="viewGradebook" class="space-y-3">
@@ -1913,8 +1969,9 @@
           <span id="qoLinkedParts" class="flex flex-wrap gap-x-4 gap-y-1"></span>
           <span id="qoLinkedHint" class="text-[11px] text-slate-500"></span>
         </div>
+      </div>
 
-        <!-- Student Pills (Equitable 2 lines of 5 students, or 1 line on very wide screen) -->
+      <div id="qoStudentBox" class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs no-print">
         <div id="qoStudentGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full">
           <!-- Populated dynamically -->
         </div>
@@ -1927,8 +1984,6 @@
             <div class="flex items-center gap-2 flex-wrap">
               <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer la grille d’évaluation" aria-label="Imprimer la grille d’évaluation"><svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
               <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Grille d’évaluation — <span id="sgCurrentStudentName" class="text-white font-bold">Élève</span></span>
-              <a id="sgSourceLink" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-300 underline no-print">Cadre d’évaluation MEQ ↗</a>
-              <a id="sgCssmbLink" href="https://sre.servicescsmb.com/disciplines/" target="_blank" rel="noopener noreferrer" class="text-[11px] text-indigo-300 underline no-print">Ressources SRÉ CSSMB ↗</a>
             </div>
             <div id="sgMajorityExplanation" class="text-xs sm:text-sm text-indigo-100"></div>
           </div>
@@ -1939,7 +1994,7 @@
           </div>
         </div>
 
-        <p class="text-xs text-slate-600">Grille locale inspirée des cadres MEQ : certains critères sont regroupés ou ajoutés. Les niveaux A–E et les éléments non cotés sont des repères du carnet, pas une reproduction officielle. Une adaptation autorisée ne détermine pas la cote : jugez les apprentissages selon les attentes et le contexte. Les traces anciennes conservent leurs descriptions d’origine.</p>
+        <p class="text-xs text-slate-600 italic">Grille locale inspirée des cadres MEQ conçue pour évaluer les apprentissages selon les attentes et le contexte.</p>
         <p id="prescoRubricNotice" class="hidden text-xs text-amber-900">Préscolaire : le bulletin utilise quatre constats qualitatifs, sans pourcentage officiel. Dans cette grille locale, A et B correspondent au même constat « se développe très bien »; C, D et E correspondent respectivement à « adéquatement », « avec certaines difficultés » et « avec des difficultés importantes ». La cote et le pourcentage calculés ici ne sont pas un constat ministériel : utilisez vos observations et votre jugement pour le bulletin.</p>
         <p id="firstCycleExplorationNotice" class="hidden text-xs text-amber-900">Au 1er cycle, cette grille est un outil local d’exploration : le cadre d’évaluation de cette discipline vise les 2e et 3e cycles. La cote affichée ici n’est pas un résultat disciplinaire ministériel pour le 1er cycle.</p>
         <!-- Fluid 5-Column Subject Rubric Table (1 Choice Per Row, Printable) -->
@@ -2840,7 +2895,7 @@
       {
         id: 'ccq_global',
         shortName: 'Culture et citoyenneté québécoise', tabLabel: 'Culture et citoyenneté québ.',
-        fullName: 'Culture et citoyenneté québécoise (CCQ) — compétence du cycle (Explorer · Examiner · Réfléchir)',
+        fullName: 'Culture et citoyenneté québécoise (CCQ) — Explorer · Examiner · Réfléchir',
         imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=960&q=70',
         icon: 'CCQ',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf',
@@ -4428,7 +4483,8 @@
         id: String(g.id),
         name: String(g.name || '').trim() || 'Groupe',
         subjectIds: (Array.isArray(g.subjectIds) ? g.subjectIds : DEFAULT_GROUP_SUBJECT_IDS).filter(id => valid.has(id)),
-        level: GRADE_LEVEL_LABELS[String(g.level)] ? String(g.level) : ''
+        level: GRADE_LEVEL_LABELS[String(g.level)] ? String(g.level) : '',
+        ...(g.placeholder ? { placeholder: true } : {})
       }));
       if (!groups.length) groups = [{ id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice(), level: '' }];
       state.groups = groups;
@@ -4463,7 +4519,9 @@
     function switchGroup(groupId) {
       if (!groupId || groupId === appState.activeGroupId || !appState.groupStore[groupId]) return;
       flushPendingSave();
-      stashActiveGroup();
+      const leaving = appState.groups.find(g => g.id === appState.activeGroupId);
+      if (leaving && leaving.placeholder) appState.groups = appState.groups.filter(g => g !== leaving);
+      else stashActiveGroup();
       const next = appState.groupStore[groupId];
       delete appState.groupStore[groupId];
       appState.students = next.students;
@@ -5027,15 +5085,18 @@
       const preschool = buildDemoPreschoolData();
       const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly);
       appState.groups = [
-        { id: 'grp_presco', name: 'Exemple — Préscolaire', subjectIds: ALL_SUBJECTS_CONFIG.filter(s => s.prescoOnly).map(s => s.id), level: 'P' },
-        { id: 'grp_regulier_2e', name: 'Exemple — 2e année', subjectIds: primarySubjects.filter(s => !['sciences', 'social'].includes(s.group)).map(s => s.id), level: '2' },
-        { id: 'grp_multi_5e6e', name: 'Exemple — 5e et 6e année', subjectIds: primarySubjects.map(s => s.id), level: '' }
+        { id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice(), level: '', placeholder: true },
+        { id: 'grp_presco', name: 'Modèle — Préscolaire', subjectIds: ALL_SUBJECTS_CONFIG.filter(s => s.prescoOnly).map(s => s.id), level: 'P' },
+        { id: 'grp_regulier_2e', name: 'Modèle — 2e année', subjectIds: primarySubjects.filter(s => !['sciences', 'social'].includes(s.group)).map(s => s.id), level: '2' },
+        { id: 'grp_multi_5e6e', name: 'Modèle — 5e et 6e année', subjectIds: primarySubjects.map(s => s.id), level: '' }
       ];
-      appState.activeGroupId = 'grp_regulier_2e';
-      appState.groupStore = { grp_presco: preschool, grp_multi_5e6e: multi };
-      appState.students = regular.students;
-      appState.terms = regular.terms;
-      appState.selectedStudentId = regular.selectedStudentId;
+      // Page neutre : un groupe vide et masqué est actif tant qu'aucun groupe n'est choisi
+      appState.activeGroupId = 'g1';
+      appState.groupStore = { grp_presco: preschool, grp_regulier_2e: regular, grp_multi_5e6e: multi };
+      appState.students = [];
+      appState.terms = { '1': buildTermDataForStudents([]), '2': buildTermDataForStudents([]), '3': buildTermDataForStudents([]) };
+      appState.selectedStudentId = null;
+      appState.activeView = 'viewStudents';
       applyActiveSubjects(appState);
       renderAll();
     }
@@ -5600,6 +5661,46 @@
     // ---- Recherche d'élèves ----
     let stFilter = '';
     let gbFilter = '';
+    let gbSort = { key: '', dir: 1 };
+    const GB_SORT_OPTIONS = [
+      { key: 'firstName', label: 'Prénom', dir: 1 },
+      { key: 'lastName', label: 'Nom de famille', dir: 1 },
+      { key: 'avg', label: 'Moyenne', dir: -1 },
+      { key: 'final', label: 'Note finale', dir: -1 }
+    ];
+    // Tri d'affichage seulement : l'ordre de la liste d'élèves n'est pas modifié
+    function getGradebookStudents(sub) {
+      const list = appState.students.slice();
+      if (!gbSort.key) return list;
+      const text = s => gbSort.key === 'lastName' ? (s.lastName || '') : (s.firstName || s.name || '');
+      const num = s => {
+        const summary = computeStudentSubjectSummary(appState.activeTerm, sub.id, s.id);
+        return gbSort.key === 'avg' ? summary.assignmentsAvg : summary.finalPct;
+      };
+      const numeric = gbSort.key === 'avg' || gbSort.key === 'final';
+      return list.sort((a, b) => {
+        if (numeric) {
+          const x = num(a), y = num(b);
+          if (x === null || y === null) return x === y ? 0 : (x === null ? 1 : -1);
+          return (x - y) * gbSort.dir;
+        }
+        const tie = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+        return (text(a).localeCompare(text(b), 'fr', { sensitivity: 'base' }) || tie) * gbSort.dir;
+      });
+    }
+    function openGradebookSortBar(event) {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const options = GB_SORT_OPTIONS.map(o => ({
+        id: o.key,
+        label: o.label + (gbSort.key === o.key ? (gbSort.dir === o.dir ? ' ↓' : ' ↑') : ''),
+        onPick: () => {
+          gbSort = gbSort.key === o.key ? { key: o.key, dir: -gbSort.dir } : { key: o.key, dir: o.dir };
+          renderGradebookView();
+        }
+      }));
+      if (gbSort.key) options.push({ label: 'Ordre de la liste', onPick: () => { gbSort = { key: '', dir: 1 }; renderGradebookView(); } });
+      openMouseBar(rect.left, rect.bottom, options, gbSort.key);
+    }
     let weightMode = false;
     let weightScope = '';
     let weightLevel = '';
@@ -7169,6 +7270,15 @@
       thStudent.className = 'p-2.5 font-bold min-w-[185px] sticky left-0 bg-slate-900 z-10';
       const studentHeading = document.createElement('div');
       studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
+      const sortBtn = document.createElement('button');
+      sortBtn.type = 'button';
+      sortBtn.className = `gb-sort-btn no-print${gbSort.key ? ' is-active' : ''}`;
+      sortBtn.title = 'Trier les élèves';
+      sortBtn.setAttribute('aria-label', 'Trier les élèves');
+      sortBtn.setAttribute('aria-haspopup', 'menu');
+      sortBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5"/></svg>';
+      sortBtn.addEventListener('click', openGradebookSortBar);
+      studentHeading.appendChild(sortBtn);
       thStudent.appendChild(studentHeading);
       if (isMulti) {
         const lvlBar = document.createElement('div');
@@ -7486,7 +7596,7 @@
 
       const allFinalPcts = [];
 
-      appState.students.forEach((st, idx) => {
+      getGradebookStudents(sub).forEach((st, idx) => {
         if (gbFilter && !studentMatches(st, gbFilter)) return;
         const rec = subData.studentRecords[st.id];
         const summary = computeStudentSubjectSummary(appState.activeTerm, sub.id, st.id);
@@ -7818,6 +7928,46 @@
       });
 
       updateGradebookRowSummaryOnly();
+    }
+
+    let mouseBarEl = null;
+    function closeMouseBar() {
+      if (mouseBarEl) { mouseBarEl.remove(); mouseBarEl = null; }
+      document.removeEventListener('mousedown', onMouseBarOutside, true);
+      document.removeEventListener('keydown', onMouseBarKey, true);
+    }
+    function onMouseBarOutside(e) { if (mouseBarEl && !mouseBarEl.contains(e.target)) closeMouseBar(); }
+    function onMouseBarKey(e) { if (e.key === 'Escape') closeMouseBar(); }
+
+    // Petite barre d'options près du curseur; se ferme après un choix, un clic à l'extérieur ou Échap.
+    function openMouseBar(x, y, options, current) {
+      closeMouseBar();
+      const el = document.createElement('div');
+      el.className = 'mouse-bar';
+      el.setAttribute('role', 'menu');
+      options.forEach(option => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('role', 'menuitem');
+        b.className = option.id && option.id === current ? 'is-current' : '';
+        b.textContent = option.label;
+        b.addEventListener('click', () => { closeMouseBar(); option.onPick(); });
+        el.appendChild(b);
+      });
+      el.style.visibility = 'hidden';
+      document.body.appendChild(el);
+      const w = el.offsetWidth, h = el.offsetHeight, m = 8;
+      let left = x + 10, top = y + 12;
+      if (left + w + m > window.innerWidth) left = Math.max(m, x - w - 10);
+      if (top + h + m > window.innerHeight) top = Math.max(m, y - h - 12);
+      el.style.left = Math.min(Math.max(m, left), Math.max(m, window.innerWidth - w - m)) + 'px';
+      el.style.top = Math.min(Math.max(m, top), Math.max(m, window.innerHeight - h - m)) + 'px';
+      el.style.visibility = '';
+      mouseBarEl = el;
+      document.addEventListener('mousedown', onMouseBarOutside, true);
+      document.addEventListener('keydown', onMouseBarKey, true);
+      const first = el.querySelector('button');
+      if (first) first.focus({ preventScroll: true });
     }
 
     let gradePickerEl = null;
@@ -8432,12 +8582,6 @@
         ? `${st.name} — ${GRADE_LEVEL_LABELS[draft.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}${isModSub ? ` [Bulletin modifié · inscrit en ${GRADE_LEVEL_LABELS[st.gradeLevel] || '—'}]` : ''}`
         : 'Sélectionner un nom';
       document.getElementById('qoBottomStudentName').textContent = st ? st.name : 'Sélectionner un nom';
-      const sgLink = document.getElementById('sgSourceLink');
-      if (sgLink) sgLink.href = sub.refUrl;
-      const sgCssmbLink = document.getElementById('sgCssmbLink');
-      if (sgCssmbLink) {
-        sgCssmbLink.href = sub.cssmbUrl || 'https://sre.servicescsmb.com/disciplines/';
-      }
       const qoAtm = document.getElementById('qoSubjectAtmosphere');
       const qoImg = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
       if (qoAtm && qoImg) qoAtm.src = qoImg;
@@ -8964,7 +9108,7 @@
       document.getElementById('groupNameInput').value = group ? group.name : '';
       const lvlSel = document.getElementById('groupLevelSelect');
       lvlSel.value = group ? (group.level || '') : '';
-      const chosen = new Set(group ? group.subjectIds : DEFAULT_GROUP_SUBJECT_IDS);
+      const chosen = new Set(type === 'edit' && group ? group.subjectIds : []);
       const list = document.getElementById('groupSubjectList');
       list.innerHTML = getDisciplines().map(d => `
         <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
@@ -8972,6 +9116,7 @@
           <span>${escapeHtml(d.label)}</span>
         </label>`).join('');
       lvlSel.onchange = () => {
+        if (type === 'new' || returnToWelcomeAfterGroup) return;
         const isP = lvlSel.value === 'P';
         list.querySelectorAll('input[data-discipline]').forEach(cb => {
           const k = cb.getAttribute('data-discipline');
@@ -8982,7 +9127,7 @@
       const copyBox = document.getElementById('groupCopyBox');
       const copySel = document.getElementById('groupCopySelect');
       copyBox.classList.toggle('hidden', type !== 'new');
-      copySel.innerHTML = '<option value="">Aucune (liste vide)</option>' + appState.groups
+      copySel.innerHTML = '<option value="">Aucune (liste vide)</option>' + appState.groups.filter(g => !g.placeholder)
         .map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
       copySel.value = '';
       const old = document.getElementById('btnGroupDelete');
@@ -9056,14 +9201,17 @@
     function renderGroupBar() {
       const bar = document.getElementById('groupBar');
       const sel = document.getElementById('headerGroupSelect');
+      const activeIsPlaceholder = (appState.groups.find(g => g.id === appState.activeGroupId) || {}).placeholder;
+      const visibleGroups = appState.groups.filter(g => !g.placeholder);
       if (sel) {
-        sel.classList.toggle('hidden', appState.groups.length < 2);
-        sel.innerHTML = appState.groups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
-        sel.value = appState.activeGroupId;
+        sel.classList.toggle('hidden', visibleGroups.length < 2);
+        sel.innerHTML = (activeIsPlaceholder ? '<option value="" disabled>Choisir un groupe…</option>' : '') +
+          visibleGroups.map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+        sel.value = activeIsPlaceholder ? '' : appState.activeGroupId;
       }
       if (!bar) return;
       bar.innerHTML = '<span class="text-[11px] font-bold uppercase tracking-wide text-slate-500 mr-1">Groupes</span>';
-      appState.groups.forEach(g => {
+      visibleGroups.forEach(g => {
         const active = g.id === appState.activeGroupId;
         const b = document.createElement('button');
         b.type = 'button';
@@ -10505,6 +10653,37 @@
       window.print();
     }
 
+    function printStudentList() {
+      let sheet = document.getElementById('studentPrintSheet');
+      if (!sheet) {
+        sheet = document.createElement('div');
+        sheet.id = 'studentPrintSheet';
+        document.body.appendChild(sheet);
+      }
+      const group = appState.groups.find(g => g.id === appState.activeGroupId);
+      const students = appState.students;
+      const extraCols = 14;
+      // Hauteur des rangées ajustée pour tenir sur une page portrait (≈ 297 − 24 mm de marges − titre et en-tête)
+      const rowMm = Math.max(5, Math.min(9, Math.floor(215 / Math.max(students.length, 1) * 10) / 10));
+      const rows = students.map(st => {
+        const level = GRADE_LEVEL_LABELS[st.gradeLevel] || '';
+        return `<tr style="height:${rowMm}mm"><td class="sps-name">${escapeHtml(st.name)}${level ? `<small>${escapeHtml(level)}</small>` : ''}</td>${'<td></td>'.repeat(extraCols)}</tr>`;
+      }).join('');
+      sheet.innerHTML = `
+        <h1>${escapeHtml(group && !group.placeholder ? group.name : '')}</h1>
+        <table>
+          <thead><tr><th class="sps-name"></th>${'<th></th>'.repeat(extraCols)}</tr></thead>
+          <tbody>${rows}</tbody>
+        </table>`;
+      document.body.classList.add('print-students');
+      const cleanup = () => {
+        document.body.classList.remove('print-students');
+        window.removeEventListener('afterprint', cleanup);
+      };
+      window.addEventListener('afterprint', cleanup);
+      window.print();
+    }
+
     // =========================================================================
     // 6. FULLSCREEN & GOOGLE SITES POP-OUT HANDLERS
     // =========================================================================
@@ -10594,7 +10773,10 @@
         const pristine = isPristineInitialGroup();
         returnToWelcomeAfterGroup = true;
         openGroupModal(pristine ? 'edit' : 'new', pristine ? group.id : null);
-        if (pristine) document.getElementById('groupModalTitle').textContent = 'Créer votre premier groupe';
+        if (pristine) {
+          document.getElementById('groupModalTitle').textContent = 'Créer votre premier groupe';
+          document.querySelectorAll('#groupSubjectList input[data-discipline]').forEach(cb => { cb.checked = false; });
+        }
       });
     }
 
@@ -11142,18 +11324,43 @@
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
 
       // Print buttons
-      document.getElementById('btnPrintView').addEventListener('click', () => window.print());
-      document.getElementById('btnPrintBareme').addEventListener('click', () => window.print());
-      document.getElementById('btnPrintSubjectGrid').addEventListener('click', () => {
-        document.body.classList.add('print-observation-grid');
+      const printWithClass = (classes, meta) => {
+        document.getElementById('printMeta').textContent = meta || '';
+        document.body.classList.add(...classes);
         const cleanup = () => {
-          document.body.classList.remove('print-observation-grid');
+          document.body.classList.remove(...classes);
           window.removeEventListener('afterprint', cleanup);
         };
         window.addEventListener('afterprint', cleanup);
         window.print();
-      });
-
+      };
+      const printMetaText = () => {
+        const group = appState.groups.find(g => g.id === appState.activeGroupId);
+        const st = appState.students.find(s => s.id === appState.selectedStudentId);
+        const sub = getCurrentSubjectConfig();
+        return [group && !group.placeholder ? group.name : '', `Étape ${appState.activeTerm}`, appState.activeView === 'viewBareme' && st ? st.name : '', sub && sub.shortName]
+          .filter(Boolean).join(' · ');
+      };
+      const printObservationGrid = blank => {
+        printWithClass(blank ? ['print-observation-grid', 'print-observation-blank'] : ['print-observation-grid']);
+      };
+      const printCurrentView = event => {
+        const view = appState.activeView;
+        if (view === 'viewStudents') printStudentList();
+        else if (view === 'viewGradebook') printWithClass(['print-gradebook'], printMetaText());
+        else if (view === 'viewBareme') printWithClass(['print-bareme'], printMetaText());
+        else if (view === 'viewGlobalReport') document.getElementById('btnPrintGlobalReport').click();
+        else if (view === 'viewQuickObs') {
+          const rect = event.currentTarget.getBoundingClientRect();
+          openMouseBar(event.clientX || rect.left, event.clientY || rect.bottom, [
+            { label: 'Page de l’élève', onPick: () => printObservationGrid(false) },
+            { label: 'Grille vierge', onPick: () => printObservationGrid(true) }
+          ]);
+        } else window.print();
+      };
+      document.getElementById('btnPrintView').addEventListener('click', printCurrentView);
+      document.getElementById('btnPrintBareme').addEventListener('click', printCurrentView);
+      document.getElementById('btnPrintSubjectGrid').addEventListener('click', printCurrentView);
       // Le pavé numérique saisit des chiffres dans les champs numériques, même sans Verr. Num.
       document.addEventListener('keydown', e => {
         const input = e.target;
