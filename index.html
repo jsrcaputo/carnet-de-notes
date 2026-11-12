@@ -175,6 +175,18 @@
       align-items: center;
       justify-content: center;
     }
+    #viewQuickObs:not(.hidden) { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+    #viewQuickObs > * { min-width: 0; margin-top: 0; }
+    #viewQuickObs .observation-matrix { max-width: none; }
+    #viewQuickObs .rubric-stmt-btn { font-size: 12px; line-height: 1.4; }
+    #viewQuickObs .grade-pills-single-line { grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: .3rem; }
+    #viewQuickObs .grade-pill-compact { min-height: 36px; font-size: 11px; }
+    #btnCommitObsSessionToGradebook { padding: .6rem 1rem; background: #355b47; color: #fff; font-size: .85rem; box-shadow: 0 2px 6px rgba(35, 70, 50, .25); }
+    #btnCommitObsSessionToGradebook:hover { background: #244b36; }
+    @media (min-width: 1200px) {
+      #viewQuickObs:not(.hidden) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
+      #viewQuickObs > .studio-hero-card { grid-column: 1 / -1; }
+    }
     @media print {
       .no-print { display: none !important; }
       body { background-color: #ffffff !important; }
@@ -413,8 +425,23 @@
     }
     .gradebook-toolbar > *:not(.gradebook-atmosphere) { position: relative; z-index: 1; }
     .gradebook-toolbar > div:first-of-type { grid-column: 1; grid-row: 1; min-width: 0; }
-    .gradebook-toolbar > div:nth-of-type(2) { grid-column: 1; grid-row: 2; justify-content: flex-end; flex-wrap: wrap; }
+    .gradebook-toolbar > div:nth-of-type(2) { grid-column: 1; grid-row: 2; justify-content: flex-start; flex-wrap: wrap; }
     .gradebook-toolbar h2 { min-width: 0; }
+    .gradebook-metrics { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1.25rem; }
+    .gradebook-metric { display: flex; flex-wrap: wrap; align-items: baseline; gap: .35rem; font-size: .75rem; color: var(--muted); }
+    .gradebook-metric strong { font-size: .9rem; color: var(--ink); }
+    #kpiClassAverage { color: #047857; }
+    #btnWeightMode { color: var(--muted); font-size: .7rem; text-decoration: underline; }
+    .weight-tools { display: inline-flex; align-items: center; gap: .25rem; }
+    .weight-tools button { min-width: 1.6rem; padding: .15rem; }
+    .weight-lock { display: inline-flex; align-items: center; gap: .2rem; color: #cbd5e1; font-size: .65rem; }
+    .weight-lock[aria-pressed="true"] { color: #6ee7b7; }
+    .weight-lock:disabled { color: #64748b; opacity: .5; cursor: not-allowed; }
+    .weight-lock svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+    .weight-input { width: 4.25rem; padding: .1rem .2rem; border: 1px solid #6ee7b7; border-radius: 4px; background: #fff; color: #0f172a; text-align: center; font-size: .75rem; }
+    #studentSearchPopover { position: absolute; top: calc(100% + .4rem); left: 0; width: min(320px, 85vw); z-index: 80; padding: .75rem; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 12px 30px rgba(0,0,0,.2); }
+    #studentSearchPopover input { width: 100%; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: .45rem; }
+    #studentSearchMessage { margin-top: .35rem; color: var(--muted); font-size: .75rem; }
     .gradebook-atmosphere {
       position: absolute;
       z-index: 0;
@@ -487,7 +514,7 @@
     #competencyPositioning .comp-subtab.is-active { background: var(--brand); border-color: var(--brand); color: #fff; }
     #competencyPositioning .comp-subtab.is-active b { color: #fff; }
     #competencyPositioning .comp-scale { display: flex; flex-direction: column; gap: .75rem; }
-    #competencyPositioning .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: .5rem; align-items: start; }
+    #competencyPositioning .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: .5rem; align-items: start; max-width: 1000px; }
     #competencyPositioning .comp-card { border: 1px solid var(--line); border-radius: 10px; background: #fffefa; padding: .6rem .7rem; }
     #competencyPositioning .comp-card.is-level { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: #f6f9f5; }
     #competencyPositioning .comp-card-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .3rem; font-size: 10px; font-weight: 700; text-transform: uppercase; color: #56615b; }
@@ -495,10 +522,10 @@
     #competencyPositioning .comp-badge { background: var(--brand); color: #fff; border-radius: 999px; padding: 1px 8px; text-transform: none; font-weight: 700; }
     #competencyPositioning .comp-card-text { font-size: 12px; line-height: 1.65; color: #3f4944; }
     #competencyPositioning .comp-sentence { cursor: pointer; border-radius: 4px; padding: 1px 2px; transition: background-color .12s ease; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
-    #competencyPositioning .comp-sentence:hover:not(.is-locked) { background: #e3ebe2; }
+    #competencyPositioning .comp-sentence:hover { background: #e3ebe2; }
     #competencyPositioning .comp-sentence.is-sibling { background: #eef2ec; box-shadow: inset 0 -1px 0 #b9c9bc; }
     #competencyPositioning .comp-sentence.is-picked { background: #cfe0d3; box-shadow: inset 0 -2px 0 var(--brand); color: #223a2e; }
-    #competencyPositioning .comp-sentence.is-locked { color: #a9b0ab; cursor: not-allowed; }
+    #competencyPositioning .comp-sentence.is-locked { color: #68716c; }
     #competencyPositioning .comp-sentence:focus-visible { outline: 2px solid var(--brand); }
     #competencyPositioning .comp-result { position: sticky; bottom: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; padding: .6rem .8rem; border: 1px solid #b9c9bc; border-radius: 10px; background: rgba(255, 254, 250, .97); box-shadow: 0 -6px 18px rgba(40, 48, 42, .08); }
     #competencyPositioning .comp-result-text { display: flex; flex-wrap: wrap; align-items: baseline; gap: .1rem .6rem; flex: 1 1 260px; }
@@ -551,6 +578,7 @@
     #competencyPositioning .comp-termtab.is-active { background: var(--brand); color: #fff; }
     #competencyPositioning .comp-printbtn { padding: .35rem .8rem; border: 1px solid var(--line); border-radius: 10px; background: #fffefa; font-size: 12px; font-weight: 600; color: var(--brand-deep); }
     #competencyPositioning .comp-printbtn:hover { background: #f3f3ed; }
+    #viewGlobalReport button:disabled { opacity: .5; cursor: not-allowed; }
     #compPrintSheet { display: none; }
     @page comp { size: portrait; margin: 14mm; }
     @media print {
@@ -602,7 +630,6 @@
     @media (min-width: 768px) {
       .gradebook-toolbar { grid-template-rows: 1.75rem auto; }
       .gradebook-toolbar h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .gradebook-toolbar > div:nth-of-type(2) { flex-wrap: nowrap; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
@@ -622,10 +649,6 @@
     header #btnExportExcel .hdr-ico { color: #fff; }
     main .hover\:bg-slate-800:hover, main .hover\:bg-slate-700:hover { background-color: var(--brand-soft) !important; color: var(--brand-deep) !important; }
     main button, main label.cursor-pointer { transition: background-color .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease; }
-    .kpi-strip > div { height: 84px !important; min-height: 84px !important; max-height: 84px !important; box-sizing: border-box !important; }
-    .kpi-strip > div > div:first-child, .kpi-strip > div > div > div:first-child { font-size: 10.5px !important; line-height: 1.2; }
-    .kpi-strip [id^="kpi"] { font-size: 1rem !important; line-height: 1.25 !important; }
-    .kpi-strip #btnResetEqualWeights { white-space: nowrap; padding: .25rem .5rem; }
     .hdr-ico { width: 15px; height: 15px; flex: none; }
     .ico-students { color: var(--brand); }
     .ico-save { color: var(--brand-deep); }
@@ -648,8 +671,63 @@
     #settingsPanel .sp-hint { margin-top: .6rem; padding-top: .5rem; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.35; }
     html.ts-sm { font-size: 14.5px; }
     html.ts-lg { font-size: 18px; }
-    html.theme-dark { filter: invert(.9) hue-rotate(180deg); }
-    html.theme-dark img { opacity: .12 !important; }
+    @media screen {
+      html.theme-dark {
+        color-scheme: dark;
+        --ink: #e7eee9;
+        --muted: #b2c0b7;
+        --line: #405048;
+        --paper: #111915;
+        --surface: #1c2822;
+        --brand: #376b50;
+        --brand-deep: #b4dfc2;
+        --brand-soft: #293d32;
+        --accent: #e2b895;
+      }
+      html.theme-dark body { background: var(--paper); color: var(--ink); }
+      html.theme-dark header { background: #19241e !important; color: var(--ink) !important; }
+      html.theme-dark header :is(.text-white, .text-slate-300, .text-slate-200, .text-amber-300, .text-indigo-200, .text-indigo-300) { color: var(--ink) !important; }
+      html.theme-dark header :is(.bg-slate-800, .bg-slate-800\/95, .hdr-icobtn) { background: #25352c !important; color: var(--ink) !important; }
+      html.theme-dark header :is(.bg-indigo-500, .bg-indigo-600), html.theme-dark header #btnExportExcel { color: #fff !important; }
+      html.theme-dark header #headerStudentCount { background: #376b50 !important; color: #fff !important; }
+      html.theme-dark header #btnNavGlobalReport.bg-amber-400 { background: var(--brand-soft) !important; color: var(--ink) !important; border-color: var(--line); }
+      html.theme-dark :is(#subjectTabsContainer, #subjectSubTabsContainer) button { background: #25352c !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.theme-dark :is(#subjectTabsContainer, #subjectSubTabsContainer) button:is(.bg-indigo-600, [aria-pressed="true"]) { background: #376b50 !important; color: #fff !important; }
+      html.theme-dark #subjectSubTabsContainer { background: #1c2822; border-color: var(--line); }
+      html.theme-dark #subjectSubTabsContainer .sub-tabs-label { color: var(--muted); }
+      html.theme-dark :is(#settingsPanel, .welcome-card, .tour-card, .grade-picker) { background: var(--surface); color: var(--ink); border-color: var(--line); }
+      html.theme-dark :is(#settingsPanel .sp-seg, .welcome-close, .welcome-actions button, .grade-picker-auto, .sort-btn) { background: #2a3b31; color: var(--ink); border-color: var(--line); }
+      html.theme-dark :is(#settingsPanel .sp-seg button.is-on, .welcome-actions button.primary) { background: var(--brand); color: #fff; }
+      html.theme-dark :is(.welcome-card p, .tour-card p) { color: var(--muted); }
+      html.theme-dark .welcome-actions button:disabled { background: #26332c; color: #adbbb1; border-color: var(--line); }
+      html.theme-dark [id^="modal"] > .bg-white { background: var(--surface) !important; color: var(--ink); border-color: var(--line) !important; }
+      html.theme-dark [id^="modal"] :is(.bg-slate-50, .bg-slate-100) { background: #293b31 !important; }
+      html.theme-dark [id^="modal"] :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600, .text-slate-500, .text-slate-400, .text-indigo-700),
+      html.theme-dark #modalUnsavedObservation #unsavedObservationMessage { color: var(--ink) !important; }
+      html.theme-dark [id^="modal"] :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { background: #111b15 !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.theme-dark [id^="modal"] :is(input, textarea)::placeholder { color: var(--muted); opacity: 1; }
+      html.theme-dark [id^="modal"] :is(.border-slate-100, .border-slate-200, .border-slate-300) { border-color: var(--line) !important; }
+      html.theme-dark .cb-phrase-item:not(.is-selected) { background: #25352c; color: var(--ink); border-color: var(--line); }
+      html.theme-dark :is(.gradebook-toolbar, .global-report-toolbar, .student-manager-card, .studio-hero-card, #emptyRosterNotice:not(.hidden)) { background: var(--surface) !important; color: var(--ink); border-color: var(--line) !important; }
+      html.theme-dark .empty-roster-visual::after { background: linear-gradient(90deg, var(--surface), transparent); }
+      html.theme-dark main :is(.bg-white, .bg-slate-50, .bg-slate-100, .bg-slate-900) { background-color: var(--surface) !important; color: var(--ink) !important; }
+      html.theme-dark main :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600, .text-slate-500, .text-indigo-950, .text-indigo-700, .text-indigo-600) { color: var(--ink) !important; }
+      html.theme-dark main :is(.bg-indigo-50, .bg-indigo-950) { background-color: var(--brand-soft) !important; color: var(--ink) !important; }
+      html.theme-dark main :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea), html.theme-dark #modalAddAssignment input {
+        background-color: #111b15 !important; color: var(--ink) !important; border-color: var(--line) !important;
+      }
+      html.theme-dark main :is(input, textarea)::placeholder { color: #b2c0b7; opacity: 1; }
+      html.theme-dark main table :is(th, td) { border-color: var(--line) !important; }
+      html.theme-dark main table thead th, html.theme-dark main table thead th:first-child,
+      html.theme-dark main table :is(.bg-slate-800, .bg-slate-900) { background: #293b31 !important; color: var(--ink) !important; }
+      html.theme-dark main table thead button, html.theme-dark #btnResetEqualWeights { background: #32473a !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.theme-dark #gradebookBody tr:nth-child(even) { background-color: #25342b; }
+      html.theme-dark #gradebookBody tr:nth-child(odd) { background-color: var(--surface) !important; }
+      html.theme-dark #gradebookBody input.asg-raw { color: var(--ink) !important; }
+      html.theme-dark #kpiClassAverage { color: #9cdbb5 !important; }
+      html.theme-dark main table tbody tr:hover, html.theme-dark.design-studio #gradebookBody tr:hover td { background-color: #293b31 !important; }
+      html.theme-dark :is(.gradebook-atmosphere, .global-report-atmosphere, .student-manager-atmosphere, .studio-only-atmosphere, .empty-roster-visual img) { filter: none !important; }
+    }
     body.compact #gradebookBody td { padding-top: .25rem !important; padding-bottom: .25rem !important; }
     #gradebookBody input.asg-raw { color: #8a9188 !important; font-weight: 600; width: 3.6rem; }
     .grade-pill-selected {
@@ -731,12 +809,13 @@
     @media print {
       body.print-observation-grid main > section:not(#viewQuickObs),
       body.print-observation-grid #viewQuickObs > :not(#observationPrintGrid),
-      body.print-observation-grid #observationPrintGrid > :not(:first-child):not(.observation-matrix) { display: none !important; }
+      body.print-observation-grid #observationPrintGrid > :not(:first-child):not(.observation-matrix):not(p) { display: none !important; }
       body.print-observation-grid #observationPrintGrid > :first-child,
       body.print-observation-grid #observationPrintGrid > :first-child * { color: #222 !important; background: #fff !important; }
       body.print-observation-grid .observation-matrix { overflow: visible !important; }
       body.print-observation-grid .rubric-matrix-table { min-width: 0; }
       body.print-observation-grid .rubric-matrix-table tr { break-inside: avoid; }
+      body.print-observation-grid #viewQuickObs:not(.hidden) { display: block; }
       body.print-observation-grid .rubric-stmt-btn[class*="stmt-checked-"] { border: 2px solid #222 !important; }
       body.print-observation-grid .rubric-stmt-btn[class*="stmt-checked-"] > span:first-child { color: #222 !important; background: #fff !important; border-color: #222 !important; }
     }
@@ -836,7 +915,7 @@
     .flag-picker {
       position: fixed;
       z-index: 95;
-      width: 228px;
+      width: min(440px, calc(100vw - 16px));
       padding: 7px;
       background: #fffefa;
       border: 1px solid var(--line);
@@ -858,10 +937,12 @@
       justify-content: space-between;
     }
     .flag-picker-list {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
     }
+    .flag-picker-group-title { padding: 4px 7px; color: var(--muted); font-size: 10px; font-weight: 800; }
+    #viewBareme .observation-matrix { max-width: 1100px; margin-inline: auto; }
     .flag-picker-item {
       display: flex;
       align-items: center;
@@ -908,6 +989,7 @@
     .gb-level-seg {
       display: inline-flex;
       align-items: center;
+      flex-wrap: wrap;
       background: #f2f2ec;
       border: 1px solid var(--line);
       border-radius: 9px;
@@ -934,6 +1016,10 @@
       color: var(--ink);
       box-shadow: 0 1px 2px rgba(35, 45, 40, .08);
     }
+    main table thead .gb-level-seg button.is-active {
+      background: #4a665a !important;
+      color: #fff !important;
+    }
     .cell-not-targeted {
       background: repeating-linear-gradient(
         -45deg,
@@ -945,6 +1031,7 @@
       color: #8b918c;
       user-select: none;
     }
+    @media screen {
     .theme-dark .gb-level-seg {
       background: #1a211f;
       border-color: #333c39;
@@ -952,6 +1039,10 @@
     .theme-dark .gb-level-seg button.is-active {
       background: #2b3532;
       color: #eef0ec;
+    }
+    html.theme-dark main table thead .gb-level-seg button.is-active {
+      background: #829e8c !important;
+      color: #101b14 !important;
     }
     .theme-dark .cell-not-targeted {
       background: repeating-linear-gradient(
@@ -962,6 +1053,7 @@
         rgba(31, 38, 36, 0.55) 10px
       );
       color: #6c7772;
+    }
     }
 
     /* Bulletin global : Sélecteur pondération 20/20/60, seuil 60%, flèches sobres & impression 1 page */
@@ -1107,10 +1199,12 @@
       color: #22352c;
       font-weight: 600;
     }
+    @media screen {
     .theme-dark .cb-phrase-item.is-selected {
       background: #25332d;
       border-color: #4c695c;
       color: #e6ece8;
+    }
     }
 
     /* Impression 1 page Portrait pour le Bulletin Global */
@@ -1181,6 +1275,7 @@
       --studio-radius-lg: 14px;
     }
 
+    @media screen {
     html.design-studio.theme-dark {
       --studio-bg: #111614;
       --studio-surface: #18201d;
@@ -1194,6 +1289,7 @@
       --studio-accent-soft: rgba(62, 163, 121, 0.16);
       --studio-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
       --studio-shadow-md: 0 16px 36px rgba(0, 0, 0, 0.38);
+    }
     }
 
     html.design-studio body {
@@ -1222,6 +1318,7 @@
       border-color: var(--studio-accent, #235c46);
       color: var(--studio-accent, #235c46);
     }
+    @media screen {
     html.design-studio.theme-dark .sp-demo-btn {
       background: #1b2622;
       border-color: rgba(255, 255, 255, 0.14);
@@ -1232,6 +1329,7 @@
       border-color: var(--studio-accent);
       color: #fff;
     }
+    }
 
     /* 1. Header verre dépoli épuré et moins massif */
     html.design-studio header {
@@ -1241,8 +1339,10 @@
       border-bottom: 1px solid var(--studio-border) !important;
       box-shadow: 0 4px 22px -6px rgba(18, 30, 24, 0.05) !important;
     }
+    @media screen {
     html.design-studio.theme-dark header {
       background: rgba(24, 32, 29, 0.88) !important;
+    }
     }
     html.design-studio header > div:first-child {
       padding-top: 0.85rem !important;
@@ -1268,8 +1368,10 @@
       padding-top: 0.5rem !important;
       padding-bottom: 0.5rem !important;
     }
+    @media screen {
     html.design-studio.theme-dark header > div:last-child {
       background: rgba(20, 27, 24, 0.82) !important;
+    }
     }
     html.design-studio #subjectTabsContainer {
       display: flex !important;
@@ -1308,10 +1410,12 @@
       font-weight: 700 !important;
       box-shadow: 0 6px 16px -4px rgba(22, 33, 28, 0.24) !important;
     }
+    @media screen {
     html.design-studio.theme-dark #subjectTabsContainer > button[aria-pressed="true"] {
-      background: var(--studio-accent) !important;
-      border-color: var(--studio-accent) !important;
+      background: #376b50 !important;
+      border-color: #376b50 !important;
       color: #ffffff !important;
+    }
     }
     html.design-studio #subjectTabsContainer > button[aria-pressed="true"]::before {
       display: none !important;
@@ -1327,9 +1431,11 @@
       border-left: 1px solid var(--studio-border) !important;
       box-shadow: none !important;
     }
+    @media screen {
     html.design-studio.theme-dark #subjectSubTabsContainer {
       background: rgba(30, 40, 36, 0.75) !important;
       border-color: rgba(255, 255, 255, 0.12) !important;
+    }
     }
     html.design-studio #subjectSubTabsContainer > button {
       border-radius: 999px !important;
@@ -1396,12 +1502,14 @@
       mask-composite: intersect !important;
       transition: opacity 0.35s ease !important;
     }
+    @media screen {
     html.design-studio.theme-dark .gradebook-atmosphere,
     html.design-studio.theme-dark .global-report-atmosphere,
     html.design-studio.theme-dark .student-manager-atmosphere,
     html.design-studio.theme-dark .studio-only-atmosphere {
       opacity: 0.2 !important;
-      filter: saturate(0.88) brightness(0.82) !important;
+      filter: none !important;
+    }
     }
     html.design-studio .empty-roster-visual {
       width: min(44%, 420px) !important;
@@ -1434,41 +1542,10 @@
       box-shadow: var(--studio-shadow-sm);
       gap: 0.55rem !important;
     }
+    @media screen {
     html.design-studio.theme-dark .gradebook-toolbar > div:nth-of-type(2) {
       background: rgba(24, 32, 29, 0.84);
     }
-    html.design-studio .kpi-strip {
-      gap: 0.85rem !important;
-      align-items: stretch !important;
-    }
-    html.design-studio .kpi-strip > div {
-      min-height: 84px !important;
-      height: 84px !important;
-      max-height: 84px !important;
-      box-sizing: border-box !important;
-      border-radius: 16px !important;
-      padding: 0.85rem 1.15rem !important;
-      background: var(--studio-surface) !important;
-      border: 1px solid var(--studio-border) !important;
-      box-shadow: var(--studio-shadow-sm) !important;
-      border-top: 3px solid rgba(35, 92, 70, 0.22) !important;
-      display: flex !important;
-      flex-direction: column !important;
-      justify-content: center !important;
-    }
-    html.design-studio .kpi-strip > div.flex.items-center.justify-between,
-    html.design-studio .kpi-strip > div:has(#btnResetEqualWeights) {
-      flex-direction: row !important;
-      align-items: center !important;
-      justify-content: space-between !important;
-    }
-    html.design-studio #kpiStudentCount,
-    html.design-studio #kpiAssignmentCount,
-    html.design-studio #kpiClassAverage,
-    html.design-studio #kpiWeightTotal {
-      font-size: 1.35rem !important;
-      letter-spacing: -0.02em !important;
-      margin-top: 0.15rem !important;
     }
     html.design-studio #gradebookScrollContainer {
       border-radius: var(--studio-radius-xl) !important;
@@ -1546,6 +1623,16 @@
             <span>Élèves</span>
             <span id="headerStudentCount" class="rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold">0</span>
           </button>
+          <div class="relative">
+            <button id="btnStudentSearch" type="button" class="hdr-icobtn" aria-label="Rechercher un élève" aria-expanded="false" aria-controls="studentSearchPopover" title="Rechercher un élève">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            </button>
+            <form id="studentSearchPopover" class="hidden" role="search">
+              <label for="headerStudentSearch" class="text-xs font-bold">Rechercher un élève</label>
+              <input id="headerStudentSearch" type="search" autocomplete="off" placeholder="Nom de l’élève">
+              <div id="studentSearchMessage" aria-live="polite">Appuyez sur Entrée pour afficher les résultats.</div>
+            </form>
+          </div>
           <select id="headerGroupSelect" class="hidden px-2 py-1 rounded-lg border border-slate-700 bg-slate-800 text-slate-200 text-xs font-semibold cursor-pointer" aria-label="Groupe actif" title="Changer de groupe"></select>
           <div class="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
             <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white">Étape 1</button>
@@ -1595,18 +1682,7 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
             </button>
             <div id="settingsPanel" class="hidden" role="dialog" aria-label="Options">
-              <div class="sp-title">Groupes modèles</div>
-              <div class="sp-row" style="flex-direction:column; align-items:stretch; gap:0.35rem;">
-                <div style="display:flex; gap:0.35rem;">
-                  <button id="btnLoadDemoRegulier" type="button" class="sp-demo-btn" title="Charger un groupe complet de 2e année avec 20 élèves et notes pour toutes les matières">
-                    Régulier (2e)
-                  </button>
-                  <button id="btnLoadDemoMulti" type="button" class="sp-demo-btn" title="Charger un groupe complet multi-niveau 5e-6e avec 20 élèves, travaux ciblés et notes">
-                    Multi-niveau (5e-6e)
-                  </button>
-                </div>
-              </div>
-              <div class="sp-title" style="margin-top:.6rem">Options d'affichage</div>
+              <div class="sp-title">Options d'affichage</div>
               <div class="sp-row">
                 <span>Thème</span>
                 <div class="sp-seg" data-pref="theme">
@@ -1627,6 +1703,9 @@
               <div class="sp-hint">Ctrl+Z annuler · Ctrl+Y rétablir · « / » pour chercher un élève</div>
             </div>
           </div>
+          <button id="btnReferences" type="button" class="hdr-icobtn" title="Informations et sources pédagogiques" aria-label="Informations et sources pédagogiques">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          </button>
           <span class="hdr-sep" aria-hidden="true"></span>
           <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" title="Basculer en plein écran">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -1677,55 +1756,27 @@
         <img id="gbSubjectAtmosphere" class="gradebook-atmosphere" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex items-center gap-2 flex-wrap">
           <h2 id="gbSubjectTitle" class="text-base sm:text-lg font-bold text-slate-900">Mathématique — C1 : Résoudre une situation-problème</h2>
-          <a id="gbSubjectRefLink" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-xs font-medium text-indigo-600 hover:text-indigo-800 underline no-print">Cadre PFEQ ↗</a>
         </div>
 
         <div class="flex flex-wrap items-center gap-2 no-print">
-          <div id="gbLevelFilterBar" class="hidden gb-level-seg" role="group" aria-label="Filtrer le carnet par niveau"></div>
-          <label class="search-box" title="Chercher un élève (touche /)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
-            <input id="gbStudentSearch" type="search" placeholder="Chercher un élève…" autocomplete="off" aria-label="Chercher un élève">
-          </label>
-          <span id="weightWarningBanner" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-            Total des pondérations : <span id="weightTotalVal">0</span>% (doit donner 100%)
-          </span>
           <button id="btnOpenAddAssignment" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs transition cursor-pointer">
             <span>＋ Ajout d’une évaluation</span>
           </button>
           <button id="btnAddVisualTraceFromGb" type="button" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs transition cursor-pointer">
             <span>＋ Ajouter une trace observable</span>
           </button>
-        </div>
-      </div>
-
-      <!-- KPI Strip -->
-      <div class="kpi-strip grid grid-cols-2 sm:grid-cols-4 gap-2 no-print">
-        <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex items-center justify-between gap-2">
-          <div>
-            <div class="text-[11px] font-medium text-slate-500">Élèves inscrits</div>
-            <div id="kpiStudentCount" class="text-lg font-extrabold text-slate-900">0</div>
-            <div id="kpiStudentCountSub" class="hidden text-[10px] font-semibold text-slate-500 mt-0.5"></div>
+          <div class="gradebook-metrics">
+            <div class="gradebook-metric"><span>Travaux &amp; traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
+            <div class="gradebook-metric"><span>Moyenne du groupe</span><strong id="kpiClassAverage">—</strong></div>
+            <button id="btnWeightMode" type="button" aria-expanded="false" aria-controls="weightControls">Pondération</button>
+            <span id="weightControls" class="hidden">
+              <button id="btnResetEqualWeights" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Répartir équitablement la pondération entre les évaluations">Répartir également</button>
+            </span>
           </div>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs">
-          <div class="text-[11px] font-medium text-slate-500">Travaux & Traces observables</div>
-          <div id="kpiAssignmentCount" class="text-lg font-extrabold text-indigo-600">0</div>
-          <div id="kpiAssignmentCountSub" class="hidden text-[10px] font-semibold text-slate-500 mt-0.5"></div>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs">
-          <div class="text-[11px] font-medium text-slate-500">Moyenne du groupe</div>
-          <div id="kpiClassAverage" class="text-lg font-extrabold text-emerald-600">—</div>
-          <div id="kpiClassAverageSub" class="hidden text-[10px] font-semibold text-slate-500 mt-0.5"></div>
-        </div>
-        <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-xs flex items-center justify-between gap-2">
-          <div>
-            <div class="text-[11px] font-medium text-slate-500">Total Pondération</div>
-            <div id="kpiWeightTotal" class="text-lg font-extrabold text-slate-900">—</div>
-            <div id="kpiWeightTotalSub" class="hidden text-[10px] font-semibold text-slate-500 mt-0.5"></div>
-          </div>
-          <button id="btnResetEqualWeights" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Répartir équitablement la pondération (100%) entre les colonnes (par niveau en classe multi-niveau)">
-            Répartir également<span id="lblWeightStatus" class="hidden">Auto</span>
-          </button>
+          <button id="btnClearStudentFilter" type="button" class="hidden px-2 py-1 rounded-lg text-xs bg-slate-100" title="Afficher tous les élèves"></button>
+          <span id="weightWarningBanner" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+            Total des pondérations : <span id="weightTotalVal">0</span>% (doit donner 100%)
+          </span>
         </div>
       </div>
 
@@ -1790,7 +1841,7 @@
         </div>
 
         <!-- Fluid 5-Column Barème Matrix (1 Choice Per Row — Zero Horizontal Scroll) -->
-        <div class="w-full overflow-x-auto custom-scrollbar">
+        <div class="observation-matrix w-full overflow-x-auto custom-scrollbar">
           <table class="rubric-matrix-table">
             <thead>
               <tr class="bg-slate-100 text-slate-800 text-[11px]">
@@ -1888,6 +1939,9 @@
           </div>
         </div>
 
+        <p class="text-xs text-slate-600">Grille locale inspirée des cadres MEQ : certains critères sont regroupés ou ajoutés. Les niveaux A–E et les éléments non cotés sont des repères du carnet, pas une reproduction officielle. Une adaptation autorisée ne détermine pas la cote : jugez les apprentissages selon les attentes et le contexte. Les traces anciennes conservent leurs descriptions d’origine.</p>
+        <p id="prescoRubricNotice" class="hidden text-xs text-amber-900">Préscolaire : le bulletin utilise quatre constats qualitatifs, sans pourcentage officiel. Dans cette grille locale, A et B correspondent au même constat « se développe très bien »; C, D et E correspondent respectivement à « adéquatement », « avec certaines difficultés » et « avec des difficultés importantes ». La cote et le pourcentage calculés ici ne sont pas un constat ministériel : utilisez vos observations et votre jugement pour le bulletin.</p>
+        <p id="firstCycleExplorationNotice" class="hidden text-xs text-amber-900">Au 1er cycle, cette grille est un outil local d’exploration : le cadre d’évaluation de cette discipline vise les 2e et 3e cycles. La cote affichée ici n’est pas un résultat disciplinaire ministériel pour le 1er cycle.</p>
         <!-- Fluid 5-Column Subject Rubric Table (1 Choice Per Row, Printable) -->
         <div class="observation-matrix w-full overflow-x-auto custom-scrollbar">
           <table class="rubric-matrix-table">
@@ -1896,23 +1950,18 @@
                 <th class="p-2 border border-slate-200 w-[15%] font-bold text-left">Critère observé<br>(1 choix / rangée)</th>
                 <th class="p-2 border border-slate-200 w-[17%] text-center bg-emerald-50/70">
                   <div class="font-extrabold text-emerald-900">Niveau A (90-100%)</div>
-                  <div class="text-[10px] text-emerald-700">Initiative et autonomie</div>
                 </th>
                 <th class="p-2 border border-slate-200 w-[17%] text-center bg-blue-50/70">
                   <div class="font-extrabold text-blue-900">Niveau B (75-85%)</div>
-                  <div class="text-[10px] text-blue-700">Autonome en tâche courante</div>
                 </th>
                 <th class="p-2 border border-slate-200 w-[17%] text-center bg-amber-50/70">
                   <div class="font-extrabold text-amber-900">Niveau C (60-70%)</div>
-                  <div class="text-[10px] text-amber-700">Relance ponctuelle</div>
                 </th>
                 <th class="p-2 border border-slate-200 w-[17%] text-center bg-orange-50/70">
                   <div class="font-extrabold text-orange-900">Niveau D (50-55%)</div>
-                  <div class="text-[10px] text-orange-700">Guidage direct, pas à pas</div>
                 </th>
                 <th class="p-2 border border-slate-200 w-[17%] text-center bg-red-50/70">
                   <div class="font-extrabold text-red-900">Niveau E (≤40%)</div>
-                  <div class="text-[10px] text-red-700">Soutien soutenu requis</div>
                 </th>
               </tr>
             </thead>
@@ -1924,8 +1973,7 @@
       </div>
 
       <!-- Cote de la trace observable et indicateurs rapides -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 no-print">
-        <div class="lg:col-span-7 bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
           <div class="flex items-center justify-between border-b border-slate-100 pb-2">
             <h3 class="text-sm font-bold text-slate-900">Cote de la trace observable — <span id="qoBottomStudentName" class="text-indigo-600">Élève</span></h3>
           </div>
@@ -1968,29 +2016,13 @@
           </div>
         </div>
 
-        <!-- Right Column: Recap of current Visual Trace session before saving to Gradebook -->
-        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-4 shadow-xs flex flex-col justify-between space-y-3">
-          <div class="space-y-2">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h3 class="text-sm font-bold text-slate-900">Aperçu des notes</h3>
-            </div>
-            <div id="qoSessionPreviewList" class="divide-y divide-slate-100 max-h-[260px] overflow-y-auto pr-1 text-xs">
-              <!-- Populated dynamically -->
-            </div>
-          </div>
-
-          <button id="btnCommitObsSessionBottom" type="button" class="w-full py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs sm:text-sm shadow-sm transition cursor-pointer flex items-center justify-center gap-1.5">
-            <span id="btnCommitBottomLabel">Enregistrer au carnet et retourner</span>
-          </button>
-        </div>
-      </div>
     </section>
 
     <!-- VIEW 4: LISTE D'ÉLÈVES & ADAPTATIONS À LA PIÈCE -->
     <section id="viewStudents" class="hidden space-y-4">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div class="grid grid-cols-1 gap-4">
         <!-- Manage Students & Per-Student Adaptations -->
-        <div class="student-manager-card lg:col-span-8 bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+        <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
           <img class="student-manager-atmosphere" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
           <div class="flex flex-wrap items-center gap-2">
             <div class="flex items-center gap-2">
@@ -2026,51 +2058,118 @@
           </div>
         </div>
 
-        <!-- Official Reference Links -->
-        <div class="lg:col-span-4 space-y-3">
-          <details class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs">
-            <summary class="text-sm font-bold text-slate-800 cursor-pointer">Références pédagogiques et sources</summary>
-            <div class="mt-3 space-y-2.5">
-            <h3 class="text-xs font-bold text-slate-700">Référentiels du PFEQ</h3>
-            <ul class="space-y-1.5 text-xs text-slate-700">
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Mathématique (C1 & C2)</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Français (Lecture, Écriture, Oral)</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Culture et citoyenneté québécoise (CCQ)</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Science et technologie</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Géographie, histoire et éducation à la citoyenneté (GHEC)</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="flex items-center justify-between p-1.5 rounded bg-slate-50">
-                <span><strong>Art dramatique (C1/C2 & C3)</strong></span>
-                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">PDF ↗</a>
-              </li>
-              <li class="p-1.5 rounded bg-slate-50">
-                <strong>Échelles des niveaux de compétence</strong>
-                <div class="mt-1 flex flex-wrap gap-3">
-                  <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-1erCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">1er cycle ↗</a>
-                  <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-2eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">2e cycle ↗</a>
-                  <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-3eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 font-semibold underline">3e cycle ↗</a>
-                </div>
-              </li>
-            </ul>
-          </div>
-          </details>
-        </div>
       </div>
     </section>
+
+    <dialog id="referencesDialog" aria-labelledby="referencesTitle" class="no-print rounded-xl border border-slate-200 p-4 shadow-xl text-slate-800" style="width:min(720px, 94vw); max-height:85vh; overflow:auto">
+      <div class="flex items-center justify-between gap-3">
+        <h2 id="referencesTitle" class="text-base font-bold">Informations pédagogiques</h2>
+        <button id="btnCloseReferences" type="button" class="px-2 py-1 rounded-lg bg-slate-100" aria-label="Fermer">✕</button>
+      </div>
+      <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
+        <summary class="text-sm font-bold cursor-pointer">Adaptation ou modification : quelle différence ?</summary>
+        <div class="mt-3 space-y-2 text-xs leading-relaxed">
+          <p><strong>Adaptation :</strong> on ajuste les moyens ou les conditions pour répondre aux besoins de l’élève, sans changer les attentes par rapport aux exigences du PFEQ. Par exemple, accorder du temps supplémentaire ou permettre un outil d’aide, lorsque son utilisation est compatible avec ce qui est évalué.</p>
+          <p><strong>Modification :</strong> on change les attentes par rapport aux exigences du PFEQ pour l’élève. Par exemple, en mathématique, évaluer des apprentissages d’un cycle antérieur plutôt que les attentes normalement visées pour son niveau. Ce n’est pas simplement une tâche plus courte ou un outil différent.</p>
+          <p>La modification est exceptionnelle : elle découle d’une analyse concertée des besoins et s’inscrit dans la démarche du plan d’intervention. Elle peut avoir des conséquences sur le parcours scolaire et la communication des résultats. Vérifiez les règles applicables avec l’équipe-école.</p>
+          <p>La flexibilité pédagogique, offerte au quotidien à tous les élèves, est distincte de ces mesures. Ces trois formes ne constituent pas une suite obligatoire d’étapes. Les marqueurs du carnet documentent une situation; ils ne remplacent ni le plan d’intervention ni le jugement professionnel.</p>
+          <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differencitation-pedago-outil-complementaire3.pdf" target="_blank" rel="noopener noreferrer">MEQ — outil sur l’adaptation et la modification ↗</a>
+        </div>
+      </details>
+      <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
+        <summary class="text-sm font-bold text-slate-800 cursor-pointer">Références pédagogiques et sources</summary>
+        <div class="mt-3 space-y-2 text-xs text-slate-700">
+          <p>Choisissez une matière pour afficher ses documents officiels.</p>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Mathématique</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/mathematique" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Français</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études actuel ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation actuel ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-Programme-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme actualisé (obligatoire en 2027-2028) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/francais-langue-enseignement" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Culture et citoyenneté québécoise</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-culture-citoyennete-quebecoise-Primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/culture-citoyennete-quebecoise" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Science et technologie</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation (2e et 3e cycles) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/science-technologie" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Géographie, histoire et éducation à la citoyenneté</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation (2e et 3e cycles) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/geographie-histoire-education-citoyennete" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Art dramatique</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/art-dramatique" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Arts plastiques</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluatioon-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/arts-plastiques" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Éducation préscolaire</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/prescolaire/Programme-cycle-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Programme-cycle ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/prescolaire/Prescolaire-tableau-domaines-competences.pdf" target="_blank" rel="noopener noreferrer">Domaines et compétences ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/prescolaire/Cadre-evaluation-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/education-prescolaire" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+            <p class="mt-2">Le programme-cycle propose des éléments d’observation plutôt qu’une progression des apprentissages par année.</p>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Ressources générales et échelles</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differenciation-pedagogique.pdf" target="_blank" rel="noopener noreferrer">MEQ — Différenciation pédagogique ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Guide-art-tous-sens.pdf" target="_blank" rel="noopener noreferrer">L’art dans tous les sens — guide pour le domaine des arts ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire.pdf" target="_blank" rel="noopener noreferrer">Échelles du primaire de 2002 ↗</a></li>
+              <li>Échelles :
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-1erCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">1er cycle ↗</a> ·
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-2eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">2e cycle ↗</a> ·
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-3eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">3e cycle ↗</a>
+              </li>
+            </ul>
+          </details>
+        </div>
+      </details>
+    </dialog>
 
     <!-- VIEW 5: BULLETIN GLOBAL & BILAN FACTUEL ANNUEL DE L'ÉLÈVE -->
     <section id="viewGlobalReport" class="hidden space-y-4">
@@ -2431,12 +2530,13 @@
 
     // Marqueurs rapides sur cellule : sobres, typographiques, monochromes (ton sur ton)
     const CELL_FLAGS = [
-      { code: 'AIDE',  label: 'Avec aide / étayage',     hint: 'Réalisé avec guidage ou soutien de l’adulte' },
-      { code: 'T+',    label: 'Temps supplémentaire',    hint: 'Réalisé avec période prolongée' },
-      { code: 'ADAPT', label: 'Tâche adaptée / allégée', hint: 'Format, quantité ou consigne adaptés pour l’élève' },
-      { code: 'OUTIL', label: 'Outils d’aide utilisés',  hint: 'Réalisé avec outil techno, référentiel ou manipulation' },
-      { code: 'REP',   label: 'Reprise / corrigé',       hint: 'Travail repris ou bonifié' },
-      { code: 'ABS',   label: 'Absent / à reprendre',    hint: 'Absence lors de l’évaluation' }
+      { code: 'AIDE',  group: 'adaptation', label: 'Avec aide / étayage', hint: 'Soutien compatible avec la compétence évaluée' },
+      { code: 'T+',    group: 'adaptation', label: 'Temps supplémentaire', hint: 'Réalisé avec période prolongée' },
+      { code: 'ADAPT', group: 'adaptation', label: 'Conditions adaptées', hint: 'Conditions adaptées sans modifier les attentes' },
+      { code: 'OUTIL', group: 'adaptation', label: 'Outils d’aide utilisés', hint: 'Outil compatible avec la compétence évaluée' },
+      { code: 'MOD',   group: 'modification', label: 'Attentes modifiées', hint: 'Attentes modifiées selon le plan d’intervention' },
+      { code: 'REP',   group: 'autre', label: 'Reprise / corrigé', hint: 'Travail repris ou bonifié' },
+      { code: 'ABS',   group: 'autre', label: 'Absent / à reprendre', hint: 'Absence lors de l’évaluation' }
     ];
     const VALID_CELL_FLAG_CODES = new Set(CELL_FLAGS.map(f => f.code));
 
@@ -2524,8 +2624,7 @@
 
     // =========================================================================
     // GRILLES OBSERVABLES PFEQ / MEQ PAR CYCLE (1er, 2e et 3e CYCLE)
-    // Style télégraphique : 100 % fidèle aux critères MEQ, rapide à balayer en classe
-    // Structure : 3 critères cotés au bulletin + 1 critère formatif (*) non coté
+    // Grilles locales inspirées des cadres MEQ; certains critères sont regroupés ou ajoutés.
     // =========================================================================
     function observableCriterion(id, title, levels, options = {}) {
       return {
@@ -3112,7 +3211,7 @@
         shortName: 'Arts plast. • Créer (C1–C2)',
         fullName: 'Arts plastiques — C1/C2 : Réaliser des créations plastiques personnelles et médiatiques',
         icon: 'AC', sharedCycles: true,
-        refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-arts-plastiques-primaire.pdf',
+        refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluatioon-arts-plastiques-primaire.pdf',
         cssmbUrl: 'https://sre.servicescsmb.com/disciplines/',
         criteria: [
           observableCriterion('ap1_langage', '1. Utilisation des connaissances liées au langage plastique', lv(
@@ -3147,7 +3246,7 @@
         shortName: 'Arts plast. • Apprécier (C3)',
         fullName: 'Arts plastiques — C3 : Apprécier des œuvres d’art, des objets culturels et des images médiatiques',
         icon: 'AA', sharedCycles: true,
-        refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-arts-plastiques-primaire.pdf',
+        refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluatioon-arts-plastiques-primaire.pdf',
         cssmbUrl: 'https://sre.servicescsmb.com/disciplines/',
         criteria: [
           observableCriterion('ap3_vocab', '1. Maîtrise des connaissances et vocabulaire disciplinaire', lv(
@@ -3177,6 +3276,37 @@
         ]
       }
     );
+
+    const artPlasticCreation = ALL_SUBJECTS_CONFIG.find(subject => subject.id === 'art_plast_c1c2');
+    const LEGACY_ART_PLASTIC_CREATION = artPlasticCreation.criteria;
+    artPlasticCreation.criteria = [
+      observableCriterion('ap1_langage', '1. Utilisation des connaissances liées au langage plastique', lv(
+        'Combine les éléments du langage plastique de façon précise et expressive selon son intention.',
+        'Utilise adéquatement les éléments du langage plastique selon son intention.',
+        'Utilise des éléments de base du langage plastique qui sont généralement liés à son intention.',
+        'Utilise quelques éléments du langage plastique, mais leur lien avec son intention reste peu clair.',
+        'Utilise peu d’éléments du langage plastique ou leur lien avec son intention est difficile à percevoir.')),
+      observableCriterion('ap1_gestes', '2. Utilisation des gestes transformateurs', lv(
+        'Choisit et combine des gestes adaptés aux matériaux et aux outils avec précision.',
+        'Utilise les gestes transformateurs appropriés aux matériaux et aux outils proposés.',
+        'Utilise les gestes essentiels; certains choix ou gestes restent à préciser.',
+        'Utilise quelques gestes appropriés, mais leur application reste souvent imprécise.',
+        'Utilise rarement des gestes adaptés aux matériaux et aux outils.')),
+      observableCriterion('ap1_proposition', '3. Cohérence de la production avec la proposition de création', lv(
+        'Réalise une production très cohérente avec l’intention et les contraintes de la proposition.',
+        'Réalise une production cohérente avec l’intention et les contraintes de la proposition.',
+        'Réalise une production généralement liée à la proposition, malgré certaines incohérences.',
+        'Réalise une production dont le lien avec la proposition est partiel ou peu clair.',
+        'Réalise une production dont le lien avec la proposition est difficile à percevoir.')),
+      observableCriterion('ap1_authenticite', '4. Authenticité de la production', lv(
+        'Développe une image expressive et personnelle, en s’éloignant des solutions convenues.',
+        'Réalise une image expressive où ses choix personnels sont visibles.',
+        'Intègre quelques choix personnels dans sa réalisation.',
+        'La réalisation montre peu de choix personnels ou reprend surtout des solutions proposées.',
+        'Les choix personnels et l’intention expressive sont difficilement perceptibles.')),
+      { ...LEGACY_ART_PLASTIC_CREATION[3], title: 'Justesse du retour réflexif (*)' },
+      { ...LEGACY_ART_PLASTIC_CREATION[1], title: 'Démarche de création', formativeOnly: true }
+    ];
 
     // Préscolaire : 5 compétences du Programme-cycle de l'éducation préscolaire
     const PRESCO_FREQ = () => lv(
@@ -3276,8 +3406,8 @@
           }, { formativeOnly: true })
         ],
         fra_lecture: [
-          observableCriterion('lec_comp', '1. Compréhension des éléments significatifs (explicite et implicite)', {
-            A: 'Lit avec fluidité, repère toute l’information explicite et réussit les inférences simples (ex. : explique pourquoi le personnage pleure).',
+          observableCriterion('lec_comp', '1. Compréhension des éléments significatifs explicites', {
+            A: 'Repère avec précision les informations explicites pertinentes et les relie aux questions posées.',
             B: 'Repère seul l’information explicite (qui, quoi, où) et fait des liens simples entre les parties du texte.',
             C: 'Relève l’essentiel de l’information explicite, en s’aidant des illustrations ou après une relecture.',
             D: 'Repère quelques informations explicites avec une aide au décodage et un guidage de l’adulte.',
@@ -3345,7 +3475,7 @@
           }),
           observableCriterion('ora_part', '2. Adaptation à la situation de communication', {
             A: 'Prend la parole avec aisance, respecte le sujet et ajuste bien le volume de sa voix au groupe.',
-            B: 'Adapte seul son message et sa voix (volume, débit) à la consigne et au groupe.',
+            B: 'Adapte seul son message et le volume de sa voix à la consigne et au groupe.',
             C: 'Transmet une idée liée au sujet et ajuste sa voix après un rappel de l’enseignant.',
             D: 'Prend la parole seulement si l’adulte le rassure et le guide, par des questions ou des amorces.',
             E: 'Adapte très difficilement sa prise de parole malgré le soutien et les encouragements de l’adulte.'
@@ -3360,7 +3490,7 @@
           observableCriterion('ora_strategies', '4. Recours à des stratégies de communication orale (*)', {
             A: 'Ajuste spontanément sa voix, utilise ses supports visuels et demande de l’aide quand il en a besoin.',
             B: 'Utilise efficacement ses repères visuels (images, mots-clés) et parle de façon audible pour tout le groupe.',
-            C: 'Utilise son support visuel ou ajuste sa voix (plus fort, plus lentement) après un rappel ponctuel.',
+            C: 'Utilise son support visuel ou ajuste le volume de sa voix après un rappel ponctuel.',
             D: 'A besoin que l’adulte modèle et guide l’utilisation de ses stratégies orales (support, voix).',
             E: 'Mobilise très difficilement les stratégies orales malgré les supports visuels et le modelage de l’adulte.'
           }, { formativeOnly: true })
@@ -3609,7 +3739,7 @@
         ],
         fra_ecriture: [
           observableCriterion('ecr_adapt', '1. Adaptation à la situation d’écriture et cohérence du texte', {
-            A: 'Développe des idées riches et pertinentes; relie ses paragraphes avec des marqueurs de relation et des reprises de mots.',
+            A: 'Développe des idées riches et pertinentes, organisées clairement en paragraphes.',
             B: 'Respecte le sujet et l’intention d’écriture; produit un texte cohérent bien divisé en paragraphes.',
             C: 'Respecte le sujet et organise des idées logiques; le découpage en paragraphes est parfois maladroit.',
             D: 'Développe peu ses idées ou les place en désordre; l’adulte le guide étape par étape.',
@@ -3940,6 +4070,207 @@
       }
     };
 
+    const LEGACY_FRENCH_RUBRICS = {};
+    [1, 2, 3].forEach(cycle => {
+      const rubrics = cycle === 3
+        ? Object.fromEntries(ALL_SUBJECTS_CONFIG.filter(s => ['fra_lecture', 'fra_ecriture'].includes(s.id)).map(s => [s.id, s.criteria]))
+        : CYCLE_OBSERVABLE_RUBRICS[cycle];
+      const lecture = rubrics.fra_lecture;
+      const ecriture = rubrics.fra_ecriture;
+      LEGACY_FRENCH_RUBRICS[cycle] = { fra_lecture: lecture, fra_ecriture: ecriture };
+
+      const revisedLecture = [
+        lecture[0],
+        lecture[1],
+        observableCriterion('lec_reac', '3. Justification des réactions au texte', lv(
+          'Explique ses réactions avec des liens précis et pertinents au texte ou à son expérience.',
+          'Justifie sa réaction par un lien pertinent au texte ou à son expérience.',
+          'Justifie sa réaction par une raison simple liée au texte ou à son expérience.',
+          'Exprime une réaction, mais la raison donnée est peu liée au texte ou à son expérience.',
+          'Exprime difficilement une réaction ou une raison qui lui est liée.')),
+        observableCriterion('lec_jugement', '4. Jugement critique sur les textes littéraires', cycle === 1 ? lv(
+          'Exprime clairement son opinion sur l’œuvre et précise ses premières impressions.',
+          'Exprime son opinion sur l’œuvre à partir de ses premières impressions.',
+          'Exprime une opinion simple sur l’œuvre.',
+          'Exprime une opinion peu claire sur l’œuvre.',
+          'Exprime difficilement une opinion sur l’œuvre.') : lv(
+          'Formule une appréciation nuancée et l’appuie sur des caractéristiques pertinentes de l’œuvre.',
+          'Formule une appréciation et l’appuie sur des caractéristiques pertinentes de l’œuvre.',
+          'Exprime une appréciation simple liée à une caractéristique de l’œuvre.',
+          'Exprime une appréciation dont le lien avec l’œuvre demeure peu clair.',
+          'Exprime difficilement une appréciation liée à l’œuvre.')),
+        { ...lecture[3], title: 'Recours à des stratégies appropriées (*)' }
+      ];
+      const revisedEcriture = [
+        observableCriterion('ecr_adapt', '1. Adaptation à la situation d’écriture', lv(
+          'Respecte avec précision le sujet et les éléments pertinents de la situation d’écriture.',
+          'Respecte le sujet et les éléments pertinents de la situation d’écriture.',
+          'Respecte généralement le sujet et les éléments essentiels de la situation d’écriture.',
+          'Respecte partiellement le sujet ou les éléments essentiels de la situation d’écriture.',
+          'Le texte est difficilement lié au sujet ou à la situation d’écriture.')),
+        observableCriterion('ecr_coherence', '2. Cohérence du texte', lv(
+          'Organise et relie les idées avec clarté et constance.',
+          'Organise les idées dans un ordre logique et assure des liens compréhensibles.',
+          'Présente des idées généralement compréhensibles malgré quelques ruptures.',
+          'Présente des idées dont l’ordre ou les liens rendent le texte difficile à suivre.',
+          'Les idées ou leur organisation rendent le texte très difficile à comprendre.'), { formativeOnly: cycle === 1 }),
+        observableCriterion('ecr_vocab', '3. Utilisation d’un vocabulaire approprié', lv(
+          'Choisit des mots précis et variés qui servent bien le sens du texte.',
+          'Choisit des mots appropriés au sujet et au sens du texte.',
+          'Utilise des mots généralement appropriés, malgré quelques imprécisions.',
+          'Utilise plusieurs mots imprécis ou peu appropriés au sens recherché.',
+          'Les mots choisis rendent souvent le sens difficile à comprendre.'), { formativeOnly: cycle === 1 }),
+        observableCriterion('ecr_syntaxe', '4. Construction des phrases et ponctuation', lv(
+          'Construit et ponctue ses phrases avec précision selon les apprentissages visés.',
+          'Construit et ponctue correctement la plupart de ses phrases.',
+          'Construit des phrases généralement compréhensibles malgré certaines erreurs.',
+          'Plusieurs erreurs de construction ou de ponctuation nuisent à la compréhension.',
+          'Les erreurs de construction ou de ponctuation rendent le texte très difficile à comprendre.')),
+        observableCriterion('ecr_ortho', '5. Orthographe d’usage et orthographe grammaticale', lv(
+          'Respecte avec précision les conventions orthographiques étudiées.',
+          'Respecte la plupart des conventions orthographiques étudiées.',
+          'Respecte les conventions essentielles étudiées malgré certaines erreurs.',
+          'Commet des erreurs fréquentes dans les conventions étudiées.',
+          'Respecte rarement les conventions orthographiques étudiées.')),
+        observableCriterion('ecr_presentation', 'Qualité de la présentation (*)', lv(
+          'Présente un texte très lisible et soigneusement organisé.',
+          'Présente un texte lisible et soigné.',
+          'Présente un texte généralement lisible.',
+          'La présentation nuit parfois à la lisibilité.',
+          'La présentation rend le texte très difficile à lire.'), { formativeOnly: true }),
+        observableCriterion('ecr_strategies', 'Recours à des stratégies appropriées (*)', lv(
+          'Choisit et ajuste efficacement les stratégies d’écriture étudiées.',
+          'Utilise efficacement les stratégies d’écriture étudiées.',
+          'Utilise certaines stratégies d’écriture étudiées.',
+          'Utilise peu les stratégies d’écriture étudiées ou les applique de façon incomplète.',
+          'Utilise très difficilement les stratégies d’écriture étudiées.'), { formativeOnly: true })
+      ];
+      if (cycle === 3) {
+        ALL_SUBJECTS_CONFIG.find(s => s.id === 'fra_lecture').criteria = revisedLecture;
+        ALL_SUBJECTS_CONFIG.find(s => s.id === 'fra_ecriture').criteria = revisedEcriture;
+      } else {
+        rubrics.fra_lecture = revisedLecture;
+        rubrics.fra_ecriture = revisedEcriture;
+      }
+    });
+
+    const V2_ART_PLASTIC_CREATION = artPlasticCreation.criteria;
+    artPlasticCreation.criteria = V2_ART_PLASTIC_CREATION.map(criterion => criterion.id === 'ap1_proposition'
+      ? observableCriterion('ap1_proposition', '3. Cohérence de l’organisation des éléments', lv(
+        'Organise les éléments plastiques avec précision et cohérence en lien avec la proposition.',
+        'Organise les éléments plastiques de façon cohérente en lien avec la proposition.',
+        'Organise des éléments généralement liés entre eux et à la proposition.',
+        'Organise des éléments dont les liens entre eux ou avec la proposition sont peu clairs.',
+        'L’organisation des éléments et son lien avec la proposition sont difficiles à percevoir.'))
+      : criterion);
+
+    const LEGACY_DRAMA_CREATION = {};
+    [1, 2, 3].forEach(cycle => {
+      const subject = ALL_SUBJECTS_CONFIG.find(s => s.id === 'art_dram_c1c2');
+      const oldCriteria = cycle === 3 ? subject.criteria : CYCLE_OBSERVABLE_RUBRICS[cycle].art_dram_c1c2;
+      LEGACY_DRAMA_CREATION[cycle] = oldCriteria;
+      const updated = [
+        ...oldCriteria.slice(0, 3),
+        observableCriterion('ad1_sequence', '4. Respect des caractéristiques de la séquence dramatique', lv(
+          'Respecte avec précision les indications de jeu et rend la séquence particulièrement expressive.',
+          'Respecte les indications de jeu et les caractéristiques expressives de la séquence.',
+          'Respecte les principales indications de jeu et certaines caractéristiques expressives.',
+          'Respecte partiellement les indications de jeu ou les caractéristiques expressives.',
+          'Les indications de jeu et les caractéristiques expressives sont difficilement perceptibles.')),
+        oldCriteria[3]
+      ];
+      if (cycle === 3) subject.criteria = updated;
+      else CYCLE_OBSERVABLE_RUBRICS[cycle].art_dram_c1c2 = updated;
+    });
+
+    const V3_SOCIAL_DIVERSITY = {};
+    [2, 3].forEach(cycle => {
+      const subject = ALL_SUBJECTS_CONFIG.find(s => s.id === 'us_diversite');
+      const oldCriteria = cycle === 3 ? subject.criteria : CYCLE_OBSERVABLE_RUBRICS[cycle].us_diversite;
+      V3_SOCIAL_DIVERSITY[cycle] = oldCriteria;
+      const updated = oldCriteria.map(criterion => criterion.id === 'us3_vision'
+        ? observableCriterion('us3_vision', '3. Mise en relation des caractéristiques des sociétés et des territoires', lv(
+          'Explique avec précision plusieurs liens entre les caractéristiques des sociétés comparées et leurs territoires, à partir de faits pertinents.',
+          'Explique un lien pertinent entre une caractéristique des sociétés comparées et leur territoire, à partir de faits étudiés.',
+          'Établit un lien simple et généralement juste entre une caractéristique d’une société et son territoire.',
+          'Établit un lien partiel ou imprécis entre une caractéristique d’une société et son territoire.',
+          'Établit difficilement un lien pertinent entre les caractéristiques étudiées et le territoire.'))
+        : criterion);
+      if (cycle === 3) subject.criteria = updated;
+      else CYCLE_OBSERVABLE_RUBRICS[cycle].us_diversite = updated;
+    });
+
+    // Les anciennes traces conservent leurs descriptions et leur calcul d'origine.
+    const V4_OBSERVABLE_RUBRICS = Object.fromEntries(ALL_SUBJECTS_CONFIG.map(subject => [
+      subject.id,
+      {
+        P: subject.prescoOnly ? subject.criteria : [],
+        1: subject.prescoOnly ? [] : subject.sharedCycles ? subject.criteria : CYCLE_OBSERVABLE_RUBRICS[1][subject.id] || [],
+        2: subject.prescoOnly ? [] : subject.sharedCycles ? subject.criteria : CYCLE_OBSERVABLE_RUBRICS[2][subject.id] || [],
+        3: subject.prescoOnly ? [] : subject.criteria
+      }
+    ]));
+
+    // Repères locaux centrés sur la production observée, avec les adaptations permises.
+    const OBSERVABLE_PERFORMANCE_LEVELS = {
+      c1_comp: ['Repère les données principales et comprend l’essentiel de la question.', 'Repère quelques données pertinentes, mais omet ou confond des éléments importants.', 'Confond les données et la question ou ne repère pas les éléments essentiels.'],
+      c1_mob: ['Choisit les concepts et processus essentiels; quelques erreurs subsistent.', 'Applique certains processus pertinents, mais plusieurs choix ou étapes sont erronés.', 'Choisit ou applique des processus qui ne permettent pas de résoudre la situation.'],
+      c1_traces: ['Présente les étapes essentielles; certaines traces manquent ou sont imprécises.', 'Présente une démarche incomplète ou difficile à suivre.', 'Présente très peu de traces permettant de comprendre la démarche.'],
+      c1_valid: ['Vérifie une partie de la solution ou de sa vraisemblance.', 'Vérifie un élément, sans tenir compte de plusieurs aspects importants.', 'La vérification de la solution demeure difficilement perceptible.'],
+      c2_analyse: ['Repère les éléments essentiels et le concept principal de la situation.', 'Repère certains éléments, mais manque des relations ou concepts importants.', 'Ne dégage pas les éléments ou les concepts essentiels de la situation.'],
+      c2_application: ['Applique les processus essentiels, malgré quelques erreurs.', 'Applique une partie des processus, mais commet plusieurs erreurs importantes.', 'Applique des processus qui ne conviennent pas ou ne mène pas les étapes essentielles à terme.'],
+      c2_justif: ['Donne une justification simple ou partielle liée à la réponse.', 'Donne une justification imprécise ou peu liée à la réponse.', 'Ne fournit pas de justification mathématique pertinente.'],
+      c2_communication: ['Utilise les termes et symboles de base, malgré certaines imprécisions.', 'Utilise plusieurs termes ou symboles de façon imprécise.', 'Les termes et symboles employés rendent le message difficile à comprendre.'],
+      lec_comp: ['Dégage les informations essentielles pertinentes au texte.', 'Dégage quelques informations, mais en omet ou confond plusieurs importantes.', 'Dégage difficilement les informations essentielles du texte.'],
+      lec_interp: ['Propose une interprétation simple liée au texte.', 'Propose une interprétation partielle ou peu liée aux indices du texte.', 'Propose difficilement une interprétation liée au texte.'],
+      lec_strat: ['Utilise certaines stratégies de lecture étudiées.', 'Utilise peu de stratégies ou les applique de façon incomplète.', 'Le recours aux stratégies étudiées est difficilement perceptible.'],
+      ora_regles: ['Réagit à l’essentiel des propos entendus.', 'Réagit partiellement aux propos entendus ou s’en éloigne souvent.', 'Les réactions montrent difficilement un lien avec les propos entendus.'],
+      ora_part: ['Transmet l’essentiel du message en tenant généralement compte de la situation.', 'Adapte partiellement son message à la situation de communication.', 'Le message est difficilement adapté à la situation de communication.'],
+      ora_voix: ['Formule un message généralement compréhensible avec les mots étudiés.', 'Plusieurs formulations ou mots imprécis nuisent à la compréhension.', 'Les formulations ou les mots rendent le message très difficile à comprendre.'],
+      ora_strategies: ['Utilise certaines stratégies de communication étudiées.', 'Utilise peu de stratégies ou les applique de façon incomplète.', 'Le recours aux stratégies étudiées est difficilement perceptible.'],
+      ccq_obs: ['Utilise les connaissances essentielles liées à la réalité étudiée.', 'Mobilise quelques connaissances, mais plusieurs sont incomplètes ou imprécises.', 'Mobilise difficilement les connaissances essentielles liées à la réalité étudiée.'],
+      ccq_ethique: ['Repère des informations pertinentes et effectue une comparaison simple.', 'Repère quelques informations, mais leur traitement demeure partiel ou imprécis.', 'Repère ou traite difficilement les informations pertinentes.'],
+      ccq_comprehension: ['Formule un constat ou une réponse simple et pertinente sur la réalité étudiée.', 'Formule un constat ou une réponse partielle dont le lien avec la réalité étudiée est peu clair.', 'Formule difficilement un constat ou une réponse pertinente sur la réalité étudiée.'],
+      ccq_dialogue: ['Participe au dialogue et prend en compte certains propos des autres.', 'Participe au dialogue, mais prend peu en compte les propos des autres.', 'Participe difficilement au dialogue ou prend rarement en compte les propos des autres.'],
+      sci_prob: ['Repère la question et propose une hypothèse ou solution simple et plausible.', 'Repère une partie du problème, mais l’hypothèse ou la solution est imprécise.', 'Décrit difficilement le problème ou ne propose pas de piste pertinente.'],
+      sci_demarche: ['Réalise les étapes essentielles de la démarche et manipule généralement le matériel de façon appropriée.', 'Réalise une partie de la démarche, avec plusieurs étapes ou manipulations imprécises.', 'La démarche ou les manipulations essentielles sont difficilement réalisées.'],
+      sci_explic: ['Relie une observation ou un résultat à une notion étudiée.', 'Présente un lien partiel ou imprécis entre les résultats et les notions étudiées.', 'Relie difficilement les résultats aux connaissances étudiées.'],
+      sci_strategies: ['Utilise certaines stratégies d’exploration ou de consignation.', 'Utilise peu de stratégies ou consigne des observations incomplètes.', 'L’utilisation de stratégies ou la consignation des observations est difficilement perceptible.'],
+      sci2_demarche: ['Réalise les étapes essentielles de la démarche.', 'Réalise une partie de la démarche, mais omet ou confond plusieurs étapes.', 'La réalisation des étapes essentielles de la démarche est difficilement perceptible.'],
+      sci2_outils: ['Utilise les outils essentiels de façon généralement appropriée et sécuritaire.', 'Utilise certains outils, mais plusieurs gestes ou règles de sécurité sont imprécis.', 'Utilise difficilement les outils ou techniques nécessaires de façon appropriée.'],
+      sci2_connaissances: ['Utilise les notions essentielles liées à l’objet ou au procédé étudié.', 'Mobilise quelques notions, mais plusieurs sont incomplètes ou imprécises.', 'Mobilise difficilement les notions essentielles liées à l’objet ou au procédé.'],
+      sci2_precision: ['Consigne les observations ou mesures essentielles, malgré quelques omissions.', 'Consigne des observations ou mesures incomplètes ou imprécises.', 'Consigne très peu d’observations ou de mesures exploitables.'],
+      sci3_explic: ['Formule une explication ou une solution simple liée aux observations.', 'Formule une explication partielle ou peu liée aux observations.', 'Formule difficilement une explication ou une solution pertinente.'],
+      sci3_terminologie: ['Utilise les termes et conventions essentiels, malgré quelques imprécisions.', 'Utilise plusieurs termes ou conventions de façon imprécise.', 'Utilise difficilement les termes et conventions essentiels.'],
+      sci3_connaissances: ['Utilise une notion pertinente pour appuyer son explication.', 'Présente des liens partiels ou imprécis avec les notions étudiées.', 'Relie difficilement son explication aux notions étudiées.'],
+      sci3_representation: ['Présente les éléments essentiels dans un schéma, un tableau ou un graphique.', 'La représentation est incomplète ou comporte plusieurs imprécisions.', 'La représentation permet difficilement de comprendre les résultats.'],
+      us_oi: ['Situe les repères principaux et rappelle des faits essentiels.', 'Situe quelques repères ou rappelle certains faits, avec plusieurs imprécisions.', 'Situe difficilement les repères ou rappelle peu de faits pertinents.'],
+      us_org: ['Décrit une caractéristique pertinente de la société et de son territoire.', 'Décrit quelques caractéristiques, mais plusieurs sont incomplètes ou imprécises.', 'Décrit difficilement les caractéristiques pertinentes de la société et de son territoire.'],
+      us_causalite: ['Établit un lien simple et pertinent entre des faits étudiés.', 'Présente un lien partiel ou imprécis entre les faits étudiés.', 'Établit difficilement un lien pertinent entre les faits étudiés.'],
+      us_div: ['Utilise une carte, une frise ou une légende pour repérer une information essentielle.', 'Utilise les documents de façon partielle ou avec plusieurs imprécisions.', 'Repère difficilement l’information pertinente dans les documents.'],
+      us2_connaissances: ['Rappelle les faits essentiels de la société étudiée.', 'Rappelle quelques faits, mais plusieurs repères sont imprécis ou manquants.', 'Rappelle difficilement des faits pertinents sur la société étudiée.'],
+      us2_changements: ['Relève un changement pertinent et en indique une cause ou une conséquence simple.', 'Relève un changement, mais la cause ou la conséquence demeure imprécise.', 'Relève difficilement un changement pertinent entre les périodes étudiées.'],
+      us2_interpretation: ['Explique simplement un changement à partir d’un fait ou d’un document pertinent.', 'Propose une explication partielle ou peu appuyée sur des faits pertinents.', 'Explique difficilement le changement à partir des faits étudiés.'],
+      us2_traces: ['Repère une trace actuelle liée à la société ou au changement étudié.', 'Repère une trace, mais son lien avec la société étudiée demeure imprécis.', 'Repère difficilement une trace liée à la société ou au changement étudié.'],
+      us3_connaissances: ['Rappelle les caractéristiques essentielles des sociétés comparées.', 'Rappelle quelques caractéristiques, avec plusieurs imprécisions ou omissions.', 'Rappelle difficilement des caractéristiques pertinentes des sociétés comparées.'],
+      us3_comparaison: ['Relève une ressemblance ou une différence pertinente entre les sociétés.', 'Compare certains éléments, mais plusieurs liens sont imprécis ou incomplets.', 'Établit difficilement une comparaison pertinente entre les sociétés.'],
+      us3_techniques: ['Utilise une carte ou une frise pour situer les sociétés étudiées.', 'Utilise la carte ou la frise de façon partielle ou avec plusieurs imprécisions.', 'Situe difficilement les sociétés à partir des documents proposés.'],
+      ad1_org: ['Utilise les éléments essentiels du langage dramatique dans la séquence.', 'Utilise quelques éléments, mais leur lien avec la séquence demeure imprécis.', 'Utilise difficilement les éléments essentiels du langage dramatique dans la séquence.'],
+      ad1_jeu: ['Utilise une technique de jeu ou un mode de théâtralisation étudié.', 'Utilise partiellement une technique ou un mode de théâtralisation étudié.', 'Utilise difficilement les techniques et modes de théâtralisation étudiés.'],
+      ad1_conventions: ['Organise les actions essentielles dans une séquence généralement cohérente.', 'Organise une séquence partielle dont plusieurs liens entre les actions sont peu clairs.', 'L’organisation des actions et la continuité de la séquence sont difficiles à percevoir.'],
+      ad1_reflexion: ['Nomme une étape ou un choix de sa démarche.', 'Décrit partiellement sa démarche ou ses choix.', 'Décrit difficilement sa démarche ou ses choix.'],
+      ad3_vocab: ['Nomme un élément pertinent de l’œuvre avec le vocabulaire étudié.', 'Nomme quelques éléments, avec plusieurs imprécisions de vocabulaire.', 'Nomme difficilement les éléments observés avec le vocabulaire étudié.'],
+      ad3_liens: ['Relie une impression ou un effet à un élément observé dans l’œuvre.', 'Propose un lien partiel ou imprécis entre un effet et l’œuvre.', 'Établit difficilement un lien pertinent entre l’œuvre et ses effets.'],
+      ad3_jugement: ['Exprime une appréciation et donne une raison simple liée à l’œuvre.', 'Exprime une appréciation dont la justification est partielle ou peu liée à l’œuvre.', 'Exprime difficilement une appréciation justifiée par des éléments de l’œuvre.'],
+      ad3_observation: ['Observe la séquence et relève certains éléments pertinents.', 'Relève quelques éléments, mais l’observation demeure incomplète.', 'Relève difficilement des éléments pertinents de la séquence observée.'],
+      ap1_retour: ['Nomme une étape ou un choix de sa démarche de création.', 'Décrit partiellement sa démarche ou ses choix de création.', 'Décrit difficilement sa démarche ou ses choix de création.'],
+      ap1_mise: ['Utilise certaines étapes de la démarche de création étudiée.', 'Réalise une démarche partielle dont plusieurs étapes sont peu perceptibles.', 'La démarche de création est difficilement perceptible.'],
+      ap3_vocab: ['Nomme un élément pertinent de l’œuvre avec le vocabulaire étudié.', 'Nomme quelques éléments, avec plusieurs imprécisions de vocabulaire.', 'Nomme difficilement les éléments observés avec le vocabulaire étudié.'],
+      ap3_liens: ['Relie une impression ou un effet à un élément observé dans l’œuvre.', 'Propose un lien partiel ou imprécis entre un effet et l’œuvre.', 'Établit difficilement un lien pertinent entre l’œuvre et ses effets.'],
+      ap3_jugement: ['Exprime une appréciation et donne une raison simple liée à l’œuvre.', 'Exprime une appréciation dont la justification est partielle ou peu liée à l’œuvre.', 'Exprime difficilement une appréciation justifiée par des éléments de l’œuvre.'],
+      ap3_posture: ['Observe l’œuvre et relève certains éléments pertinents.', 'Relève quelques éléments, mais l’observation demeure incomplète.', 'Relève difficilement des éléments pertinents de l’œuvre observée.']
+    };
+
     const CYCLE_RUBRIC_UNAVAILABLE_MESSAGES = {
       sciences_outils: 'Au 1er cycle, la science et la technologie n’est pas à la grille-matières : utilisez l’onglet « Proposer (C1) » pour vos traces.',
       sciences_comm: 'Au 1er cycle, la science et la technologie n’est pas à la grille-matières : utilisez l’onglet « Proposer (C1) » pour vos traces.',
@@ -3996,7 +4327,7 @@
       us_diversite: {
         us3_connaissances: ['Situe les sociétés comparées.', 'Décrit les caractéristiques de chaque société.', 'Rappelle les faits essentiels étudiés.', 'Utilise cartes et lignes du temps.'],
         us3_comparaison: ['Relève des ressemblances.', 'Relève des différences.', 'Explique des causes des différences.', 'Explique des conséquences des différences.'],
-        us3_vision: ['Indique des forces d’une société.', 'Indique des faiblesses d’une société.', 'Présente sa vision de la diversité.', 'Appuie sa vision sur des arguments pertinents.']
+        us3_vision: ['Repère des caractéristiques des sociétés étudiées.', 'Relie une caractéristique au territoire.', 'Utilise des faits pertinents pour expliquer le lien.', 'Compare les liens observés entre les sociétés.']
       },
       sciences_global: {
         sci_prob: ['Décrit le problème ou le phénomène à l’étude.', 'Formule une question ou une hypothèse pertinente.', 'Repère les variables ou les éléments à examiner.', 'Justifie une prédiction à partir de ses connaissances ou observations.'],
@@ -4037,6 +4368,7 @@
       });
       return {
         editingAssignmentId: null,
+        rubricVersion: 5,
         title: '',
         linkTargets: [],
         studentDrafts
@@ -4137,6 +4469,7 @@
       appState.students = next.students;
       appState.terms = next.terms;
       appState.selectedStudentId = null;
+      gbFilter = '';
       appState.activeGroupId = groupId;
       applyActiveSubjects(appState);
       if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0].id;
@@ -4182,7 +4515,7 @@
       };
 
       const subjectIds = [
-        'math_resoudre', 'fra_lecture', 'fra_ecriture', 'fra_oral',
+        'math_resoudre', 'math_raisonner', 'fra_lecture', 'fra_ecriture', 'fra_oral',
         'sciences_global', 'sciences_outils', 'sciences_comm',
         'univers_social', 'us_changement', 'us_diversite',
         'ccq_global',
@@ -4191,12 +4524,13 @@
       ];
 
       const baseScores = [
-        88, 92, 84, 76, 91, 80, 83, 64, 89, 79,
-        82, 90, 78, 81, 93, 80, 85, 68, 92, 77
+        91, 76, 68, 84, 55, 72, 81, 48, 88, 63,
+        73, 95, 58, 79, 65, 86, 52, 75, 92, 69
       ];
 
       const subjectOffsets = {
         math_resoudre: [3, 4, -2, 2, 4, -1, 2, -3, 3, -1, 2, 4, -2, 3, 4, 1, 2, -4, 3, 1],
+        math_raisonner: [-2, 4, 3, -4, 2, 5, -1, -3, 0, 3, -2, 4, 1, -3, 2, 0, 4, -2, 3, -1],
         fra_lecture: [2, 1, 3, -2, 2, 1, 2, -2, 2, 2, 1, 2, 1, -1, 3, 2, 3, -2, 2, 2],
         fra_ecriture: [1, 2, 1, -3, 3, 0, 1, -4, 2, 0, 1, 1, -1, 0, 2, 0, 2, -3, 2, 0],
         fra_oral: [4, 2, 4, 1, 3, 3, 2, -1, 4, 2, 3, 3, 2, 2, 4, 3, 3, 0, 4, 2],
@@ -4231,6 +4565,20 @@
             { title: 'Mini-test : Calcul mental et régularités', outOf: 30, weight: 30, date: '2027-04-18', isObs: false, targetLevels: [] },
             { title: type === 'multi' ? 'Situation-problème finale : Le projet d’école' : 'Situation-problème finale : Le jardin', outOf: 50, weight: 40, date: '2027-05-20', isObs: false, targetLevels: [] },
             { title: 'Bilan observable : Validation et explicitation', outOf: 100, weight: 30, date: '2027-06-02', isObs: true, critPrefix: 'c1', targetLevels: [] }
+          ]
+        },
+        math_raisonner: {
+          '1': [
+            { title: type === 'multi' ? 'Raisonnement : Fractions et nombres décimaux' : 'Raisonnement : Nombres et additions', outOf: 30, weight: 60, date: '2026-10-21', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Choix et application des processus', outOf: 100, weight: 40, date: '2026-11-06', isObs: true, targetLevels: [] }
+          ],
+          '2': [
+            { title: 'Raisonnement : Mesure et géométrie', outOf: 30, weight: 60, date: '2027-02-03', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Justification mathématique', outOf: 100, weight: 40, date: '2027-02-20', isObs: true, targetLevels: [] }
+          ],
+          '3': [
+            { title: type === 'multi' ? 'Raisonnement : Statistique et probabilités' : 'Raisonnement : Données et régularités', outOf: 40, weight: 60, date: '2027-05-21', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Concepts et processus', outOf: 100, weight: 40, date: '2027-06-04', isObs: true, targetLevels: [] }
           ]
         },
         fra_lecture: {
@@ -4435,6 +4783,11 @@
           'Bonne compréhension des situations-problèmes; consolider la vérification des calculs.',
           'Progrès constants. L’utilisation du matériel de manipulation favorise la compréhension.'
         ],
+        math_raisonner: [
+          'Choisit des processus pertinents et explique clairement son raisonnement.',
+          'Applique les concepts étudiés; poursuivre la vérification des calculs.',
+          'Développe ses stratégies de calcul et gagne à expliquer ses choix.'
+        ],
         fra_lecture: [
           'Excellente compréhension en lecture; dégage avec finesse les inférences implicites.',
           'Lit avec fluidité et relève bien les repères explicites du texte.',
@@ -4496,6 +4849,7 @@
               weight: planItem.weight,
               outOf: planItem.outOf,
               isObservation: Boolean(planItem.isObs),
+              rubricVersion: 5,
               targetLevels: planItem.targetLevels || []
             };
             subData.assignments.push(asgObj);
@@ -4506,10 +4860,11 @@
               const base = baseScores[stIdx % baseScores.length];
               const offsetList = subjectOffsets[subId] || [];
               const offset = offsetList[stIdx % offsetList.length] || 0;
-              let studentPct = Math.min(97, Math.max(54, base + offset + termProgression));
+              const variation = ((stIdx * 7 + planIdx * 5 + subjectIds.indexOf(subId) * 3 + Number(termKey)) % 17) - 8;
+              let studentPct = Math.min(98, Math.max(40, base + offset + termProgression + variation));
 
               if (st.modifiedExpectations && st.modifiedExpectations[subId]) {
-                studentPct = Math.min(90, Math.max(68, studentPct + 4));
+                studentPct = Math.min(90, studentPct + 4);
               }
 
               const rec = subData.studentRecords[st.id];
@@ -4528,10 +4883,12 @@
                 const gradeCode = pctToClosestGradeCode(studentPct);
                 const gObj = GRADE_SCALE.find(g => g.code === gradeCode) || { pct: studentPct };
                 rec.scores[asgId] = gObj.pct;
-                const critPrefix = planItem.critPrefix || subId.slice(0, 3);
+                const subject = ALL_SUBJECTS_CONFIG.find(item => item.id === subId);
+                const criteria = subject ? getCriteriaForGradeLevel(subject, getEffectiveGradeLevel(st, subject)) : [];
+                const family = GRADE_MAP[gradeCode].family;
                 rec.scoreMeta[asgId] = {
                   overrideCode: gradeCode,
-                  checked: [`${critPrefix}_comp_${gradeCode}_0`, `${critPrefix}_mob_${gradeCode}_0`, `${critPrefix}_traces_${gradeCode}_0`],
+                  checked: getScoredObservableCriteria(criteria).map(criterion => `${criterion.id}_${family}_0`),
                   tags: studentPct >= 85 ? ['autonomie', 'demarche'] : studentPct >= 75 ? ['effort', 'collaboration'] : ['recuperation'],
                   flags: st.adaptations ? st.adaptations.slice() : [],
                   comment: studentPct >= 85 ? 'Démontre une autonomie constante.' : 'Progression observée lors des ateliers.'
@@ -4546,7 +4903,7 @@
             'Efforts constants et participation positive lors des activités.'
           ];
           students.forEach((st, stIdx) => {
-            const base = baseScores[stIdx % baseScores.length];
+            const base = baseScores[stIdx % baseScores.length] + ((subjectOffsets[subId] || [])[stIdx] || 0);
             const cIdx = base >= 88 ? 0 : base >= 78 ? 1 : 2;
             const rec = subData.studentRecords[st.id];
             if (rec) rec.comment = commentPool[cIdx];
@@ -4633,53 +4990,53 @@
       });
     }
 
-    function loadPreconfiguredGroup(type) {
-      flushPendingSave();
-      stashActiveGroup();
-      hideWelcome();
+    function buildDemoPreschoolData() {
+      const students = buildDemoRegulierStudents().map((student, index) => ({
+        ...student, id: `st_presco_${index + 1}`, gradeLevel: 'P', adaptations: [], modifiedExpectations: {}
+      }));
+      const terms = {
+        '1': buildTermDataForStudents(students),
+        '2': buildTermDataForStudents(students),
+        '3': buildTermDataForStudents(students)
+      };
+      const descriptions = [
+        'Participe avec aisance et partage ses découvertes.',
+        'Progresse dans les activités et prend confiance.',
+        'Développe cette compétence; des rappels l’aident à participer.',
+        'Rencontre certaines difficultés et bénéficie d’un accompagnement régulier.',
+        'Rencontre des difficultés importantes malgré le soutien offert.'
+      ];
+      Object.keys(terms).forEach(term => {
+        ALL_SUBJECTS_CONFIG.filter(subject => subject.prescoOnly).forEach((subject, subjectIndex) => {
+          students.forEach((student, index) => {
+            const profile = [0, 1, 2, 1, 3, 2, 0, 4, 1, 3, 2, 0, 3, 1, 2, 0, 4, 2, 1, 3][index];
+            const variation = (index + subjectIndex * 3 + Number(term)) % 5 === 0 ? 1 : 0;
+            terms[term].subjectData[subject.id].studentRecords[student.id].comment =
+              descriptions[Math.min(descriptions.length - 1, profile + variation)];
+          });
+        });
+      });
+      return { students, terms, selectedStudentId: students[0].id };
+    }
 
-      if (type === 'regulier') {
-        const groupId = 'grp_regulier_2e';
-        const groupName = 'Groupe 201 — 2e année';
-        const level = '2';
-        const students = buildDemoRegulierStudents();
-        const terms = buildFullDemoTerms('regulier', students);
-        const existingIdx = appState.groups.findIndex(g => g.id === groupId);
-        const groupObj = {
-          id: groupId,
-          name: groupName,
-          subjectIds: ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly).map(s => s.id),
-          level
-        };
-        if (existingIdx >= 0) appState.groups[existingIdx] = groupObj;
-        else appState.groups.push(groupObj);
-
-        appState.groupStore[groupId] = { students, terms, selectedStudentId: students[0].id };
-        switchGroup(groupId);
-        appState.selectedStudentId = students[0].id;
-        showToast('Groupe modèle « Régulier (2e année) » activé avec notes complètes !');
-      } else if (type === 'multi') {
-        const groupId = 'grp_multi_5e6e';
-        const groupName = 'Groupe 502/602 — Multi (5e-6e)';
-        const level = '';
-        const students = buildDemoMultiStudents();
-        const terms = buildFullDemoTerms('multi', students);
-        const existingIdx = appState.groups.findIndex(g => g.id === groupId);
-        const groupObj = {
-          id: groupId,
-          name: groupName,
-          subjectIds: ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly).map(s => s.id),
-          level
-        };
-        if (existingIdx >= 0) appState.groups[existingIdx] = groupObj;
-        else appState.groups.push(groupObj);
-
-        appState.groupStore[groupId] = { students, terms, selectedStudentId: students[0].id };
-        switchGroup(groupId);
-        appState.selectedStudentId = students[0].id;
-        showToast('Groupe modèle « Multi-niveau (5e-6e) » activé avec notes complètes !');
-      }
-      closeSettingsPanel();
+    function initializeExampleGroups() {
+      const regularStudents = buildDemoRegulierStudents();
+      const multiStudents = buildDemoMultiStudents();
+      const regular = { students: regularStudents, terms: buildFullDemoTerms('regulier', regularStudents), selectedStudentId: regularStudents[0].id };
+      const multi = { students: multiStudents, terms: buildFullDemoTerms('multi', multiStudents), selectedStudentId: multiStudents[0].id };
+      const preschool = buildDemoPreschoolData();
+      const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly);
+      appState.groups = [
+        { id: 'grp_presco', name: 'Exemple — Préscolaire', subjectIds: ALL_SUBJECTS_CONFIG.filter(s => s.prescoOnly).map(s => s.id), level: 'P' },
+        { id: 'grp_regulier_2e', name: 'Exemple — 2e année', subjectIds: primarySubjects.filter(s => !['sciences', 'social'].includes(s.group)).map(s => s.id), level: '2' },
+        { id: 'grp_multi_5e6e', name: 'Exemple — 5e et 6e année', subjectIds: primarySubjects.map(s => s.id), level: '' }
+      ];
+      appState.activeGroupId = 'grp_regulier_2e';
+      appState.groupStore = { grp_presco: preschool, grp_multi_5e6e: multi };
+      appState.students = regular.students;
+      appState.terms = regular.terms;
+      appState.selectedStudentId = regular.selectedStudentId;
+      applyActiveSubjects(appState);
       renderAll();
     }
 
@@ -4767,6 +5124,12 @@
               const validCriteria = new Set(getScoredObservableCriteria(
                 getCriteriaForGradeLevel(subject, cycle * 2)
               ).map(criterion => criterion.id));
+              if (subject.id === 'art_plast_c1c2') {
+                getScoredObservableCriteria(LEGACY_ART_PLASTIC_CREATION).forEach(criterion => validCriteria.add(criterion.id));
+              }
+              if (LEGACY_FRENCH_RUBRICS[cycle][subject.id]) {
+                getScoredObservableCriteria(LEGACY_FRENCH_RUBRICS[cycle][subject.id]).forEach(criterion => validCriteria.add(criterion.id));
+              }
               const normalizedEvidence = {};
               Object.entries(savedSubjectEvidence).forEach(([criterionId, level]) => {
                 const normalizedLevel = String(level || '');
@@ -4944,6 +5307,7 @@
       requestObservationDraftExit(() => {
         const session = createBlankObsSession(appState.students);
         session.editingAssignmentId = asg.id;
+        session.rubricVersion = asg.rubricVersion;
         session.title = asg.title;
         session.targetLevels = getAssignmentTargetLevels(asg);
 
@@ -5234,14 +5598,80 @@
     }
 
     // ---- Recherche d'élèves ----
-    let gbFilter = '';
     let stFilter = '';
+    let gbFilter = '';
+    let weightMode = false;
+    let weightScope = '';
+    let weightLevel = '';
+    const unlockedWeights = new Set();
     function normText(value) {
       return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     }
     function studentMatches(student, query) {
       const q = normText(query).trim();
       return !q || normText(student.name).includes(q);
+    }
+
+    function adjustUnlockedWeight(subData, target, level, newWeight, render = true) {
+      const factor = 1000;
+      const current = Math.round(getAssignmentWeightForLevel(target, level) * factor);
+      const next = Math.round(newWeight * factor);
+      if (!Number.isFinite(newWeight) || next < 0 || next > 100 * factor) {
+        showToast('La pondération doit rester entre 0 et 100 %.');
+        return false;
+      }
+      const change = next - current;
+      if (change === 0) return true;
+      const peers = subData.assignments.filter(asg => asg !== target && unlockedWeights.has(asg.id) &&
+        (level === 'ALL' || isAssignmentForLevel(asg, level)));
+      if (!peers.length) {
+        showToast('Déverrouillez au moins deux évaluations pour répartir la pondération.');
+        return false;
+      }
+      const values = peers.map(asg => Math.round(getAssignmentWeightForLevel(asg, level) * factor));
+      let remaining = Math.abs(change);
+      const peerDirection = -Math.sign(change);
+      while (remaining > 0) {
+        const available = values.map((value, index) => ({ index, room: peerDirection > 0 ? 100 * factor - value : value }))
+          .filter(item => item.room > 0);
+        if (!available.length) {
+          showToast('Les autres évaluations déverrouillées ne peuvent pas absorber ce changement.');
+          return false;
+        }
+        const share = Math.ceil(remaining / available.length);
+        available.forEach(item => {
+          const amount = Math.min(share, item.room, remaining);
+          values[item.index] += peerDirection * amount;
+          remaining -= amount;
+        });
+      }
+      const changes = [{ asg: target, value: next / factor }, ...peers.map((asg, index) => ({ asg, value: values[index] / factor }))];
+      const linkedDeltas = new Map();
+      if (getCurrentSubjectConfig().singleResult) {
+        changes.forEach(changeItem => {
+          getLinkedAssignments(changeItem.asg).forEach(linked => {
+            const delta = changeItem.value - getAssignmentWeightForLevel(linked.asg, level);
+            linkedDeltas.set(linked.subData, (linkedDeltas.get(linked.subData) || 0) + delta);
+          });
+        });
+        if ([...linkedDeltas.values()].some(delta => Math.abs(delta) > 0.000001)) {
+          showToast('Les évaluations liées dans une autre compétence doivent aussi conserver leur total. Déverrouillez les évaluations liées correspondantes.');
+          return false;
+        }
+      }
+      changes.forEach(changeItem => {
+        setAssignmentWeightForLevel(changeItem.asg, level, changeItem.value);
+        if (getCurrentSubjectConfig().singleResult) {
+          getLinkedAssignments(changeItem.asg).forEach(linked => {
+            setAssignmentWeightForLevel(linked.asg, level, changeItem.value);
+            linked.subData.equalWeights = false;
+          });
+        }
+      });
+      subData.equalWeights = false;
+      notifyUpdate('Pondération ajustée');
+      if (render) renderGradebookView();
+      return true;
     }
 
     // ---- Historique (annuler / rétablir) ----
@@ -5586,6 +6016,11 @@
       return (criteria || []).filter(criterion => !criterion.formativeOnly);
     }
 
+    const LOCAL_FORMATIVE_CRITERIA = new Set([
+      'ccq_dialogue', 'sci2_precision', 'sci3_representation',
+      'us2_traces', 'ad3_observation', 'ap3_posture', 'ap1_mise'
+    ]);
+
     function computeObservableResult(checkedKeys, overrideCode, criteria, explicitlyNotEvaluated = false) {
       const allCriteria = criteria || [];
       const scoredCriteria = getScoredObservableCriteria(allCriteria);
@@ -5647,14 +6082,8 @@
         BAREME_ECOLE_ROWS.length
       );
 
-      // 3. Combined percentage across populated components
-      const components = [];
-      if (assignmentsAvg !== null) components.push(assignmentsAvg);
-      if (baremeRes.hasFinalGrade) components.push(baremeRes.pct);
-
-      const autoCombinedPct = components.length > 0
-        ? Math.round(components.reduce((a, b) => a + b, 0) / components.length)
-        : null;
+      // Le barème soutient le jugement, mais ne modifie pas la moyenne calculée.
+      const autoCombinedPct = assignmentsAvg;
 
       const overridePct = Number(rec.finalJudgmentOverride);
       const finalPct = (rec.finalJudgmentOverride !== '' && Number.isFinite(overridePct) && overridePct >= 0 && overridePct <= 100)
@@ -5676,7 +6105,6 @@
     function computePooledGroupPct(termId, parts, studentId, fallback) {
       let sum = 0, wTot = 0;
       const seen = new Set();
-      const baremePcts = [];
       let hasOverride = false;
       const stObj = (appState.students || []).find(s => s.id === studentId) || null;
       const stuLvl = stObj && stObj.gradeLevel ? String(stObj.gradeLevel) : '';
@@ -5699,14 +6127,9 @@
           sum += (v / outOf * 100) * w;
           wTot += w;
         });
-        const b = computeMajorityFromChecked(rec.baremeChecked, rec.baremeOverrideCode, BAREME_ECOLE_ROWS.length);
-        if (b.hasFinalGrade) baremePcts.push(b.pct);
       });
       if (hasOverride) return fallback;
-      const comps = [];
-      if (wTot > 0) comps.push(sum / wTot);
-      if (baremePcts.length) comps.push(baremePcts.reduce((a, b) => a + b, 0) / baremePcts.length);
-      return comps.length ? Math.round(comps.reduce((a, b) => a + b, 0) / comps.length) : null;
+      return wTot > 0 ? Math.round(sum / wTot) : null;
     }
 
     function pctToClosestGradeCode(pct) {
@@ -5969,8 +6392,9 @@
         .filter(Boolean);
     }
 
-    function getCompetencyScaleModel(scale) {
-      if (competencyModelCache[scale.id]) return competencyModelCache[scale.id];
+    function getCompetencyScaleModel(scale, legacy = false) {
+      const cacheKey = `${scale.id}:${legacy ? 'legacy' : 'v2'}`;
+      if (competencyModelCache[cacheKey]) return competencyModelCache[cacheKey];
       const tokenize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .split(/[^a-z]+/).filter(w => w.length >= 4 && !COMPETENCY_STOPWORDS.has(w)).map(w => w.slice(0, 6));
       const levels = scale.echelons.map((e, ei) => {
@@ -6015,14 +6439,31 @@
         const merged = a.cluster.concat(b.cluster);
         merged.forEach(s => { s.cluster = merged; });
       });
+      if (!legacy) {
+        const oldClusters = new Set(all.map(s => s.cluster));
+        oldClusters.forEach(cluster => {
+          const groups = [];
+          cluster.slice().sort((a, b) => a.e - b.e || a.j - b.j).forEach(sentence => {
+            const group = groups.find(members => members.every(other => {
+              const shared = [...new Set(sentence.w)].filter(word => other.w.includes(word));
+              if (shared.length < 2) return false;
+              const dot = shared.reduce((sum, word) => sum + sentence.v[word] * other.v[word], 0);
+              return dot / (sentence.norm * other.norm) >= 0.25;
+            }));
+            if (group) group.push(sentence);
+            else groups.push([sentence]);
+          });
+          groups.forEach(group => group.forEach(sentence => { sentence.cluster = group; }));
+        });
+      }
       const rows = {};
       all.forEach(s => {
         const members = s.cluster.slice().sort((p, q) => p.e - q.e);
-        s.row = `${members[0].e}:${members[0].j}`;
+        s.row = `${legacy ? '' : 'v2:'}${members[0].e}:${members[0].j}`;
         if (!rows[s.row]) rows[s.row] = { key: s.row, count: members.length, levels: members.map(m => levels[m.e].n) };
       });
       const model = { levels, rows, max: scale.max };
-      competencyModelCache[scale.id] = model;
+      competencyModelCache[cacheKey] = model;
       return model;
     }
 
@@ -6065,7 +6506,7 @@
     // -------------------------------------------------------------------------
     // Pont vers les échelles officielles du MEQ à 5 niveaux (bilan de fin de cycle, depuis 2008-2009).
     // Aucun calcul à partir du /10 : chaque phrase surlignée est située par rapport aux attentes du cycle
-    // réel de l'élève (cycle modifié inclus) et au vocabulaire d'autonomie/maîtrise de la phrase elle-même.
+    // réel de l'élève (cycle modifié inclus).
     // Le repère suggéré peut toujours être ajusté d'un clic par l'enseignant.
     // -------------------------------------------------------------------------
     const MEQ5_LEVELS = {
@@ -6116,9 +6557,6 @@
           const isEnd = idx === band.length - 1;
           q = Math.max(1, 4 - (band.length - 1 - idx));
           why = isEnd ? 'attente de fin de cycle' : (q === 3 ? 'en progression vers la fin de cycle' : 'début de développement dans le cycle');
-          if (isEnd && sentence && MEQ5_EXCELLENCE.test(sentence.text)) {
-            q = 5; why = 'attente de fin de cycle exercée avec efficacité / autonomie';
-          }
         }
         items.push({ n, q, w: row.count, why, text: sentence ? sentence.text : '' });
       });
@@ -6165,7 +6603,31 @@
       }
       const key = String(term);
       if (!student.competencyTerms[key]) student.competencyTerms[key] = {};
-      return student.competencyTerms[key];
+      const picks = student.competencyTerms[key];
+      let migrated = false;
+      let migrationFailed = false;
+      getCompetencyTabs().flatMap(tab => tab.scales).forEach(scale => {
+        const selected = picks[scale.id];
+        if (!selected || !Object.keys(selected).some(row => !row.startsWith('v2:'))) return;
+        const previous = getCompetencyScaleModel(scale, true);
+        const current = getCompetencyScaleModel(scale);
+        Object.keys(selected).filter(row => !row.startsWith('v2:')).forEach(row => {
+          const levelIndex = previous.levels.findIndex(level => level.n === Number(selected[row]));
+          const oldSentence = levelIndex < 0 ? null : previous.levels[levelIndex].sentences.find(sentence => sentence.row === row);
+          const newSentence = oldSentence && current.levels[levelIndex].sentences[oldSentence.j];
+          if (!newSentence || Object.prototype.hasOwnProperty.call(selected, newSentence.row)) {
+            console.warn('Impossible de migrer une sélection de niveau de compétence.', scale.id, row);
+            migrationFailed = true;
+            return;
+          }
+          selected[newSentence.row] = selected[row];
+          delete selected[row];
+          migrated = true;
+        });
+      });
+      if (migrated) scheduleAppStateSave();
+      if (migrationFailed) showToast('Certaines phrases choisies n’ont pas pu être mises à jour; vérifiez votre sauvegarde.');
+      return picks;
     }
 
     function getCompetencyProgress(student, scale) {
@@ -6446,11 +6908,79 @@
     function getCriteriaForGradeLevel(subject, gradeLevel) {
       const cycle = getStudentCycle(gradeLevel);
       if (!cycle) return [];
-      if (subject.prescoOnly) return cycle === 'P' ? subject.criteria : [];
-      if (cycle === 'P') return [];
-      if (subject.sharedCycles) return subject.criteria;
-      if (cycle === 3) return subject.criteria;
-      return CYCLE_OBSERVABLE_RUBRICS[cycle][subject.id] || [];
+      if (subject.prescoOnly && cycle !== 'P') return [];
+      if (!subject.prescoOnly && cycle === 'P') return [];
+      const criteria = subject.prescoOnly || subject.sharedCycles || cycle === 3
+        ? subject.criteria
+        : CYCLE_OBSERVABLE_RUBRICS[cycle][subject.id] || [];
+      return criteria.map(criterion => {
+        if (subject.prescoOnly) {
+          return {
+            ...criterion,
+            title: criterion.id === 'presco_c3_3' ? '3. Trouve des solutions aux conflits' : criterion.title,
+            cells: Object.fromEntries(Object.entries(lv(
+              'Se développe très bien : manifeste cet élément de façon constante dans diverses situations.',
+              'Se développe très bien : manifeste cet élément régulièrement et avec aisance.',
+              'Se développe adéquatement : manifeste cet élément dans les situations habituelles.',
+              'Se développe avec certaines difficultés : manifeste cet élément de façon irrégulière ou partielle.',
+              'Se développe avec des difficultés importantes : manifeste encore très difficilement cet élément.'
+            )).map(([level, text]) => [level, [text]]))
+          };
+        }
+        const performance = cycle === 1 && criterion.id === 'us_org'
+          ? [
+            'Décrit une caractéristique pertinente du milieu étudié.',
+            'Décrit quelques caractéristiques du milieu, avec plusieurs imprécisions.',
+            'Décrit difficilement les caractéristiques pertinentes du milieu étudié.'
+          ]
+          : OBSERVABLE_PERFORMANCE_LEVELS[criterion.id];
+        const cells = { ...criterion.cells };
+        ['A', 'B'].forEach(level => {
+          cells[level] = cells[level].map(text => text
+            .replaceAll(' seul et ', ' ')
+            .replaceAll(' seul ', ' ')
+            .replaceAll(' seul,', ',')
+            .replaceAll(' seul.', '.')
+            .replaceAll(', sans aide extérieure', '')
+            .replaceAll(', sans aide', '')
+            .replaceAll(' sans aide extérieure', '')
+            .replaceAll(' sans aide', '')
+            .replaceAll(', sans relance', '')
+            .replaceAll(', sans rappel', '')
+            .replaceAll(' spontanément', '')
+            .replaceAll(' avec autonomie', '')
+            .replaceAll(' (regard, silence)', '')
+            .replaceAll('regarde l’auditoire', 's’adresse à l’auditoire'));
+        });
+        if (performance) {
+          ['C', 'D', 'E'].forEach((level, index) => { cells[level] = [performance[index]]; });
+        }
+        return { ...criterion, cells };
+      });
+    }
+
+    function getObservationCriteria(subject, gradeLevel, context) {
+      const cycle = getStudentCycle(gradeLevel);
+      if (subject.id === 'art_plast_c1c2' && context && !(context.rubricVersion >= 2) &&
+          cycle && cycle !== 'P') {
+        return LEGACY_ART_PLASTIC_CREATION;
+      }
+      if (subject.id === 'art_plast_c1c2' && context && context.rubricVersion === 2 && cycle && cycle !== 'P') {
+        return V2_ART_PLASTIC_CREATION;
+      }
+      if (cycle && cycle !== 'P' && context && !(context.rubricVersion >= 3) && LEGACY_FRENCH_RUBRICS[cycle][subject.id]) {
+        return LEGACY_FRENCH_RUBRICS[cycle][subject.id];
+      }
+      if (subject.id === 'art_dram_c1c2' && cycle && cycle !== 'P' && context && !(context.rubricVersion >= 3)) {
+        return LEGACY_DRAMA_CREATION[cycle];
+      }
+      if (subject.id === 'us_diversite' && V3_SOCIAL_DIVERSITY[cycle] && context && !(context.rubricVersion >= 4)) {
+        return V3_SOCIAL_DIVERSITY[cycle];
+      }
+      if (context && !(context.rubricVersion >= 5) && cycle) {
+        return V4_OBSERVABLE_RUBRICS[subject.id][cycle];
+      }
+      return getCriteriaForGradeLevel(subject, gradeLevel);
     }
 
     // =========================================================================
@@ -6587,8 +7117,6 @@
       const subjectTitle = `${sub.fullName} (Étape ${appState.activeTerm})`;
       document.getElementById('gbSubjectTitle').textContent = subjectTitle;
       document.getElementById('gbSubjectTitle').title = subjectTitle;
-      const refLink = document.getElementById('gbSubjectRefLink');
-      if (refLink) refLink.href = sub.refUrl;
       const subjectAtmosphere = document.getElementById('gbSubjectAtmosphere');
       const heroImageUrl = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
       if (subjectAtmosphere && heroImageUrl) subjectAtmosphere.src = heroImageUrl;
@@ -6596,37 +7124,28 @@
       const presentLevels = getPresentStudentLevels();
       const isMulti = presentLevels.length > 1;
       const activeLvlFilter = isMulti ? ensureValidGbLevelFilter() : 'ALL';
-
-      // Render Multi-Level Filter Bar in Gradebook Toolbar (only shown when >1 level exists in student list)
-      const lvlBar = document.getElementById('gbLevelFilterBar');
-      if (lvlBar) {
-        lvlBar.classList.toggle('hidden', !isMulti);
-        lvlBar.innerHTML = '';
-        if (isMulti) {
-          const allBtn = document.createElement('button');
-          allBtn.type = 'button';
-          allBtn.className = activeLvlFilter === 'ALL' ? 'is-active' : '';
-          allBtn.textContent = `Tous (${appState.students.length})`;
-          allBtn.addEventListener('click', () => {
-            gbLevelFilter = 'ALL';
-            renderGradebookView();
-          });
-          lvlBar.appendChild(allBtn);
-
-          presentLevels.forEach(lvl => {
-            const count = appState.students.filter(s => String(s.gradeLevel) === lvl).length;
-            const b = document.createElement('button');
-            b.type = 'button';
-            b.className = activeLvlFilter === lvl ? 'is-active' : '';
-            b.textContent = `${GRADE_LEVEL_LABELS[lvl]} (${count})`;
-            b.addEventListener('click', () => {
-              gbLevelFilter = lvl;
-              renderGradebookView();
-            });
-            lvlBar.appendChild(b);
-          });
-        }
+      const currentWeightScope = [appState.activeGroupId, appState.activeTerm, sub.id].join('|');
+      if (weightScope !== currentWeightScope) {
+        unlockedWeights.clear();
+        weightLevel = '';
+        weightScope = currentWeightScope;
       }
+      if (weightLevel && weightLevel !== 'ALL' && !presentLevels.includes(weightLevel)) {
+        unlockedWeights.clear();
+        weightLevel = '';
+      }
+      unlockedWeights.forEach(id => {
+        const asg = subData.assignments.find(item => item.id === id);
+        if (!asg || (weightLevel && weightLevel !== 'ALL' && !isAssignmentForLevel(asg, weightLevel))) {
+          unlockedWeights.delete(id);
+        }
+      });
+      if (!unlockedWeights.size) weightLevel = '';
+      document.getElementById('btnWeightMode').setAttribute('aria-expanded', String(weightMode));
+      document.getElementById('weightControls').classList.toggle('hidden', !weightMode);
+      const filterButton = document.getElementById('btnClearStudentFilter');
+      filterButton.classList.toggle('hidden', !gbFilter);
+      filterButton.textContent = gbFilter ? `Recherche : ${gbFilter} ✕` : '';
 
       const visibleAssignments = (isMulti && activeLvlFilter !== 'ALL')
         ? subData.assignments.filter(a => isAssignmentForLevel(a, activeLvlFilter))
@@ -6636,27 +7155,45 @@
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
       const valid100 = isWeightSumValid100(subData);
 
-      updateWeightIndicatorsUI(totalW, valid100, subData.equalWeights, hasWorks, subData);
+      updateWeightIndicatorsUI(totalW, valid100, hasWorks, subData);
       document.getElementById('emptyRosterNotice').classList.toggle('hidden', appState.students.length > 0);
-
-      document.getElementById('kpiStudentCount').textContent = isMulti && activeLvlFilter !== 'ALL'
-        ? `${appState.students.filter(s => String(s.gradeLevel) === activeLvlFilter).length} / ${appState.students.length}`
-        : String(appState.students.length);
-      const stuSubEl = document.getElementById('kpiStudentCountSub');
-      if (stuSubEl) { stuSubEl.classList.add('hidden'); stuSubEl.textContent = ''; }
 
       document.getElementById('kpiAssignmentCount').textContent = isMulti && activeLvlFilter !== 'ALL'
         ? `${visibleAssignments.length}`
         : String(subData.assignments.length);
-      const asgSubEl = document.getElementById('kpiAssignmentCountSub');
-      if (asgSubEl) { asgSubEl.classList.add('hidden'); asgSubEl.textContent = ''; }
 
       const headerRow = document.getElementById('gradebookHeaderRow');
       headerRow.innerHTML = '';
 
       const thStudent = document.createElement('th');
       thStudent.className = 'p-2.5 font-bold min-w-[185px] sticky left-0 bg-slate-900 z-10';
-      thStudent.textContent = isMulti && activeLvlFilter !== 'ALL' ? `Élève (${GRADE_LEVEL_LABELS[activeLvlFilter]})` : 'Élève';
+      const studentHeading = document.createElement('div');
+      studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
+      thStudent.appendChild(studentHeading);
+      if (isMulti) {
+        const lvlBar = document.createElement('div');
+        lvlBar.id = 'gbLevelFilterBar';
+        lvlBar.className = 'gb-level-seg no-print';
+        lvlBar.style.marginTop = '.35rem';
+        lvlBar.setAttribute('role', 'group');
+        lvlBar.setAttribute('aria-label', 'Filtrer le carnet par niveau');
+        const levels = [{ id: 'ALL', label: `Tous (${appState.students.length})` }, ...presentLevels.map(lvl => ({
+          id: lvl,
+          label: `${GRADE_LEVEL_LABELS[lvl]} (${appState.students.filter(s => String(s.gradeLevel) === lvl).length})`
+        }))];
+        levels.forEach(level => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = activeLvlFilter === level.id ? 'is-active' : '';
+          button.textContent = level.label;
+          button.addEventListener('click', () => {
+            gbLevelFilter = level.id;
+            renderGradebookView();
+          });
+          lvlBar.appendChild(button);
+        });
+        thStudent.appendChild(lvlBar);
+      }
       headerRow.appendChild(thStudent);
 
       const activeSub = SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId);
@@ -6669,6 +7206,19 @@
           : 'bg-red-950 border-red-500 text-red-200 ring-2 ring-red-500';
         const displayedWeight = getAssignmentWeightForLevel(asg, activeLvlFilter !== 'ALL' ? activeLvlFilter : '');
         const targets = getAssignmentTargetLevels(asg);
+        const linkedReadonly = asg.linkId && asg.linkOrigin === false && activeSub.singleResult;
+        const levelRequired = isMulti && activeLvlFilter === 'ALL';
+        const otherLevelLocked = isMulti && weightLevel && weightLevel !== activeLvlFilter;
+        const unlocked = !otherLevelLocked && unlockedWeights.has(asg.id);
+        const lockTitle = linkedReadonly ? 'Pondération définie dans la compétence d’origine'
+          : levelRequired ? 'Choisissez un niveau pour modifier sa pondération'
+          : otherLevelLocked ? 'Reverrouillez les évaluations de l’autre niveau pour modifier celui-ci'
+          : unlocked ? 'Verrouiller cette pondération' : 'Déverrouiller cette pondération';
+        const weightTools = weightMode ? `
+          <span class="weight-tools no-print">
+            <button type="button" class="weight-lock" data-weight-lock="${escapeHtml(asg.id)}" aria-label="${escapeHtml(lockTitle + ' : ' + asg.title)}" aria-pressed="${unlocked}" title="${escapeHtml(lockTitle)}" ${linkedReadonly || levelRequired || otherLevelLocked ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="${unlocked ? 'M8 11V7a4 4 0 0 1 7.7-1.5' : 'M8 11V7a4 4 0 0 1 8 0v4'}"/><path d="M12 15v2"/></svg><span>${unlocked ? 'Ouvert' : 'Fermé'}</span></button>
+            ${unlocked ? `<button type="button" data-weight-step="-1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Diminuer la pondération de ${escapeHtml(asg.title)}" title="Diminuer de 0,5 point">▼</button><button type="button" data-weight-step="1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Augmenter la pondération de ${escapeHtml(asg.title)}" title="Augmenter de 0,5 point">▲</button>` : ''}
+          </span>` : '';
         const targetBadgeHtml = isMulti
           ? `<button type="button" data-cycle-target-asg="${asg.id}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition shadow-2xs cursor-pointer ${targets.length ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 hover:bg-indigo-500/30' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}" title="Niveau(x) visé(s) — Cliquer pour choisir avec des cases à cocher">${escapeHtml(formatAssignmentTargetBadge(asg))} ▾</button>`
           : '';
@@ -6684,9 +7234,10 @@
             ${!asg.isObservation && getAssignmentOutOf(asg) !== 100 ? `<span class="text-[10px] font-bold text-slate-500" title="Note maximale de cette évaluation">/${formatScoreNumber(getAssignmentOutOf(asg))}</span>` : ''}
             ${asg.linkId ? `<span class="text-[10px] font-bold text-indigo-500" title="${escapeHtml('Évaluation partagée avec : ' + (getLinkedAssignments(asg).map(l => l.sub.partLabel || l.sub.shortName).join(', ') || '—'))}">🔗 aussi en ${escapeHtml(getLinkedAssignments(asg).map(l => (l.sub.partLabel || l.sub.shortName).match(/C\d/) ? (l.sub.partLabel || l.sub.shortName).match(/C\d/)[0] : (l.sub.partLabel || l.sub.shortName)).join(', '))}</span>` : ''}
             <div data-weight-box="${asg.id}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${weightBoxClasses}">
-              <input type="number" min="0" max="100" step="0.5" data-weight-asg="${asg.id}" value="${displayedWeight}" class="w-10 bg-transparent text-center text-[11px] font-bold focus:outline-none${asg.linkId && asg.linkOrigin === false && activeSub.singleResult ? ' opacity-60 cursor-not-allowed' : ''}" ${asg.linkId && asg.linkOrigin === false && activeSub.singleResult ? 'readonly' : ''} title="${asg.linkId && asg.linkOrigin === false && activeSub.singleResult ? 'Pondération définie dans l’onglet d’origine (résultat unique au bulletin)' : 'Pondération (%)'}" />
+              ${weightMode && unlocked ? `<input type="text" inputmode="decimal" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${displayedWeight}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir une pondération entre 0 et 100">` : `<span data-weight-asg="${asg.id}" class="text-[11px] font-bold" title="Pondération (%)">${displayedWeight}</span>`}
               <span class="text-[10px] font-bold ml-0.5">%</span>
             </div>
+            ${weightTools}
             ${asg.isObservation
               ? `<button type="button" data-edit-trace-hdr="${asg.id}" class="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-[10px] font-bold cursor-pointer no-print" title="Ouvrir la grille de cette trace observable">Grille</button>`
               : ''
@@ -6699,8 +7250,8 @@
 
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]' },
-        { label: 'Barème', sub: 'Surlignage', minW: 'min-w-[115px]' },
-        { label: 'Jugement Final', sub: '% et Cote', minW: 'min-w-[135px]' },
+        { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]' },
+        { label: 'Note/Jugement final', sub: '', minW: 'min-w-[135px]' },
         { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]' }
       ];
 
@@ -6872,39 +7423,61 @@
         });
       });
 
-      // Manual weight change listeners
-      headerRow.querySelectorAll('[data-weight-asg]').forEach(inp => {
-        inp.addEventListener('keydown', ev => {
-          if (ev.key === 'Enter') {
-            ev.preventDefault();
-            inp.blur();
+      headerRow.querySelectorAll('[data-weight-lock]').forEach(button => {
+        button.addEventListener('click', () => {
+          const id = button.getAttribute('data-weight-lock');
+          if (unlockedWeights.has(id)) unlockedWeights.delete(id);
+          else {
+            unlockedWeights.add(id);
+            weightLevel = activeLvlFilter;
+          }
+          if (!unlockedWeights.size) weightLevel = '';
+          renderGradebookView();
+          const replacement = [...document.querySelectorAll('[data-weight-lock]')].find(item => item.getAttribute('data-weight-lock') === id);
+          if (replacement) replacement.focus();
+        });
+      });
+      headerRow.querySelectorAll('[data-weight-step]').forEach(button => {
+        button.addEventListener('click', () => {
+          const id = button.getAttribute('data-weight-id');
+          const direction = Number(button.getAttribute('data-weight-step'));
+          const target = subData.assignments.find(asg => asg.id === id);
+          const next = target && getAssignmentWeightForLevel(target, activeLvlFilter) + direction * 0.5;
+          if (target && unlockedWeights.has(id) && adjustUnlockedWeight(subData, target, activeLvlFilter, next)) {
+            const replacement = [...document.querySelectorAll('[data-weight-step]')].find(item =>
+              item.getAttribute('data-weight-id') === id && Number(item.getAttribute('data-weight-step')) === direction);
+            if (replacement) replacement.focus();
           }
         });
-        inp.addEventListener('input', (e) => {
-          const asgId = inp.getAttribute('data-weight-asg');
-          const target = subData.assignments.find(a => a.id === asgId);
-          if (target) {
-            const newW = e.target.value === '' ? 0 : Number(e.target.value);
-            setAssignmentWeightForLevel(target, activeLvlFilter, newW);
-            if (target.linkId && SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId).singleResult) {
-              getLinkedAssignments(target).forEach(l => {
-                setAssignmentWeightForLevel(l.asg, activeLvlFilter, newW);
-              });
-            }
-            subData.equalWeights = false;
-            const newTotal = getTotalAssignmentWeights(subData);
-            const newValid = isWeightSumValid100(subData);
-            updateWeightIndicatorsUI(newTotal, newValid, false, subData.assignments.length > 0, subData);
-            headerRow.querySelectorAll('[data-weight-box]').forEach(box => {
-              const boxAsgId = box.getAttribute('data-weight-box');
-              const boxAsg = subData.assignments.find(a => a.id === boxAsgId);
-              const boxOk = boxAsg ? isAssignmentWeightBoxValid(subData, boxAsg) : newValid;
-              box.className = boxOk
-                ? 'inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition bg-slate-800 border-slate-700 text-indigo-200 focus-within:ring-1 focus-within:ring-indigo-400'
-                : 'inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition bg-red-950 border-red-500 text-red-200 ring-2 ring-red-500';
-            });
-            updateGradebookRowSummaryOnly();
+      });
+      headerRow.querySelectorAll('[data-weight-input]').forEach(input => {
+        const id = input.getAttribute('data-weight-input');
+        const target = subData.assignments.find(asg => asg.id === id);
+        input.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            input.blur();
+          } else if (event.key === 'Escape') {
+            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+            input.blur();
           }
+        });
+        input.addEventListener('change', () => {
+          const value = input.value.trim();
+          if (!/^(?:\d+(?:[.,]\d{1,3})?|[.,]\d{1,3})$/.test(value)) {
+            showToast('Entrez une pondération valide avec au plus trois décimales.');
+            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+            return;
+          }
+          if (!adjustUnlockedWeight(subData, target, activeLvlFilter, Number(value.replace(',', '.')), false)) {
+            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+            return;
+          }
+          headerRow.querySelectorAll('[data-weight-input]').forEach(field => {
+            const asg = subData.assignments.find(item => item.id === field.getAttribute('data-weight-input'));
+            field.value = String(getAssignmentWeightForLevel(asg, activeLvlFilter));
+          });
+          updateGradebookRowSummaryOnly();
         });
       });
 
@@ -6914,11 +7487,11 @@
       const allFinalPcts = [];
 
       appState.students.forEach((st, idx) => {
+        if (gbFilter && !studentMatches(st, gbFilter)) return;
         const rec = subData.studentRecords[st.id];
         const summary = computeStudentSubjectSummary(appState.activeTerm, sub.id, st.id);
         if (summary.finalPct !== null) allFinalPcts.push(summary.finalPct);
         if (isMulti && activeLvlFilter !== 'ALL' && String(st.gradeLevel) !== activeLvlFilter) return;
-        if (gbFilter && !studentMatches(st, gbFilter)) return;
 
         const tr = document.createElement('tr');
         tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-slate-50/80';
@@ -7029,7 +7602,7 @@
             btnTrace.type = 'button';
             const scoreNumber = Number(rawScore);
             const hasScore = rawScore !== '' && rawScore !== '-' && Number.isFinite(scoreNumber) && scoreNumber >= 0 && scoreNumber <= 100;
-            const traceCriteria = meta ? getCriteriaForGradeLevel(sub, meta.gradeLevel || getEffectiveGradeLevel(st, sub)) : [];
+            const traceCriteria = meta ? getObservationCriteria(sub, meta.gradeLevel || getEffectiveGradeLevel(st, sub), asg) : [];
             const traceObsRes = meta ? computeObservableResult(meta.checked, meta.overrideCode, traceCriteria, meta.notEvaluated) : null;
             const scoredTraceCriteriaCount = getScoredObservableCriteria(traceCriteria).length;
             const hasPartialTrace = !hasScore && traceObsRes && traceObsRes.hasData;
@@ -7339,7 +7912,23 @@
 
         const list = document.createElement('div');
         list.className = 'flag-picker-list';
+        const columns = ['adaptation', 'modification'].map(group => {
+          const column = document.createElement('div');
+          const heading = document.createElement('div');
+          heading.className = 'flag-picker-group-title';
+          heading.textContent = group === 'adaptation' ? 'Adaptation' : 'Modification';
+          column.appendChild(heading);
+          list.appendChild(column);
+          return column;
+        });
         CELL_FLAGS.forEach(flag => {
+          const column = flag.group === 'adaptation' ? columns[0] : columns[1];
+          if (flag.group === 'autre' && flag.code === 'REP') {
+            const heading = document.createElement('div');
+            heading.className = 'flag-picker-group-title';
+            heading.textContent = 'Autres suivis';
+            column.appendChild(heading);
+          }
           const isOn = activeFlags.includes(flag.code);
           const item = document.createElement('button');
           item.type = 'button';
@@ -7354,7 +7943,7 @@
             onToggle(flag.code);
             renderContent();
           });
-          list.appendChild(item);
+          column.appendChild(item);
         });
         el.appendChild(list);
       };
@@ -7520,24 +8109,14 @@
       activeCommentBankContext = null;
     }
 
-    function updateWeightIndicatorsUI(totalW, valid100, isEqual, hasWorks, subDataOverride) {
+    function updateWeightIndicatorsUI(totalW, valid100, hasWorks, subDataOverride) {
       const warnBanner = document.getElementById('weightWarningBanner');
-      const kpiW = document.getElementById('kpiWeightTotal');
-      const kpiWSub = document.getElementById('kpiWeightTotalSub');
-      const lblStatus = document.getElementById('lblWeightStatus');
       const subData = subDataOverride || (getActiveTermData().subjectData[appState.activeSubjectId]);
       const presentLevels = getPresentStudentLevels();
       const isMulti = presentLevels.length > 1;
-      const activeLvlFilter = isMulti ? ensureValidGbLevelFilter() : 'ALL';
 
       if (!hasWorks) {
         if (warnBanner) warnBanner.classList.add('hidden');
-        if (kpiW) {
-          kpiW.textContent = '—';
-          kpiW.className = 'text-lg font-extrabold text-slate-900';
-        }
-        if (kpiWSub) kpiWSub.classList.add('hidden');
-        if (lblStatus) lblStatus.textContent = 'Auto';
         return;
       }
 
@@ -7549,11 +8128,6 @@
           return { lvl, label: GRADE_LEVEL_LABELS[lvl], short: formatShortLevelTag(lvl), count, tot, ok };
         });
 
-        if (kpiWSub) {
-          kpiWSub.classList.add('hidden');
-          kpiWSub.textContent = '';
-        }
-
         if (warnBanner) {
           if (!valid100) {
             warnBanner.classList.remove('hidden');
@@ -7563,29 +8137,12 @@
           }
         }
 
-        if (kpiW) {
-          kpiW.textContent = valid100 ? '100 %' : `${Math.round(totalW * 10) / 10} %`;
-          kpiW.className = valid100
-            ? 'text-lg font-extrabold text-slate-900'
-            : 'text-lg font-extrabold text-red-600';
-        }
       } else {
-        if (kpiWSub) kpiWSub.classList.add('hidden');
         if (warnBanner) {
           warnBanner.innerHTML = `Total des pondérations : <span id="weightTotalVal">${escapeHtml(String(totalW))}</span>% (doit donner 100%)`;
           if (!valid100) warnBanner.classList.remove('hidden');
           else warnBanner.classList.add('hidden');
         }
-        if (kpiW) {
-          kpiW.textContent = `${totalW} %`;
-          kpiW.className = valid100
-            ? 'text-lg font-extrabold text-slate-900'
-            : 'text-lg font-extrabold text-red-600';
-        }
-      }
-
-      if (lblStatus) {
-        lblStatus.textContent = isEqual ? 'Égale 100%' : `${totalW}%`;
       }
     }
 
@@ -7619,7 +8176,6 @@
         }
       });
       const kpiAvg = document.getElementById('kpiClassAverage');
-      const kpiAvgSub = document.getElementById('kpiClassAverageSub');
       if (kpiAvg) {
         const targetList = (isMulti && activeLvlFilter !== 'ALL')
           ? (pctsByLevel[activeLvlFilter] || [])
@@ -7630,10 +8186,6 @@
         } else {
           kpiAvg.textContent = '—';
         }
-      }
-      if (kpiAvgSub) {
-        kpiAvgSub.classList.add('hidden');
-        kpiAvgSub.textContent = '';
       }
     }
 
@@ -7869,7 +8421,10 @@
         draft.gradeLevel = getObservationDraftGradeLevel(draft, st, session);
       }
       const cycle = st && draft ? getStudentCycle(draft.gradeLevel) : null;
-      const criteria = st && draft ? getCriteriaForGradeLevel(sub, draft.gradeLevel) : [];
+      const criteria = st && draft ? getObservationCriteria(sub, draft.gradeLevel, session) : [];
+      document.getElementById('prescoRubricNotice').classList.toggle('hidden', !sub.prescoOnly);
+      document.getElementById('firstCycleExplorationNotice').classList.toggle('hidden',
+        cycle !== 1 || !['sciences_global', 'univers_social'].includes(sub.id));
 
       document.getElementById('qoSubjectBadge').textContent = `${sub.fullName} • Étape ${appState.activeTerm}`;
       const isModSub = st ? isSubjectModifiedForStudent(st, sub) : false;
@@ -7888,7 +8443,6 @@
       if (qoAtm && qoImg) qoAtm.src = qoImg;
       const modeBadge = document.getElementById('qoEditModeBadge');
       const topCommitLbl = document.getElementById('btnCommitTopLabel');
-      const botCommitLbl = document.getElementById('btnCommitBottomLabel');
 
       if (session.editingAssignmentId) {
         if (modeBadge) {
@@ -7897,14 +8451,12 @@
           modeBadge.textContent = `Mode modification : ${session.title || 'Trace observable'}`;
         }
         if (topCommitLbl) topCommitLbl.textContent = 'Enregistrer au carnet';
-        if (botCommitLbl) botCommitLbl.textContent = 'Enregistrer les modifications au carnet';
       } else {
         if (modeBadge) {
           modeBadge.classList.add('hidden');
           modeBadge.textContent = '';
         }
         if (topCommitLbl) topCommitLbl.textContent = 'Enregistrer au carnet';
-        if (botCommitLbl) botCommitLbl.textContent = 'Enregistrer au carnet et retourner';
       }
 
       const titleInput = document.getElementById('qoSessionTitleInput');
@@ -7941,7 +8493,7 @@
       let feedbackCount = 0;
       targetedStudents.forEach(student => {
         const d = session.studentDrafts[student.id];
-        const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
+        const studentCriteria = getObservationCriteria(sub, getObservationDraftGradeLevel(d, student, session), session);
         const r = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
         if (r.hasFinalGrade || r.isNotEvaluated) evaluatedCount++;
         else if (r.hasData) partialCount++;
@@ -7957,7 +8509,7 @@
       stuGrid.innerHTML = '';
       targetedStudents.forEach(student => {
         const d = session.studentDrafts[student.id];
-        const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
+        const studentCriteria = getObservationCriteria(sub, getObservationDraftGradeLevel(d, student, session), session);
         const stuRes = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
         const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
@@ -8006,39 +8558,6 @@
           commInputEmpty.disabled = true;
           commInputEmpty.placeholder = 'Sélectionner un nom pour noter vos observations...';
         }
-        const previewElEmpty = document.getElementById('qoSessionPreviewList');
-        previewElEmpty.innerHTML = '';
-        targetedStudents.forEach(student => {
-          const d = session.studentDrafts[student.id];
-          const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
-          const r = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
-          const row = document.createElement('div');
-          row.className = 'py-2 px-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 rounded';
-          row.innerHTML = `
-            <div class="truncate">
-              <span class="font-bold text-slate-900">${escapeHtml(student.name)}</span>
-              ${d.tags.length > 0 ? `<span class="text-[10px] text-indigo-600 ml-1">(${d.tags.map(escapeHtml).join(', ')})</span>` : ''}
-              ${d.comment ? `<div class="text-[11px] text-slate-500 italic truncate">"${escapeHtml(d.comment)}"</div>` : ''}
-            </div>
-            <div class="flex-shrink-0">
-              ${r.isNotEvaluated
-                ? `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold text-xs">N/A — coté</span>`
-                : r.hasFinalGrade
-                ? `<span class="px-2 py-0.5 rounded border text-xs font-extrabold ${getBadgeColorClasses(r.code)}">${r.code} (${r.pct}%)</span>`
-                : r.hasData
-                  ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-xs">En cours (${r.total}/${getScoredObservableCriteria(studentCriteria).length})</span>`
-                  : r.hasEvidence
-                    ? `<span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold text-xs">Rétroaction</span>`
-                    : `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-400 font-bold text-xs">- (N/A)</span>`
-              }
-            </div>
-          `;
-          row.addEventListener('click', () => {
-            appState.selectedStudentId = student.id;
-            renderQuickObsView();
-          });
-          previewElEmpty.appendChild(row);
-        });
         return;
       }
 
@@ -8091,14 +8610,16 @@
           ? 'p-2 font-bold text-amber-950 bg-amber-50/90 border border-amber-200 break-words'
           : 'p-2 font-bold text-slate-900 bg-slate-50 border border-slate-200 break-words';
         const titleText = document.createElement('div');
+        const isLocalFormative = LOCAL_FORMATIVE_CRITERIA.has(crit.id);
         titleText.textContent = crit.title.replace(/^\d+\.\s*/, '');
+        if (isLocalFormative) titleText.textContent = titleText.textContent.replace(/\s*\(\*\)/, '');
         tdTitle.appendChild(titleText);
         const roleBadge = document.createElement('span');
         roleBadge.className = crit.formativeOnly
           ? 'mt-1 inline-block max-w-full px-1.5 py-0.5 rounded text-[9px] leading-tight font-bold bg-amber-100 text-amber-900 border border-amber-300'
           : 'mt-1 inline-block max-w-full px-1.5 py-0.5 rounded text-[9px] leading-tight font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200';
         roleBadge.textContent = crit.formativeOnly
-          ? 'Formatif • Non coté'
+          ? (isLocalFormative ? 'Repère local • Non coté' : 'Formatif • Non coté')
           : 'Critère coté';
         tdTitle.appendChild(roleBadge);
         tr.appendChild(tdTitle);
@@ -8246,40 +8767,6 @@
         }
       }
 
-      // 7. Render Session Preview List
-      const previewEl = document.getElementById('qoSessionPreviewList');
-      previewEl.innerHTML = '';
-      targetedStudents.forEach(student => {
-        const d = session.studentDrafts[student.id];
-        const studentCriteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, student, session));
-        const r = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated);
-        const row = document.createElement('div');
-        row.className = 'py-2 px-1.5 flex items-center justify-between gap-2 cursor-pointer hover:bg-slate-50 rounded';
-        row.innerHTML = `
-          <div class="truncate">
-            <span class="font-bold text-slate-900">${escapeHtml(student.name)}</span>
-            ${d.tags.length > 0 ? `<span class="text-[10px] text-indigo-600 ml-1">(${d.tags.map(escapeHtml).join(', ')})</span>` : ''}
-            ${d.comment ? `<div class="text-[11px] text-slate-500 italic truncate">"${escapeHtml(d.comment)}"</div>` : ''}
-          </div>
-          <div class="flex-shrink-0">
-            ${r.isNotEvaluated
-              ? `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200 font-bold text-xs">N/A — coté</span>`
-              : r.hasFinalGrade
-              ? `<span class="px-2 py-0.5 rounded border text-xs font-extrabold ${getBadgeColorClasses(r.code)}">${r.code} (${r.pct}%)</span>`
-              : r.hasData
-                ? `<span class="px-2 py-0.5 rounded bg-amber-100 text-amber-900 font-bold text-xs">En cours (${r.total}/${getScoredObservableCriteria(studentCriteria).length})</span>`
-                : r.hasEvidence
-                  ? `<span class="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-bold text-xs">Rétroaction</span>`
-                  : `<span class="px-2 py-0.5 rounded bg-slate-100 text-slate-400 font-bold text-xs">- (N/A)</span>`
-            }
-          </div>
-        `;
-        row.addEventListener('click', () => {
-          appState.selectedStudentId = student.id;
-          renderQuickObsView();
-        });
-        previewEl.appendChild(row);
-      });
     }
 
     function commitObservationSessionToGradebook() {
@@ -8300,7 +8787,7 @@
       let draftsWithData = 0;
       targetedStudents.forEach(st => {
         const d = session.studentDrafts[st.id];
-        const criteria = getCriteriaForGradeLevel(sub, getObservationDraftGradeLevel(d, st, session));
+        const criteria = getObservationCriteria(sub, getObservationDraftGradeLevel(d, st, session), session);
         const r = computeObservableResult(d.checked, d.overrideCode, criteria, d.notEvaluated);
         if (r.hasEvidence || d.comment.trim() || d.tags.length) draftsWithData++;
       });
@@ -8330,7 +8817,8 @@
             title: actTitle,
             date: todayStr,
             weight: 100,
-            isObservation: true
+            isObservation: true,
+            rubricVersion: session.rubricVersion
           };
           if (targetLevels.length) newEntry.targetLevels = targetLevels.slice();
           subData.assignments.push(newEntry);
@@ -8343,7 +8831,8 @@
           title: actTitle,
           date: todayStr,
           weight: 100,
-          isObservation: true
+          isObservation: true,
+          rubricVersion: session.rubricVersion
         };
         if (targetLevels.length) newEntry.targetLevels = targetLevels.slice();
         subData.assignments.push(newEntry);
@@ -8367,7 +8856,7 @@
         const d = session.studentDrafts[st.id];
         const gradeLevel = getObservationDraftGradeLevel(d, st, session);
         d.gradeLevel = gradeLevel;
-        const criteria = getCriteriaForGradeLevel(sub, gradeLevel);
+        const criteria = getObservationCriteria(sub, gradeLevel, session);
         const r = computeObservableResult(d.checked, d.overrideCode, criteria, d.notEvaluated);
 
         if (r.hasEvidence || d.comment.trim() || d.tags.length) {
@@ -8416,7 +8905,7 @@
         newLinkTargets.forEach(subId => {
           const sd = termData.subjectData[subId];
           if (!sd) return;
-          const linkedAsg = { id: `obs_asg_${Date.now()}_${subId}`, title: actTitle, date: todayStr, weight: 100, isObservation: true, linkId: traceLinkId, linkOrigin: false };
+          const linkedAsg = { id: `obs_asg_${Date.now()}_${subId}`, title: actTitle, date: todayStr, weight: 100, isObservation: true, rubricVersion: session.rubricVersion, linkId: traceLinkId, linkOrigin: false };
           if (targetLevels.length) linkedAsg.targetLevels = targetLevels.slice();
           sd.assignments.push(linkedAsg);
           if (sd.equalWeights) recalculateEqualWeights(sd);
@@ -8896,16 +9385,16 @@
       appState.annualWeightMode = 'official';
       const weightMode = 'official';
 
+      const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
+      ['btnGrPrevStudent', 'btnGrNextStudent', 'btnPrintGlobalReport'].forEach(id => {
+        document.getElementById(id).disabled = !st;
+      });
+
       if (!appState.students.length) {
         band.innerHTML = '';
         container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600">Ajoutez un élève pour consulter sa synthèse.</div>';
         return;
       }
-
-      if (!appState.selectedStudentId && appState.students.length > 0) {
-        appState.selectedStudentId = appState.students[0].id;
-      }
-      const st = appState.students.find(s => s.id === appState.selectedStudentId) || appState.students[0] || null;
 
       // 1. Render Student Band (2 rows of 5 students)
       band.innerHTML = '';
@@ -8913,6 +9402,7 @@
         const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(isSel));
         btn.className = isSel
           ? 'w-full px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
           : 'w-full px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
@@ -9117,7 +9607,7 @@
             <details class="comp-meq-detail">
               <summary>Comment le niveau MEQ ${meq.level}/5 est-il établi ?</summary>
               <div class="comp-meq-body">
-                <p>Chaque phrase surlignée est située par rapport aux <strong>attentes du ${escapeHtml(CYCLE_LABELS[meq.cycle] || '')}</strong> de l’élève (cycle modifié inclus) : fin de cycle → niveau 4, étapes en progression → niveau 2 ou 3, repères du cycle suivant ou fin de cycle exercée avec efficacité → niveau 5. Le niveau suggéré est celui atteint par la majorité de vos phrases; aucun calcul à partir du /${scale.max}. ${meq.override ? `<strong>Vous avez ajusté manuellement le niveau (suggestion : ${meq.suggested}/5).</strong>` : 'Un clic sur un autre niveau permet de l’ajuster.'}</p>
+                <p>Chaque phrase surlignée est située par rapport aux <strong>attentes du ${escapeHtml(CYCLE_LABELS[meq.cycle] || '')}</strong> de l’élève (cycle modifié inclus) : fin de cycle → niveau 4, étapes en progression → niveau 2 ou 3, repères du cycle suivant → niveau 5. Le niveau suggéré est celui atteint par la majorité de vos phrases; aucun calcul à partir du /${scale.max}. Le niveau 5 peut aussi être choisi manuellement selon votre jugement. ${meq.override ? `<strong>Vous avez ajusté manuellement le niveau (suggestion : ${meq.suggested}/5).</strong>` : 'Un clic sur un autre niveau permet de l’ajuster.'}</p>
                 <ul class="comp-meq-items">
                   ${meq.items.map(item => `<li><b>Éch. ${item.n}</b> → niv. ${item.q} <span class="comp-meq-why">(${escapeHtml(item.why)})</span><span class="comp-meq-quote">« ${escapeHtml(item.text.length > 120 ? item.text.slice(0, 117) + '…' : item.text)} »</span></li>`).join('')}
                 </ul>
@@ -9135,8 +9625,8 @@
           const isPicked = pickedLevel !== undefined && Number(pickedLevel) === level.n;
           const isLocked = pickedLevel !== undefined && !isPicked;
           const rowLevels = (model.rows[sentence.row] || { levels: [] }).levels;
-          const rowTitle = rowLevels.length > 1 ? `Même idée aux échelons ${rowLevels.join(', ')}` : 'Précision propre à cet échelon';
-          return `<span class="comp-sentence${isPicked ? ' is-picked' : ''}${isLocked ? ' is-locked' : ''}" title="${rowTitle}" role="button" tabindex="${isLocked ? -1 : 0}" aria-pressed="${isPicked}" aria-disabled="${isLocked}" data-comp-scale="${scale.id}" data-comp-row="${sentence.row}" data-comp-level="${level.n}">${escapeHtml(sentence.text)}</span> `;
+          const rowTitle = rowLevels.length > 1 ? `Rapprochement suggéré aux échelons ${rowLevels.join(', ')}${isLocked ? ' — cliquer pour remplacer la phrase choisie' : ''}` : 'Précision propre à cet échelon';
+          return `<span class="comp-sentence${isPicked ? ' is-picked' : ''}${isLocked ? ' is-locked' : ''}" title="${rowTitle}" role="button" tabindex="0" aria-pressed="${isPicked}" data-comp-scale="${scale.id}" data-comp-row="${sentence.row}" data-comp-level="${level.n}">${escapeHtml(sentence.text)}</span> `;
         };
         const meterHtml = model.levels.map(level => {
           const inRange = result && level.n >= result.min && level.n <= result.max;
@@ -9146,7 +9636,7 @@
           <section class="comp-scale" aria-label="${escapeHtml(scale.label)}">
             <div>
               <h4 class="text-sm font-bold text-slate-900">${escapeHtml(scale.label)}</h4>
-              <p class="mt-0.5 text-[11px] text-slate-500">Dans chaque paragraphe, cliquez la phrase qui décrit le mieux l’élève. Une phrase choisie verrouille ses équivalents dans les autres échelons (survolez une phrase pour les repérer). Le niveau se calcule et s’enregistre automatiquement.</p>
+              <p class="mt-0.5 text-[11px] text-slate-500">Cliquez les phrases qui décrivent l’élève. Les rapprochements entre échelons sont automatiques et peuvent être imparfaits : survolez une phrase pour les vérifier. Un clic sur une phrase rapprochée remplace le choix précédent. Le regroupement revu conserve les phrases déjà choisies, mais peut changer le niveau estimé. Ces repères de 2002 et l’estimation ne remplacent pas les échelles officielles de fin de cycle ni votre jugement professionnel.</p>
             </div>
             ${cycles.map(cycle => {
               const levels = model.levels.filter(level => level.cycle === cycle);
@@ -9482,18 +9972,18 @@
       const competencyDetails = document.getElementById('competencyPositioning');
       if (competencyDetails) {
         competencyDetails.addEventListener('toggle', () => {
-          competencyPanelOpen = competencyDetails.open;
+          if (competencyDetails.isConnected) competencyPanelOpen = competencyDetails.open;
         });
 
         const commitCompetencyChange = () => {
           const scrollY = window.scrollY;
+          competencyPanelOpen = competencyDetails.open;
           scheduleAppStateSave();
           renderGlobalReportView();
           window.scrollTo(0, scrollY);
         };
 
         const togglePickedSentence = el => {
-          if (el.getAttribute('aria-disabled') === 'true') return;
           const scaleId = el.getAttribute('data-comp-scale');
           const rowKey = el.getAttribute('data-comp-row');
           const level = Number(el.getAttribute('data-comp-level'));
@@ -9520,6 +10010,7 @@
         };
 
         competencyDetails.addEventListener('click', event => {
+          competencyPanelOpen = competencyDetails.open;
           const sentence = event.target.closest('.comp-sentence');
           if (sentence) {
             togglePickedSentence(sentence);
@@ -9623,7 +10114,7 @@
 
         competencyDetails.addEventListener('mouseover', event => {
           const sentence = event.target.closest('.comp-sentence');
-          highlightSiblings(sentence && sentence.getAttribute('aria-disabled') !== 'true' ? sentence : null);
+          highlightSiblings(sentence);
         });
         competencyDetails.addEventListener('mouseleave', () => highlightSiblings(null));
       }
@@ -9909,7 +10400,7 @@
         ['Cotes', 'A+ (97-100 %), A, A−, B+, B, B−, C+, C, C−, D+, D, E : la cote est dérivée du pourcentage; la cote finale est le jugement de l’enseignant.'],
         ['Note brute / Sur', 'La note saisie et son maximum (ex. 32 sur 40). Le pourcentage est ramené sur 100. Les traces observables sont toujours sur 100.'],
         ['Pondération (%)', 'Poids de l’évaluation dans la moyenne de la matière ou de la compétence. Le total visé est 100 %.'],
-        ['Barème', 'Cote obtenue en surlignant des descripteurs dans la grille du barème école; combinée aux évaluations pour proposer la note finale.'],
+        ['Barème', 'Cote obtenue en surlignant des descripteurs dans la grille du barème école; repère de jugement, exclu du calcul automatique de la note finale.'],
         ['Note ajustée (*)', '« Oui » : l’enseignant a modifié manuellement la cote proposée par la grille.'],
         ['Évaluation partagée', '« Oui » : une même évaluation est liée à plusieurs compétences ou matières; elle ne compte qu’une fois dans le résultat unique des matières à résultat unique.'],
         ['Matières à résultat unique', 'Sciences, Géographie-Histoire-Éducation à la citoyenneté et Culture et citoyenneté québécoise : plusieurs compétences, mais un seul résultat au bulletin.'],
@@ -10077,15 +10568,25 @@
       document.getElementById('welcomeOverlay').classList.add('hidden');
     }
 
+    function isPristineInitialGroup() {
+      const initial = createInitialState();
+      const terms = JSON.parse(JSON.stringify(appState.terms));
+      Object.values(terms).forEach(term => Object.values(term.subjectData).forEach(data => {
+        const session = data.currentObsSession;
+        if (session && Array.isArray(session.targetLevels) && !session.targetLevels.length) delete session.targetLevels;
+      }));
+      return ['groups', 'activeGroupId', 'groupStore', 'students', 'annualWeightMode', 'tagCategories']
+        .every(key => JSON.stringify(appState[key]) === JSON.stringify(initial[key])) &&
+        JSON.stringify(terms) === JSON.stringify(initial.terms);
+    }
+
     function startGroupFromWelcome() {
       hideWelcome();
       requestObservationDraftExit(() => {
         appState.activeView = 'viewStudents';
         renderAll();
         const group = appState.groups[0];
-        const pristine = appState.groups.length === 1 && group.name === 'Mon groupe' && !group.level &&
-          !appState.students.length && Object.values(appState.terms).every(term =>
-            !term.observations.length && Object.values(term.subjectData).every(data => !data.assignments.length));
+        const pristine = isPristineInitialGroup();
         returnToWelcomeAfterGroup = true;
         openGroupModal(pristine ? 'edit' : 'new', pristine ? group.id : null);
         if (pristine) document.getElementById('groupModalTitle').textContent = 'Créer votre premier groupe';
@@ -10142,7 +10643,10 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('welcomeClose').addEventListener('click', hideWelcome);
+      document.getElementById('welcomeClose').addEventListener('click', () => {
+        if (isPristineInitialGroup()) initializeExampleGroups();
+        hideWelcome();
+      });
       document.getElementById('welcomeOverlay').addEventListener('click', event => {
         if (event.target.id === 'welcomeOverlay') hideWelcome();
       });
@@ -10327,6 +10831,45 @@
       document.getElementById('btnNavStudentsTop').addEventListener('click', () => {
         navigateToView(appState.activeView === 'viewStudents' ? 'viewGradebook' : 'viewStudents');
       });
+      const studentSearchPopover = document.getElementById('studentSearchPopover');
+      const headerStudentSearch = document.getElementById('headerStudentSearch');
+      const studentSearchButton = document.getElementById('btnStudentSearch');
+      const closeStudentSearch = () => {
+        studentSearchPopover.classList.add('hidden');
+        studentSearchButton.setAttribute('aria-expanded', 'false');
+      };
+      studentSearchButton.addEventListener('click', () => {
+        studentSearchPopover.classList.remove('hidden');
+        studentSearchButton.setAttribute('aria-expanded', 'true');
+        document.getElementById('studentSearchMessage').textContent = 'Appuyez sur Entrée pour afficher les résultats.';
+        studentSearchPopover.style.left = '0px';
+        const rect = studentSearchPopover.getBoundingClientRect();
+        const shift = Math.max(8 - rect.left, Math.min(0, document.documentElement.clientWidth - 8 - rect.right));
+        studentSearchPopover.style.left = `${shift}px`;
+        headerStudentSearch.focus({ preventScroll: true });
+      });
+      document.addEventListener('click', event => {
+        if (!studentSearchPopover.contains(event.target) && !studentSearchButton.contains(event.target)) closeStudentSearch();
+      });
+      studentSearchPopover.addEventListener('submit', event => {
+        event.preventDefault();
+        const query = headerStudentSearch.value.trim();
+        const matches = appState.students.filter(student => studentMatches(student, query));
+        if (!query || !matches.length) {
+          document.getElementById('studentSearchMessage').textContent = query ? 'Aucun élève trouvé dans ce groupe.' : 'Entrez le nom d’un élève.';
+          return;
+        }
+        navigateToView('viewGradebook', () => {
+          gbFilter = query;
+          gbLevelFilter = 'ALL';
+          closeStudentSearch();
+        });
+      });
+      document.getElementById('btnClearStudentFilter').addEventListener('click', () => {
+        gbFilter = '';
+        headerStudentSearch.value = '';
+        renderGradebookView();
+      });
       document.getElementById('btnOpenStudentsFromEmpty').addEventListener('click', () => {
         if (navigateToView('viewStudents')) document.getElementById('newStudentName').focus();
       });
@@ -10350,11 +10893,46 @@
       });
 
       // Equal Weights Button
+      const closeWeightMode = () => {
+        weightMode = false;
+        unlockedWeights.clear();
+        weightLevel = '';
+        document.getElementById('btnWeightMode').setAttribute('aria-expanded', 'false');
+        document.getElementById('weightControls').classList.add('hidden');
+        document.querySelectorAll('#gradebookHeaderRow .weight-tools').forEach(tools => tools.remove());
+        document.querySelectorAll('#gradebookHeaderRow [data-weight-input]').forEach(input => {
+          const asg = getActiveTermData().subjectData[appState.activeSubjectId].assignments.find(item => item.id === input.getAttribute('data-weight-input'));
+          if (!asg) return;
+          const level = isMultiLevelGroup() ? ensureValidGbLevelFilter() : 'ALL';
+          const value = document.createElement('span');
+          value.setAttribute('data-weight-asg', asg.id);
+          value.className = 'text-[11px] font-bold';
+          value.title = 'Pondération (%)';
+          value.textContent = String(getAssignmentWeightForLevel(asg, level));
+          input.replaceWith(value);
+        });
+      };
+      document.getElementById('btnWeightMode').addEventListener('click', () => {
+        weightMode = !weightMode;
+        if (!weightMode) {
+          closeWeightMode();
+        } else {
+          renderGradebookView();
+        }
+      });
+      document.addEventListener('pointerdown', event => {
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gbLevelFilterBar, [data-weight-lock], [data-weight-step], [data-weight-input]')) return;
+        setTimeout(() => {
+          if (weightMode) closeWeightMode();
+        }, 0);
+      });
       document.getElementById('btnResetEqualWeights').addEventListener('click', () => {
         const termData = getActiveTermData();
         const subData = termData.subjectData[appState.activeSubjectId];
         subData.equalWeights = true;
         recalculateEqualWeights(subData);
+        unlockedWeights.clear();
+        weightLevel = '';
         notifyUpdate('Pondération répartie équitablement (100%)');
         renderAll();
       });
@@ -10560,7 +11138,6 @@
 
       // Commit Visual Trace Session to Gradebook (Top & Bottom buttons)
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
-      document.getElementById('btnCommitObsSessionBottom').addEventListener('click', commitObservationSessionToGradebook);
 
       // Print buttons
       document.getElementById('btnPrintView').addEventListener('click', () => window.print());
@@ -10784,6 +11361,10 @@
               return;
             }
             appState = importedState;
+            gbFilter = '';
+            unlockedWeights.clear();
+            weightLevel = '';
+            weightScope = '';
             Object.assign(prefs, importedPrefs);
             applyPrefs();
             renderAll();
@@ -10813,13 +11394,6 @@
       if (!appState.students || appState.students.length === 0) showWelcome();
 
       // Recherche et tri des élèves
-      document.getElementById('gbStudentSearch').addEventListener('input', e => {
-        gbFilter = e.target.value;
-        renderGradebookView();
-      });
-      document.getElementById('gbStudentSearch').addEventListener('keydown', e => {
-        if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
-      });
       document.getElementById('studentSearch').addEventListener('input', e => {
         stFilter = e.target.value;
         renderStudentsView();
@@ -10878,8 +11452,7 @@
           return;
         }
         if (e.key === '/' && !mod && !typing) {
-          const target = appState.activeView === 'viewStudents' ? 'studentSearch'
-            : appState.activeView === 'viewGradebook' ? 'gbStudentSearch' : null;
+          const target = appState.activeView === 'viewStudents' ? 'studentSearch' : null;
           if (target) { e.preventDefault(); document.getElementById(target).focus(); }
         }
         if (e.key === 'Escape') closeSettingsPanel();
@@ -10888,6 +11461,12 @@
       // Options d'affichage
       const settingsPanel = document.getElementById('settingsPanel');
       const settingsBtn = document.getElementById('btnSettings');
+      const referencesDialog = document.getElementById('referencesDialog');
+      document.getElementById('btnReferences').addEventListener('click', () => {
+        closeSettingsPanel();
+        referencesDialog.showModal();
+      });
+      document.getElementById('btnCloseReferences').addEventListener('click', () => referencesDialog.close());
       window.closeSettingsPanel = () => {
         settingsPanel.classList.add('hidden');
         settingsBtn.setAttribute('aria-expanded', 'false');
@@ -10900,14 +11479,6 @@
       document.addEventListener('click', e => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettingsPanel();
       });
-      const btnLoadDemoReg = document.getElementById('btnLoadDemoRegulier');
-      if (btnLoadDemoReg) {
-        btnLoadDemoReg.addEventListener('click', () => loadPreconfiguredGroup('regulier'));
-      }
-      const btnLoadDemoMul = document.getElementById('btnLoadDemoMulti');
-      if (btnLoadDemoMul) {
-        btnLoadDemoMul.addEventListener('click', () => loadPreconfiguredGroup('multi'));
-      }
       settingsPanel.querySelectorAll('.sp-seg button').forEach(b => b.addEventListener('click', () => {
         prefs[b.parentElement.getAttribute('data-pref')] = b.getAttribute('data-val');
         applyPrefs();
