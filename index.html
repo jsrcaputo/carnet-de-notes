@@ -10568,6 +10568,11 @@
       document.getElementById('welcomeOverlay').classList.add('hidden');
     }
 
+    function dismissWelcome() {
+      if (isPristineInitialGroup()) initializeExampleGroups();
+      hideWelcome();
+    }
+
     function isPristineInitialGroup() {
       const initial = createInitialState();
       const terms = JSON.parse(JSON.stringify(appState.terms));
@@ -10643,12 +10648,9 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('welcomeClose').addEventListener('click', () => {
-        if (isPristineInitialGroup()) initializeExampleGroups();
-        hideWelcome();
-      });
+      document.getElementById('welcomeClose').addEventListener('click', dismissWelcome);
       document.getElementById('welcomeOverlay').addEventListener('click', event => {
-        if (event.target.id === 'welcomeOverlay') hideWelcome();
+        if (event.target.id === 'welcomeOverlay') dismissWelcome();
       });
       document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
       document.getElementById('welcomeTutorial').addEventListener('click', startTutorial);
