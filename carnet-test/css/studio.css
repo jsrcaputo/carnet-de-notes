@@ -1,0 +1,322 @@
+
+    /* ==========================================================================
+       DESIGN STUDIO PRO — ÉDITORIAL, AÉRÉ, IMAGES EN FONDU & CLARTÉ MAXIMALE
+       Inspiré par Craft.do, Linear, Notion, Apple Classroom & Toddle
+       Entièrement réversible en 1 clic via la classe racine `html.design-studio`
+       ========================================================================== */
+    html.design-studio {
+      --studio-bg: #f5f4f0;
+      --studio-surface: #ffffff;
+      --studio-surface-soft: #faf9f5;
+      --studio-border: rgba(24, 36, 30, 0.085);
+      --studio-border-strong: rgba(24, 36, 30, 0.15);
+      --studio-text: #16211c;
+      --studio-text-muted: #57655e;
+      --studio-accent: #235c46;
+      --studio-accent-deep: #184332;
+      --studio-accent-soft: #e6f2ec;
+      --studio-shadow-sm: 0 2px 8px -2px rgba(18, 30, 24, 0.055), 0 1px 2px -1px rgba(18, 30, 24, 0.035);
+      --studio-shadow-md: 0 14px 34px -10px rgba(18, 30, 24, 0.075), 0 4px 12px -4px rgba(18, 30, 24, 0.04);
+      --studio-radius-xl: 18px;
+      --studio-radius-lg: 14px;
+    }
+
+    @media screen {
+    html.design-studio.theme-dark {
+      --studio-bg: #111614;
+      --studio-surface: #18201d;
+      --studio-surface-soft: #1e2824;
+      --studio-border: rgba(226, 238, 231, 0.09);
+      --studio-border-strong: rgba(226, 238, 231, 0.16);
+      --studio-text: #ecf2ee;
+      --studio-text-muted: #9ab0a4;
+      --studio-accent: #3ea379;
+      --studio-accent-deep: #2f8561;
+      --studio-accent-soft: rgba(62, 163, 121, 0.16);
+      --studio-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.28);
+      --studio-shadow-md: 0 16px 36px rgba(0, 0, 0, 0.38);
+    }
+    }
+
+    html.design-studio body {
+      background-color: var(--studio-bg) !important;
+      background-image:
+        radial-gradient(circle at 10% 0%, rgba(35, 92, 70, 0.06), transparent 40%),
+        radial-gradient(circle at 90% 4%, rgba(188, 128, 68, 0.055), transparent 38%) !important;
+      color: var(--studio-text) !important;
+    }
+
+    .sp-demo-btn {
+      flex: 1;
+      padding: 0.35rem 0.5rem;
+      border-radius: 7px;
+      border: 1px solid var(--studio-border, #d8e0d9);
+      background: #fbfbf9;
+      color: #3e4b44;
+      font-size: 11.5px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .sp-demo-btn:hover {
+      background: #eef3ef;
+      border-color: var(--studio-accent, #235c46);
+      color: var(--studio-accent, #235c46);
+    }
+    @media screen {
+    html.design-studio.theme-dark .sp-demo-btn {
+      background: #1b2622;
+      border-color: rgba(255, 255, 255, 0.14);
+      color: #d6e2dc;
+    }
+    html.design-studio.theme-dark .sp-demo-btn:hover {
+      background: #253630;
+      border-color: var(--studio-accent);
+      color: #fff;
+    }
+    }
+
+    /* 1. Header verre dépoli épuré et moins massif */
+    html.design-studio header {
+      background: rgba(255, 255, 255, 0.86) !important;
+      backdrop-filter: blur(18px) saturate(150%) !important;
+      -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+      border-bottom: 1px solid var(--studio-border) !important;
+      box-shadow: 0 4px 22px -6px rgba(18, 30, 24, 0.05) !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark header {
+      background: rgba(24, 32, 29, 0.88) !important;
+    }
+    }
+    html.design-studio header > div:first-child {
+      padding-top: 0.85rem !important;
+      padding-bottom: 0.7rem !important;
+      gap: 0.55rem !important;
+    }
+    html.design-studio header .brand-title {
+      font-size: 1.45rem !important;
+      letter-spacing: -0.03em !important;
+    }
+    html.design-studio header > div:first-child .term-btn,
+    html.design-studio header > div:first-child button,
+    html.design-studio header > div:first-child label {
+      font-size: 12.5px !important;
+      padding-top: 0.36rem !important;
+      padding-bottom: 0.36rem !important;
+    }
+
+    /* 2. Onglets de matières fluides en pilules (remplace la grille massive de 6 blocs) */
+    html.design-studio header > div:last-child {
+      background: rgba(248, 247, 243, 0.78) !important;
+      border-top: 1px solid var(--studio-border) !important;
+      padding-top: 0.5rem !important;
+      padding-bottom: 0.5rem !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark header > div:last-child {
+      background: rgba(20, 27, 24, 0.82) !important;
+    }
+    }
+    html.design-studio #subjectTabsContainer {
+      display: flex !important;
+      flex-wrap: wrap !important;
+      align-items: center !important;
+      gap: 0.42rem !important;
+    }
+    html.design-studio #subjectTabsContainer > button {
+      width: auto !important;
+      min-height: 2.2rem !important;
+      padding: 0.38rem 0.9rem !important;
+      border-radius: 999px !important;
+      background: var(--studio-surface) !important;
+      border: 1px solid var(--studio-border-strong) !important;
+      color: var(--studio-text-muted) !important;
+      font-size: 12.5px !important;
+      font-weight: 600 !important;
+      box-shadow: var(--studio-shadow-sm) !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 0.45rem !important;
+      transition: all 0.16s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+    }
+    html.design-studio #subjectTabsContainer > button::before {
+      display: none !important;
+    }
+    html.design-studio #subjectTabsContainer > button:hover {
+      color: var(--studio-text) !important;
+      transform: translateY(-1px);
+      border-color: rgba(35, 92, 70, 0.35) !important;
+    }
+    html.design-studio #subjectTabsContainer > button[aria-pressed="true"] {
+      background: var(--studio-text) !important;
+      color: #ffffff !important;
+      border-color: var(--studio-text) !important;
+      font-weight: 700 !important;
+      box-shadow: 0 6px 16px -4px rgba(22, 33, 28, 0.24) !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark #subjectTabsContainer > button[aria-pressed="true"] {
+      background: #376b50 !important;
+      border-color: #376b50 !important;
+      color: #ffffff !important;
+    }
+    }
+    html.design-studio #subjectTabsContainer > button[aria-pressed="true"]::before {
+      display: none !important;
+    }
+
+    /* Sous-onglets de compétences : barre fine et légère sans encadré lourd ni ombre verte sur le côté */
+    html.design-studio #subjectSubTabsContainer {
+      margin-top: 0.45rem !important;
+      padding: 0.35rem 0.6rem !important;
+      border-radius: 999px !important;
+      background: rgba(255, 255, 255, 0.68) !important;
+      border: 1px solid var(--studio-border) !important;
+      border-left: 1px solid var(--studio-border) !important;
+      box-shadow: none !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark #subjectSubTabsContainer {
+      background: rgba(30, 40, 36, 0.75) !important;
+      border-color: rgba(255, 255, 255, 0.12) !important;
+    }
+    }
+    html.design-studio #subjectSubTabsContainer > button {
+      border-radius: 999px !important;
+      min-height: 1.85rem !important;
+      padding: 0.24rem 0.78rem !important;
+      font-size: 11.5px !important;
+    }
+
+    /* 3. Bannières Hero éditoriales avec vraies images en fondu naturel */
+    .studio-only-atmosphere {
+      display: none;
+    }
+    html.design-studio .gradebook-toolbar,
+    html.design-studio .global-report-toolbar,
+    html.design-studio .student-manager-card,
+    html.design-studio .studio-hero-card,
+    html.design-studio #emptyRosterNotice:not(.hidden) {
+      position: relative !important;
+      isolation: isolate !important;
+      overflow: hidden !important;
+      border-radius: var(--studio-radius-xl) !important;
+      background: var(--studio-surface) !important;
+      border: 1px solid var(--studio-border) !important;
+      box-shadow: var(--studio-shadow-md) !important;
+    }
+    html.design-studio .gradebook-toolbar {
+      padding: 1.35rem 1.6rem !important;
+      gap: 1rem !important;
+    }
+    html.design-studio .global-report-toolbar,
+    html.design-studio .studio-hero-card {
+      padding: 1.35rem 1.6rem !important;
+    }
+    html.design-studio .studio-hero-card > *:not(img) {
+      position: relative;
+      z-index: 1;
+    }
+    html.design-studio .gradebook-atmosphere,
+    html.design-studio .global-report-atmosphere,
+    html.design-studio .student-manager-atmosphere,
+    html.design-studio .studio-only-atmosphere {
+      display: block !important;
+      position: absolute !important;
+      z-index: 0 !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      left: auto !important;
+      width: min(48%, 520px) !important;
+      height: 100% !important;
+      max-height: 260px !important;
+      object-fit: cover !important;
+      object-position: center 38% !important;
+      opacity: 0.32 !important;
+      filter: saturate(1.04) contrast(0.98) !important;
+      pointer-events: none !important;
+      -webkit-mask-image:
+        linear-gradient(to left, rgba(0,0,0,0.96) 6%, rgba(0,0,0,0.52) 52%, transparent 96%),
+        linear-gradient(to bottom, rgba(0,0,0,0.95) 60%, transparent 100%) !important;
+      mask-image:
+        linear-gradient(to left, rgba(0,0,0,0.96) 6%, rgba(0,0,0,0.52) 52%, transparent 96%),
+        linear-gradient(to bottom, rgba(0,0,0,0.95) 60%, transparent 100%) !important;
+      -webkit-mask-composite: source-in !important;
+      mask-composite: intersect !important;
+      transition: opacity 0.35s ease !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark .gradebook-atmosphere,
+    html.design-studio.theme-dark .global-report-atmosphere,
+    html.design-studio.theme-dark .student-manager-atmosphere,
+    html.design-studio.theme-dark .studio-only-atmosphere {
+      opacity: 0.2 !important;
+      filter: none !important;
+    }
+    }
+    html.design-studio .empty-roster-visual {
+      width: min(44%, 420px) !important;
+    }
+    html.design-studio .empty-roster-visual img {
+      filter: saturate(1.02) !important;
+      opacity: 0.32 !important;
+    }
+
+    /* 4. Respiration, espace et hiérarchie claire (Cartes KPI, Barre d'actions & Tableau) */
+    html.design-studio main.site-layout {
+      padding-top: 1.5rem !important;
+      padding-bottom: 3rem !important;
+    }
+    html.design-studio #viewGradebook {
+      gap: 1rem !important;
+    }
+    html.design-studio #gbSubjectTitle {
+      font-size: 1.38rem !important;
+      font-weight: 800 !important;
+      letter-spacing: -0.025em !important;
+      color: var(--studio-text) !important;
+    }
+    html.design-studio .gradebook-toolbar > div:nth-of-type(2) {
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(8px);
+      padding: 0.45rem 0.6rem;
+      border-radius: 12px;
+      border: 1px solid var(--studio-border);
+      box-shadow: var(--studio-shadow-sm);
+      gap: 0.55rem !important;
+    }
+    @media screen {
+    html.design-studio.theme-dark .gradebook-toolbar > div:nth-of-type(2) {
+      background: rgba(24, 32, 29, 0.84);
+    }
+    }
+    html.design-studio #gradebookScrollContainer {
+      border-radius: var(--studio-radius-xl) !important;
+    }
+    html.design-studio #gradebookBody tr td {
+      padding-top: 0.62rem !important;
+      padding-bottom: 0.62rem !important;
+    }
+    html.design-studio #gradebookBody tr:hover td {
+      background-color: rgba(35, 92, 70, 0.04) !important;
+    }
+    @media (max-width: 768px) {
+      html.design-studio .gradebook-atmosphere,
+      html.design-studio .global-report-atmosphere,
+      html.design-studio .student-manager-atmosphere,
+      html.design-studio .studio-only-atmosphere {
+        width: 100% !important;
+        opacity: 0.14 !important;
+      }
+    }
+    html:not(.design-studio) #emptyRosterAtmosphere,
+    html:not(.design-studio) .studio-only-atmosphere {
+      display: none !important;
+    }
+    html.design-studio .empty-roster-visual svg {
+      display: none !important;
+    }
+  

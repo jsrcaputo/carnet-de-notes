@@ -1,0 +1,507 @@
+
+    @media screen {
+      html.design-studio {
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --paper: #f1f5f9;
+        --surface: #fff;
+        --brand: #1d4ed8;
+        --brand-deep: #1e3a8a;
+        --brand-soft: #eff6ff;
+        --accent: #0284c7;
+        --studio-bg: #f1f5f9;
+        --studio-surface: #fff;
+        --studio-surface-soft: #f8fafc;
+        --studio-border: #e2e8f0;
+        --studio-border-strong: #cbd5e1;
+        --studio-text: #0f172a;
+        --studio-text-muted: #475569;
+        --studio-accent: #1d4ed8;
+        --studio-accent-deep: #1e3a8a;
+        --studio-accent-soft: #eff6ff;
+        --studio-shadow-sm: 0 1px 3px rgba(15, 23, 42, .06);
+        --studio-shadow-md: 0 8px 24px -8px rgba(15, 23, 42, .12);
+      }
+
+      html.design-studio.theme-dark {
+        color-scheme: dark;
+        --ink: #e3e3e3;
+        --muted: #c4c7c5;
+        --line: #444746;
+        --paper: #131314;
+        --surface: #1e1f20;
+        --brand: #1a73e8;
+        --brand-deep: #a8c7fa;
+        --brand-soft: #26364d;
+        --studio-bg: #131314;
+        --studio-surface: #1e1f20;
+        --studio-surface-soft: #292a2d;
+        --studio-border: #444746;
+        --studio-border-strong: #5f6368;
+        --studio-text: #e3e3e3;
+        --studio-text-muted: #c4c7c5;
+        --studio-accent: #1a73e8;
+        --studio-accent-deep: #a8c7fa;
+        --studio-accent-soft: #26364d;
+      }
+      html.design-studio body {
+        padding: 0 !important;
+        background: var(--studio-bg) !important;
+        background-image: none !important;
+        color: var(--studio-text) !important;
+      }
+      #printMeta { display: none; }
+      html.design-studio body, html.design-studio button, html.design-studio input, html.design-studio select, html.design-studio textarea { font-family: "Segoe UI", system-ui, sans-serif; }
+      html.design-studio :is(main h2, main h3, main h4, .test-sidebar-brand h1, .welcome-card h2) { font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+      .test-sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        z-index: 31;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        width: 246px;
+        padding: 1rem .8rem;
+        overflow-y: auto;
+        background: var(--studio-surface);
+        border-right: 0;
+      }
+      .test-sidebar-brand { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem; padding: 0 0 .85rem; border-bottom: 1px solid var(--studio-border); }
+      .test-sidebar-brand h1 { font-size: 1.23rem; line-height: 1.2; font-weight: 800; letter-spacing: -.025em; }
+      .test-sidebar-brand span { padding: .12rem .13rem; border: 1px solid var(--studio-border-strong); border-radius: 6px; background: var(--brand-soft); color: var(--brand-deep); font-size: .73rem; font-weight: 800; }
+      .test-sidebar-sections { display: flex; flex-direction: column; gap: .75rem; }
+      .test-sidebar-section { min-width: 0; padding-bottom: .7rem; border-bottom: 1px solid var(--studio-border); }
+      .test-sidebar-label { padding: 0 .55rem; margin: 0 0 .35rem; color: var(--studio-text-muted); font-size: .76rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
+      .test-sidebar-heading { display: flex; align-items: center; gap: .35rem; min-width: 0; margin-bottom: .35rem; }
+      .test-sidebar-heading .test-sidebar-label { flex: 0 0 auto; margin-bottom: 0; }
+      .test-single-group, .test-sidebar #headerGroupSelect { min-width: 0; flex: 1 1 auto; font-size: .76rem; font-weight: 600; color: var(--studio-text); }
+      .test-single-group { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .test-sidebar #headerGroupSelect { width: 0; min-height: 2rem; padding: .2rem .25rem; border: 1px solid transparent; border-radius: 7px; background: transparent; cursor: pointer; }
+      .test-sidebar #headerGroupSelect:hover { background: var(--studio-surface-soft); }
+      .test-sidebar #headerGroupSelect:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+      .test-group-actions { position: relative; flex: 0 0 auto; }
+      .test-group-actions.hidden, .test-single-group.hidden, .test-sidebar #headerGroupSelect.hidden { display: none; }
+      #btnSidebarGroupMenu { display: grid; place-items: center; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--studio-text-muted); font-size: 1.15rem; line-height: 1; cursor: pointer; }
+      #btnSidebarGroupMenu:hover, #btnSidebarGroupMenu[aria-expanded="true"] { background: var(--brand-soft); color: var(--brand-deep); }
+      .test-group-menu { position: absolute; z-index: 20; top: calc(100% + .25rem); right: 0; min-width: 180px; padding: .3rem; border: 1px solid var(--studio-border); border-radius: 10px; background: var(--studio-surface); box-shadow: 0 8px 24px rgba(15, 23, 42, .16); }
+      .test-group-menu.hidden { display: none; }
+      .test-group-menu button { display: block; width: 100%; padding: .6rem .7rem; border: 0; border-radius: 7px; background: transparent; color: var(--studio-text); font-size: .82rem; font-weight: 600; text-align: left; cursor: pointer; }
+      .test-group-menu button:hover { background: var(--studio-surface-soft); }
+      .test-sidebar-nav { display: flex; flex-direction: column; gap: .2rem; }
+      .test-sidebar-section > .test-sidebar-nav + .test-sidebar-nav { margin-top: .4rem; }
+      .test-sidebar-nav > button,
+      html.design-studio #subjectTabsContainer > button {
+        display: flex !important;
+        justify-content: flex-start !important;
+        align-items: center !important;
+        width: 100% !important;
+        min-height: 2.35rem !important;
+        padding: .5rem .65rem !important;
+        border: 1px solid transparent !important;
+        border-radius: 8px !important;
+        background: transparent !important;
+        color: var(--studio-text-muted) !important;
+        box-shadow: none !important;
+        font-size: .81rem !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+        transform: none !important;
+      }
+      html.design-studio .test-sidebar-nav > button,
+      html.design-studio #subjectTabsContainer > button {
+        transition: background-color .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+      }
+      .test-sidebar-nav > button:hover,
+      html.design-studio #subjectTabsContainer > button:hover { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
+      html.design-studio .test-sidebar-nav > button:hover,
+      html.design-studio #subjectTabsContainer > button:hover { transform: translateX(2px) !important; }
+      .test-sidebar-nav > button.bg-indigo-500,
+      .test-sidebar-nav > button.bg-indigo-600,
+      .test-sidebar-nav > button.bg-amber-400,
+      html.design-studio #subjectTabsContainer > button[aria-pressed="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; font-weight: 800 !important; }
+      html.design-studio .test-sidebar-nav > button[aria-pressed="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; font-weight: 800 !important; }
+      html.design-studio #subjectTabsContainer > button[aria-expanded="true"]:not([aria-pressed="true"]) { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
+      html.design-studio .test-sidebar button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+      #headerStudentCount { margin-left: auto; background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      .test-sidebar .subject-icon { flex: 0 0 1rem; width: 1rem; height: 1rem; }
+      .test-sidebar #subjectTabsContainer { display: flex !important; flex-direction: column; align-items: stretch !important; gap: .2rem !important; }
+      .test-subject-empty { padding: .6rem .65rem; border-radius: 8px; background: var(--brand-soft); color: var(--brand-deep); font-size: .81rem; font-weight: 700; }
+      .test-sidebar #subjectTabsContainer button span { white-space: normal; }
+      .test-sidebar #subjectTabsContainer > button[data-subject-id="ccq_global"] span { white-space: nowrap; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer {
+        display: flex !important;
+        flex-direction: column;
+        align-items: stretch;
+        gap: .2rem;
+        margin: .15rem 0 .45rem .85rem !important;
+        padding: .2rem .2rem .2rem .3rem !important;
+        border: 0 !important;
+        border-left: 0 !important;
+        border-radius: 0 !important;
+        background: transparent !important;
+        box-shadow: none !important;
+      }
+      html.design-studio .test-sidebar #subjectSubTabsContainer.hidden { display: none !important; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button {
+        display: flex;
+        align-items: center;
+        gap: .45rem;
+        width: 100%;
+        justify-content: flex-start;
+        min-height: 1.75rem !important;
+        padding: .3rem .45rem !important;
+        border: 1px solid transparent !important;
+        border-radius: 6px !important;
+        background: transparent !important;
+        color: var(--studio-text-muted) !important;
+        font-size: .82rem !important;
+        text-align: left;
+      }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button::before { content: ""; flex: 0 0 .25rem; width: .25rem; height: .25rem; border-radius: 50%; background: currentColor; opacity: .5; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"]::before { opacity: 1; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button:hover { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: transparent !important; font-weight: 800; }
+      .test-sidebar #subjectSubTabsContainer:not(.hidden) { animation: sidebarIndexIn .2s ease-out both; }
+      .test-sidebar #subjectSubTabsContainer > button { transition: background-color .15s ease, color .15s ease, transform .15s ease; }
+      .test-sidebar #subjectSubTabsContainer > button:hover { transform: translateX(2px); }
+      .test-sidebar #subjectSubTabsContainer > button:nth-of-type(2) { animation-delay: .025s; }
+      .test-sidebar #subjectSubTabsContainer > button:nth-of-type(3) { animation-delay: .05s; }
+      .test-sidebar #subjectSubTabsContainer > button:nth-of-type(4) { animation-delay: .075s; }
+      .test-sidebar-footer { margin-top: auto; }
+      .test-sidebar-footer button { gap: .5rem; }
+      html.design-studio header.test-topbar {
+        width: calc(100% - 246px);
+        margin-left: 246px;
+        background: var(--studio-surface) !important;
+        color: var(--studio-text) !important;
+        border-bottom: 0 !important;
+        box-shadow: none !important;
+      }
+      html.design-studio header.test-topbar > div:first-child {
+        max-width: none;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: .55rem 1rem !important;
+        padding: .65rem 1.25rem !important;
+      }
+      .test-topbar > div:first-child > div:first-child { flex: 0 0 auto; }
+      .test-topbar > div:first-child > div:nth-child(2) { flex: 1 1 auto; flex-wrap: nowrap !important; min-width: 0; border: 0 !important; padding: 0 !important; gap: .4rem; }
+      .test-topbar > div:first-child > div:nth-child(2) > div { flex: 0 0 auto; flex-wrap: nowrap !important; }
+      .test-topbar > div:first-child > div:first-child > div { margin-right: 0; gap: .4rem; }
+      .test-topbar .term-btn { min-height: 2rem; }
+      .test-topbar .term-btn.bg-indigo-600 { background: var(--brand) !important; color: #fff !important; }
+      .test-topbar .term-btn:not(.bg-indigo-600) { color: var(--studio-text-muted) !important; }
+      .test-sidebar .term-btn { justify-content: flex-start !important; }
+      .test-sidebar #btnNavGlobalReport.bg-amber-400 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio #studentSearchPopover { position: relative; top: auto; left: auto; z-index: auto; display: flex; align-items: center; width: clamp(150px, 17vw, 220px); padding: 0 .45rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); box-shadow: none; }
+      html.design-studio #studentSearchPopover:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
+      html.design-studio #studentSearchPopover #btnStudentSearch { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 34px; padding: 0; border: 0; background: transparent; color: var(--studio-text-muted); cursor: pointer; }
+      #btnStudentSearch svg { width: 17px; height: 17px; }
+      html.design-studio #studentSearchPopover input { min-width: 0; width: 100%; padding: .4rem .1rem; border: 0; outline: 0; background: transparent; color: var(--studio-text); font-size: .8rem; }
+      #headerStudentSearch::placeholder { color: var(--studio-text-muted); opacity: .8; }
+      html.design-studio #studentSearchMessage:not(:empty) { position: absolute; z-index: 80; top: calc(100% + .35rem); left: 0; width: max-content; max-width: min(250px, 80vw); margin: 0; padding: .55rem .7rem; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text-muted); box-shadow: var(--studio-shadow-sm); }
+      #studentSearchMessage:empty { display: none; }
+      html.design-studio .test-topbar .hdr-icobtn,
+      html.design-studio .test-topbar #btnPrintView,
+      html.design-studio .test-topbar #btnFullscreen,
+      html.design-studio .test-topbar #btnOpenJSONDirect,
+      html.design-studio .test-topbar #btnExportJSON,
+      html.design-studio .test-topbar #btnExportExcel {
+        background: var(--studio-surface) !important;
+        color: var(--studio-text-muted) !important;
+        border: 1px solid var(--studio-border-strong) !important;
+        box-shadow: none !important;
+      }
+      .file-sync-status { color: var(--studio-text-muted); font-size: .68rem; font-weight: 600; }
+      .file-sync-status[data-status="error"] { color: #b91c1c; }
+      html.design-studio.theme-dark .file-sync-status[data-status="error"] { color: #f2b8b5; }
+      .backup-dialog { width: min(520px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.3rem; border: 1px solid var(--studio-border); border-radius: 16px; background: var(--studio-surface); color: var(--studio-text); box-shadow: 0 16px 48px rgba(15, 23, 42, .25); font-size: .9rem; line-height: 1.55; }
+      .backup-dialog::backdrop { background: rgba(15, 23, 42, .6); }
+      .backup-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: .75rem; margin-bottom: .8rem; }
+      .backup-dialog-heading h2 { font-size: 1.1rem; font-weight: 800; line-height: 1.3; }
+      .backup-dialog-close { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 8px; background: transparent; color: var(--studio-text-muted); font-size: 1.3rem; cursor: pointer; }
+      .backup-dialog-close:hover { background: var(--studio-surface-soft); }
+      .backup-help-content { display: grid; gap: .8rem; }
+      .backup-help-content ol { display: grid; gap: .65rem; padding-left: 1.4rem; list-style: decimal; }
+      .backup-dialog-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .5rem; margin-top: 1rem; }
+      .backup-dialog-actions button { padding: .55rem .85rem; border-radius: 8px; font-size: .85rem; font-weight: 700; cursor: pointer; }
+      .backup-dialog-primary { border: 1px solid var(--brand); background: var(--brand); color: #fff; }
+      .backup-dialog-secondary { border: 1px solid var(--studio-border-strong); background: var(--studio-surface); color: var(--studio-text); }
+      .backup-dialog button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+      html.design-studio #modalUnsavedObservation { background-color: rgba(15, 23, 42, .6) !important; }
+      html.design-studio #modalUnsavedObservation > div { background: var(--studio-surface) !important; color: var(--studio-text) !important; border-color: var(--studio-border) !important; box-shadow: 0 16px 48px rgba(15, 23, 42, .25) !important; }
+      html.design-studio #modalUnsavedObservation #unsavedObservationTitle { color: var(--studio-text) !important; }
+      html.design-studio #modalUnsavedObservation #unsavedObservationMessage { color: var(--studio-text-muted) !important; }
+      html.design-studio #modalUnsavedObservation [aria-hidden="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio #modalUnsavedObservation #btnStayOnObservation { background: var(--studio-surface) !important; color: var(--studio-text) !important; border-color: var(--studio-border-strong) !important; }
+      html.design-studio #modalUnsavedObservation #btnStayOnObservation:hover { background: var(--studio-surface-soft) !important; }
+      html.design-studio #modalUnsavedObservation #btnLeaveObservation { background: #1d4ed8 !important; color: #fff !important; border-color: #1d4ed8 !important; }
+      html.design-studio #modalUnsavedObservation #btnLeaveObservation:hover { background: #1e40af !important; }
+      html.design-studio #modalUnsavedObservation button:focus-visible { outline: 2px solid var(--brand) !important; outline-offset: 2px; }
+      html.design-studio .test-topbar :is(button, label):hover:not(:disabled) { border-color: var(--brand) !important; }
+      html.design-studio .test-topbar #btnExportExcel svg { color: var(--brand); }
+      html.design-studio .test-topbar .test-old-subject-bar { display: none; }
+      html.design-studio main.site-layout {
+        width: calc(100% - 246px);
+        max-width: none;
+        margin: 0 0 0 246px;
+        padding: 1.75rem 1.5rem 3rem !important;
+      }
+      html.design-studio main #subjectSubTabsContainer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .4rem;
+        margin: 0 0 1rem !important;
+        padding: .5rem .7rem !important;
+        border-radius: 12px !important;
+        background: var(--studio-surface) !important;
+        border: 1px solid var(--studio-border) !important;
+      }
+      html.design-studio main #subjectSubTabsContainer.hidden { display: none; }
+      html.design-studio main #subjectSubTabsContainer > button { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; border: 1px solid var(--studio-border-strong) !important; }
+      html.design-studio main #subjectSubTabsContainer > button[aria-pressed="true"] { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
+      html.design-studio :is(.gradebook-atmosphere, .global-report-atmosphere, .student-manager-atmosphere, .studio-only-atmosphere, .empty-roster-visual) { display: none !important; }
+      html.design-studio :is(.gradebook-toolbar, .global-report-toolbar, .student-manager-card, .studio-hero-card, #emptyRosterNotice:not(.hidden)) {
+        background: var(--studio-surface) !important;
+        border-color: var(--studio-border) !important;
+        border-radius: 16px !important;
+        box-shadow: var(--studio-shadow-sm) !important;
+      }
+      html.design-studio .gradebook-toolbar { padding: 1.15rem 1.25rem !important; grid-template-rows: auto auto; }
+      #studentAddRow[hidden], #studentListTools[hidden] { display: none !important; }
+      .no-group-notice:not(.hidden) { padding: .7rem .8rem; border-radius: 8px; background: var(--studio-surface-soft); color: var(--studio-text-muted); font-size: .85rem; line-height: 1.45; }
+      html.design-studio .gradebook-toolbar h2 { white-space: normal; overflow: visible; }
+      html.design-studio .gradebook-toolbar > div:nth-of-type(2) { background: transparent; border: 0; box-shadow: none; padding: 0; }
+      html.design-studio #btnNewEvaluation { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+      html.design-studio .new-evaluation-choices:not(.hidden) { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .2rem; background: var(--studio-surface-soft); border: 1px solid var(--studio-border); border-radius: 9px; }
+      html.design-studio .new-evaluation-choices > button { padding: .4rem .65rem; border: 0; border-radius: 6px; background: transparent !important; color: var(--brand-deep) !important; box-shadow: none !important; font-size: .75rem; font-weight: 700; }
+      html.design-studio .new-evaluation-choices > button:hover { background: var(--brand-soft) !important; }
+      html.design-studio #btnCommitObsSessionToGradebook { background: var(--brand); color: #fff; }
+      html.design-studio #btnCommitObsSessionToGradebook:hover { background: #1e40af; }
+      html.design-studio #viewQuickObs > div { border-color: var(--studio-border); box-shadow: var(--studio-shadow-sm); }
+      html.design-studio #viewQuickObs :is(.test-trace-save-bar, #qoLinkedPartsBox, #observationPrintGrid > div:first-child, #qoQuickTags) {
+        background: var(--studio-surface-soft) !important;
+        border-color: var(--studio-border) !important;
+      }
+      html.design-studio #viewQuickObs :is(.test-trace-save-bar > div:first-child label, #qoEvaluatedCounter, #observationPrintGrid > div:first-child .text-indigo-300, #sgMajorityExplanation) { color: var(--studio-text-muted) !important; }
+      html.design-studio #viewQuickObs #sgCurrentStudentName { color: var(--studio-text) !important; }
+      html.design-studio #viewQuickObs #qoEvaluatedCounter { background: var(--studio-surface) !important; border-color: var(--studio-border) !important; }
+      html.design-studio #viewQuickObs :is(#btnPrintSubjectGrid, #btnClearCurrentStudentObs) { background: var(--studio-surface) !important; color: var(--studio-text-muted) !important; border-color: var(--studio-border-strong) !important; }
+      html.design-studio #viewQuickObs :is(#btnPrintSubjectGrid, #btnClearCurrentStudentObs):hover { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio #qoCategoryTabs button.bg-slate-900 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio #qoCategoryTabs button:not(.bg-slate-900) { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio #viewQuickObs .rubric-matrix-table thead th { color: var(--studio-text-muted) !important; }
+      html.design-studio #viewQuickObs .rubric-matrix-table thead th:not(:nth-child(2)) { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio #viewQuickObs .rubric-matrix-table thead th:not(:nth-child(2)) .font-extrabold { color: var(--studio-text-muted) !important; }
+      html.design-studio #viewQuickObs .rubric-stmt-btn[aria-pressed="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: var(--studio-border-strong) !important; box-shadow: none !important; }
+      html.design-studio #viewQuickObs .rubric-stmt-btn[aria-pressed="true"] > span:first-child { background: #1d4ed8 !important; color: #fff !important; border-color: #1d4ed8 !important; }
+      html.design-studio #viewQuickObs .grade-pill-selected { background: #1d4ed8 !important; color: #fff !important; border-color: #1d4ed8 !important; box-shadow: 0 0 0 3px rgba(29, 78, 216, .22), var(--studio-shadow-sm); }
+      html.design-studio #viewQuickObs :is(input:not([type="checkbox"]), textarea):focus { border-color: var(--brand) !important; --tw-ring-color: rgba(29, 78, 216, .25) !important; }
+      html.design-studio #viewQuickObs .ring-indigo-500 { --tw-ring-color: rgba(29, 78, 216, .35) !important; }
+      html.design-studio :is(#kpiClassAverage, #btnWeightMode) { color: var(--brand-deep) !important; }
+      html.design-studio #gradebookScrollContainer thead th { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio #gradebookScrollContainer thead button { background: var(--studio-surface-soft) !important; border-color: var(--studio-border-strong) !important; color: var(--brand-deep) !important; }
+      html.design-studio main table thead .gb-level-seg button.is-active { background: var(--brand) !important; color: #fff !important; }
+      html.design-studio :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th:nth-child(2) { background: var(--brand-soft) !important; }
+      html.design-studio :is(#btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents, #btnResetEqualWeights) { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; border-color: var(--studio-border-strong) !important; }
+      html.design-studio :is(#btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents, #btnResetEqualWeights):hover { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio .bar-track-wrap { background: var(--studio-border); border-color: var(--studio-border-strong); }
+      html.design-studio .bar-fill-inner { background: #94b9e8; }
+      html.design-studio .bar-threshold-60 { background: var(--studio-text-muted); }
+      html.design-studio main .text-indigo-950 { color: var(--brand-deep) !important; }
+      html.design-studio main :is(.text-slate-700, .text-slate-600) { color: var(--studio-text-muted) !important; }
+      html.design-studio main .border-indigo-200 { border-color: var(--studio-border-strong) !important; }
+      html.design-studio #competencyPositioning :is(.comp-tab.is-active, .comp-card.is-level, .comp-chip.is-set, .comp-meq-legend li.is-level) { background: var(--brand-soft); color: var(--brand-deep); border-color: var(--studio-border-strong); }
+      html.design-studio #competencyPositioning :is(.comp-result, .comp-meq-btn.is-suggested:not(.is-level)) { border-color: var(--studio-border-strong); }
+      html.design-studio #competencyPositioning :is(.comp-reset, .comp-meq-auto, .comp-meq-name, .comp-refs a, .comp-meq-note a) { color: var(--brand-deep); }
+      html.design-studio #competencyPositioning :is(.comp-sentence:hover, .comp-sentence.is-sibling, .comp-meter-cell.in-range, .comp-meq-btn:hover) { background: var(--brand-soft); color: var(--brand-deep); }
+      html.design-studio #competencyPositioning .comp-sentence.is-picked { background: #dbeafe; color: var(--brand-deep); box-shadow: inset 0 -2px 0 var(--brand); }
+      html.design-studio #competencyPositioning .comp-meq-btn.is-level { background: var(--brand); color: #fff; }
+      html.design-studio #gradebookScrollContainer { border-radius: 12px !important; }
+      html.design-studio #gradebookHeaderRow > th:first-child { z-index: 20; }
+      html.design-studio #gradebookBody tr > td:first-child { background: var(--studio-surface) !important; }
+      html.design-studio #gradebookBody tr:nth-child(even) > td:first-child { background: var(--studio-surface-soft) !important; }
+      html.design-studio #gradebookBody tr:hover > td:first-child { background: var(--brand-soft) !important; }
+      html.design-studio .linked-grade-warning { display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #fef3c7; color: #92400e; font-weight: 800; }
+      html.design-studio .gr-weight-label { color: var(--studio-text); font-size: .75rem; font-weight: 700; }
+      html.design-studio .comp-recap-print { display: inline-flex; align-items: center; justify-content: center; width: 1.7rem; height: 1.7rem; margin-right: .25rem; border: 1px solid var(--studio-border); border-radius: 6px; background: var(--studio-surface); color: var(--brand-deep); }
+      html.design-studio .comp-recap-print:hover { background: var(--brand-soft); }
+      html.design-studio .comp-recap-print svg { width: .9rem; height: .9rem; }
+      html.design-studio #grCompetencyLevelSummary .comp-recap-title { color: var(--studio-text-muted); }
+      html.design-studio #grCompetencyLevelSummary { background: var(--studio-surface); border-color: var(--studio-border); }
+      html.design-studio #grCompetencyLevelSummary .comp-chip { background: var(--studio-surface-soft); color: var(--studio-text-muted); }
+      html.design-studio #grCompetencyLevelSummary .comp-chip.is-set { background: var(--brand-soft); color: var(--brand-deep); }
+      html.design-studio #grCompetencyLevelSummary .comp-chip-meq { color: inherit; }
+      html.design-studio .gr-results-scroll { overflow-x: auto; }
+      html.design-studio .gr-results-scroll table { min-width: 650px; }
+      html.design-studio #viewGlobalReport .gr-results-scroll thead th { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio #viewGlobalReport .trend-badge { background: var(--studio-surface-soft); color: var(--studio-text-muted); border-color: var(--studio-border); }
+      html.design-studio .gr-average-row { color: var(--studio-text-muted); background: var(--studio-surface-soft); font-size: .68rem; }
+      html.design-studio .gr-average-row :is(th, td) { padding: .55rem .5rem; border-top: 1px solid var(--studio-border); }
+      html.design-studio .gr-average-row td { text-align: center; }
+      html.design-studio .gr-teacher-comment { display: block; width: 100%; min-height: 7rem; resize: vertical; padding: .65rem; border: 1px solid var(--studio-border-strong); border-radius: 9px; background: var(--studio-surface); color: var(--studio-text); line-height: 1.5; }
+      html.design-studio .gr-teacher-comment:focus { outline: 2px solid var(--brand); outline-offset: 2px; box-shadow: none; }
+      #modalAddAssignment > div { max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; }
+      html.design-studio #competencyPositioning :is(.comp-recap-title, .comp-refs-title, .comp-card-head, .comp-card-text, .comp-result-label, .comp-result-note, .comp-end, .comp-meq-label, .comp-meq-body, .comp-meq-why, .comp-meq-quote, .comp-meq-note) { color: var(--studio-text-muted); }
+      html.design-studio #competencyPositioning :is(.comp-tab:not(.is-active), .comp-subtab:not(.is-active), .comp-sentence:not(.is-picked):not(.is-sibling)) { color: var(--studio-text); }
+      html.design-studio #competencyPositioning .comp-scale.has-picks .comp-sentence:not(.is-picked):not(.is-locked):not(.is-sibling):not(:hover) { color: #53647a; }
+      html.design-studio #competencyPositioning .comp-scale.has-picks .comp-sentence.is-locked:not(.is-picked) { background: #f1f5f9; color: #5b6b80; box-shadow: none; }
+      .gr-teacher-comment-print { display: none; }
+      html.design-studio .custom-scrollbar { scrollbar-color: #64748b #e2e8f0; scrollbar-width: auto; }
+      html.design-studio .custom-scrollbar::-webkit-scrollbar { height: 13px; width: 10px; }
+      html.design-studio .custom-scrollbar::-webkit-scrollbar-track { background: #e2e8f0; border: 1px solid #cbd5e1; border-radius: 999px; }
+      html.design-studio .custom-scrollbar::-webkit-scrollbar-thumb { min-width: 46px; background: #64748b; border: 2px solid #e2e8f0; border-radius: 999px; }
+      html.design-studio .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+      html.design-studio.theme-dark .custom-scrollbar { scrollbar-color: #8b9bb3 #292a2d; }
+      html.design-studio.theme-dark .custom-scrollbar::-webkit-scrollbar-track { background: #292a2d; border-color: #444746; }
+      html.design-studio.theme-dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #8b9bb3; border-color: #292a2d; }
+      html.design-studio.theme-dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #8ab4f8; }
+      html.design-studio #viewQuickObs .rubric-matrix-table { min-width: 900px; }
+      html.design-studio #viewQuickObs .rubric-stmt-text { overflow-wrap: normal; word-break: normal; hyphens: auto; line-height: 1.45; }
+      html.design-studio .welcome-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
+      html.design-studio .welcome-card p { color: var(--studio-text-muted); }
+      html.design-studio .tour-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
+      html.design-studio .tour-card p { color: var(--studio-text-muted); }
+      html.design-studio #tourNext { background: var(--brand) !important; color: #fff !important; }
+      html.design-studio #tourSkip { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio .welcome-actions button:not(:disabled) { background: var(--studio-surface-soft); color: var(--studio-text); border-color: var(--studio-border-strong); }
+      html.design-studio .welcome-actions :is(#welcomeLoad, #welcomeCreate) { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: var(--studio-border-strong) !important; }
+      html.design-studio .welcome-actions button:not(:disabled):hover { border-color: var(--brand); }
+      html.design-studio .welcome-templates { margin-top: 1.35rem; padding-top: 1rem; border-top: 1px solid var(--studio-border); }
+      html.design-studio .welcome-templates h3 { margin-bottom: .6rem; color: var(--studio-text); font-size: .82rem; font-weight: 800; }
+      html.design-studio .welcome-template-list { display: flex; flex-wrap: wrap; gap: .45rem; }
+      html.design-studio .welcome-template-list button { padding: .45rem .7rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface-soft); color: var(--studio-text-muted); font-size: .78rem; font-weight: 700; }
+      html.design-studio .welcome-template-list button { transition: transform .16s ease, border-color .16s ease, color .16s ease, background-color .16s ease; }
+      html.design-studio .welcome-template-list button:hover { border-color: var(--brand); color: var(--brand-deep); background: var(--brand-soft); transform: translateY(-1px); }
+      html.design-studio .modified-expectations { width: fit-content; max-width: 100%; }
+      html.design-studio .modified-expectations[open] { width: min(100%, 900px); }
+      html.design-studio .modified-expectations summary { white-space: nowrap; }
+      html.design-studio .modified-expectations[open] summary { white-space: normal; }
+      html.design-studio :is([class*="bg-emerald-"], [class*="bg-green-"]) { background-color: var(--brand-soft) !important; }
+      html.design-studio :is([class~="bg-emerald-500"], [class~="bg-emerald-600"], [class~="bg-green-500"], [class~="bg-green-600"]) { background-color: var(--brand) !important; }
+      html.design-studio :is([class*="text-emerald-"], [class*="text-green-"]) { color: var(--brand-deep) !important; }
+      html.design-studio :is([class*="border-emerald-"], [class*="border-green-"]) { border-color: var(--studio-border-strong) !important; }
+      html.design-studio :is([class*="ring-emerald-"], [class*="ring-green-"]) { --tw-ring-color: var(--brand) !important; }
+      html.design-studio :is([class*="accent-emerald-"], [class*="accent-green-"]) { accent-color: var(--brand) !important; }
+      html.design-studio main .bg-emerald-100.text-emerald-800.border-emerald-300 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: var(--studio-border-strong) !important; }
+      html.design-studio #viewQuickObs .bg-emerald-400 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
+      html.design-studio :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th:nth-child(2) :is(.font-extrabold, .mt-1) { color: var(--brand-deep) !important; }
+      html.design-studio .stmt-checked-A { background: var(--brand-soft) !important; border-color: var(--studio-border-strong) !important; color: var(--brand-deep) !important; box-shadow: none !important; }
+      html.design-studio #toastNotification { background: var(--brand) !important; border-color: var(--brand) !important; color: #fff !important; }
+      html.design-studio #toastNotification.toast-entering { animation: toastIn .18s ease-out both; }
+      html.design-studio #toastNotification.toast-leaving { animation: toastOut .16s ease-in both; }
+      @keyframes sidebarIndexIn {
+        from { opacity: 0; transform: translateY(-3px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes toastIn {
+        from { opacity: 0; transform: translateY(7px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      @keyframes toastOut {
+        from { opacity: 1; transform: translateY(0); }
+        to { opacity: 0; transform: translateY(4px); }
+      }
+      html.design-studio.theme-dark :is(#settingsPanel, #studentSearchPopover) { background: var(--surface); color: var(--ink); }
+      html.design-studio.theme-dark #subjectTabsContainer > button[aria-pressed="true"] { background: var(--brand-soft) !important; color: #bfdbfe !important; border-color: transparent !important; }
+      html.design-studio.theme-dark main #subjectSubTabsContainer { background: var(--studio-surface) !important; border-color: var(--studio-border) !important; }
+      html.design-studio.theme-dark main #subjectSubTabsContainer > button { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
+      html.design-studio.theme-dark main #subjectSubTabsContainer > button[aria-pressed="true"] { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
+      html.design-studio.theme-dark .test-topbar .bg-slate-800 { background: var(--studio-surface-soft) !important; }
+      html.design-studio.theme-dark header.test-topbar #headerStudentCount { background: var(--brand) !important; color: #fff !important; }
+      html.design-studio.theme-dark .gradebook-toolbar > div:nth-of-type(2) { background: transparent !important; }
+      html.design-studio.theme-dark :is(#settingsPanel .sp-seg, .welcome-close, .welcome-actions button:disabled, .grade-picker-auto, .sort-btn) { background: var(--studio-surface-soft); color: var(--studio-text-muted); border-color: var(--line); }
+      html.design-studio.theme-dark #settingsPanel .sp-seg button.is-on { background: var(--brand); color: #fff; }
+      html.design-studio.theme-dark [id^="modal"] :is(.bg-slate-50, .bg-slate-100) { background: var(--studio-surface-soft) !important; }
+      html.design-studio.theme-dark :is(main, [id^="modal"]) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { background: var(--paper) !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.design-studio.theme-dark :is(main, [id^="modal"]) :is(input, textarea)::placeholder { color: #a7aaa9; opacity: 1; }
+      html.design-studio.theme-dark #gradebookBody tr:nth-child(even) { background: var(--studio-surface-soft); }
+      html.design-studio.theme-dark .gb-level-seg { background: var(--studio-surface-soft); border-color: var(--line); }
+      html.design-studio.theme-dark main table thead button { background: var(--studio-surface-soft) !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.design-studio.theme-dark main table thead .gb-level-seg button { background: var(--studio-surface-soft) !important; color: var(--ink) !important; }
+      html.design-studio.theme-dark main table thead .gb-level-seg button.is-active { background: var(--brand) !important; color: #fff !important; }
+      html.design-studio.theme-dark main table thead th { background: var(--studio-surface-soft) !important; }
+      html.design-studio.theme-dark #gradebookBody tr:hover td { background: #303134 !important; }
+      html.design-studio.theme-dark #btnAddVisualTraceFromGb { border-color: #496481; }
+      html.design-studio.theme-dark :is(.test-trace-save-bar, #observationPrintGrid > div:first-child) { background: var(--studio-surface-soft) !important; color: var(--ink) !important; border-color: var(--line) !important; }
+      html.design-studio.theme-dark :is(.test-trace-save-bar label, #qoEvaluatedCounter, #observationPrintGrid > div:first-child span, #sgMajorityExplanation) { color: var(--ink) !important; }
+      html.design-studio.theme-dark #qoEvaluatedCounter { background: var(--paper) !important; border-color: var(--line) !important; }
+      html.design-studio.theme-dark :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th { background: var(--studio-surface-soft) !important; color: var(--ink) !important; }
+      html.design-studio.theme-dark :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th :is(.font-extrabold, .mt-1) { color: var(--ink) !important; }
+      html.design-studio.theme-dark #competencyPositioning :is(summary, .comp-tab, .comp-subtab, .comp-card, .comp-result, .comp-reset, .comp-meq-auto, .comp-meq-detail, .comp-termtabs, .comp-printbtn) {
+        background: var(--studio-surface-soft);
+        color: var(--ink);
+        border-color: var(--line);
+      }
+      html.design-studio.theme-dark #competencyPositioning .comp-comment { background: var(--studio-surface-soft); border-color: var(--line); }
+      html.design-studio.theme-dark #competencyPositioning :is(.comp-card-head, .comp-card-text, .comp-result-label, .comp-result-note, .comp-end, .comp-meq-label, .comp-meq-name, .comp-meq-body, .comp-meq-why, .comp-meq-quote, .comp-meq-note, .comp-refs-title, .comp-termtab) { color: var(--studio-text-muted); }
+      html.design-studio.theme-dark #competencyPositioning :is(.comp-tab.is-active, .comp-card.is-level) { background: var(--brand-soft); color: #d3e3fd; border-color: #8ab4f8; }
+      html.design-studio.theme-dark #competencyPositioning :is(.comp-subtab.is-active, .comp-termtab.is-active, .comp-meter-cell.is-level, .comp-meq-btn.is-level) { background: var(--brand); color: #fff; }
+      html.design-studio.theme-dark #competencyPositioning .comp-sentence:hover,
+      html.design-studio.theme-dark #competencyPositioning .comp-sentence.is-sibling { background: #34445a; color: var(--ink); }
+      html.design-studio.theme-dark #competencyPositioning .comp-sentence.is-locked { color: #a7afad; }
+      html.design-studio.theme-dark #competencyPositioning .comp-sentence.is-picked { background: #355a86; color: #fff; box-shadow: inset 0 -2px 0 #a8c7fa; }
+      html.design-studio.theme-dark #competencyPositioning .comp-scale.has-picks .comp-sentence:not(.is-picked):not(.is-locked):not(.is-sibling):not(:hover) { color: #a7afbc; }
+      html.design-studio.theme-dark #competencyPositioning .comp-scale.has-picks .comp-sentence.is-locked:not(.is-picked) { background: #29313c; color: #b1bdcb; box-shadow: none; }
+      html.design-studio.theme-dark #competencyPositioning :is(.comp-meter-cell, .comp-meq-btn) { background: #3c4043; color: var(--ink); }
+      html.design-studio.theme-dark #competencyPositioning :is(.comp-refs a, .comp-meq-note a) { color: var(--brand-deep); }
+      html.design-studio.theme-dark #toastNotification { background: var(--brand) !important; border-color: var(--brand) !important; }
+      html.design-studio #grStudentBand button, html.design-studio #grStudentBand button span:first-child { white-space: normal; overflow-wrap: anywhere; }
+      @media (prefers-reduced-motion: reduce) {
+        html.design-studio *,
+        html.design-studio *::before,
+        html.design-studio *::after {
+          scroll-behavior: auto !important;
+          animation-duration: .01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: .01ms !important;
+        }
+      }
+      @media (max-width: 900px) {
+        .test-sidebar { position: static; width: 100%; padding: .7rem 1rem; gap: .6rem; overflow: visible; border-right: 0; border-bottom: 1px solid var(--studio-border); }
+        .test-sidebar-brand { padding: 0 0 .6rem; }
+        .test-sidebar-sections { display: flex; flex-direction: row; flex-wrap: wrap; gap: .5rem 1rem; }
+        .test-sidebar-footer { margin-top: 0; }
+        .test-sidebar-section { min-width: 0; flex: 1 1 280px; }
+        .test-sidebar-label { margin-bottom: .15rem; padding: 0; }
+        .test-sidebar-nav { flex-direction: row; flex-wrap: nowrap !important; overflow-x: auto; scrollbar-width: thin; }
+        html.design-studio .test-sidebar #subjectTabsContainer { flex-direction: row; flex-wrap: wrap !important; overflow: visible; }
+        .test-sidebar-nav > button, html.design-studio #subjectTabsContainer > button { flex: 0 0 auto !important; width: auto !important; white-space: nowrap; }
+        html.design-studio .test-sidebar #subjectSubTabsContainer { flex: 0 0 calc(100% - 1rem); max-width: calc(100% - 1rem); flex-direction: row; flex-wrap: wrap; overflow: visible; }
+        html.design-studio .test-sidebar #subjectSubTabsContainer > button { flex: 0 0 auto; width: auto; white-space: nowrap; }
+        html.design-studio .test-sidebar #subjectTabsContainer button span { white-space: nowrap; }
+        html.design-studio header.test-topbar, html.design-studio main.site-layout { width: 100%; margin-left: 0; }
+        html.design-studio header.test-topbar { position: relative; }
+        html.design-studio main.site-layout { padding: 1rem !important; }
+        html.design-studio #viewQuickObs .rubric-matrix-table :is(thead th:first-child, tbody td:first-child) { position: sticky; left: 0; z-index: 2; background: var(--studio-surface) !important; }
+        html.design-studio #viewQuickObs .rubric-matrix-table thead th:first-child { z-index: 3; background: var(--studio-surface-soft) !important; }
+      }
+      @media (max-width: 1150px) {
+        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) > span { display: none; }
+        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
+      }
+      @media (max-width: 600px) {
+        html.design-studio header.test-topbar > div:first-child { position: relative; flex-wrap: wrap; }
+        .test-settings-anchor { position: static; }
+        #settingsPanel { right: 1rem; width: min(270px, calc(100vw - 2rem)); }
+        .test-topbar > div:first-child > div:nth-child(2) { flex: 1 1 100%; flex-wrap: wrap !important; }
+        .test-topbar > div:first-child > div:nth-child(2) { justify-content: flex-start; }
+        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) > span { display: none; }
+        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
+        html.design-studio header.test-topbar > div:first-child { padding: .65rem 1rem !important; }
+        html.design-studio .gradebook-toolbar, html.design-studio .studio-hero-card, html.design-studio .global-report-toolbar { padding: 1rem !important; }
+        html.design-studio #gradebookHeaderRow > th:first-child,
+        html.design-studio #gradebookBody tr > td:first-child { width: 120px; min-width: 120px; max-width: 120px; overflow-wrap: anywhere; }
+        html.design-studio #gbLevelFilterBar { display: flex; max-width: 100%; }
+      }
+    }
+
+    @media print {
+      .gr-teacher-comment-print { display: block; white-space: pre-wrap; }
+      html.design-studio .bar-fill-inner { background-color: #94b9e8 !important; }
+    }

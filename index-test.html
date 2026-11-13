@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="fr" class="design-studio">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carnet de notes - 2026/2027</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script src="echelles-niveaux.js"></script>
+  <link rel="stylesheet" href="carnet-test/css/tailwind.css">
+  <link rel="stylesheet" href="carnet-test/css/base.css">
+  <link rel="stylesheet" href="carnet-test/css/design.css">
+  <link rel="stylesheet" href="carnet-test/css/fonctionnalites.css">
+  <link rel="stylesheet" href="carnet-test/css/studio.css">
+  <link rel="stylesheet" href="carnet-test/css/test.css">
+</head>
+<body class="min-h-screen flex flex-col">
+
+  <div id="welcomeOverlay" class="welcome-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+    <div class="welcome-card">
+      <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
+      <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
+      <p>La solution tout-en-un pour gérer vos évaluations!</p>
+      <div class="welcome-actions">
+        <button id="welcomeLoad" class="primary" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
+        <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
+      </div>
+      <section class="welcome-templates" aria-labelledby="welcomeTemplatesTitle">
+        <h3 id="welcomeTemplatesTitle">Explorer une classe modèle</h3>
+        <div class="welcome-template-list">
+          <button type="button" data-example-group="grp_presco">Test-Présco</button>
+          <button type="button" data-example-group="grp_regulier_2e">Test-2e</button>
+          <button type="button" data-example-group="grp_multi_5e6e">Test-5e/6e</button>
+        </div>
+      </section>
+    </div>
+  </div>
+  <div id="tutorialOverlay" class="tour-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
+    <div id="tourHighlight" class="tour-highlight" aria-hidden="true"></div>
+    <div id="tourCard" class="tour-card">
+      <div id="tourProgress" class="text-xs font-bold text-slate-500"></div>
+      <h2 id="tourTitle"></h2>
+      <p id="tourDescription"></p>
+      <div class="tour-actions">
+        <button id="tourSkip" type="button">Passer le tutoriel</button>
+        <button id="tourNext" type="button">Suivant →</button>
+      </div>
+    </div>
+  </div>
+
+  <aside class="test-sidebar no-print" aria-label="Navigation principale">
+    <div class="test-sidebar-brand"><h1>Carnet de notes</h1><span>2026-2027</span></div>
+    <div class="test-sidebar-sections">
+      <section class="test-sidebar-section">
+        <div class="test-sidebar-heading">
+          <h2 id="sidebarGroupLabel" class="test-sidebar-label">Groupe</h2>
+          <span id="sidebarSingleGroup" class="test-single-group">Aucun groupe</span>
+          <select id="headerGroupSelect" class="hidden" aria-label="Groupe actif" title="Changer de groupe"></select>
+          <div class="test-group-actions">
+            <button id="btnSidebarGroupMenu" type="button" aria-label="Options des groupes" aria-expanded="false" aria-controls="sidebarGroupMenu" title="Ajouter ou gérer les groupes">+</button>
+            <div id="sidebarGroupMenu" class="test-group-menu hidden">
+              <button id="btnSidebarNewGroup" type="button">Créer un groupe</button>
+              <button id="btnSidebarManageGroups" type="button">Gérer les groupes</button>
+            </div>
+          </div>
+        </div>
+        <nav id="testClassNavigation" class="test-sidebar-nav" aria-label="Groupe et élèves"></nav>
+      </section>
+      <section class="test-sidebar-section">
+        <h2 class="test-sidebar-label">Étape et bulletin</h2>
+        <nav id="testTermNavigation" class="test-sidebar-nav" aria-label="Étapes"></nav>
+        <nav id="testReportNavigation" class="test-sidebar-nav" aria-label="Bulletin"></nav>
+      </section>
+      <section class="test-sidebar-section">
+        <h2 class="test-sidebar-label">Matières</h2>
+        <nav id="testSubjectNavigation" aria-label="Matières et compétences">
+          <div id="subjectSubTabsContainer" class="hidden no-print flex flex-wrap items-center gap-1.5" aria-label="Compétences de la matière"></div>
+        </nav>
+      </section>
+    </div>
+    <nav class="test-sidebar-footer test-sidebar-nav" aria-label="Informations et accueil">
+      <button id="btnOpenWelcomeFromSidebar" type="button">
+        <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg>
+        <span>Accueil</span>
+      </button>
+      <button id="btnReferences" type="button" title="Informations et sources pédagogiques">
+        <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+        <span>Informations et sources</span>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- TOP HEADER (ERGONOMIC, ZERO HORIZONTAL OVERFLOW AT ANY WIDTH) -->
+  <header class="test-topbar bg-slate-900 text-white sticky top-0 z-30 shadow-md no-print w-full">
+    <div class="site-layout max-w-7xl mx-auto px-3 sm:px-5 py-2.5 flex flex-col gap-2">
+      <!-- Row 1: Brand Title + Étape Switcher (Shifted left with Bulletin global at the end of Étape 3) -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="test-original-brand flex items-baseline gap-2">
+          <h1 class="brand-title text-lg sm:text-2xl font-extrabold text-white tracking-tight leading-none">
+            Carnet de notes
+          </h1>
+          <span class="brand-title text-xs sm:text-sm font-extrabold px-2 py-0.5 rounded-md bg-indigo-500/25 border border-indigo-400/40 text-indigo-200">
+            2026-2027
+          </span>
+        </div>
+
+        <!-- ÉTAPE 1, 2, 3 + BULLETIN GLOBAL -->
+        <div class="flex flex-wrap items-center gap-2 sm:mr-6">
+          <button id="btnNavStudentsTop" type="button" class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 flex items-center gap-1" title="Gérer les élèves, leur niveau et leurs adaptations">
+            <svg class="hdr-ico ico-students" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.2" cy="9.2" r="2.4"/><path d="M16.5 14.6c2.6.2 4.5 2 4.5 4.9"/></svg>
+            <span>Élèves</span>
+            <span id="headerStudentCount" class="rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold">0</span>
+          </button>
+          <form id="studentSearchPopover" class="test-student-search" role="search">
+            <button id="btnStudentSearch" type="submit" aria-label="Rechercher un élève" title="Rechercher un élève">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+            </button>
+            <input id="headerStudentSearch" type="search" autocomplete="off" aria-label="Rechercher un élève" placeholder="Rechercher">
+            <div id="studentSearchMessage" aria-live="polite"></div>
+          </form>
+          <div class="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
+            <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white">Étape 1</button>
+            <button type="button" data-term="2" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 2</button>
+            <button type="button" data-term="3" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 3</button>
+            <div class="h-4 w-px bg-slate-700 mx-1"></div>
+            <button id="btnNavGlobalReport" type="button" class="px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer text-amber-300 hover:bg-amber-500/20 flex items-center gap-1">
+              <span>Synthèse</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Row 2: Action Toolbar (Wraps cleanly, fits narrow Canvas & Google Sites without ever clipping right) -->
+      <div class="flex flex-wrap items-center justify-between gap-1.5 pt-1.5 border-t border-slate-800/90">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button id="btnPrintView" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" aria-label="Imprimer" title="Imprimer la grille ou vue actuelle">
+            <svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
+            <span>Imprimer</span>
+          </button>
+          <button id="btnExportExcel" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-2xs cursor-pointer" aria-label="Exporter" title="Télécharger tout le carnet formaté en fichier Excel (.xlsx)">
+            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 10h17M3.5 15h17M10 4v16"/></svg>
+            <span>Exporter</span>
+          </button>
+
+          <button id="btnExportJSON" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Télécharger un fichier de sauvegarde (.json)">
+            <svg class="hdr-ico ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7.5" y="13" width="9" height="6" rx="1"/></svg>
+            <span>Sauvegarder</span>
+          </button>
+          <button id="btnOpenJSONDirect" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" title="Charger un fichier de sauvegarde (.json)">
+            <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
+            <span>Charger</span>
+          </button>
+          <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
+          <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
+
+        </div>
+
+        <div class="flex flex-wrap items-center gap-1.5">
+          <button id="btnUndo" type="button" class="hdr-icobtn" title="Annuler (Ctrl+Z)" aria-label="Annuler" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+          </button>
+          <button id="btnRedo" type="button" class="hdr-icobtn" title="Rétablir (Ctrl+Y)" aria-label="Rétablir" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/></svg>
+          </button>
+          <div class="relative test-settings-anchor">
+            <button id="btnSettings" type="button" class="hdr-icobtn" title="Options" aria-label="Options" aria-haspopup="true" aria-expanded="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+            </button>
+            <div id="settingsPanel" class="hidden" role="dialog" aria-label="Options">
+              <div class="sp-title">Options d'affichage</div>
+              <div class="sp-row">
+                <span>Thème</span>
+                <div class="sp-seg" data-pref="theme">
+                  <button type="button" data-val="light">Clair</button>
+                  <button type="button" data-val="dark">Sombre</button>
+                </div>
+              </div>
+              <div class="sp-row">
+                <span>Taille du texte</span>
+                <div class="sp-seg" data-pref="textSize">
+                  <button type="button" data-val="sm" style="font-size:11px">A</button>
+                  <button type="button" data-val="md" style="font-size:13px">A</button>
+                  <button type="button" data-val="lg" style="font-size:16px">A</button>
+                </div>
+              </div>
+              <div class="sp-title" style="margin-top:.6rem">Sauvegarde</div>
+              <label class="sp-check"><input type="checkbox" data-pref-check="backupReminder"> <span>Rappel de sauvegarde à la fermeture</span></label>
+              <button id="btnDownloadJSON" type="button" class="sort-btn">Télécharger une copie JSON</button>
+              <button id="btnUnlinkJSON" type="button" class="sort-btn">Délier le fichier</button>
+            </div>
+          </div>
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
+          <span class="hdr-sep" aria-hidden="true"></span>
+          <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" aria-label="Plein écran" title="Basculer en plein écran">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+            <span id="fullscreenBtnLabel">Plein écran</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 3: Subject Selector Grid (5 columns on desktop, 2 on mobile — 100% visible, zero overflow) -->
+    <div class="test-old-subject-bar bg-slate-800/95 border-t border-slate-700/80 px-3 sm:px-5 py-2">
+      <div class="site-layout max-w-7xl mx-auto">
+        <div id="subjectTabsContainer" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT AREA -->
+  <main class="site-layout flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-4 space-y-4">
+    <div id="printMeta" aria-hidden="true"></div>
+
+    <!-- VIEW 1: CARNET & TRAVAUX (ONLY ELEMENT THAT SCROLLS HORIZONTALLY AS WORKS ARE ADDED) -->
+    <section id="viewGradebook" class="space-y-3">
+      <div id="emptyRosterNotice" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-950">
+        <div class="empty-roster-copy">
+          <div id="emptyRosterTitle" class="font-bold">Votre carnet est prêt.</div>
+          <div id="emptyRosterDescription" class="mt-1">Ajoutez vos élèves et choisissez leur niveau pour afficher les grilles du bon cycle.</div>
+          <button id="btnOpenStudentsFromEmpty" type="button" class="mt-2 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-500">
+            Ajouter des élèves
+          </button>
+        </div>
+        <div class="empty-roster-visual flex items-center justify-end pr-6" aria-hidden="true">
+          <img id="emptyRosterAtmosphere" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+          <svg class="w-28 h-28 text-slate-700 opacity-15" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="22" y="16" width="66" height="88" rx="6"/>
+            <line x1="34" y1="16" x2="34" y2="104"/>
+            <line x1="44" y1="36" x2="74" y2="36"/>
+            <line x1="44" y1="50" x2="74" y2="50"/>
+            <line x1="44" y1="64" x2="64" y2="64"/>
+            <path d="M78 78l18-18 8 8-18 18-10 2z"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Compact Toolbar -->
+      <div class="gradebook-toolbar bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
+        <img id="gbSubjectAtmosphere" class="gradebook-atmosphere" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h2 id="gbSubjectTitle" class="text-base sm:text-lg font-bold text-slate-900">Mathématique — C1 : Résoudre une situation-problème</h2>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 no-print">
+          <button id="btnNewEvaluation" type="button" aria-expanded="false" aria-controls="newEvaluationChoices" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
+            <span>＋ Nouvelle évaluation</span>
+          </button>
+          <div id="newEvaluationChoices" class="new-evaluation-choices hidden" role="group" aria-label="Type d’évaluation">
+            <button id="btnOpenAddAssignment" type="button">Déjà réalisée</button>
+            <button id="btnAddVisualTraceFromGb" type="button" title="Remplir une grille d’observation">Observable</button>
+          </div>
+          <div class="gradebook-metrics">
+            <div class="gradebook-metric"><span>Travaux &amp; traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
+            <div class="gradebook-metric"><span>Moyenne du groupe</span><strong id="kpiClassAverage">—</strong></div>
+            <button id="btnWeightMode" type="button" aria-expanded="false" aria-controls="weightControls">Pondération</button>
+            <span id="weightControls" class="hidden">
+              <button id="btnResetEqualWeights" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Répartir équitablement la pondération entre les évaluations">Répartir également</button>
+            </span>
+          </div>
+          <button id="btnClearStudentFilter" type="button" class="hidden px-2 py-1 rounded-lg text-xs bg-slate-100" title="Afficher tous les élèves"></button>
+          <span id="weightWarningBanner" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-800 border border-red-300">
+            Total des pondérations : <span id="weightTotalVal">0</span>% (doit donner 100%)
+          </span>
+        </div>
+      </div>
+
+      <!-- Gradebook Table: THE ONLY CONTAINER WITH HORIZONTAL SCROLL AS COLUMNS GROW -->
+      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div id="gradebookScrollContainer" class="overflow-x-auto custom-scrollbar w-full">
+          <table class="w-full min-w-max text-left border-collapse">
+            <thead>
+              <tr id="gradebookHeaderRow" class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
+                <!-- Populated dynamically -->
+              </tr>
+            </thead>
+            <tbody id="gradebookBody" class="divide-y divide-slate-200 text-xs">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: BARÈME (1 SEULE CASE PAR RANGÉE — ZERO HORIZONTAL SCROLL) -->
+    <section id="viewBareme" class="hidden space-y-3">
+      <div class="studio-hero-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+        <img id="baremeSubjectAtmosphere" class="studio-only-atmosphere" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btnBackToGradebookFromBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1 no-print">
+              <span>← Retour au Carnet</span>
+            </button>
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Barème — <span id="baremeSubjectLabel" class="text-indigo-600"></span></h2>
+          </div>
+          <div class="flex items-center gap-2 no-print">
+            <button id="btnPrintBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer">
+              Imprimer ce barème
+            </button>
+            <button id="btnClearStudentBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-red-50 transition cursor-pointer">
+              Réinitialiser l'élève
+            </button>
+          </div>
+        </div>
+
+        <!-- Student Pill Selector (Wrapped, No Horizontal Scroll) -->
+        <div id="baremeStudentPills" class="flex flex-wrap items-center gap-1.5 no-print">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Majority Calculation & Nuance Selector Banner -->
+        <div class="bg-slate-900 text-white rounded-xl p-3.5 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="text-[11px] uppercase tracking-wider text-slate-400 font-semibold">Élève : <span id="baremeCurrentStudentName" class="text-white font-bold">Élève</span></div>
+            <div id="baremeMajorityExplanation" class="text-xs sm:text-sm text-slate-200">
+              Aucun critère sélectionné.
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-1 no-print">
+            <span class="text-[11px] text-slate-300 mr-1">Cote :</span>
+            <div id="baremeFineGradeButtons" class="flex flex-wrap items-center gap-1">
+              <!-- A+ to E buttons populated dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Fluid 5-Column Barème Matrix (1 Choice Per Row — Zero Horizontal Scroll) -->
+        <div class="observation-matrix w-full overflow-x-auto custom-scrollbar">
+          <table class="rubric-matrix-table">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800 text-[11px]">
+                <th class="p-2 border border-slate-200 w-[15%] font-bold text-left">Critères<br>(1 choix / rangée)</th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-emerald-50/70">
+                  <div class="font-extrabold text-emerald-900">A+ (100) • A (95) • A- (90)</div>
+                  <div id="colCountBareme_A" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-emerald-300 text-emerald-800 font-bold">0</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-blue-50/70">
+                  <div class="font-extrabold text-blue-900">B+ (85) • B (80) • B- (75)</div>
+                  <div id="colCountBareme_B" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-blue-300 text-blue-800 font-bold">0</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-amber-50/70">
+                  <div class="font-extrabold text-amber-900">C+ (70) • C (65) • C- (60)</div>
+                  <div id="colCountBareme_C" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-amber-300 text-amber-800 font-bold">0</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-orange-50/70">
+                  <div class="font-extrabold text-orange-900">D+ (55) • D (50) • D- (45)</div>
+                  <div id="colCountBareme_D" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-orange-300 text-orange-800 font-bold">0</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-red-50/70">
+                  <div class="font-extrabold text-red-900">E (40)</div>
+                  <div id="colCountBareme_E" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-red-300 text-red-800 font-bold">0</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="baremeMatrixBody" class="text-xs">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- Éditeur de trace observable -->
+    <section id="viewQuickObs" class="hidden space-y-4">
+      <div class="studio-hero-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
+        <img id="qoSubjectAtmosphere" class="studio-only-atmosphere" src="https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btnBackToGradebookFromTrace" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1">
+              <span>← Retour au Carnet</span>
+            </button>
+            <h2 class="text-base font-bold text-slate-900">Trace observable — <span id="qoSubjectBadge" class="text-indigo-600"></span></h2>
+            <span id="qoEditModeBadge" class="hidden px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300"></span>
+          </div>
+        </div>
+
+        <!-- Activity Name & Save Session to Gradebook Bar (Compact & Clean) -->
+        <div class="test-trace-save-bar bg-amber-50/90 border border-amber-200 rounded-xl px-3 py-2 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex-1 min-w-[210px] flex items-center gap-2">
+            <label for="qoSessionTitleInput" class="text-xs font-bold text-amber-950 whitespace-nowrap">Nom de la trace :</label>
+            <input id="qoSessionTitleInput" type="text" placeholder="Ex: Atelier manipulation fractions, Causerie, Jeu de rôle..." class="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500" />
+          </div>
+          <div id="qoTargetLevelsBox" class="hidden items-center gap-1 flex-wrap"></div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span id="qoEvaluatedCounter" class="inline-flex items-center text-[11px] font-semibold text-amber-900 px-2 py-1 rounded-lg bg-white border border-amber-200 whitespace-nowrap leading-none">
+              0 évalué(s)
+            </span>
+            <button id="btnCommitObsSessionToGradebook" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-2xs transition cursor-pointer whitespace-nowrap">
+              <span id="btnCommitTopLabel">Enregistrer au carnet</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Compétences liées (trace partagée) -->
+        <div id="qoLinkedPartsBox" class="hidden rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+          <span class="text-xs font-bold text-slate-700">Compte aussi pour :</span>
+          <span id="qoLinkedParts" class="flex flex-wrap gap-x-4 gap-y-1"></span>
+          <span id="qoLinkedHint" class="text-[11px] text-slate-500"></span>
+        </div>
+      </div>
+
+      <div id="qoStudentBox" class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs no-print">
+        <div id="qoStudentGrid" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- PART A: INTEGRATED SUBJECT OBSERVABLE RUBRIC (1 SEULE CASE PAR RANGÉE -> DRIVES COTE BELOW) -->
+      <div id="observationPrintGrid" class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+        <div class="bg-indigo-950 text-white rounded-xl p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div class="space-y-0.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer la grille d’évaluation" aria-label="Imprimer la grille d’évaluation"><svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
+              <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Grille d’évaluation — <span id="sgCurrentStudentName" class="text-white font-bold">Élève</span></span>
+            </div>
+            <div id="sgMajorityExplanation" class="text-xs sm:text-sm text-indigo-100"></div>
+          </div>
+          <div class="flex items-center gap-2 no-print">
+            <button id="btnClearCurrentStudentObs" type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-indigo-900 hover:bg-red-600 text-indigo-100 hover:text-white border border-indigo-700 transition cursor-pointer">
+              Coter N/A (« - ») pour cet élève
+            </button>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 italic">Grille locale inspirée des cadres MEQ conçue pour évaluer les apprentissages selon les attentes et le contexte.</p>
+        <p id="prescoRubricNotice" class="hidden text-xs text-amber-900">Préscolaire : le bulletin utilise quatre constats qualitatifs, sans pourcentage officiel. Dans cette grille locale, A et B correspondent au même constat « se développe très bien »; C, D et E correspondent respectivement à « adéquatement », « avec certaines difficultés » et « avec des difficultés importantes ». La cote et le pourcentage calculés ici ne sont pas un constat ministériel : utilisez vos observations et votre jugement pour le bulletin.</p>
+        <p id="firstCycleExplorationNotice" class="hidden text-xs text-amber-900">Au 1er cycle, cette grille est un outil local d’exploration : le cadre d’évaluation de cette discipline vise les 2e et 3e cycles. La cote affichée ici n’est pas un résultat disciplinaire ministériel pour le 1er cycle.</p>
+        <p class="no-print text-xs text-slate-500">Faites défiler la grille horizontalement au besoin.</p>
+        <!-- Fluid 5-Column Subject Rubric Table (1 Choice Per Row, Printable) -->
+        <div class="observation-matrix w-full overflow-x-auto custom-scrollbar" tabindex="0" role="region" aria-label="Grille d'évaluation à défilement horizontal">
+          <table class="rubric-matrix-table">
+            <thead>
+              <tr class="bg-slate-100 text-slate-800 text-[11px]">
+                <th class="p-2 border border-slate-200 w-[15%] font-bold text-left">Critère observé<br>(1 choix / rangée)</th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-emerald-50/70">
+                  <div class="font-extrabold text-emerald-900">Niveau A (90-100%)</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-blue-50/70">
+                  <div class="font-extrabold text-blue-900">Niveau B (75-85%)</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-amber-50/70">
+                  <div class="font-extrabold text-amber-900">Niveau C (60-70%)</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-orange-50/70">
+                  <div class="font-extrabold text-orange-900">Niveau D (50-55%)</div>
+                </th>
+                <th class="p-2 border border-slate-200 w-[17%] text-center bg-red-50/70">
+                  <div class="font-extrabold text-red-900">Niveau E (≤40%)</div>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="sgMatrixBody" class="text-xs">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Cote de la trace observable et indicateurs rapides -->
+        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+            <h3 class="text-sm font-bold text-slate-900">Cote de la trace observable — <span id="qoBottomStudentName" class="text-indigo-600">Élève</span></h3>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+              Ajuster la note
+            </label>
+            <div id="qoGradePills" class="grade-pills-single-line">
+              <!-- A+ to E buttons on a single line -->
+            </div>
+          </div>
+
+          <!-- Categorized PIA / Plan d'intervention Observable Indicators -->
+          <div class="space-y-2 pt-1 border-t border-slate-100">
+            <div class="flex items-center justify-between gap-2">
+              <label class="text-[11px] font-bold uppercase tracking-wider text-slate-700">Observations pertinentes (Plan d'intervention)</label>
+              <span id="qoSelectedTagsCount" class="text-[10px] font-semibold text-indigo-600">0 sélectionné(s)</span>
+            </div>
+
+            <!-- Category Tabs (6 logical PIA categories) -->
+            <div id="qoCategoryTabs" class="grid grid-cols-2 sm:grid-cols-3 gap-1">
+              <!-- Populated dynamically -->
+            </div>
+
+            <!-- Indicators for the active category -->
+            <div id="qoQuickTags" class="flex flex-wrap gap-1.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 min-h-[76px] items-start content-start">
+              <!-- Tags populated dynamically -->
+            </div>
+
+            <!-- Selected indicators summary strip -->
+            <div id="qoActiveStudentTagsStrip" class="flex flex-wrap gap-1 pt-0.5">
+              <!-- Shows currently selected tags across all categories for this student -->
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label for="qoCommentInput" class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Notes</label>
+            <textarea id="qoCommentInput" rows="2" placeholder="Notez vos observations pour cet élève..." class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          </div>
+        </div>
+
+    </section>
+
+    <!-- VIEW 4: LISTE D'ÉLÈVES & ADAPTATIONS À LA PIÈCE -->
+    <section id="viewStudents" class="hidden space-y-4">
+      <div class="grid grid-cols-1 gap-4">
+        <!-- Manage Students & Per-Student Adaptations -->
+        <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <img class="student-manager-atmosphere" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="flex items-center gap-2">
+              <button id="btnBackToGradebookFromStudents" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1">
+                <span>← Retour au Carnet</span>
+              </button>
+              <h2 class="text-base font-bold text-slate-900">Liste d'élèves & Adaptations à la pièce</h2>
+            </div>
+          </div>
+
+          <div id="groupBar" class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5"></div>
+
+          <div id="studentListTools" class="flex flex-wrap items-center gap-2">
+            <label class="search-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="studentSearch" type="search" placeholder="Chercher…" autocomplete="off" aria-label="Chercher un élève dans la liste">
+            </label>
+            <button id="btnSortAZ" type="button" class="sort-btn" title="Trier par prénom">Prénom <span aria-hidden="true">↓</span></button>
+            <button id="btnSortLastName" type="button" class="sort-btn" title="Trier par nom de famille">Nom <span aria-hidden="true">↓</span></button>
+            <button id="btnSortGrade" type="button" class="sort-btn" title="Trier par niveau scolaire">Niveau <span aria-hidden="true">↓</span></button>
+          </div>
+
+          <p id="noGroupNotice" class="no-group-notice hidden">Pour ajouter des élèves, créez d’abord un groupe avec « Nouveau groupe ».</p>
+          <div id="studentAddRow" class="student-add-row">
+            <input id="newStudentName" type="text" placeholder="Prénom" aria-label="Prénom de l’élève" class="student-name-field px-2.5 py-2 rounded-lg border border-slate-300 text-sm" />
+            <input id="newStudentLastName" type="text" placeholder="Nom de famille" aria-label="Nom de famille de l’élève" class="student-name-field px-2.5 py-2 rounded-lg border border-slate-300 text-sm" />
+            <button id="btnAddStudent" type="button" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer">
+              ＋ Ajouter
+            </button>
+          </div>
+
+          <div id="studentManagerList" class="divide-y divide-slate-100">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <dialog id="referencesDialog" aria-labelledby="referencesTitle" class="no-print rounded-xl border border-slate-200 p-4 shadow-xl text-slate-800" style="width:min(720px, 94vw); max-height:85vh; overflow:auto">
+      <div class="flex items-center justify-between gap-3">
+        <h2 id="referencesTitle" class="text-base font-bold">Informations pédagogiques</h2>
+        <button id="btnCloseReferences" type="button" class="px-2 py-1 rounded-lg bg-slate-100" aria-label="Fermer">✕</button>
+      </div>
+      <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
+        <summary class="text-sm font-bold cursor-pointer">Adaptation ou modification : quelle différence ?</summary>
+        <div class="mt-3 space-y-2 text-xs leading-relaxed">
+          <p><strong>Adaptation :</strong> on ajuste les moyens ou les conditions pour répondre aux besoins de l’élève, sans changer les attentes par rapport aux exigences du PFEQ. Par exemple, accorder du temps supplémentaire ou permettre un outil d’aide, lorsque son utilisation est compatible avec ce qui est évalué.</p>
+          <p><strong>Modification :</strong> on change les attentes par rapport aux exigences du PFEQ pour l’élève. Par exemple, en mathématique, évaluer des apprentissages d’un cycle antérieur plutôt que les attentes normalement visées pour son niveau. Ce n’est pas simplement une tâche plus courte ou un outil différent.</p>
+          <p>La modification est exceptionnelle : elle découle d’une analyse concertée des besoins et s’inscrit dans la démarche du plan d’intervention. Elle peut avoir des conséquences sur le parcours scolaire et la communication des résultats. Vérifiez les règles applicables avec l’équipe-école.</p>
+          <p>La flexibilité pédagogique, offerte au quotidien à tous les élèves, est distincte de ces mesures. Ces trois formes ne constituent pas une suite obligatoire d’étapes. Les marqueurs du carnet documentent une situation; ils ne remplacent ni le plan d’intervention ni le jugement professionnel.</p>
+          <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differencitation-pedago-outil-complementaire3.pdf" target="_blank" rel="noopener noreferrer">MEQ — outil sur l’adaptation et la modification ↗</a>
+        </div>
+      </details>
+      <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
+        <summary class="text-sm font-bold text-slate-800 cursor-pointer">Références pédagogiques et sources</summary>
+        <div class="mt-3 space-y-2 text-xs text-slate-700">
+          <p>Choisissez une matière pour afficher ses documents officiels.</p>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Mathématique</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/mathematique" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Français</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études actuel ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation actuel ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-Programme-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme actualisé (obligatoire en 2027-2028) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/francais-langue-enseignement" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Culture et citoyenneté québécoise</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-culture-citoyennete-quebecoise-Primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/culture-citoyennete-quebecoise" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Science et technologie</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation (2e et 3e cycles) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/science-technologie" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Géographie, histoire et éducation à la citoyenneté</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation (2e et 3e cycles) ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/geographie-histoire-education-citoyennete" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Art dramatique</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-art-dramatique-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/art-dramatique" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Arts plastiques</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluatioon-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/arts-plastiques" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Éducation préscolaire</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/prescolaire/Programme-cycle-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Programme-cycle ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/prescolaire/Prescolaire-tableau-domaines-competences.pdf" target="_blank" rel="noopener noreferrer">Domaines et compétences ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/prescolaire/Cadre-evaluation-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/education-prescolaire" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+            </ul>
+            <p class="mt-2">Le programme-cycle propose des éléments d’observation plutôt qu’une progression des apprentissages par année.</p>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Ressources générales et échelles</summary>
+            <ul class="mt-2 space-y-1">
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differenciation-pedagogique.pdf" target="_blank" rel="noopener noreferrer">MEQ — Différenciation pédagogique ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Guide-art-tous-sens.pdf" target="_blank" rel="noopener noreferrer">L’art dans tous les sens — guide pour le domaine des arts ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire.pdf" target="_blank" rel="noopener noreferrer">Échelles du primaire de 2002 ↗</a></li>
+              <li>Échelles :
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-1erCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">1er cycle ↗</a> ·
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-2eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">2e cycle ↗</a> ·
+                <a href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-3eCycle.pdf" target="_blank" rel="noopener noreferrer" class="text-indigo-600 underline">3e cycle ↗</a>
+              </li>
+            </ul>
+          </details>
+        </div>
+      </details>
+    </dialog>
+
+    <!-- VIEW 5: BULLETIN GLOBAL & BILAN FACTUEL ANNUEL DE L'ÉLÈVE -->
+    <section id="viewGlobalReport" class="hidden space-y-4">
+      <!-- Student Selector Band (Equitable 2 lines of 5 students) -->
+      <div class="global-report-toolbar bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
+        <img class="global-report-atmosphere" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-base sm:text-lg font-bold text-slate-900">Synthèse des résultats (2026-2027)</h2>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button id="btnGrPrevStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève précédent">← Préc.</button>
+            <button id="btnGrNextStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève suivant">Suiv. →</button>
+            <button id="btnPrintGlobalReport" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white cursor-pointer flex items-center gap-1.5" title="Imprimer le bilan annuel">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+              <span>Imprimer la synthèse</span>
+            </button>
+          </div>
+        </div>
+
+        <div id="grStudentBand" class="grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Personalized Student Report Card -->
+      <div id="grReportContent" class="space-y-4">
+        <!-- Populated dynamically with 100% deterministic, factual data & SVG charts -->
+      </div>
+    </section>
+
+  </main>
+  <script src="carnet-test/js/navigation.js"></script>
+
+  <dialog id="backupHelpDialog" class="backup-dialog no-print" aria-labelledby="backupHelpTitle">
+    <div class="backup-dialog-heading">
+      <h2 id="backupHelpTitle">Comment sauvegarder mon carnet?</h2>
+      <button id="btnCloseBackupHelp" type="button" class="backup-dialog-close" aria-label="Fermer">×</button>
+    </div>
+    <div class="backup-help-content">
+      <p>Votre carnet contient vos groupes, vos élèves, leurs résultats et vos commentaires. Pour les retrouver plus tard, gardez un fichier de sauvegarde sur votre ordinateur.</p>
+      <ol>
+        <li><strong>Sauvegarder :</strong> cliquez sur « Sauvegarder ». Selon votre navigateur, choisissez un endroit facile à retrouver ou récupérez le fichier dans vos téléchargements. Son nom se termine par <strong>.json</strong>.</li>
+        <li><strong>Vérifier :</strong> si un fichier est lié et que l’écriture est autorisée, les changements y sont enregistrés automatiquement. Sinon, sauvegardez de nouveau après vos modifications. En cas d’erreur ou de refus d’autorisation, ouvrez les options et choisissez « Télécharger une copie JSON ».</li>
+        <li><strong>Reprendre votre travail :</strong> cliquez sur « Charger » et choisissez votre fichier <strong>.json</strong>. Le carnet ouvert sera remplacé par celui du fichier.</li>
+      </ol>
+      <p>Le fichier Excel sert à consulter les résultats; il ne permet pas de recharger le carnet. Conservez aussi une copie de votre fichier de sauvegarde dans un endroit sûr.</p>
+      <p>Si des changements ne sont pas sauvegardés, votre navigateur peut afficher son propre avertissement quand vous fermez la page.</p>
+    </div>
+    <div class="backup-dialog-actions"><button id="btnDoneBackupHelp" type="button" class="backup-dialog-primary">J’ai compris</button></div>
+  </dialog>
+
+  <dialog id="backupLoadDialog" class="backup-dialog no-print" role="alertdialog" aria-labelledby="backupLoadTitle" aria-describedby="backupLoadMessage">
+    <div class="backup-dialog-heading"><h2 id="backupLoadTitle">Charger un autre carnet?</h2></div>
+    <p id="backupLoadMessage">Le fichier choisi remplacera le carnet actuellement affiché. Si vos dernières modifications ne sont pas sauvegardées dans un fichier, elles seront perdues. Vous pouvez annuler et cliquer sur « Sauvegarder » d’abord.</p>
+    <div class="backup-dialog-actions">
+      <button id="btnCancelBackupLoad" type="button" class="backup-dialog-secondary" autofocus>Annuler</button>
+      <button id="btnConfirmBackupLoad" type="button" class="backup-dialog-primary">Choisir un fichier</button>
+    </div>
+  </dialog>
+
+  <div id="modalUnsavedObservation" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="alertdialog" aria-modal="true" aria-labelledby="unsavedObservationTitle" aria-describedby="unsavedObservationMessage">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex items-start gap-3">
+        <span class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-800" aria-hidden="true">
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v4m0 4h.01M10.3 3.9 1.9 18.5A1.7 1.7 0 0 0 3.4 21h17.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.9a1.95 1.95 0 0 0-3.4 0Z"/></svg>
+        </span>
+        <div class="space-y-1">
+          <h3 id="unsavedObservationTitle" class="text-base font-bold text-slate-900">Trace non enregistrée au carnet</h3>
+          <p id="unsavedObservationMessage" class="text-sm leading-relaxed text-slate-600">Cette trace n’apparaîtra pas au carnet ni dans l’export Excel tant que vous ne l’aurez pas enregistrée au carnet.</p>
+        </div>
+      </div>
+      <div class="flex flex-wrap justify-end gap-2 pt-1">
+        <button id="btnStayOnObservation" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-slate-200 cursor-pointer">Continuer à modifier</button>
+        <button id="btnLeaveObservation" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-amber-700 hover:bg-amber-800 text-white shadow-xs cursor-pointer">Quitter sans enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD ASSIGNMENT (/100) -->
+  <div id="modalAddAssignment" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="modalAddAssignmentTitle">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="modalAddAssignmentTitle" class="text-base font-bold text-slate-900">Ajout d’une évaluation</h3>
+        <button id="btnCloseModalAssignment" type="button" aria-label="Fermer" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">✕</button>
+      </div>
+      <div class="space-y-3">
+        <div>
+          <label for="inputAssignmentTitle" class="block text-xs font-semibold text-slate-700 mb-1">Nom du travail / de l'évaluation (obligatoire)</label>
+          <input id="inputAssignmentTitle" type="text" placeholder="Ex: Situation-problème : Le jardin, Dictée #1..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+        <div>
+          <label for="inputAssignmentOutOf" class="block text-xs font-semibold text-slate-700 mb-1">Pondération de l’évaluation : note sur…</label>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-bold text-slate-500">/</span>
+            <input id="inputAssignmentOutOf" type="number" min="1" step="any" value="100" class="w-24 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <span class="text-[11px] text-slate-500">Ex : 40. Les notes saisies sont converties automatiquement sur 100 (note ÷ total × 100).</span>
+          </div>
+        </div>
+        <div id="asgTargetLevelsBox" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+          <div class="text-xs font-semibold text-slate-700 mb-1.5">Niveau(x) visé(s) par cette évaluation :</div>
+          <div id="asgTargetLevelsList" class="flex flex-wrap gap-1.5"></div>
+        </div>
+        <div id="asgLinkedPartsBox" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+          <div class="text-xs font-semibold text-slate-700 mb-1">Cette évaluation vise aussi…</div>
+          <div id="asgLinkedParts" class="flex flex-wrap gap-x-4 gap-y-1"></div>
+          <p class="mt-1.5 text-[11px] text-slate-500">La note est saisie une seule fois et apparaît dans chaque onglet coché. La pondération (%) se règle séparément dans chaque onglet : elle peut valoir 10 % d’une compétence et 25 % d’une autre.</p>
+        </div>
+        <div>
+          <label for="inputAssignmentDate" class="block text-xs font-semibold text-slate-700 mb-1">Date (optionnel)</label>
+          <input id="inputAssignmentDate" type="date" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+        </div>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button id="btnCancelModalAssignment" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
+        <button id="btnConfirmAddAssignment" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">Ajouter au carnet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: NIVEAUX VISÉS PAR L'ÉVALUATION -->
+  <div id="modalTargetLevels" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="modalTargetLevelsTitle">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <h3 id="modalTargetLevelsTitle" class="text-sm font-bold text-slate-900">Niveaux visés par l'évaluation</h3>
+        <button id="btnCloseModalTargetLevels" type="button" class="text-slate-400 hover:text-slate-600 text-base font-bold cursor-pointer">✕</button>
+      </div>
+      <p id="modalTargetLevelsAsgTitle" class="text-xs font-bold text-indigo-700 truncate"></p>
+      <div class="text-[11px] text-slate-500">Cochez les niveaux d'élèves auxquels cette évaluation s'applique :</div>
+      <div id="modalTargetLevelsList" class="space-y-2 py-1"></div>
+      <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+        <button id="btnConfirmTargetLevels" type="button" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-2xs cursor-pointer">Valider</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: GROUP -->
+  <div id="modalGroup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 id="groupModalTitle" class="text-base font-bold text-slate-900">Nouveau groupe</h3>
+        <button id="btnGroupClose" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">✕</button>
+      </div>
+      <div>
+        <label for="groupNameInput" class="block text-xs font-semibold text-slate-700 mb-1">Nom du groupe</label>
+        <input id="groupNameInput" type="text" placeholder="Ex : 5e A, Préscolaire B…" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+      </div>
+      <div>
+        <label for="groupLevelSelect" class="block text-xs font-semibold text-slate-700 mb-1">Niveau du groupe <span class="font-normal text-slate-500">(laisser sur « Multi-niveaux » pour une classe combinée ex. 5e/6e)</span></label>
+        <select id="groupLevelSelect" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="">Multi-niveaux / choisir par élève</option>
+          <option value="P">Préscolaire</option>
+          <option value="1">1re année</option>
+          <option value="2">2e année</option>
+          <option value="3">3e année</option>
+          <option value="4">4e année</option>
+          <option value="5">5e année</option>
+          <option value="6">6e année</option>
+        </select>
+      </div>
+      <div>
+        <div class="text-xs font-semibold text-slate-700 mb-1">Matières que vous enseignez à ce groupe</div>
+        <div id="groupSubjectList" class="grid grid-cols-2 gap-x-3 gap-y-1"></div>
+      </div>
+      <div id="groupCopyBox" class="hidden">
+        <label for="groupCopySelect" class="block text-xs font-semibold text-slate-700 mb-1">Reprendre la liste d’élèves de…</label>
+        <select id="groupCopySelect" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"></select>
+        <p class="mt-1 text-[11px] text-slate-500">Seuls les noms, niveaux et adaptations sont copiés, pas les notes.</p>
+      </div>
+      <div class="flex items-center justify-end gap-2 pt-2">
+        <button id="btnGroupCancel" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
+        <button id="btnGroupSave" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: DELETE LINKED ASSIGNMENT -->
+  <div id="modalDeleteLinked" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <h3 class="text-base font-bold text-slate-900">Supprimer l’évaluation</h3>
+        <button id="btnDelLinkedClose" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer">✕</button>
+      </div>
+      <p class="text-sm text-slate-700">« <strong id="delLinkedTitle"></strong> » est aussi présente dans : <strong id="delLinkedNames"></strong>.</p>
+      <div class="flex flex-col gap-2 pt-1">
+        <button id="btnDelLinkedAll" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-rose-100 hover:bg-rose-200 text-rose-900 border border-rose-200 cursor-pointer">Supprimer partout</button>
+        <button id="btnDelLinkedHere" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 cursor-pointer">Retirer seulement de cet onglet</button>
+        <button id="btnDelLinkedCancel" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: BANQUE & ASSISTANT DE COMMENTAIRES -->
+  <div id="modalCommentBank" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="cbModalTitle">
+    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-xl border border-slate-200 space-y-3.5 max-h-[90vh] flex flex-col">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+        <div>
+          <h3 id="cbModalTitle" class="text-base font-bold text-slate-900">Banque & Rédaction de commentaire</h3>
+          <p id="cbModalSubtitle" class="text-xs text-slate-600 mt-0.5"></p>
+        </div>
+        <button id="btnCbClose" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer" aria-label="Fermer">✕</button>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+        <div class="flex items-center gap-2 flex-wrap">
+          <label for="cbPronounSelect" class="text-xs font-semibold text-slate-700">Formulation :</label>
+          <select id="cbPronounSelect" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800">
+            <option value="prenom">Prénom + « il » (sans répétition)</option>
+            <option value="prenom_elle">Prénom + « elle » (accords féminins)</option>
+            <option value="il">« Il » uniquement</option>
+            <option value="elle">« Elle » uniquement (accords féminins)</option>
+          </select>
+        </div>
+        <button id="btnCbAutoSynthesize" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer flex items-center gap-1.5" title="Rédige un paragraphe cohérent selon la note, le barème et les observations de l’élève">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+          <span>Synthèse selon le dossier</span>
+        </button>
+      </div>
+
+      <div id="cbCategoryTabs" class="flex flex-wrap gap-1.5" role="tablist" aria-label="Catégories de commentaires"></div>
+
+      <div id="cbPhraseList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-[150px] max-h-[240px] custom-scrollbar"></div>
+
+      <div class="space-y-1.5 pt-2 border-t border-slate-100">
+        <div class="flex items-center justify-between text-xs">
+          <label for="cbTextarea" class="font-bold text-slate-800">Texte du commentaire (éditable)</label>
+          <div class="flex items-center gap-2">
+            <span id="cbCharCount" class="text-[11px] font-semibold text-slate-500 tabular-nums">0 caract.</span>
+            <button id="btnCbClear" type="button" class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline cursor-pointer">Effacer</button>
+          </div>
+        </div>
+        <textarea id="cbTextarea" rows="3" placeholder="Cliquez sur des énoncés ci-dessus ou sur « Synthèse selon le dossier » pour composer un commentaire fluide sans répétition du prénom…" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
+        <button id="btnCbCopy" type="button" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 cursor-pointer">Copier le texte</button>
+        <div class="flex items-center gap-2">
+          <button id="btnCbCancel" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
+          <button id="btnCbSave" type="button" class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">Appliquer au carnet</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div id="toastNotification" class="fixed bottom-4 right-4 z-50 hidden bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-lg border border-slate-700 text-xs font-medium items-center gap-2 no-print">
+    <span id="toastIcon" aria-hidden="true"></span>
+    <span id="toastMessage">Action effectuée</span>
+  </div>
+
+  <script src="carnet-test/js/constantes.js"></script>
+  <script src="carnet-test/js/grilles-matieres.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-mathematiques.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-francais.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-ccq.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-sciences.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-univers-social.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-art-dramatique.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-arts-plastiques.js"></script>
+  <script src="carnet-test/js/pedagogie/matieres-prescolaire.js"></script>
+  <script src="carnet-test/js/grilles-cycles.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-mathematiques.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-francais.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-ccq.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-sciences.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-univers-social.js"></script>
+  <script src="carnet-test/js/pedagogie/cycles-art-dramatique.js"></script>
+  <script src="carnet-test/js/grilles-historiques.js"></script>
+  <script src="carnet-test/js/groupes.js"></script>
+  <script src="carnet-test/js/demo.js"></script>
+  <script src="carnet-test/js/etat.js"></script>
+  <script src="carnet-test/js/sauvegarde.js"></script>
+  <script src="carnet-test/js/calculs.js"></script>
+  <script src="carnet-test/js/competences.js"></script>
+  <script src="carnet-test/js/commentaires.js"></script>
+  <script src="carnet-test/js/criteres.js"></script>
+  <script src="carnet-test/js/ui-carnet.js"></script>
+  <script src="carnet-test/js/ui-traces.js"></script>
+  <script src="carnet-test/js/ui-eleves.js"></script>
+  <script src="carnet-test/js/ui-bulletin.js"></script>
+  <script src="carnet-test/js/export-excel.js"></script>
+  <script src="carnet-test/js/impression.js"></script>
+  <script src="carnet-test/js/demarrage.js"></script>
+</body>
+</html>
