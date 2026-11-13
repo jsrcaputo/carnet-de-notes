@@ -199,7 +199,7 @@
       .test-topbar .term-btn:not(.bg-indigo-600) { color: var(--studio-text-muted) !important; }
       .test-sidebar .term-btn { justify-content: flex-start !important; }
       .test-sidebar #btnNavGlobalReport.bg-amber-400 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
-      html.design-studio #studentSearchPopover { position: relative; top: auto; left: auto; z-index: auto; display: flex; align-items: center; width: clamp(150px, 17vw, 220px); padding: 0 .45rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); box-shadow: none; }
+      html.design-studio #studentSearchPopover { position: relative; top: auto; left: auto; z-index: auto; display: flex; align-items: center; width: clamp(180px, 17vw, 220px); padding: 0 .45rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); box-shadow: none; }
       html.design-studio #studentSearchPopover:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
       html.design-studio #studentSearchPopover #btnStudentSearch { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 34px; padding: 0; border: 0; background: transparent; color: var(--studio-text-muted); cursor: pointer; }
       #btnStudentSearch svg { width: 17px; height: 17px; }
