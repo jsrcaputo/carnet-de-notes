@@ -7,6 +7,8 @@
 
 Pour utiliser le carnet, ouvrir `index.html` avec son dossier `carnet-test` et `echelles-niveaux.js` à leurs emplacements respectifs. Le site peut aussi être servi en statique, notamment sur GitHub Pages ; aucun serveur backend n'est requis.
 
+À l’accueil, **Démonstration** charge trois groupes fictifs : Test-001 (préscolaire), Test-201 (2e année) et Test-503 (multi 5e/6e). Fermer l’accueil ou créer son propre groupe ne charge pas ces groupes. La démonstration conserve les groupes existants.
+
 ## Sauvegarde des données
 
 Dans un navigateur compatible avec l'accès aux fichiers, **Sauvegarder** permet de choisir un fichier JSON. Les modifications suivantes y sont enregistrées automatiquement après un court délai. Après **Charger**, il peut être nécessaire de cliquer sur **Sauvegarder** pour autoriser l'écriture. La liaison ne survit pas à la fermeture ou au rechargement de la page : il faut rouvrir le fichier.

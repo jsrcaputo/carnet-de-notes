@@ -794,9 +794,9 @@
     }
 
     const EXAMPLE_GROUP_NAMES = {
-      grp_presco: { old: 'Modèle — Préscolaire', current: 'Test-Présco' },
-      grp_regulier_2e: { old: 'Modèle — 2e année', current: 'Test-2e' },
-      grp_multi_5e6e: { old: 'Modèle — 5e et 6e année', current: 'Test-5e/6e' }
+      grp_presco: { old: ['Modèle — Préscolaire', 'Test-Présco'], current: 'Test-001' },
+      grp_regulier_2e: { old: ['Modèle — 2e année', 'Test-2e'], current: 'Test-201' },
+      grp_multi_5e6e: { old: ['Modèle — 5e et 6e année', 'Test-5e/6e'], current: 'Test-503' }
     };
     const EXAMPLE_GROUP_IDS = new Set(Object.keys(EXAMPLE_GROUP_NAMES));
 
@@ -806,7 +806,7 @@
 
     function updateExampleGroupName(group) {
       const names = EXAMPLE_GROUP_NAMES[group.id];
-      if (names && group.name === names.old) group.name = names.current;
+      if (names && names.old.includes(group.name)) group.name = names.current;
     }
 
     function buildExampleGroups(previousSeed = false) {

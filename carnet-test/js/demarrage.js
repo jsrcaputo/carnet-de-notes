@@ -54,7 +54,7 @@
 
     function showWelcome() {
       document.getElementById('welcomeOverlay').classList.remove('hidden');
-      document.getElementById('welcomeLoad').focus();
+      document.getElementById('welcomeClose').focus();
     }
 
     function hideWelcome() {
@@ -64,8 +64,9 @@
     function dismissWelcome() {
       hideWelcome();
       if (isPristineInitialGroup()) {
+        appState.activeView = 'viewStudents';
         expandedSubjectGroup = null;
-        initializeExampleGroups();
+        renderAll();
       } else {
         navigateToView('viewStudents');
       }
@@ -87,13 +88,11 @@
       hideWelcome();
       requestObservationDraftExit(() => {
         const pristine = isPristineInitialGroup();
-        ensureExampleGroups();
         appState.activeView = 'viewStudents';
         expandedSubjectGroup = null;
         renderAll();
-        const group = appState.groups[0];
         returnToWelcomeAfterGroup = true;
-        openGroupModal(pristine ? 'edit' : 'new', pristine ? group.id : null);
+        openGroupModal('new');
         if (pristine) {
           document.getElementById('groupModalTitle').textContent = 'Créer votre premier groupe';
           document.querySelectorAll('#groupSubjectList input[data-discipline]').forEach(cb => { cb.checked = false; });
@@ -156,18 +155,15 @@
         if (event.target.id === 'welcomeOverlay') dismissWelcome();
       });
       document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
-      document.querySelectorAll('[data-example-group]').forEach(button => {
-        button.addEventListener('click', () => {
-          const groupId = button.getAttribute('data-example-group');
-          requestObservationDraftExit(() => {
-            if (isPristineInitialGroup()) initializeExampleGroups();
-            else ensureExampleGroups();
-            hideWelcome();
-            switchGroup(groupId);
-            appState.activeView = 'viewStudents';
-            expandedSubjectGroup = null;
-            renderAll();
-          });
+      document.getElementById('welcomeDemo').addEventListener('click', () => {
+        requestObservationDraftExit(() => {
+          if (isPristineInitialGroup()) initializeExampleGroups();
+          else ensureExampleGroups();
+          hideWelcome();
+          switchGroup('grp_presco');
+          appState.activeView = 'viewStudents';
+          expandedSubjectGroup = null;
+          renderAll();
         });
       });
       document.getElementById('welcomeLoad').addEventListener('click', () => {
@@ -227,12 +223,10 @@
         btn.addEventListener('click', () => {
           const nextTerm = btn.getAttribute('data-term');
           const nextView = appState.activeView === 'viewGlobalReport' ? viewBeforeGlobalReport : appState.activeView;
-          if (navigateToView(nextView, () => {
+          navigateToView(nextView, () => {
             appState.activeTerm = nextTerm;
             competencyTermSelected = null;
-          })) {
-            notifyUpdate(`Basculé vers l'Étape ${appState.activeTerm}`);
-          }
+          });
         });
       });
 
@@ -354,7 +348,8 @@
 
       // Top bar "Élèves" button (toggles the student manager or returns to the gradebook)
       document.getElementById('btnNavStudentsTop').addEventListener('click', () => {
-        navigateToView(appState.activeView === 'viewStudents' ? 'viewGradebook' : 'viewStudents');
+        const canReturn = hasActiveGroup() && appState.students.length > 0;
+        navigateToView(appState.activeView === 'viewStudents' && canReturn ? 'viewGradebook' : 'viewStudents');
       });
       const sidebarGroupButton = document.getElementById('btnSidebarGroupMenu');
       const sidebarGroupMenu = document.getElementById('sidebarGroupMenu');
@@ -426,7 +421,7 @@
       });
 
       document.getElementById('btnBackToGradebookFromStudents').addEventListener('click', () => {
-        navigateToView('viewGradebook');
+        if (hasActiveGroup() && appState.students.length) navigateToView('viewGradebook');
       });
 
       // Back to Gradebook button inside Visual Trace panel

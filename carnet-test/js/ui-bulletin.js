@@ -463,7 +463,7 @@
               <div id="grTeacherCommentPrint" class="gr-teacher-comment-print">${escapeHtml(st.reportComment || '')}</div>
 
               <div class="p-2.5 rounded-lg bg-indigo-50/60 border border-indigo-200">
-                <span class="font-bold text-indigo-950">Indicateurs observables (PIA) & marqueurs rapides consignés :</span>
+                <span class="font-bold text-indigo-950">Indicateurs observables (PIA) et marqueurs rapides consignés :</span>
                 <div class="mt-1 flex flex-wrap gap-1">
                   ${sortedFlags.map(([fl, count]) => {
                     const def = CELL_FLAGS.find(f => f.code === fl);

@@ -14,6 +14,12 @@
       const studentButton = document.getElementById('btnNavStudentsTop');
       const studentCount = document.getElementById('headerStudentCount');
       if (studentCount) studentCount.textContent = String(appState.students.length);
+      document.getElementById('sidebarStudentsLabel').textContent = appState.students.length === 0
+        ? 'Élève(s)' : appState.students.length === 1 ? 'Élève' : 'Élèves';
+      const hasGroup = hasActiveGroup();
+      document.getElementById('sidebarTermEmpty').classList.toggle('hidden', hasGroup);
+      document.getElementById('testTermNavigation').classList.toggle('is-unavailable', !hasGroup);
+      document.getElementById('testReportNavigation').classList.toggle('is-unavailable', !hasGroup);
       if (studentButton) {
         const isStudentsView = appState.activeView === 'viewStudents';
         studentButton.setAttribute('aria-pressed', String(isStudentsView));
@@ -264,6 +270,7 @@
           const button = document.createElement('button');
           button.type = 'button';
           button.className = activeLvlFilter === level.id ? 'is-active' : '';
+          button.setAttribute('aria-pressed', String(activeLvlFilter === level.id));
           button.textContent = level.label;
           button.addEventListener('click', () => {
             gbLevelFilter = level.id;
@@ -330,7 +337,7 @@
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]' },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]' },
-        { label: 'Note/Jugement final', sub: '', minW: 'min-w-[135px]' },
+        { label: 'Note finale', sub: 'Jugement', minW: 'min-w-[135px]' },
         { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]' }
       ];
 
@@ -1118,7 +1125,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = `cb-tab-btn${cat.id === activeCommentBankCategoryId ? ' is-active' : ''}`;
-        btn.textContent = cat.label;
+        btn.textContent = cat.label.replace(/ & /g, ' et ');
         btn.addEventListener('click', () => {
           activeCommentBankCategoryId = cat.id;
           renderCommentBankPhrases();

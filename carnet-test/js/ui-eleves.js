@@ -123,11 +123,12 @@
       const managedGroups = isExampleGroup(activeGroup)
         ? [...appState.groups.filter(g => !g.placeholder && isExampleGroup(g)), ...visibleGroups]
         : visibleGroups;
+      const groupLabel = count => count === 0 ? 'Groupe(s)' : count === 1 ? 'Groupe' : 'Groupes';
       if (sel) {
         const choices = appState.groups.filter(g => !g.placeholder && (isExampleGroup(activeGroup) || !isExampleGroup(g)));
         const needsChoice = activeIsPlaceholder && choices.length > 0;
         const showSelect = choices.length > 0;
-        document.getElementById('sidebarGroupLabel').textContent = choices.length > 1 ? 'Groupes' : 'Groupe';
+        document.getElementById('sidebarGroupLabel').textContent = groupLabel(choices.length);
         const single = document.getElementById('sidebarSingleGroup');
         single.classList.toggle('hidden', showSelect);
         single.textContent = choices.length ? choices[0].name : 'Aucun groupe';
@@ -158,7 +159,7 @@
         sel.value = needsChoice ? '' : appState.activeGroupId;
       }
       if (!bar) return;
-      bar.innerHTML = '<span class="text-[11px] font-bold uppercase tracking-wide text-slate-500 mr-1">Groupes</span>';
+      bar.innerHTML = `<span class="text-[11px] font-bold uppercase tracking-wide text-slate-500 mr-1">${groupLabel(managedGroups.length)}</span>`;
       managedGroups.forEach(g => {
         const active = g.id === appState.activeGroupId;
         const b = document.createElement('button');
@@ -182,6 +183,7 @@
     function renderStudentsView() {
       renderGroupBar();
       const hasGroup = hasActiveGroup();
+      document.getElementById('btnBackToGradebookFromStudents').classList.toggle('hidden', !hasGroup || !appState.students.length);
       const notice = document.getElementById('noGroupNotice');
       notice.classList.toggle('hidden', hasGroup);
       const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId);

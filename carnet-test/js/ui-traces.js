@@ -107,7 +107,7 @@
 
         const tdTitle = document.createElement('td');
         tdTitle.className = 'p-2 font-bold text-slate-900 bg-slate-50 border border-slate-200 break-words';
-        tdTitle.textContent = row.title;
+        tdTitle.textContent = row.title.replace(/ & /g, ' et ');
         tr.appendChild(tdTitle);
 
         ['A', 'B', 'C', 'D', 'E'].forEach(fam => {
@@ -518,7 +518,7 @@
             ? 'px-2 py-1.5 rounded-lg text-[11px] font-bold bg-slate-900 text-white shadow-2xs flex items-center justify-between gap-1 cursor-pointer truncate'
             : 'px-2 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-between gap-1 cursor-pointer truncate';
           cBtn.innerHTML = `
-            <span class="truncate">${cat.label}</span>
+            <span class="truncate">${escapeHtml(cat.label.replace(/ & /g, ' et '))}</span>
             ${countInCat > 0 ? `<span class="px-1.5 py-0.2 rounded-full text-[10px] bg-indigo-500 text-white font-extrabold">${countInCat}</span>` : ''}
           `;
           cBtn.addEventListener('click', () => {

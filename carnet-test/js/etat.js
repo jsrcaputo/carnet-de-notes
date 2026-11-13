@@ -3,13 +3,13 @@
       const tagCategories = JSON.parse(JSON.stringify(PIA_TAG_CATEGORIES));
 
       return {
-        groups: [{ id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice() }],
+        groups: [{ id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice(), placeholder: true }],
         activeGroupId: 'g1',
         groupStore: {},
         version: 9,
         activeTerm: '1',
         activeSubjectId: 'math_resoudre',
-        activeView: 'viewGradebook',
+        activeView: 'viewStudents',
         selectedStudentId: null,
         annualWeightMode: 'official',
         activeTagCategoryId: 'autonomie',

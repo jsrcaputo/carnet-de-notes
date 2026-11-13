@@ -21,17 +21,10 @@
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
       <p>La solution tout-en-un pour gérer vos évaluations!</p>
       <div class="welcome-actions">
-        <button id="welcomeLoad" class="primary" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
+        <button id="welcomeLoad" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
         <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
+        <button id="welcomeDemo" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg></span>Démonstration</span><span>Trois groupes (préscolaire, 2e année et multi 5e/6e) seront chargés pour explorer les fonctionnalités du site.</span></button>
       </div>
-      <section class="welcome-templates" aria-labelledby="welcomeTemplatesTitle">
-        <h3 id="welcomeTemplatesTitle">Explorer une classe modèle</h3>
-        <div class="welcome-template-list">
-          <button type="button" data-example-group="grp_presco">Test-Présco</button>
-          <button type="button" data-example-group="grp_regulier_2e">Test-2e</button>
-          <button type="button" data-example-group="grp_multi_5e6e">Test-5e/6e</button>
-        </div>
-      </section>
     </div>
   </div>
   <div id="tutorialOverlay" class="tour-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
@@ -67,6 +60,7 @@
       </section>
       <section class="test-sidebar-section">
         <h2 class="test-sidebar-label">Étape et bulletin</h2>
+        <p id="sidebarTermEmpty" class="test-subject-empty hidden">Aucun groupe créé</p>
         <nav id="testTermNavigation" class="test-sidebar-nav" aria-label="Étapes"></nav>
         <nav id="testReportNavigation" class="test-sidebar-nav" aria-label="Bulletin"></nav>
       </section>
@@ -107,7 +101,7 @@
         <div class="flex flex-wrap items-center gap-2 sm:mr-6">
           <button id="btnNavStudentsTop" type="button" class="px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-700 flex items-center gap-1" title="Gérer les élèves, leur niveau et leurs adaptations">
             <svg class="hdr-ico ico-students" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5"/><circle cx="17.2" cy="9.2" r="2.4"/><path d="M16.5 14.6c2.6.2 4.5 2 4.5 4.9"/></svg>
-            <span>Élèves</span>
+            <span id="sidebarStudentsLabel">Élève(s)</span>
             <span id="headerStudentCount" class="rounded-full bg-slate-700 px-1.5 py-0.5 text-[10px] font-bold">0</span>
           </button>
           <form id="studentSearchPopover" class="test-student-search" role="search">
@@ -250,7 +244,7 @@
             <button id="btnAddVisualTraceFromGb" type="button" title="Remplir une grille d’observation">Observable</button>
           </div>
           <div class="gradebook-metrics">
-            <div class="gradebook-metric"><span>Travaux &amp; traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
+            <div class="gradebook-metric"><span>Travaux et traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
             <div class="gradebook-metric"><span>Moyenne du groupe</span><strong id="kpiClassAverage">—</strong></div>
             <button id="btnWeightMode" type="button" aria-expanded="false" aria-controls="weightControls">Pondération</button>
             <span id="weightControls" class="hidden">
@@ -508,13 +502,11 @@
         <!-- Manage Students & Per-Student Adaptations -->
         <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
           <img class="student-manager-atmosphere" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
-          <div class="flex flex-wrap items-center gap-2">
-            <div class="flex items-center gap-2">
+          <div class="student-page-heading">
               <button id="btnBackToGradebookFromStudents" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1">
                 <span>← Retour au Carnet</span>
               </button>
-              <h2 class="text-base font-bold text-slate-900">Liste d'élèves & Adaptations à la pièce</h2>
-            </div>
+              <h2>Liste d'élèves et adaptations à la pièce</h2>
           </div>
 
           <div id="groupBar" class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5"></div>
@@ -551,6 +543,14 @@
         <h2 id="referencesTitle" class="text-base font-bold">Informations pédagogiques</h2>
         <button id="btnCloseReferences" type="button" class="px-2 py-1 rounded-lg bg-slate-100" aria-label="Fermer">✕</button>
       </div>
+      <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
+        <summary class="text-sm font-bold cursor-pointer">Genèse du carnet</summary>
+        <div class="mt-3 space-y-2 text-xs leading-relaxed">
+          <p>Ce carnet est né du désir de réunir dans un même outil les évaluations, les observations et les repères utiles au suivi des apprentissages au primaire.</p>
+          <p>Les grilles et les options d’évaluation ont été élaborées à partir de documents ministériels, notamment les programmes, les progressions des apprentissages et les cadres d’évaluation, et s’inspirent de pratiques et de ressources de différents centres de services scolaires.</p>
+          <p>Il s’agit d’un outil local d’aide au jugement professionnel, et non d’une grille officielle ou d’une reproduction des documents ministériels. Les attentes et les pratiques applicables demeurent à vérifier dans votre milieu.</p>
+        </div>
+      </details>
       <details class="bg-white rounded-xl border border-slate-200 p-4 mt-3">
         <summary class="text-sm font-bold cursor-pointer">Adaptation ou modification : quelle différence ?</summary>
         <div class="mt-3 space-y-2 text-xs leading-relaxed">
@@ -852,7 +852,7 @@
     <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-xl border border-slate-200 space-y-3.5 max-h-[90vh] flex flex-col">
       <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
         <div>
-          <h3 id="cbModalTitle" class="text-base font-bold text-slate-900">Banque & Rédaction de commentaire</h3>
+          <h3 id="cbModalTitle" class="text-base font-bold text-slate-900">Banque et rédaction de commentaire</h3>
           <p id="cbModalSubtitle" class="text-xs text-slate-600 mt-0.5"></p>
         </div>
         <button id="btnCbClose" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer" aria-label="Fermer">✕</button>
