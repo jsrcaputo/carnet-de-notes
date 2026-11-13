@@ -277,7 +277,15 @@
       .no-group-notice:not(.hidden) { padding: .7rem .8rem; border-radius: 8px; background: var(--studio-surface-soft); color: var(--studio-text-muted); font-size: .85rem; line-height: 1.45; }
       html.design-studio .gradebook-toolbar h2 { white-space: normal; overflow: visible; }
       html.design-studio .gradebook-toolbar > div:nth-of-type(2) { background: transparent; border: 0; box-shadow: none; padding: 0; }
-      html.design-studio #btnNewEvaluation { background: var(--brand); color: #fff; border: 1px solid var(--brand); }
+      html.design-studio #btnNewEvaluation {
+        background: var(--brand-soft);
+        color: var(--brand-deep);
+        border: 1px solid var(--studio-border-strong);
+      }
+      html.design-studio #btnNewEvaluation:hover {
+        background: var(--studio-surface-soft);
+        color: var(--studio-text);
+      }
       html.design-studio .new-evaluation-choices:not(.hidden) { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .2rem; background: var(--studio-surface-soft); border: 1px solid var(--studio-border); border-radius: 9px; }
       html.design-studio .new-evaluation-choices > button { padding: .4rem .65rem; border: 0; border-radius: 6px; background: transparent !important; color: var(--brand-deep) !important; box-shadow: none !important; font-size: .75rem; font-weight: 700; }
       html.design-studio .new-evaluation-choices > button:hover { background: var(--brand-soft) !important; }
@@ -365,6 +373,11 @@
       html.design-studio #viewQuickObs .rubric-stmt-text { overflow-wrap: normal; word-break: normal; hyphens: auto; line-height: 1.45; }
       html.design-studio .welcome-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
       html.design-studio .welcome-card p { color: var(--studio-text-muted); }
+      html.design-studio .welcome-close:hover {
+        background: var(--studio-surface-soft);
+        color: var(--studio-text);
+        border-color: var(--studio-border-strong);
+      }
       html.design-studio .tour-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
       html.design-studio .tour-card p { color: var(--studio-text-muted); }
       html.design-studio #tourNext { background: var(--brand) !important; color: #fff !important; }

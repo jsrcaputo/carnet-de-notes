@@ -106,10 +106,15 @@
         btn.innerHTML = `<svg class="subject-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg><span class="truncate">${escapeHtml(label)}</span>`;
         btn.addEventListener('click', () => {
           if (sub.group) {
-            expandedSubjectGroup = sub.group;
+            expandedSubjectGroup = expandedSubjectGroup === sub.group ? null : sub.group;
             renderSubjectTabs();
-            const replacement = [...container.children].find(el => el.getAttribute('aria-controls') === 'subjectSubTabsContainer' && el.title === sub.groupLabel);
-            if (replacement) replacement.focus();
+            if (expandedSubjectGroup) {
+              const replacement = [...container.children].find(el => el.getAttribute('aria-controls') === 'subjectSubTabsContainer' && el.title === sub.groupLabel);
+              if (replacement) replacement.focus();
+            } else {
+              const replacement = container.querySelector(`[data-subject-id="${sub.id}"]`);
+              if (replacement) replacement.focus();
+            }
             return;
           }
           const navigated = navigateToView('viewGradebook', () => {
