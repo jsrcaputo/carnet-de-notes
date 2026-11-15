@@ -165,21 +165,27 @@
     }
 
     function renderNavTabs() {
+      const hasGroup = hasActiveGroup();
+      document.documentElement.classList.toggle('no-active-group', !hasGroup);
       const views = ['viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'];
       views.forEach(v => {
         const sec = document.getElementById(v);
         if (sec) {
-          if (appState.activeView === v) sec.classList.remove('hidden');
+          if (hasGroup && appState.activeView === v) sec.classList.remove('hidden');
           else sec.classList.add('hidden');
         }
       });
 
     }
 
+    let pendingWeightFocusSelector = null;
+
     // -------------------------------------------------------------------------
     // VIEW 1: CARNET & TRAVAUX (STARTS WITH 0 WORKS, EDITABLE TITLES, HORIZONTAL SCROLL AS WORKS GROW)
     // -------------------------------------------------------------------------
     function renderGradebookView() {
+      const scrollContainerEl = document.getElementById('gradebookScrollContainer');
+      const savedScrollLeft = scrollContainerEl ? scrollContainerEl.scrollLeft : 0;
       const sub = getCurrentSubjectConfig();
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
@@ -293,22 +299,29 @@
         const displayedWeight = getAssignmentWeightForLevel(asg, activeLvlFilter !== 'ALL' ? activeLvlFilter : '');
         const targets = getAssignmentTargetLevels(asg);
         const linkedReadonly = asg.linkId && asg.linkOrigin === false && activeSub.singleResult;
-        const levelRequired = isMulti && activeLvlFilter === 'ALL';
-        const otherLevelLocked = isMulti && weightLevel && weightLevel !== activeLvlFilter;
-        const unlocked = !otherLevelLocked && unlockedWeights.has(asg.id);
+        const isPinned = isWeightPinned(asg.id);
+        const canEditWeight = !linkedReadonly;
         const lockTitle = linkedReadonly ? 'Pondération définie dans la compétence d’origine'
-          : levelRequired ? 'Choisissez un niveau pour modifier sa pondération'
-          : otherLevelLocked ? 'Reverrouillez les évaluations de l’autre niveau pour modifier celui-ci'
-          : unlocked ? 'Verrouiller cette pondération' : 'Déverrouiller cette pondération';
+          : isPinned ? 'Pondération figée (ne bouge pas automatiquement) — cliquer pour libérer'
+          : 'Pondération libre (s’ajuste automatiquement) — cliquer pour figer';
         const weightTools = weightMode ? `
           <span class="weight-tools no-print">
-            <button type="button" class="weight-lock" data-weight-lock="${escapeHtml(asg.id)}" aria-label="${escapeHtml(lockTitle + ' : ' + asg.title)}" aria-pressed="${unlocked}" title="${escapeHtml(lockTitle)}" ${linkedReadonly || levelRequired || otherLevelLocked ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="${unlocked ? 'M8 11V7a4 4 0 0 1 7.7-1.5' : 'M8 11V7a4 4 0 0 1 8 0v4'}"/><path d="M12 15v2"/></svg><span>${unlocked ? 'Ouvert' : 'Fermé'}</span></button>
-            ${unlocked ? `<button type="button" data-weight-step="-1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Diminuer la pondération de ${escapeHtml(asg.title)}" title="Diminuer de 0,5 point">▼</button><button type="button" data-weight-step="1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Augmenter la pondération de ${escapeHtml(asg.title)}" title="Augmenter de 0,5 point">▲</button>` : ''}
+            <button type="button" class="weight-lock${isPinned ? ' is-pinned' : ''}" data-weight-lock="${escapeHtml(asg.id)}" aria-label="${escapeHtml(lockTitle + ' : ' + asg.title)}" aria-pressed="${isPinned}" title="${escapeHtml(lockTitle)}" ${linkedReadonly ? 'disabled' : ''}><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="${isPinned ? 'M8 11V7a4 4 0 0 1 8 0v4' : 'M8 11V7a4 4 0 0 1 7.7-1.5'}"/><path d="M12 15v2"/></svg><span>${isPinned ? 'Figé' : 'Libre'}</span></button>
+            ${canEditWeight ? `<button type="button" data-weight-step="-1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Diminuer la pondération de ${escapeHtml(asg.title)}" title="Diminuer de 1 %">▼</button><button type="button" data-weight-step="1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Augmenter la pondération de ${escapeHtml(asg.title)}" title="Augmenter de 1 %">▲</button>` : ''}
           </span>` : '';
         const targetBadgeHtml = isMulti
           ? `<button type="button" data-cycle-target-asg="${asg.id}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition shadow-2xs cursor-pointer ${targets.length ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 hover:bg-indigo-500/30' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}" title="Niveau(x) visé(s) — Cliquer pour choisir avec des cases à cocher">${escapeHtml(formatAssignmentTargetBadge(asg))} ▾</button>`
           : '';
-        const multiWeightSubHtml = '';
+        let multiWeightSubHtml = '';
+        if (isMulti && activeLvlFilter === 'ALL') {
+          const applicableLvls = presentLevels.filter(lvl => isAssignmentForLevel(asg, lvl));
+          if (applicableLvls.length > 1) {
+            const wList = applicableLvls.map(lvl => ({ lvl, w: getAssignmentWeightForLevel(asg, lvl) }));
+            if (wList.some(x => x.w !== wList[0].w)) {
+              multiWeightSubHtml = `<div class="mt-0.5 text-[9.5px] font-semibold text-slate-400">${wList.map(x => `${escapeHtml(formatShortLevelTag(x.lvl))}: ${x.w}%`).join(' · ')}</div>`;
+            }
+          }
+        }
         th.innerHTML = `
           <div class="flex items-center justify-center gap-1 px-1">
             <button type="button" data-title-view="${asg.id}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
@@ -319,8 +332,8 @@
             ${targetBadgeHtml}
             ${!asg.isObservation && getAssignmentOutOf(asg) !== 100 ? `<span class="text-[10px] font-bold text-slate-500" title="Note maximale de cette évaluation">/${formatScoreNumber(getAssignmentOutOf(asg))}</span>` : ''}
             ${asg.linkId ? `<span class="text-[10px] font-bold text-indigo-500" title="${escapeHtml('Évaluation partagée avec : ' + (getLinkedAssignments(asg).map(l => l.sub.partLabel || l.sub.shortName).join(', ') || '—'))}">🔗 aussi en ${escapeHtml(getLinkedAssignments(asg).map(l => (l.sub.partLabel || l.sub.shortName).match(/C\d/) ? (l.sub.partLabel || l.sub.shortName).match(/C\d/)[0] : (l.sub.partLabel || l.sub.shortName)).join(', '))}</span>` : ''}
-            <div data-weight-box="${asg.id}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${weightBoxClasses}">
-              ${weightMode && unlocked ? `<input type="text" inputmode="decimal" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${displayedWeight}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir une pondération entre 0 et 100">` : `<span data-weight-asg="${asg.id}" class="text-[11px] font-bold" title="Pondération (%)">${displayedWeight}</span>`}
+            <div data-weight-box="${asg.id}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${canEditWeight && !weightMode ? 'cursor-pointer ' : ''}${weightBoxClasses}" title="${canEditWeight && !weightMode ? 'Cliquer pour modifier la pondération (%)' : ''}">
+              ${weightMode && canEditWeight ? `<input type="text" inputmode="numeric" pattern="[0-9]*" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${Math.round(Number(displayedWeight) || 0)}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir un entier entre 0 et 100 %">` : `<span data-weight-asg="${asg.id}" class="text-[11px] font-bold" title="Pondération (%) — cliquer pour modifier">${Math.round(Number(displayedWeight) || 0)}</span>`}
               <span class="text-[10px] font-bold ml-0.5">%</span>
             </div>
             ${weightTools}
@@ -445,8 +458,8 @@
           const isAll = currentTargets.length === 0;
 
           const allLbl = document.createElement('label');
-          allLbl.className = `cursor-pointer flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition shadow-2xs ${isAll ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-300' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
-          allLbl.innerHTML = `<span>Tout le groupe (tous les niveaux)</span><input type="checkbox" class="rounded accent-emerald-600 w-4 h-4 cursor-pointer" ${isAll ? 'checked' : ''}>`;
+          allLbl.className = `cursor-pointer flex items-center justify-between p-2.5 rounded-xl border text-xs font-bold transition shadow-2xs ${isAll ? 'bg-indigo-50 border-indigo-300 text-indigo-900 ring-1 ring-indigo-300' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
+          allLbl.innerHTML = `<span>Tout le groupe (tous les niveaux)</span><input type="checkbox" class="rounded accent-indigo-600 w-4 h-4 cursor-pointer" ${isAll ? 'checked' : ''}>`;
           allLbl.querySelector('input').addEventListener('change', () => {
             currentTargets = [];
             renderCheckboxes();
@@ -509,61 +522,79 @@
         });
       });
 
-      headerRow.querySelectorAll('[data-weight-lock]').forEach(button => {
-        button.addEventListener('click', () => {
-          const id = button.getAttribute('data-weight-lock');
-          if (unlockedWeights.has(id)) unlockedWeights.delete(id);
-          else {
-            unlockedWeights.add(id);
-            weightLevel = activeLvlFilter;
+      headerRow.querySelectorAll('[data-weight-box], [data-weight-lock], [data-weight-step]').forEach(el => {
+        el.addEventListener('pointerdown', () => {
+          const inpEl = el.querySelector('[data-weight-input]');
+          const lockId = el.getAttribute('data-weight-lock');
+          const stepId = el.getAttribute('data-weight-id');
+          const stepDir = el.getAttribute('data-weight-step');
+          if (inpEl) pendingWeightFocusSelector = `[data-weight-input="${inpEl.getAttribute('data-weight-input')}"]`;
+          else if (lockId) pendingWeightFocusSelector = `[data-weight-lock="${lockId}"]`;
+          else if (stepId && stepDir) pendingWeightFocusSelector = `[data-weight-step="${stepDir}"][data-weight-id="${stepId}"]`;
+        });
+      });
+
+      headerRow.querySelectorAll('[data-weight-box]').forEach(box => {
+        box.addEventListener('click', (ev) => {
+          if (ev.target.closest('button, input')) return;
+          if (!weightMode) {
+            weightMode = true;
+            const id = box.getAttribute('data-weight-box');
+            pendingWeightFocusSelector = `[data-weight-input="${id}"]`;
+            renderGradebookView();
           }
-          if (!unlockedWeights.size) weightLevel = '';
+        });
+      });
+      headerRow.querySelectorAll('[data-weight-lock]').forEach(button => {
+        button.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const id = button.getAttribute('data-weight-lock');
+          pendingWeightFocusSelector = `[data-weight-lock="${id}"]`;
+          toggleWeightPin(id);
           renderGradebookView();
-          const replacement = [...document.querySelectorAll('[data-weight-lock]')].find(item => item.getAttribute('data-weight-lock') === id);
-          if (replacement) replacement.focus();
         });
       });
       headerRow.querySelectorAll('[data-weight-step]').forEach(button => {
-        button.addEventListener('click', () => {
+        button.addEventListener('click', (ev) => {
+          ev.stopPropagation();
           const id = button.getAttribute('data-weight-id');
           const direction = Number(button.getAttribute('data-weight-step'));
           const target = subData.assignments.find(asg => asg.id === id);
-          const next = target && getAssignmentWeightForLevel(target, activeLvlFilter) + direction * 0.5;
-          if (target && unlockedWeights.has(id) && adjustUnlockedWeight(subData, target, activeLvlFilter, next)) {
-            const replacement = [...document.querySelectorAll('[data-weight-step]')].find(item =>
-              item.getAttribute('data-weight-id') === id && Number(item.getAttribute('data-weight-step')) === direction);
-            if (replacement) replacement.focus();
+          const curRounded = target ? Math.round(Number(getAssignmentWeightForLevel(target, activeLvlFilter)) || 0) : 0;
+          const next = target && Math.max(0, Math.min(100, curRounded + direction * 1));
+          pendingWeightFocusSelector = `[data-weight-step="${direction}"][data-weight-id="${id}"]`;
+          if (target && adjustUnlockedWeight(subData, target, activeLvlFilter, next)) {
+            renderGradebookView();
           }
         });
       });
       headerRow.querySelectorAll('[data-weight-input]').forEach(input => {
         const id = input.getAttribute('data-weight-input');
         const target = subData.assignments.find(asg => asg.id === id);
+        input.addEventListener('focus', () => input.select());
         input.addEventListener('keydown', event => {
           if (event.key === 'Enter') {
             event.preventDefault();
+            pendingWeightFocusSelector = null;
             input.blur();
           } else if (event.key === 'Escape') {
-            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+            pendingWeightFocusSelector = null;
+            input.value = String(Math.round(Number(getAssignmentWeightForLevel(target, activeLvlFilter)) || 0));
             input.blur();
           }
         });
         input.addEventListener('change', () => {
           const value = input.value.trim();
-          if (!/^(?:\d+(?:[.,]\d{1,3})?|[.,]\d{1,3})$/.test(value)) {
-            showToast('Entrez une pondération valide avec au plus trois décimales.');
-            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+          if (!/^\d{1,3}$/.test(value)) {
+            showToast('Entrez un pourcentage entier entre 0 et 100 % (bonds de 1 %).');
+            input.value = String(Math.round(Number(getAssignmentWeightForLevel(target, activeLvlFilter)) || 0));
             return;
           }
-          if (!adjustUnlockedWeight(subData, target, activeLvlFilter, Number(value.replace(',', '.')), false)) {
-            input.value = String(getAssignmentWeightForLevel(target, activeLvlFilter));
+          if (!adjustUnlockedWeight(subData, target, activeLvlFilter, Number(value), false)) {
+            input.value = String(Math.round(Number(getAssignmentWeightForLevel(target, activeLvlFilter)) || 0));
             return;
           }
-          headerRow.querySelectorAll('[data-weight-input]').forEach(field => {
-            const asg = subData.assignments.find(item => item.id === field.getAttribute('data-weight-input'));
-            field.value = String(getAssignmentWeightForLevel(asg, activeLvlFilter));
-          });
-          updateGradebookRowSummaryOnly();
+          renderGradebookView();
         });
       });
 
@@ -660,6 +691,23 @@
             openCellFlagPicker(rect.left, rect.bottom, {
               studentName: st.name,
               assignmentTitle: asg.title,
+              getStatus: () => {
+                const s = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
+                if (s === 'NR' || s === 'JUST' || s === 'REP') return s;
+                if (s === '-' || (meta && meta.notEvaluated)) return '-';
+                return '';
+              },
+              onStatusChange: (statusCode) => {
+                const curStatus = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
+                const nextVal = (curStatus === statusCode || statusCode === '') ? '' : statusCode;
+                rec.scores[asg.id] = nextVal;
+                if (asg.isObservation && rec.scoreMeta && rec.scoreMeta[asg.id]) {
+                  rec.scoreMeta[asg.id].notEvaluated = (nextVal === '-');
+                }
+                scheduleAppStateSave();
+                renderGradebookView();
+                renderAllPreserveScroll();
+              },
               getFlags: () => getCellFlags(rec, asg.id),
               onToggle: (code) => {
                 const cur = getCellFlags(rec, asg.id);
@@ -686,45 +734,74 @@
           if (asg.isObservation) {
             const btnTrace = document.createElement('button');
             btnTrace.type = 'button';
+            const upperRaw = rawScore.trim().toUpperCase();
+            const isStatusNR = upperRaw === 'NR';
+            const isStatusJUST = upperRaw === 'JUST' || upperRaw === 'JUS';
+            const isStatusREP = upperRaw === 'REP';
             const scoreNumber = Number(rawScore);
-            const hasScore = rawScore !== '' && rawScore !== '-' && Number.isFinite(scoreNumber) && scoreNumber >= 0 && scoreNumber <= 100;
-            const traceCriteria = meta ? getObservationCriteria(sub, meta.gradeLevel || getEffectiveGradeLevel(st, sub), asg) : [];
-            const traceObsRes = meta ? computeObservableResult(meta.checked, meta.overrideCode, traceCriteria, meta.notEvaluated) : null;
+            const hasScore = !isStatusNR && !isStatusJUST && !isStatusREP && rawScore !== '' && rawScore !== '-' && Number.isFinite(scoreNumber) && scoreNumber >= 0 && scoreNumber <= 100;
+            const traceEffLvl = meta ? (meta.gradeLevel || getEffectiveGradeLevel(st, sub)) : getEffectiveGradeLevel(st, sub);
+            const traceCriteria = meta ? getObservationCriteria(sub, traceEffLvl, asg) : [];
+            const traceObsOptions = {
+              obsMode: (meta && meta.obsMode) || asg.obsMode || 'portrait',
+              criteriaWeights: (meta && meta.criteriaWeights) || asg.criteriaWeights || null,
+              subjectId: sub.id,
+              cycle: getStudentCycle(traceEffLvl)
+            };
+            const traceObsRes = meta ? computeObservableResult(meta.checked, meta.overrideCode, traceCriteria, meta.notEvaluated, traceObsOptions) : null;
             const scoredTraceCriteriaCount = getScoredObservableCriteria(traceCriteria).length;
-            const hasPartialTrace = !hasScore && traceObsRes && traceObsRes.hasData;
-            const hasNotEvaluatedTrace = Boolean(meta && meta.notEvaluated);
-            const hasFormativeOnlyTrace = !hasScore && !hasPartialTrace && !hasNotEvaluatedTrace && traceObsRes && traceObsRes.hasEvidence;
+            const hasPartialTrace = !hasScore && !isStatusNR && !isStatusJUST && !isStatusREP && traceObsRes && traceObsRes.hasData;
+            const hasNotEvaluatedTrace = Boolean((meta && meta.notEvaluated) || upperRaw === '-');
+            const hasFormativeOnlyTrace = !hasScore && !hasPartialTrace && !hasNotEvaluatedTrace && !isStatusNR && !isStatusJUST && !isStatusREP && traceObsRes && traceObsRes.hasEvidence;
             const codeStr = (meta && meta.code) ? meta.code : (hasScore ? pctToClosestGradeCode(scoreNumber) : '-');
-            const badgeStyle = hasNotEvaluatedTrace
-              ? 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
-              : hasScore
-              ? getBadgeColorClasses(codeStr)
-              : hasPartialTrace
-                ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
-                : hasFormativeOnlyTrace
-                  ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
-                  : 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300';
+            const badgeStyle = isStatusNR
+              ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
+              : isStatusJUST
+                ? 'bg-blue-50 text-blue-800 border-blue-200 hover:bg-blue-100'
+                : isStatusREP
+                  ? 'bg-purple-50 text-purple-800 border-purple-200 hover:bg-purple-100'
+                  : hasNotEvaluatedTrace
+                    ? 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-slate-200'
+                    : hasScore
+                      ? getBadgeColorClasses(codeStr)
+                      : hasPartialTrace
+                        ? 'bg-amber-100 text-amber-900 border-amber-300 hover:bg-amber-200'
+                        : hasFormativeOnlyTrace
+                          ? 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100'
+                          : 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300';
             btnTrace.className = `px-2.5 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${badgeStyle}`;
-            btnTrace.title = hasNotEvaluatedTrace
-              ? 'Élève coté N/A pour cette trace — cliquez pour modifier son évaluation'
-              : hasPartialTrace
-              ? 'Trace partielle : cliquez pour compléter les 3 critères cotés'
-              : hasFormativeOnlyTrace
-                ? 'Rétroaction formative consignée (non comptabilisée dans la moyenne)'
-                : 'Cliquez pour consulter ou modifier la trace observable de cet élève';
+            btnTrace.title = isStatusNR
+              ? 'Non remis (NR) — exclu de la moyenne en attendant la remise'
+              : isStatusJUST
+                ? 'Absence justifiée (JUST) — exclu de la moyenne'
+                : isStatusREP
+                  ? 'En reprise (REP) — exclu de la moyenne en attendant la reprise'
+                  : hasNotEvaluatedTrace
+                    ? 'Élève coté N/A pour cette trace — cliquez pour modifier son évaluation'
+                    : hasPartialTrace
+                      ? 'Trace partielle : cliquez pour compléter les critères cotés'
+                      : hasFormativeOnlyTrace
+                        ? 'Rétroaction formative consignée (non comptabilisée dans la moyenne)'
+                        : 'Cliquez pour consulter ou modifier la trace observable de cet élève';
             if (meta && meta.linkedCopy && hasScore) {
               btnTrace.title = 'Note recopiée d’une autre compétence : remplissez cette grille pour confirmer le résultat.';
               btnTrace.setAttribute('aria-label', `${st.name}, ${asg.title} : ${codeStr}, ${rawScore} %. Note recopiée d’une autre compétence, grille à remplir.`);
             }
-            btnTrace.innerHTML = hasNotEvaluatedTrace
-              ? `<span>N/A (coté)</span>`
-              : hasScore
-              ? `<span>${codeStr} (${rawScore}%)${meta && meta.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement par l’enseignant">*</span>' : ''}</span>`
-              : hasPartialTrace
-                ? `<span>En cours (${traceObsRes.total}/${scoredTraceCriteriaCount})</span>`
-                : hasFormativeOnlyTrace
-                  ? `<span>Rétroaction (*)</span>`
-                  : `<span>- (Modifier)</span>`;
+            btnTrace.innerHTML = isStatusNR
+              ? `<span>NR · Non remis</span>`
+              : isStatusJUST
+                ? `<span>JUST · Justifié</span>`
+                : isStatusREP
+                  ? `<span>REP · En reprise</span>`
+                  : hasNotEvaluatedTrace
+                    ? `<span>N/A (coté)</span>`
+                    : hasScore
+                      ? `<span>${codeStr} (${rawScore}%)${meta && meta.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement par l’enseignant">*</span>' : ''}</span>`
+                      : hasPartialTrace
+                        ? `<span>En cours (${traceObsRes.total}/${scoredTraceCriteriaCount})</span>`
+                        : hasFormativeOnlyTrace
+                          ? `<span>Rétroaction (*)</span>`
+                          : `<span>- (Modifier)</span>`;
             if (meta && meta.linkedCopy && hasScore) {
               btnTrace.insertAdjacentHTML('beforeend', '<span class="linked-grade-warning" aria-hidden="true">!</span>');
             }
@@ -743,17 +820,46 @@
             const pctPill = document.createElement('span');
             pctPill.className = 'asg-pct';
             const refreshPct = () => {
+              const val = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
+              const isSpecial = val === 'NR' || val === 'JUST' || val === 'REP' || val === '-' || val === 'N/A';
+              if (isSpecial) {
+                pctPill.textContent = '';
+                pctPill.classList.add('hidden');
+                return;
+              }
               const n = Number(String(rec.scores[asg.id] ?? '').replace(',', '.'));
-              const ok = outOf !== 100 && rec.scores[asg.id] !== undefined && rec.scores[asg.id] !== '' && rec.scores[asg.id] !== '-' && Number.isFinite(n);
+              const ok = outOf !== 100 && rec.scores[asg.id] !== undefined && rec.scores[asg.id] !== '' && Number.isFinite(n);
               pctPill.textContent = ok ? `${Math.round(n / outOf * 100)} %` : '';
               pctPill.classList.toggle('hidden', !ok);
             };
-            refreshPct();
+            const updateInputStyle = () => {
+              const val = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
+              input.classList.remove('bg-amber-50', 'text-amber-800', 'border-amber-300',
+                                     'bg-blue-50', 'text-blue-800', 'border-blue-200',
+                                     'bg-purple-50', 'text-purple-800', 'border-purple-200',
+                                     'bg-slate-100', 'text-slate-400', 'border-slate-200',
+                                     'bg-white', 'text-slate-900', 'border-slate-300');
+              if (val === 'NR') {
+                input.classList.add('bg-amber-50', 'text-amber-800', 'border-amber-300');
+                input.title = "Non remis — exclu du calcul en attendant la remise";
+              } else if (val === 'JUST') {
+                input.classList.add('bg-blue-50', 'text-blue-800', 'border-blue-200');
+                input.title = "Absence justifiée / motivée — exclu du calcul de la moyenne";
+              } else if (val === 'REP') {
+                input.classList.add('bg-purple-50', 'text-purple-800', 'border-purple-200');
+                input.title = "En reprise — exclu du calcul en attendant la nouvelle note";
+              } else if (val === '-') {
+                input.classList.add('bg-slate-100', 'text-slate-400', 'border-slate-200');
+                input.title = "Non évalué / dispensé";
+              } else {
+                input.classList.add('bg-white', 'text-slate-900', 'border-slate-300');
+                input.title = `Entrez une note de 0 à ${formatScoreNumber(outOf)}, ou NR (non remis), JUST (justifié), REP (en reprise), - (non évalué)`;
+              }
+            };
             input.inputMode = 'decimal';
-            input.className = `w-16 px-1.5 py-1 text-center rounded-lg border text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-              rawScore === '-' ? 'bg-slate-100 text-slate-400 border-slate-200' : 'bg-white text-slate-900 border-slate-300'
-            }`;
-            input.title = `Entrez une note de 0 à ${formatScoreNumber(outOf)} ou "-" pour non évalué (Entrée/Flèches pour changer d’élève)`;
+            input.className = 'w-16 px-1.5 py-1 text-center rounded-lg border text-xs font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors';
+            refreshPct();
+            updateInputStyle();
             input.addEventListener('input', (e) => {
               const parsed = parsePercentageInput(e.target.value, outOf);
               input.setAttribute('aria-invalid', String(!parsed.valid));
@@ -762,6 +868,7 @@
               else rec.scores[asg.id] = parsed.value;
               syncLinkedScore(asg, st.id, parsed.empty ? undefined : parsed.value);
               refreshPct();
+              updateInputStyle();
               updateGradebookRowSummaryOnly();
             });
             input.addEventListener('keydown', (ev) => {
@@ -785,12 +892,13 @@
               const parsed = parsePercentageInput(input.value, outOf);
               if (!parsed.valid) {
                 input.value = rec.scores[asg.id] === undefined ? '' : String(rec.scores[asg.id]);
-                showToast(`La note doit être entre 0 et ${formatScoreNumber(outOf)}. Utilisez « - » pour non évalué.`);
+                showToast(`La note doit être entre 0 et ${formatScoreNumber(outOf)}, ou un statut : NR (non remis), JUST (justifié), REP (en reprise), - (non évalué).`);
               } else if (!parsed.empty) {
                 input.value = parsed.value;
               }
               input.setAttribute('aria-invalid', 'false');
               refreshPct();
+              updateInputStyle();
               updateGradebookRowSummaryOnly();
             });
             if (outOf !== 100) {
@@ -911,6 +1019,27 @@
       });
 
       updateGradebookRowSummaryOnly();
+      if (scrollContainerEl && savedScrollLeft > 0) {
+        scrollContainerEl.scrollLeft = savedScrollLeft;
+      }
+      if (pendingWeightFocusSelector) {
+        const sel = pendingWeightFocusSelector;
+        pendingWeightFocusSelector = null;
+        const focusEl = headerRow.querySelector(sel);
+        if (focusEl) {
+          focusEl.focus({ preventScroll: true });
+          if (typeof focusEl.select === 'function') focusEl.select();
+        }
+      }
+    }
+
+    function hideNewEvalChoicesPopover() {
+      const choices = document.getElementById('newEvaluationChoices');
+      const btn = document.getElementById('btnNewEvaluation');
+      if (choices && !choices.classList.contains('hidden')) {
+        choices.classList.add('hidden');
+        if (btn) btn.setAttribute('aria-expanded', 'false');
+      }
     }
 
     let mouseBarEl = null;
@@ -918,6 +1047,7 @@
       if (mouseBarEl) { mouseBarEl.remove(); mouseBarEl = null; }
       document.removeEventListener('mousedown', onMouseBarOutside, true);
       document.removeEventListener('keydown', onMouseBarKey, true);
+      window.removeEventListener('scroll', closeMouseBar, true);
     }
     function onMouseBarOutside(e) { if (mouseBarEl && !mouseBarEl.contains(e.target)) closeMouseBar(); }
     function onMouseBarKey(e) { if (e.key === 'Escape') closeMouseBar(); }
@@ -925,6 +1055,9 @@
     // Petite barre d'options près du curseur; se ferme après un choix, un clic à l'extérieur ou Échap.
     function openMouseBar(x, y, options, current) {
       closeMouseBar();
+      closeGradePicker();
+      closeCellFlagPicker();
+      hideNewEvalChoicesPopover();
       const el = document.createElement('div');
       el.className = 'mouse-bar';
       el.setAttribute('role', 'menu');
@@ -949,6 +1082,7 @@
       mouseBarEl = el;
       document.addEventListener('mousedown', onMouseBarOutside, true);
       document.addEventListener('keydown', onMouseBarKey, true);
+      window.addEventListener('scroll', closeMouseBar, true);
       const first = el.querySelector('button');
       if (first) first.focus({ preventScroll: true });
     }
@@ -958,6 +1092,7 @@
       if (gradePickerEl) { gradePickerEl.remove(); gradePickerEl = null; }
       document.removeEventListener('mousedown', onGradePickerOutside, true);
       document.removeEventListener('keydown', onGradePickerKey, true);
+      window.removeEventListener('scroll', closeGradePicker, true);
     }
     function onGradePickerOutside(e) {
       if (gradePickerEl && !gradePickerEl.contains(e.target)) closeGradePicker();
@@ -967,6 +1102,9 @@
     // Bandeau de cotes cliquables près du curseur; se ferme par un clic dedans ou à l'extérieur.
     function openGradePicker(x, y, { current, onPick }) {
       closeGradePicker();
+      closeMouseBar();
+      closeCellFlagPicker();
+      hideNewEvalChoicesPopover();
       const el = document.createElement('div');
       el.className = 'grade-picker';
       el.setAttribute('role', 'dialog');
@@ -1000,6 +1138,7 @@
       gradePickerEl = el;
       document.addEventListener('mousedown', onGradePickerOutside, true);
       document.addEventListener('keydown', onGradePickerKey, true);
+      window.addEventListener('scroll', closeGradePicker, true);
     }
 
     // Sélecteur sobre et monochrome de marqueurs rapides sur cellule (AIDE, T+, REP, ABS, SUIVI)
@@ -1008,27 +1147,65 @@
       if (cellFlagPickerEl) { cellFlagPickerEl.remove(); cellFlagPickerEl = null; }
       document.removeEventListener('mousedown', onCellFlagPickerOutside, true);
       document.removeEventListener('keydown', onCellFlagPickerKey, true);
+      window.removeEventListener('scroll', closeCellFlagPicker, true);
     }
     function onCellFlagPickerOutside(e) {
       if (cellFlagPickerEl && !cellFlagPickerEl.contains(e.target)) closeCellFlagPicker();
     }
     function onCellFlagPickerKey(e) { if (e.key === 'Escape') closeCellFlagPicker(); }
 
-    function openCellFlagPicker(x, y, { studentName, assignmentTitle, getFlags, onToggle, onClear }) {
+    function openCellFlagPicker(x, y, { studentName, assignmentTitle, getStatus, onStatusChange, getFlags, onToggle, onClear }) {
       closeCellFlagPicker();
       closeGradePicker();
+      closeMouseBar();
+      hideNewEvalChoicesPopover();
       const el = document.createElement('div');
       el.className = 'flag-picker no-print';
       el.setAttribute('role', 'dialog');
-      el.setAttribute('aria-label', 'Marqueurs rapides');
+      el.setAttribute('aria-label', 'Statut de remise et marqueurs rapides');
 
       const renderContent = () => {
         const activeFlags = getFlags();
+        const activeStatus = typeof getStatus === 'function' ? getStatus() : '';
         el.innerHTML = '';
+
+        if (typeof onStatusChange === 'function') {
+          const statusSection = document.createElement('div');
+          statusSection.className = 'flag-picker-status-section';
+          const statusHead = document.createElement('div');
+          statusHead.className = 'flag-picker-group-title mb-1.5 flex items-center justify-between';
+          statusHead.innerHTML = `<span>Statut de remise (exclu de la moyenne)</span>`;
+          statusSection.appendChild(statusHead);
+
+          const statusGrid = document.createElement('div');
+          statusGrid.className = 'grid grid-cols-4 gap-1.5 mb-2.5 pb-2.5 border-b border-slate-200';
+          const statusDefs = [
+            { code: 'NR', label: 'Non remis', hint: 'Travail non remis temporairement (exclu de la moyenne)', cls: 'border-amber-300 bg-amber-50 text-amber-900 hover:bg-amber-100' },
+            { code: 'JUST', label: 'Justifié', hint: 'Absence motivée / justifiée (exclu de la moyenne)', cls: 'border-blue-200 bg-blue-50 text-blue-900 hover:bg-blue-100' },
+            { code: 'REP', label: 'Reprise', hint: 'En attente de reprise (exclu de la moyenne)', cls: 'border-purple-200 bg-purple-50 text-purple-900 hover:bg-purple-100' },
+            { code: '-', label: 'Exempté', hint: 'Non évalué / exempté (-)', cls: 'border-slate-300 bg-slate-100 text-slate-700 hover:bg-slate-200' }
+          ];
+          statusDefs.forEach(stDef => {
+            const isSel = activeStatus === stDef.code;
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `px-2 py-1.5 rounded-lg border text-[11px] font-bold flex flex-col items-center justify-center transition cursor-pointer ${stDef.cls} ${isSel ? 'ring-2 ring-offset-1 ring-slate-700 shadow-sm' : 'opacity-85 hover:opacity-100'}`;
+            btn.title = stDef.hint + (isSel ? ' — Cliquer pour retirer ce statut' : '');
+            btn.innerHTML = `<span class="font-extrabold text-xs">${escapeHtml(stDef.code)}</span><span class="text-[9px] font-medium leading-tight">${escapeHtml(stDef.label)}</span>`;
+            btn.addEventListener('click', () => {
+              onStatusChange(stDef.code);
+              closeCellFlagPicker();
+            });
+            statusGrid.appendChild(btn);
+          });
+          statusSection.appendChild(statusGrid);
+          el.appendChild(statusSection);
+        }
+
         const head = document.createElement('div');
         head.className = 'flag-picker-title';
         const titleSpan = document.createElement('span');
-        titleSpan.textContent = 'Marqueurs rapides';
+        titleSpan.textContent = 'Marqueurs d’adaptation / soutien';
         head.appendChild(titleSpan);
         if (activeFlags.length > 0) {
           const clearBtn = document.createElement('button');
@@ -1095,6 +1272,7 @@
       cellFlagPickerEl = el;
       document.addEventListener('mousedown', onCellFlagPickerOutside, true);
       document.addEventListener('keydown', onCellFlagPickerKey, true);
+      window.addEventListener('scroll', closeCellFlagPicker, true);
     }
 
     // Modale Banque & Assistant de commentaires
@@ -1165,7 +1343,7 @@
         btn.setAttribute('aria-pressed', String(isAlreadyInText));
         btn.innerHTML = `
           <span>${escapeHtml(previewWithName)}</span>
-          <span class="text-[11px] font-bold ${isAlreadyInText ? 'text-emerald-800' : 'text-slate-500'} shrink-0">${isAlreadyInText ? '✓ Ajouté · retirer' : '＋ Insérer'}</span>
+          <span class="text-[11px] font-bold ${isAlreadyInText ? 'text-indigo-800' : 'text-slate-500'} shrink-0">${isAlreadyInText ? '✓ Ajouté · retirer' : '＋ Insérer'}</span>
         `;
         btn.addEventListener('click', () => {
           const textNow = area.value.trim();
@@ -1244,14 +1422,18 @@
 
     function updateWeightIndicatorsUI(totalW, valid100, hasWorks, subDataOverride) {
       const warnBanner = document.getElementById('weightWarningBanner');
+      const btnWeight = document.getElementById('btnWeightMode');
       const subData = subDataOverride || (getActiveTermData().subjectData[appState.activeSubjectId]);
       const presentLevels = getPresentStudentLevels();
       const isMulti = presentLevels.length > 1;
 
       if (!hasWorks) {
         if (warnBanner) warnBanner.classList.add('hidden');
+        if (btnWeight) btnWeight.classList.remove('is-weight-error');
         return;
       }
+
+      if (btnWeight) btnWeight.classList.toggle('is-weight-error', !valid100);
 
       if (isMulti && subData) {
         const levelBreakdown = presentLevels.map(lvl => {
@@ -1264,7 +1446,7 @@
         if (warnBanner) {
           if (!valid100) {
             warnBanner.classList.remove('hidden');
-            warnBanner.innerHTML = `Pondération par niveau : ${levelBreakdown.map(b => `${escapeHtml(b.label)} : <strong>${b.tot}%</strong>${b.ok ? ' ✓' : ' (doit donner 100%)'}`).join(' · ')}`;
+            warnBanner.innerHTML = `Erreur pondération : ${levelBreakdown.map(b => `${escapeHtml(b.short)} : <strong>${b.tot} %</strong>${b.ok ? ' ✓' : (b.tot > 100 ? ' (dépasse 100 %)' : ' (≠ 100 %)')}`).join(' · ')}`;
           } else {
             warnBanner.classList.add('hidden');
           }
@@ -1272,7 +1454,8 @@
 
       } else {
         if (warnBanner) {
-          warnBanner.innerHTML = `Total des pondérations : <span id="weightTotalVal">${escapeHtml(String(totalW))}</span>% (doit donner 100%)`;
+          const dispTotal = Math.round(Number(totalW) || 0);
+          warnBanner.innerHTML = `Total : <span id="weightTotalVal">${escapeHtml(String(dispTotal))}</span> % ${dispTotal > 100 ? '(dépasse 100 %)' : '(doit donner 100 %)'}`;
           if (!valid100) warnBanner.classList.remove('hidden');
           else warnBanner.classList.add('hidden');
         }

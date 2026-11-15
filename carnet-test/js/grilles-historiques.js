@@ -224,72 +224,133 @@
       math_resoudre: {
         c1_comp: ['Reformule ce qu’il faut trouver.', 'Repère les données utiles dans l’énoncé et les représentations.', 'Tient compte des contraintes de la situation.', 'Écarte les données qui ne servent pas à résoudre la tâche.'],
         c1_mob: ['Choisit les concepts et opérations adaptés.', 'Mobilise une stratégie ou des outils mathématiques pertinents.', 'Applique les processus et calcule avec exactitude.', 'Ajuste sa démarche lorsque les résultats ne conviennent pas.'],
-        c1_traces: ['Présente les étapes essentielles de sa démarche.', 'Utilise des représentations, symboles et calculs compréhensibles.', 'Précise les unités et les éléments utiles à l’interprétation.', 'Formule une réponse qui répond à la question.']
+        c1_traces: ['Présente les étapes essentielles de sa démarche.', 'Utilise des représentations, symboles et calculs compréhensibles.', 'Précise les unités et les éléments utiles à l’interprétation.', 'Formule une réponse qui répond à la question.'],
+        c1_valid: ['Vérifie la vraisemblance du résultat obtenu.', 'Explique comment la solution respecte les contraintes de départ.']
       },
       math_raisonner: {
         c2_analyse: ['Repère les éléments mathématiques utiles de la tâche.', 'Établit les relations entre les données, figures ou mesures.', 'Choisit les concepts et processus appropriés.', 'Distingue les informations utiles des éléments secondaires.'],
         c2_application: ['Sélectionne une démarche adaptée.', 'Applique correctement les concepts et processus requis.', 'Organise les étapes de calcul, de mesure ou de construction.', 'Vérifie la cohérence des résultats obtenus.'],
-        c2_justif: ['Explique les étapes qui soutiennent sa réponse.', 'Appuie ses affirmations sur des propriétés ou des faits mathématiques.', 'Utilise des exemples, des représentations ou des contre-exemples pertinents.', 'Relie clairement ses arguments à sa conclusion.']
+        c2_justif: ['Explique les étapes qui soutiennent sa réponse.', 'Appuie ses affirmations sur des propriétés ou des faits mathématiques.', 'Utilise des exemples, des représentations ou des contre-exemples pertinents.', 'Relie clairement ses arguments à sa conclusion.'],
+        c2_communication: ['Emploie les termes et symboles mathématiques appropriés.', 'Structure clairement son message mathématique.']
       },
       fra_lecture: {
         lec_comp: ['Repère les informations explicites importantes.', 'Dégage les informations implicites par des inférences.', 'Établit des liens entre les idées et les parties du texte.', 'Appuie sa compréhension sur des indices pertinents du texte.'],
         lec_interp: ['Propose une interprétation cohérente du texte ou de l’œuvre.', 'S’appuie sur des indices pour expliquer son interprétation.', 'Établit des liens entre des éléments du texte et ses connaissances.', 'Tient compte du point de vue, de l’intention ou du contexte.'],
-        lec_reac: ['Exprime une réaction ou un jugement personnel.', 'Justifie sa réaction par des éléments précis du texte.', 'Explique l’effet produit par des choix de l’auteur.', 'Établit des liens pertinents avec d’autres textes ou expériences.']
+        lec_reac: ['Exprime une réaction personnelle face au texte.', 'Explique sa réaction à l’aide d’exemples ou d’extraits.', 'Établit des liens avec son vécu ou d’autres lectures.'],
+        lec_jugement: ['Formule une appréciation critique sur le texte ou l’œuvre.', 'Appuie son jugement sur des critères et des extraits précis.', 'Explique l’effet produit par les choix de l’auteur.'],
+        lec_strat: ['Mobilise des stratégies de lecture adaptées (prédiction, survol, dépannage).', 'Vérifie et régule sa compréhension en cours de lecture.']
       },
       fra_ecriture: {
-        ecr_adapt: ['Tient compte du sujet, de l’intention et du destinataire.', 'Organise les idées et les informations de façon cohérente.', 'Assure la progression et les liens entre les idées.', 'Respecte les caractéristiques du genre et de la situation d’écriture.'],
-        ecr_vocab: ['Choisit un vocabulaire précis et adapté.', 'Construit des phrases compréhensibles et bien formées.', 'Varie les formulations selon le texte et l’intention.', 'Utilise la ponctuation pour clarifier le sens.'],
-        ecr_ortho: ['Respecte les accords dans le groupe nominal.', 'Accorde correctement le verbe avec son sujet.', 'Applique les règles d’orthographe grammaticale étudiées.', 'Révise l’orthographe d’usage à l’aide de stratégies et d’outils.']
+        ecr_adapt: ['Tient compte du sujet, de l’intention et du destinataire.', 'Élabore des idées pertinentes et suffisantes.', 'Respecte les caractéristiques du genre de texte demandé.'],
+        ecr_coherence: ['Organise le texte de façon logique (début, développement, fin).', 'Assure la continuité et la progression de l’information.', 'Utilise adéquatement les substituts (pronoms, synonymes) et organisateurs textuels.'],
+        ecr_vocab: ['Choisit des mots justes, précis et variés.', 'Évite les répétitions et les termes vagues.', 'Adapte les expressions au registre et à l’intention.'],
+        ecr_syntaxe: ['Construit des phrases complètes et grammaticalement correctes.', 'Délimite les phrases avec la majuscule et le point.', 'Utilise la ponctuation interne (virgules, dialogues) de façon appropriée.'],
+        ecr_ortho: ['Respecte l’orthographe d’usage des mots courants et appris.', 'Réalise les accords dans le groupe du nom (déterminant, nom, adjectif).', 'Accorde correctement le verbe avec son sujet.'],
+        ecr_presentation: ['Soigne l’écriture et la lisibilité du texte.', 'Respecte la mise en page convenant au texte.'],
+        ecr_strategies: ['Planifie son texte avant la rédaction.', 'Utilise son code de correction et ses outils de référence lors de la révision.']
       },
       fra_oral: {
         ora_regles: ['Écoute les interventions jusqu’au bout.', 'Réagit en tenant compte des propos entendus.', 'Reprend ou approfondit une idée exprimée par un pair.', 'Respecte les règles et les tours de parole.'],
         ora_part: ['Adapte ses propos au sujet et à l’intention.', 'Tient compte de l’auditoire et du contexte.', 'Organise ses idées pour faire comprendre son message.', 'Ajuste sa voix, son débit et sa posture à la situation.'],
-        ora_voix: ['Formule des idées compréhensibles et suffisamment développées.', 'Construit des phrases adaptées à la situation.', 'Emploie un vocabulaire précis et pertinent.', 'Utilise des exemples ou des précisions pour soutenir son propos.']
+        ora_voix: ['Formule des idées compréhensibles et suffisamment développées.', 'Construit des phrases adaptées à la situation.', 'Emploie un vocabulaire précis et pertinent.', 'Utilise des exemples ou des précisions pour soutenir son propos.'],
+        ora_strategies: ['Mobilise des stratégies d’écoute et de prise de parole.', 'S’appuie sur un support visuel ou des notes au besoin.']
       },
       ccq_global: {
         ccq_obs: ['Nomme les notions et réalités culturelles étudiées.', 'Décrit des faits ou des exemples pertinents.', 'Utilise les connaissances pour éclairer une situation.', 'Distingue les faits, les opinions et les valeurs en jeu.'],
         ccq_ethique: ['Formule une question liée à une réalité culturelle ou éthique.', 'Recueille et sélectionne des informations pertinentes.', 'Compare des points de vue ou des perspectives.', 'Considère les raisons et les conséquences associées aux points de vue.'],
-        ccq_comprehension: ['Dégage des constats à partir des informations étudiées.', 'Explique les enjeux ou les tensions présents.', 'Appuie sa réflexion sur des raisons ou des exemples.', 'Formule une réponse nuancée en considérant plusieurs perspectives.']
+        ccq_comprehension: ['Dégage des constats à partir des informations étudiées.', 'Explique les enjeux ou les tensions présents.', 'Appuie sa réflexion sur des raisons ou des exemples.', 'Formule une réponse nuancée en considérant plusieurs perspectives.'],
+        ccq_dialogue: ['Respecte les conditions favorables au dialogue.', 'Interagit avec ouverture et appuie ses propos sur des raisons pertinentes.']
       },
       sciences_outils: {
         sci2_demarche: ['Planifie les étapes de son travail.', 'Réalise la démarche prévue.', 'Réajuste sa démarche au besoin.', 'Respecte les consignes et le protocole.'],
         sci2_outils: ['Choisit l’outil ou l’instrument approprié.', 'Manipule les objets avec soin et précision.', 'Respecte les règles de sécurité.', 'Utilise la technique enseignée.'],
-        sci2_connaissances: ['Nomme les notions liées à l’objet ou au procédé.', 'Décrit le fonctionnement de l’objet ou du procédé.', 'Applique les notions étudiées à la tâche.', 'Utilise les connaissances de la progression des apprentissages.']
+        sci2_connaissances: ['Nomme les notions liées à l’objet ou au procédé.', 'Décrit le fonctionnement de l’objet ou du procédé.', 'Applique les notions étudiées à la tâche.', 'Utilise les connaissances de la progression des apprentissages.'],
+        sci2_precision: ['Note fidèlement les mesures et observations.', 'Organise clairement ses relevés.']
       },
       sciences_comm: {
         sci3_explic: ['Interprète ses observations ou ses résultats.', 'Formule une explication ou une solution.', 'Appuie son explication sur des données.', 'Tire une conclusion liée à la problématique.'],
         sci3_terminologie: ['Emploie les termes scientifiques étudiés.', 'Utilise les unités et symboles appropriés.', 'Respecte les conventions de la discipline.', 'Précise le sens des mots employés.'],
-        sci3_connaissances: ['Relie ses propos aux notions étudiées.', 'Utilise les concepts de façon juste.', 'Intègre plusieurs notions dans une explication.', 'Justifie sa solution à l’aide des connaissances.']
+        sci3_connaissances: ['Relie ses propos aux notions étudiées.', 'Utilise les concepts de façon juste.', 'Intègre plusieurs notions dans une explication.', 'Justifie sa solution à l’aide des connaissances.'],
+        sci3_representation: ['Trace un schéma, un tableau ou un graphique lisible.', 'Ajoute les titres et légendes nécessaires.']
       },
       us_changement: {
         us2_connaissances: ['Situe la société dans le temps et dans l’espace.', 'Rappelle des faits, personnages ou événements.', 'Décrit l’organisation de la société à deux moments.', 'Utilise les documents pour appuyer ses connaissances.'],
         us2_changements: ['Relève des changements sociaux et territoriaux.', 'Compare deux moments dans le temps.', 'Établit des causes des changements.', 'Établit des conséquences des changements.'],
-        us2_interpretation: ['Exprime son interprétation du changement.', 'Appuie son interprétation sur des arguments.', 'Utilise des traces ou des documents.', 'Défend son point de vue auprès des autres.']
+        us2_interpretation: ['Exprime son interprétation du changement.', 'Appuie son interprétation sur des arguments.', 'Utilise des traces ou des documents.', 'Défend son point de vue auprès des autres.'],
+        us2_traces: ['Repère une trace du passé dans le présent.', 'Explique le lien entre cette trace et la société étudiée.']
       },
       us_diversite: {
         us3_connaissances: ['Situe les sociétés comparées.', 'Décrit les caractéristiques de chaque société.', 'Rappelle les faits essentiels étudiés.', 'Utilise cartes et lignes du temps.'],
         us3_comparaison: ['Relève des ressemblances.', 'Relève des différences.', 'Explique des causes des différences.', 'Explique des conséquences des différences.'],
-        us3_vision: ['Repère des caractéristiques des sociétés étudiées.', 'Relie une caractéristique au territoire.', 'Utilise des faits pertinents pour expliquer le lien.', 'Compare les liens observés entre les sociétés.']
+        us3_vision: ['Repère des caractéristiques des sociétés étudiées.', 'Relie une caractéristique au territoire.', 'Utilise des faits pertinents pour expliquer le lien.', 'Compare les liens observés entre les sociétés.'],
+        us3_techniques: ['Utilise adéquatement les cartes, tableaux et lignes du temps.', 'Extrait l’information pertinente des documents iconographiques et écrits.']
       },
       sciences_global: {
         sci_prob: ['Décrit le problème ou le phénomène à l’étude.', 'Formule une question ou une hypothèse pertinente.', 'Repère les variables ou les éléments à examiner.', 'Justifie une prédiction à partir de ses connaissances ou observations.'],
         sci_demarche: ['Choisit ou suit une démarche adaptée à la question.', 'Utilise les instruments et le matériel de façon appropriée et sécuritaire.', 'Réalise les étapes de l’expérimentation ou de la conception.', 'Consigne des observations et des résultats utiles.'],
-        sci_explic: ['Interprète les observations ou les résultats recueillis.', 'Établit des liens avec les concepts scientifiques étudiés.', 'Tire une conclusion en lien avec la question de départ.', 'Communique son raisonnement avec des termes et représentations appropriés.']
+        sci_explic: ['Interprète les observations ou les résultats recueillis.', 'Établit des liens avec les concepts scientifiques étudiés.', 'Tire une conclusion en lien avec la question de départ.', 'Communique son raisonnement avec des termes et représentations appropriés.'],
+        sci_strategies: ['Garde des traces claires de ses essais et observations.', 'Ajuste ses manipulations en cours d’expérimentation.']
       },
       univers_social: {
         us_oi: ['Situe les faits et les sociétés dans le temps.', 'Localise les lieux et territoires à l’aide de documents.', 'Mobilise des connaissances historiques et géographiques pertinentes.', 'Repère des informations utiles dans des sources variées.'],
         us_org: ['Décrit des caractéristiques d’une société ou d’un territoire.', 'Compare des sociétés, des périodes ou des territoires.', 'Repère des changements et des continuités.', 'Relie les caractéristiques aux modes de vie et à l’organisation étudiés.'],
-        us_causalite: ['Établit des liens entre des faits ou des phénomènes.', 'Explique des causes et des conséquences.', 'Appuie ses interprétations sur des traces ou des documents.', 'Présente une explication cohérente et contextualisée.']
+        us_causalite: ['Établit des liens entre des faits ou des phénomènes.', 'Explique des causes et des conséquences.', 'Appuie ses interprétations sur des traces ou des documents.', 'Présente une explication cohérente et contextualisée.'],
+        us_div: ['Consulte la légende et l’échelle d’une carte.', 'Situe les événements sur une frise chronologique.']
+      },
+      presco_c1: {
+        presco_c1_1: ['Se déplace avec aisance et équilibre dans l’espace.', 'Coordonne ses gestes lors des jeux moteurs (courir, sauter, lancer, attraper).'],
+        presco_c1_2: ['Manipule avec précision les petits objets et outils (ciseaux, crayons, pinceaux).', 'Ajuste son tonus et sa posture selon l’activité.'],
+        presco_c1_3: ['Agit de façon sécuritaire pour lui-même et les autres.', 'Reconnaît ses besoins physiques (détente, hygiène, énergie).']
+      },
+      presco_c2: {
+        presco_c2_1: ['Reconnaît et nomme ses émotions, ses goûts et ses besoins.', 'Exprime ce qu’il ressent de façon adaptée.'],
+        presco_c2_2: ['Fait des choix d’activités et prend des initiatives.', 'S’engage avec autonomie dans les routines et les ateliers.'],
+        presco_c2_3: ['Démontre de la confiance dans ses capacités.', 'Utilise des moyens pour retrouver son calme ou surmonter une frustration.']
+      },
+      presco_c3: {
+        presco_c3_1: ['Entre en contact positivement et joue avec les autres.', 'Partage le matériel et participe aux jeux collectifs.'],
+        presco_c3_2: ['Respecte les règles de vie de la classe et attend son tour.', 'Adopte des comportements d’entraide et de bienveillance.'],
+        presco_c3_3: ['Utilise des mots pour exprimer un désaccord.', 'Cherche des solutions pacifiques lors d’un conflit.']
+      },
+      presco_c4: {
+        presco_c4_1: ['Écoute attentivement les consignes, les histoires et ses pairs.', 'Démontre sa compréhension par ses actions ou ses réponses.'],
+        presco_c4_2: ['S’exprime par des phrases complètes avec un vocabulaire varié.', 'Raconte une expérience ou formule une idée clairement.'],
+        presco_c4_3: ['Manifeste de l’intérêt pour les livres, les lettres et les sons.', 'Explore spontanément des activités de lecture et d’écriture émergentes.']
+      },
+      presco_c5: {
+        presco_c5_1: ['Observe, manipule, expérimente et pose des questions.', 'Fait des prédictions lors des activités d’exploration.'],
+        presco_c5_2: ['Dénombre, classe, compare et reconnaît les formes et régularités.', 'Utilise le vocabulaire mathématique en contexte de jeu.'],
+        presco_c5_3: ['Établit des liens entre ses découvertes et ce qu’il connaît.', 'Persévère et essaie différentes stratégies devant un défi.']
       },
       art_dram_c1c2: {
         ad1_org: ['Mobilise le corps, la voix, l’espace ou les objets pour créer.', 'Développe un personnage ou une action dramatique.', 'Fait des choix liés à l’intention de création ou d’interprétation.', 'Combine les éléments du langage dramatique de façon signifiante.'],
         ad1_jeu: ['Utilise les techniques de jeu travaillées.', 'Exploite les modes de théâtralisation appropriés.', 'Ajuste ses moyens de jeu pendant la répétition ou la prestation.', 'Prend en compte les partenaires et les contraintes de la proposition.'],
-        ad1_conventions: ['Organise les actions dans une séquence cohérente.', 'Respecte les caractéristiques de la proposition dramatique.', 'Maintient le rôle et la continuité de l’action.', 'Ajuste son jeu pour soutenir le sens et l’effet de la scène.']
+        ad1_conventions: ['Organise les actions dans une séquence cohérente.', 'Respecte les caractéristiques de la proposition dramatique.', 'Maintient le rôle et la continuité de l’action.', 'Ajuste son jeu pour soutenir le sens et l’effet de la scène.'],
+        ad1_sequence: ['Respecte les indications de jeu et les repères de la séquence.', 'Maintient une présence expressive et soutenue du début à la fin.', 'Enchaîne les actions dramatiques avec fluidité.'],
+        ad1_reflexion: ['Nomme une étape ou un choix de sa démarche.', 'Explique ce qui a aidé son jeu ou sa création.']
       },
       art_dram_c3: {
         ad3_vocab: ['Reconnaît des éléments du langage dramatique et théâtral.', 'Utilise le vocabulaire disciplinaire pour décrire ses observations.', 'Repère des choix de jeu ou de mise en scène.', 'Décrit des caractéristiques pertinentes de l’œuvre ou de la réalisation.'],
         ad3_liens: ['Relie des choix artistiques aux effets produits.', 'Explique une réaction à partir d’éléments observés.', 'Établit des liens entre l’œuvre et son contexte socioculturel.', 'Compare des aspects pertinents de différentes œuvres ou réalisations.'],
-        ad3_jugement: ['Formule une appréciation personnelle claire.', 'Justifie son jugement par des exemples précis.', 'Tient compte de critères liés à l’œuvre ou à la réalisation.', 'Explique les effets et les intentions qui soutiennent son appréciation.']
+        ad3_jugement: ['Formule une appréciation personnelle claire.', 'Justifie son jugement par des exemples précis.', 'Tient compte de critères liés à l’œuvre ou à la réalisation.', 'Explique les effets et les intentions qui soutiennent son appréciation.'],
+        ad3_observation: ['Adopte une posture d’écoute et d’attention envers la prestation.', 'Relève des éléments pertinents lors de l’observation.']
+      },
+      art_plast_c1c2: {
+        ap1_id: ['Exploite des idées originales en lien avec la proposition de création.', 'Tient compte des consignes et des éléments déclencheurs.'],
+        ap1_langage: ['Exploite les éléments du langage plastique (formes, couleurs, lignes, textures, espace, volumes).', 'Fait des choix plastiques variés et pertinents.'],
+        ap1_gestes: ['Utilise les gestes transformateurs, matériaux et outils de façon appropriée.', 'Maîtrise les techniques travaillées.'],
+        ap1_org: ['Organise les éléments du langage plastique (formes, couleurs, lignes, espace) de façon cohérente.', 'Réalise une image équilibrée et expressive.'],
+        ap1_proposition: ['Organise les éléments plastiques de façon cohérente en lien avec la proposition.', 'Respecte l’intention et les contraintes de la proposition de création.'],
+        ap1_authenticite: ['Intègre des choix personnels et expressifs dans sa réalisation.', 'Produit une image personnelle et originale.'],
+        ap1_part: ['Décrit son expérience de création ou de réalisation.', 'Nomme les moyens et stratégies utilisés.'],
+        ap1_retour: ['Décrit son expérience de création ou de réalisation.', 'Explique ses choix plastiques et les stratégies utilisées.'],
+        ap1_mise: ['Explore des idées et réalise des essais lors de la démarche de création.', 'S’engage dans les phases d’ouverture, d’action et de prise de recul.']
+      },
+      art_plast_c3: {
+        ap3_vocab: ['Repère des éléments du langage plastique dans l’œuvre ou la réalisation.', 'Utilise le vocabulaire disciplinaire approprié pour nommer ses observations.'],
+        ap3_liens: ['Établit des liens entre des éléments ressentis et ce qui est observé dans l’œuvre.', 'Repère les éléments du langage plastique et les techniques utilisées.'],
+        ap3_jugement: ['Formule une appréciation personnelle de l’œuvre ou de la réalisation.', 'Appuie son jugement sur des éléments visuels précis et le vocabulaire disciplinaire.'],
+        ap3_posture: ['Observe attentivement l’œuvre ou la réalisation.', 'Partage ses impressions dans le respect des propositions des autres.']
       }
     };
 

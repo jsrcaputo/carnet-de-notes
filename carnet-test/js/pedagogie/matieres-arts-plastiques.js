@@ -103,7 +103,7 @@
         'La réalisation montre peu de choix personnels ou reprend surtout des solutions proposées.',
         'Les choix personnels et l’intention expressive sont difficilement perceptibles.')),
       { ...LEGACY_ART_PLASTIC_CREATION[3], title: 'Justesse du retour réflexif (*)' },
-      { ...LEGACY_ART_PLASTIC_CREATION[1], title: 'Démarche de création', formativeOnly: true }
+      { ...LEGACY_ART_PLASTIC_CREATION[1], title: 'Démarche de création (*)', formativeOnly: true }
     ];
 
     // Préscolaire : 5 compétences du Programme-cycle de l'éducation préscolaire

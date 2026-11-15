@@ -31,11 +31,11 @@
       background: #64748b;
     }
     .stmt-checked-A {
-      background-color: #e8eee8 !important;
-      border-color: #cbd8cc !important;
-      color: #3f5b48 !important;
+      background-color: var(--brand-soft, #e0ebfb) !important;
+      border-color: var(--studio-border-strong, #b8cce4) !important;
+      color: var(--brand-deep, #132a4a) !important;
       font-weight: 600;
-      box-shadow: 0 1px 2px rgba(63, 91, 72, .08);
+      box-shadow: 0 1px 2px rgba(19, 42, 74, .08);
     }
     .stmt-checked-B {
       background-color: #e9edef !important;
@@ -115,8 +115,8 @@
     }
     .rubric-matrix-table th,
     .rubric-matrix-table td {
-      overflow-wrap: anywhere;
-      word-break: break-word;
+      overflow-wrap: break-word;
+      word-break: normal;
       white-space: normal;
       vertical-align: top;
       overflow: hidden;
@@ -129,9 +129,14 @@
       max-width: 100%;
       text-align: left;
       white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
+      overflow-wrap: break-word;
+      word-break: normal;
       box-sizing: border-box;
+    }
+    .rubric-stmt-btn.is-weighted {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.25rem;
     }
     .rubric-stmt-text {
       flex: 1 1 0%;
@@ -139,9 +144,9 @@
       max-width: 100%;
       white-space: normal;
       overflow-wrap: break-word;
-      word-break: break-word;
-      -webkit-hyphens: auto;
-      hyphens: auto;
+      word-break: normal;
+      -webkit-hyphens: none;
+      hyphens: none;
       line-height: 1.32;
     }
     .grade-pills-single-line {
@@ -169,8 +174,8 @@
     #viewQuickObs .rubric-stmt-btn { font-size: 12px; line-height: 1.4; }
     #viewQuickObs .grade-pills-single-line { grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); gap: .3rem; }
     #viewQuickObs .grade-pill-compact { min-height: 36px; font-size: 11px; }
-    #btnCommitObsSessionToGradebook { padding: .6rem 1rem; background: #355b47; color: #fff; font-size: .85rem; box-shadow: 0 2px 6px rgba(35, 70, 50, .25); }
-    #btnCommitObsSessionToGradebook:hover { background: #244b36; }
+    #btnCommitObsSessionToGradebook { padding: .6rem 1rem; background: var(--brand); color: #fff; font-size: .85rem; box-shadow: 0 2px 6px rgba(15, 23, 42, .18); }
+    #btnCommitObsSessionToGradebook:hover { background: var(--brand-deep); }
     @media (min-width: 1200px) {
       #viewQuickObs:not(.hidden) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); align-items: start; }
       #viewQuickObs > .studio-hero-card, #viewQuickObs > #qoStudentBox { grid-column: 1 / -1; }

@@ -54,7 +54,7 @@
 
     function showWelcome() {
       document.getElementById('welcomeOverlay').classList.remove('hidden');
-      document.getElementById('welcomeClose').focus();
+      document.getElementById('welcomeOverlay').focus({ preventScroll: true });
     }
 
     function hideWelcome() {
@@ -63,13 +63,6 @@
 
     function dismissWelcome() {
       hideWelcome();
-      if (isPristineInitialGroup()) {
-        appState.activeView = 'viewStudents';
-        expandedSubjectGroup = null;
-        renderAll();
-      } else {
-        navigateToView('viewStudents');
-      }
     }
 
     function isPristineInitialGroup() {
@@ -150,9 +143,12 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('welcomeClose').addEventListener('click', dismissWelcome);
+      document.getElementById('welcomeClose').addEventListener('click', event => {
+        event.stopPropagation();
+        dismissWelcome();
+      });
       document.getElementById('welcomeOverlay').addEventListener('click', event => {
-        if (event.target.id === 'welcomeOverlay') dismissWelcome();
+        if (!event.target.closest('.welcome-card')) dismissWelcome();
       });
       document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
       document.getElementById('welcomeDemo').addEventListener('click', () => {
@@ -239,6 +235,9 @@
       });
 
       document.getElementById('btnPrintGlobalReport').addEventListener('click', () => {
+        printStudentIndividualSheet();
+      });
+      if (false) document.getElementById('btnPrintGlobalReport').addEventListener('click', () => {
         document.body.classList.add('print-global-report');
         const cleanup = () => {
           document.body.classList.remove('print-global-report');
@@ -463,7 +462,8 @@
         weightLevel = '';
         document.getElementById('btnWeightMode').setAttribute('aria-expanded', 'false');
         document.getElementById('weightControls').classList.add('hidden');
-        document.querySelectorAll('#gradebookHeaderRow .weight-tools').forEach(tools => tools.remove());
+        renderGradebookView();
+        if (false) document.querySelectorAll('#gradebookHeaderRow .weight-tools').forEach(tools => tools.remove());
         document.querySelectorAll('#gradebookHeaderRow [data-weight-input]').forEach(input => {
           const asg = getActiveTermData().subjectData[appState.activeSubjectId].assignments.find(item => item.id === input.getAttribute('data-weight-input'));
           if (!asg) return;
@@ -485,7 +485,7 @@
         }
       });
       document.addEventListener('pointerdown', event => {
-        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gbLevelFilterBar, [data-weight-lock], [data-weight-step], [data-weight-input]')) return;
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookScrollContainer')) return;
         setTimeout(() => {
           if (weightMode) closeWeightMode();
         }, 0);
@@ -500,6 +500,14 @@
         notifyUpdate('Pondération répartie équitablement (100%)');
         renderAll();
       });
+      const btnUnlockAll = document.getElementById('btnUnlockAllWeights');
+      if (btnUnlockAll) {
+        btnUnlockAll.addEventListener('click', () => {
+          unlockedWeights.clear();
+          notifyUpdate('Toutes les pondérations sont maintenant libres');
+          renderGradebookView();
+        });
+      }
 
       // Add Assignment Modal (Requires explicit custom name!)
       const modalAsg = document.getElementById('modalAddAssignment');
@@ -523,8 +531,8 @@
         const isAll = modalAddAsgTargetLevels.length === 0;
 
         const allLbl = document.createElement('label');
-        allLbl.className = `cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition shadow-2xs ${isAll ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-300' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
-        allLbl.innerHTML = `<input type="checkbox" class="rounded accent-emerald-600 w-4 h-4 cursor-pointer" ${isAll ? 'checked' : ''}><span>Tout le groupe (tous les niveaux)</span>`;
+        allLbl.className = `cursor-pointer inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition shadow-2xs ${isAll ? 'bg-indigo-50 border-indigo-300 text-indigo-900 ring-1 ring-indigo-300' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
+        allLbl.innerHTML = `<input type="checkbox" class="rounded accent-indigo-600 w-4 h-4 cursor-pointer" ${isAll ? 'checked' : ''}><span>Tout le groupe (tous les niveaux)</span>`;
         allLbl.querySelector('input').addEventListener('change', () => {
           modalAddAsgTargetLevels = [];
           renderModalAddAsgTargetLevels();
@@ -990,6 +998,7 @@
       });
 
       applyPrefs();
+      const restoredFromLocal = typeof loadStateFromLocalStorage === 'function' ? loadStateFromLocalStorage() : false;
       ['input', 'change', 'click', 'drop', 'dragend'].forEach(eventName => {
         document.addEventListener(eventName, scheduleAppStateSave);
       });
@@ -998,7 +1007,8 @@
       initialEditableSnapshot = getEditableStateSnapshot();
       lastSavedFileSnapshot = getBackupSnapshot();
       updateHistoryButtons();
-      if (!appState.students || appState.students.length === 0) showWelcome();
+      if (!hasActiveGroup() && (!appState.students || appState.students.length === 0)) showWelcome();
+      else hideWelcome();
 
       // Recherche et tri des élèves
       document.getElementById('studentSearch').addEventListener('input', e => {
@@ -1103,6 +1113,11 @@
       settingsPanel.querySelectorAll('.sp-seg button').forEach(b => b.addEventListener('click', () => {
         prefs[b.parentElement.getAttribute('data-pref')] = b.getAttribute('data-val');
         applyPrefs();
+      }));
+      settingsPanel.querySelectorAll('[data-palette-val]').forEach(b => b.addEventListener('click', () => {
+        prefs.palette = b.getAttribute('data-palette-val');
+        applyPrefs();
+        scheduleAppStateSave();
       }));
       settingsPanel.querySelectorAll('[data-pref-check]').forEach(cb => cb.addEventListener('change', () => {
         prefs[cb.getAttribute('data-pref-check')] = cb.checked;

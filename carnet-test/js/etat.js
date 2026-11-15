@@ -159,9 +159,30 @@
             } else {
               delete asg.weightByLevel;
             }
+            if (!['portrait', 'weighted'].includes(asg.obsMode)) {
+              if (asg.obsMode === 'checklist') asg.obsMode = 'portrait';
+              else delete asg.obsMode;
+            }
+            if (asg.criteriaWeights && typeof asg.criteriaWeights === 'object' && !Array.isArray(asg.criteriaWeights)) {
+              const cleanCritW = {};
+              Object.entries(asg.criteriaWeights).forEach(([cId, w]) => {
+                const num = Number(w);
+                if (Number.isFinite(num) && num >= 0 && num <= 100) cleanCritW[String(cId)] = num;
+              });
+              if (Object.keys(cleanCritW).length) asg.criteriaWeights = cleanCritW;
+              else delete asg.criteriaWeights;
+            } else {
+              delete asg.criteriaWeights;
+            }
           });
           subData.studentRecords = subData.studentRecords || {};
           subData.currentObsSession = subData.currentObsSession || createBlankObsSession(imported.students);
+          subData.currentObsSession.obsMode = ['portrait', 'weighted'].includes(subData.currentObsSession.obsMode)
+            ? subData.currentObsSession.obsMode
+            : 'portrait';
+          if (!subData.currentObsSession.criteriaWeights || typeof subData.currentObsSession.criteriaWeights !== 'object' || Array.isArray(subData.currentObsSession.criteriaWeights)) {
+            subData.currentObsSession.criteriaWeights = null;
+          }
           subData.currentObsSession.studentDrafts = subData.currentObsSession.studentDrafts || {};
           if (Array.isArray(subData.currentObsSession.targetLevels)) {
             subData.currentObsSession.targetLevels = [...new Set(
@@ -266,6 +287,8 @@
         const session = createBlankObsSession(appState.students);
         session.editingAssignmentId = asg.id;
         session.rubricVersion = asg.rubricVersion;
+        session.obsMode = ['portrait', 'weighted'].includes(asg.obsMode) ? asg.obsMode : 'portrait';
+        session.criteriaWeights = (asg.criteriaWeights && typeof asg.criteriaWeights === 'object') ? { ...asg.criteriaWeights } : null;
         session.title = asg.title;
         session.targetLevels = getAssignmentTargetLevels(asg);
 
@@ -422,7 +445,7 @@
 
     function setAssignmentWeightForLevel(asg, level, val) {
       if (!asg) return;
-      const num = Math.max(0, Number.isFinite(Number(val)) ? Number(val) : 0);
+      const num = Math.max(0, Math.round(Number.isFinite(Number(val)) ? Number(val) : 0));
       const targets = getAssignmentTargetLevels(asg);
       const present = getPresentStudentLevels();
       if (!isMultiLevelGroup() || targets.length === 1) {
@@ -434,7 +457,7 @@
       } else if (level && level !== 'ALL') {
         asg.weightByLevel = (asg.weightByLevel && typeof asg.weightByLevel === 'object') ? asg.weightByLevel : {};
         present.forEach(l => {
-          if (asg.weightByLevel[l] === undefined) asg.weightByLevel[l] = asg.weight !== undefined ? Number(asg.weight) : 100;
+          if (asg.weightByLevel[l] === undefined) asg.weightByLevel[l] = asg.weight !== undefined ? Math.round(Number(asg.weight)) : 100;
         });
         asg.weightByLevel[String(level)] = num;
         asg.weight = num;
@@ -446,39 +469,35 @@
       }
     }
 
+    function distributeIntegersEqually(totalUnits, count) {
+      if (count <= 0) return [];
+      const base = Math.floor(totalUnits / count);
+      const rem = totalUnits - base * count;
+      return Array.from({ length: count }, (_, idx) => base + (idx >= count - rem ? 1 : 0));
+    }
+
     function recalculateEqualWeights(subObj) {
       const allAsgs = subObj.assignments;
       if (allAsgs.length === 0) return;
       const present = getPresentStudentLevels();
       if (present.length <= 1) {
-        const n = allAsgs.length;
-        const base = Math.round((100 / n) * 10) / 10;
+        const shares = distributeIntegersEqually(100, allAsgs.length);
         allAsgs.forEach((a, idx) => {
           delete a.weightByLevel;
-          if (idx === n - 1) {
-            const sumPrev = Math.round(base * (n - 1) * 10) / 10;
-            a.weight = Math.max(0, Math.round((100 - sumPrev) * 10) / 10);
-          } else {
-            a.weight = base;
-          }
+          a.weight = shares[idx];
         });
         return;
       }
 
-      // En multi-niveau (ex. 5e et 6e), répartir 100 % à l'intérieur de chaque niveau présent
+      // En multi-niveau (ex. 5e et 6e), répartir 100 % en entiers (bonds de 1 %) à l'intérieur de chaque niveau présent
       allAsgs.forEach(a => {
         a.weightByLevel = {};
       });
       present.forEach(lvl => {
         const applicable = allAsgs.filter(a => isAssignmentForLevel(a, lvl));
-        const n = applicable.length;
-        if (n === 0) return;
-        const base = Math.round((100 / n) * 10) / 10;
+        const shares = distributeIntegersEqually(100, applicable.length);
         applicable.forEach((a, idx) => {
-          const w = idx === n - 1
-            ? Math.max(0, Math.round((100 - Math.round(base * (n - 1) * 10) / 10) * 10) / 10)
-            : base;
-          a.weightByLevel[lvl] = w;
+          a.weightByLevel[lvl] = shares[idx];
         });
       });
       allAsgs.forEach(a => {
@@ -538,10 +557,6 @@
       if (subObj.assignments.length === 0) return true;
       const present = getPresentStudentLevels();
       if (present.length > 1) {
-        const filterLvl = ensureValidGbLevelFilter();
-        if (filterLvl !== 'ALL') {
-          return isLevelWeightSumValid100(subObj, filterLvl);
-        }
         return present.every(lvl => isLevelWeightSumValid100(subObj, lvl));
       }
       const total = getTotalAssignmentWeights(subObj);
@@ -604,7 +619,27 @@
     let weightMode = false;
     let weightScope = '';
     let weightLevel = '';
-    const unlockedWeights = new Set();
+    const lockedWeights = new Set();
+    const autoLockedWeights = new Set();
+    const unlockedWeights = {
+      has: id => !lockedWeights.has(id) && !autoLockedWeights.has(id),
+      add: id => { lockedWeights.delete(id); autoLockedWeights.delete(id); },
+      delete: id => { lockedWeights.add(id); autoLockedWeights.delete(id); },
+      clear: () => { lockedWeights.clear(); autoLockedWeights.clear(); },
+      forEach: () => {},
+      get size() { return lockedWeights.size + autoLockedWeights.size; }
+    };
+    function isWeightPinned(id) {
+      return lockedWeights.has(id);
+    }
+    function toggleWeightPin(id) {
+      if (isWeightPinned(id)) {
+        lockedWeights.delete(id);
+      } else {
+        lockedWeights.add(id);
+        autoLockedWeights.delete(id);
+      }
+    }
     function normText(value) {
       return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
     }
@@ -614,63 +649,114 @@
     }
 
     function adjustUnlockedWeight(subData, target, level, newWeight, render = true) {
-      const factor = 1000;
-      const current = Math.round(getAssignmentWeightForLevel(target, level) * factor);
-      const next = Math.round(newWeight * factor);
-      if (!Number.isFinite(newWeight) || next < 0 || next > 100 * factor) {
+      const next = Math.round(newWeight);
+      if (!Number.isFinite(newWeight) || next < 0 || next > 100) {
         showToast('La pondération doit rester entre 0 et 100 %.');
         return false;
       }
-      const change = next - current;
-      if (change === 0) return true;
-      const peers = subData.assignments.filter(asg => asg !== target && unlockedWeights.has(asg.id) &&
-        (level === 'ALL' || isAssignmentForLevel(asg, level)));
-      if (!peers.length) {
-        showToast('Déverrouillez au moins deux évaluations pour répartir la pondération.');
-        return false;
-      }
-      const values = peers.map(asg => Math.round(getAssignmentWeightForLevel(asg, level) * factor));
-      let remaining = Math.abs(change);
-      const peerDirection = -Math.sign(change);
-      while (remaining > 0) {
-        const available = values.map((value, index) => ({ index, room: peerDirection > 0 ? 100 * factor - value : value }))
-          .filter(item => item.room > 0);
-        if (!available.length) {
-          showToast('Les autres évaluations déverrouillées ne peuvent pas absorber ce changement.');
-          return false;
-        }
-        const share = Math.ceil(remaining / available.length);
-        available.forEach(item => {
-          const amount = Math.min(share, item.room, remaining);
-          values[item.index] += peerDirection * amount;
-          remaining -= amount;
-        });
-      }
-      const changes = [{ asg: target, value: next / factor }, ...peers.map((asg, index) => ({ asg, value: values[index] / factor }))];
-      const linkedDeltas = new Map();
-      if (getCurrentSubjectConfig().singleResult) {
-        changes.forEach(changeItem => {
-          getLinkedAssignments(changeItem.asg).forEach(linked => {
-            const delta = changeItem.value - getAssignmentWeightForLevel(linked.asg, level);
-            linkedDeltas.set(linked.subData, (linkedDeltas.get(linked.subData) || 0) + delta);
+      const presentLevels = getPresentStudentLevels();
+      const isMulti = presentLevels.length > 1;
+      const levelsToUpdate = (isMulti && (!level || level === 'ALL'))
+        ? presentLevels.filter(lvl => isAssignmentForLevel(target, lvl))
+        : [level || 'ALL'];
+      if (!levelsToUpdate.length) levelsToUpdate.push('ALL');
+
+      const distributeDeltaAcross = (pool, deltaPct, lvlKey) => {
+        if (!pool.length || deltaPct === 0) return deltaPct;
+        const vals = pool.map(asg => Math.round(getAssignmentWeightForLevel(asg, lvlKey === 'ALL' ? '' : lvlKey)));
+        let rem = Math.abs(deltaPct);
+        const dir = deltaPct > 0 ? 1 : -1;
+        while (rem > 0) {
+          const available = vals
+            .map((value, index) => ({ index, room: dir > 0 ? 100 - value : value }))
+            .filter(item => item.room > 0);
+          if (!available.length) break;
+          const stepBase = Math.floor(rem / available.length);
+          let stepExtra = rem - stepBase * available.length;
+          let movedThisPass = 0;
+          available.forEach(item => {
+            if (rem <= 0) return;
+            const wanted = stepBase + (stepExtra > 0 ? 1 : 0);
+            const take = Math.min(wanted, item.room, rem);
+            if (take > 0) {
+              vals[item.index] += dir * take;
+              rem -= take;
+              movedThisPass += take;
+              if (stepExtra > 0) stepExtra--;
+            }
           });
-        });
-        if ([...linkedDeltas.values()].some(delta => Math.abs(delta) > 0.000001)) {
-          showToast('Les évaluations liées dans une autre compétence doivent aussi conserver leur total. Déverrouillez les évaluations liées correspondantes.');
-          return false;
+          if (movedThisPass === 0) break;
         }
-      }
-      changes.forEach(changeItem => {
-        setAssignmentWeightForLevel(changeItem.asg, level, changeItem.value);
+        pool.forEach((asg, index) => {
+          const val = Math.round(vals[index]);
+          setAssignmentWeightForLevel(asg, lvlKey, val);
+          if (getCurrentSubjectConfig().singleResult) {
+            getLinkedAssignments(asg).forEach(linked => {
+              setAssignmentWeightForLevel(linked.asg, lvlKey, val);
+              linked.subData.equalWeights = false;
+            });
+          }
+        });
+        return dir > 0 ? rem : -rem;
+      };
+
+      let anyChanged = false;
+      let blockedByExplicitLocks = false;
+      levelsToUpdate.forEach(lvl => {
+        const current = Math.round(getAssignmentWeightForLevel(target, lvl === 'ALL' ? '' : lvl));
+        const targetTotal = 100;
+        const allAsgs = subData.assignments.filter(asg => lvl === 'ALL' || isAssignmentForLevel(asg, lvl));
+        const sumAllNow = allAsgs.reduce((acc, asg) => acc + Math.round(getAssignmentWeightForLevel(asg, lvl === 'ALL' ? '' : lvl)), 0);
+        const change = next - current;
+        if (change === 0 && sumAllNow === targetTotal) return;
+        anyChanged = true;
+
+        setAssignmentWeightForLevel(target, lvl, next);
         if (getCurrentSubjectConfig().singleResult) {
-          getLinkedAssignments(changeItem.asg).forEach(linked => {
-            setAssignmentWeightForLevel(linked.asg, level, changeItem.value);
+          getLinkedAssignments(target).forEach(linked => {
+            setAssignmentWeightForLevel(linked.asg, lvl, next);
             linked.subData.equalWeights = false;
           });
         }
+
+        const allPeers = allAsgs.filter(asg => asg !== target);
+        if (!allPeers.length) return;
+
+        // Cible de correction en bonds entiers de 1 % pour conserver 100 % par niveau
+        const currentTotalWithNext = (sumAllNow - current) + next;
+        let neededDelta = targetTotal - currentTotalWithNext;
+
+        // 1) Ajuster d'abord les colonnes libres qui n'ont pas été ajustées juste avant
+        const freePeers = allPeers.filter(asg => !lockedWeights.has(asg.id) && !autoLockedWeights.has(asg.id));
+        if (freePeers.length && neededDelta !== 0) {
+          neededDelta = distributeDeltaAcross(freePeers, neededDelta, lvl);
+        }
+
+        // 2) S'il reste un écart (ex. une autre colonne était déjà ajustée mais reste déverrouillée),
+        //    répartir en entiers sur les autres colonnes dont le cadenas n'est pas figé manuellement
+        if (neededDelta !== 0) {
+          const nonManualPeers = allPeers.filter(asg => !lockedWeights.has(asg.id) && autoLockedWeights.has(asg.id));
+          if (nonManualPeers.length) {
+            neededDelta = distributeDeltaAcross(nonManualPeers, neededDelta, lvl);
+          }
+        }
+
+        if (neededDelta !== 0 && allPeers.some(asg => lockedWeights.has(asg.id))) {
+          blockedByExplicitLocks = true;
+        }
       });
+
+      if (!anyChanged) return true;
+      // Garder uniquement une priorité interne de non-recul sans jamais fermer le cadenas visuel
+      if (!lockedWeights.has(target.id)) autoLockedWeights.add(target.id);
       subData.equalWeights = false;
-      notifyUpdate('Pondération ajustée');
+      const valid100 = isWeightSumValid100(subData);
+      const totalW = getTotalAssignmentWeights(subData);
+      updateWeightIndicatorsUI(totalW, valid100, subData.assignments.length > 0, subData);
+      notifyUpdate(blockedByExplicitLocks
+        ? 'Ajusté : libérez une colonne figée ou cliquez sur « Répartir également » pour revenir à 100 %'
+        : 'Pondération ajustée');
+      scheduleAppStateSave();
       if (render) renderGradebookView();
       return true;
     }
@@ -734,7 +820,63 @@
     }
 
     // ---- Préférences d'affichage ----
-    const prefs = { theme: 'light', textSize: 'md', backupReminder: true };
+    const CUSTOM_RUBRICS_STORAGE_KEY = 'carnet_notes_custom_rubrics_v1';
+    function loadAllCustomWeightedPresets() {
+      try {
+        const parsed = JSON.parse(window.localStorage.getItem(CUSTOM_RUBRICS_STORAGE_KEY) || '{}');
+        return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+      } catch (_) {
+        return {};
+      }
+    }
+    function getCustomWeightedPreset(subjectId, cycle, scoredCriteria = []) {
+      const all = loadAllCustomWeightedPresets();
+      const key = `${subjectId}__c${cycle}`;
+      const saved = all[key];
+      if (!saved || typeof saved !== 'object' || Array.isArray(saved) || !scoredCriteria.length) return null;
+      const valid = scoredCriteria.every(c => Number.isFinite(Number(saved[c.id])) && Number(saved[c.id]) >= 0);
+      if (!valid) return null;
+      const out = {};
+      scoredCriteria.forEach(c => { out[c.id] = Math.round(Number(saved[c.id])); });
+      return out;
+    }
+    function saveCustomWeightedPreset(subjectId, cycle, weightsMap, scoredCriteria = []) {
+      if (!subjectId || !weightsMap || !scoredCriteria.length) return false;
+      const clean = {};
+      scoredCriteria.forEach(c => {
+        clean[c.id] = Math.round(Math.max(0, Number(weightsMap[c.id] || 0)));
+      });
+      const all = loadAllCustomWeightedPresets();
+      all[`${subjectId}__c${cycle}`] = clean;
+      try {
+        window.localStorage.setItem(CUSTOM_RUBRICS_STORAGE_KEY, JSON.stringify(all));
+        return true;
+      } catch (_) {
+        return false;
+      }
+    }
+
+    const VALID_PALETTES = ['ocean', 'foret', 'boreal', 'azur', 'terracotta', 'prune', 'ambre', 'graphite'];
+    const PALETTE_LABELS = {
+      ocean: 'Bleu Océan',
+      foret: 'Vert Forêt',
+      boreal: 'Indigo Boréal',
+      azur: 'Azur Nordique',
+      terracotta: 'Argile & Terracotta',
+      prune: 'Prune Éditoriale',
+      ambre: 'Ocre & Ambre',
+      graphite: 'Graphite & Encre'
+    };
+    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true };
+    try {
+      const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
+      if (savedPrefs && typeof savedPrefs === 'object') {
+        if (['light', 'dark'].includes(savedPrefs.theme)) prefs.theme = savedPrefs.theme;
+        if (VALID_PALETTES.includes(savedPrefs.palette)) prefs.palette = savedPrefs.palette;
+        if (['sm', 'md', 'lg'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
+        if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
+      }
+    } catch (_) {}
     const STUDIO_ATMOSPHERE_IMAGES = {
       math_resoudre: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1400&q=80',
       math_raisonner: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1400&q=80',
@@ -764,6 +906,9 @@
     function applyPrefs() {
       const root = document.documentElement;
       root.classList.add('design-studio');
+      const activePalette = VALID_PALETTES.includes(prefs.palette) ? prefs.palette : 'ocean';
+      prefs.palette = activePalette;
+      root.setAttribute('data-palette', activePalette);
       root.classList.toggle('theme-dark', prefs.theme === 'dark');
       root.classList.toggle('ts-sm', prefs.textSize === 'sm');
       root.classList.toggle('ts-lg', prefs.textSize === 'lg');
@@ -773,9 +918,19 @@
           seg.querySelectorAll('button').forEach(b => b.classList.toggle('is-on', b.getAttribute('data-val') === prefs[key]));
         }
       });
+      const paletteNameEl = document.getElementById('spPaletteName');
+      if (paletteNameEl) paletteNameEl.textContent = PALETTE_LABELS[activePalette] || 'Bleu Océan';
+      document.querySelectorAll('#settingsPanel [data-palette-val]').forEach(btn => {
+        const isOn = btn.getAttribute('data-palette-val') === activePalette;
+        btn.classList.toggle('is-active', isOn);
+        btn.setAttribute('aria-pressed', String(isOn));
+      });
       document.querySelectorAll('#settingsPanel [data-pref-check]').forEach(cb => {
         cb.checked = !!prefs[cb.getAttribute('data-pref-check')];
       });
+      try {
+        window.localStorage.setItem('carnet_notes_prefs_2026_v1', JSON.stringify(prefs));
+      } catch (_) {}
     }
 
     function getEditableStateSnapshot() {
@@ -801,7 +956,8 @@
           typeof value.backupReminder !== 'boolean') {
         throw new Error('Les paramètres d’affichage de ce fichier sont invalides.');
       }
-      return { theme: value.theme, textSize: value.textSize, backupReminder: value.backupReminder };
+      const palette = VALID_PALETTES.includes(value.palette) ? value.palette : (prefs.palette || 'ocean');
+      return { theme: value.theme, palette, textSize: value.textSize, backupReminder: value.backupReminder };
     }
 
     function getCurrentObservationSessionSnapshot(sessionOverride) {
@@ -879,6 +1035,7 @@
       if (toastMsg) {
         showToast(toastMsg);
       }
+      scheduleAppStateSave();
     }
 
     let toastTimer = null;
@@ -915,6 +1072,9 @@
       autosaveTimer = setTimeout(() => {
         autosaveTimer = null;
         recordHistory();
+        if (typeof saveStateToLocalStorage === 'function') {
+          saveStateToLocalStorage();
+        }
         if (!fileOperation && activeFileHandle && activeFileWritable && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) {
           queueLinkedFileSave();
         }

@@ -1,10 +1,24 @@
 <!DOCTYPE html>
-<html lang="fr" class="design-studio">
+<html lang="fr" class="design-studio no-active-group">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Carnet de notes - 2026/2027</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
+        var p = raw ? JSON.parse(raw) : null;
+        var root = document.documentElement;
+        var valid = ['ocean', 'foret', 'boreal', 'azur', 'terracotta', 'prune', 'ambre', 'graphite'];
+        root.setAttribute('data-palette', p && valid.indexOf(p.palette) !== -1 ? p.palette : 'ocean');
+        if (p && p.theme === 'dark') root.classList.add('theme-dark');
+        if (p && p.textSize === 'sm') root.classList.add('ts-sm');
+        if (p && p.textSize === 'lg') root.classList.add('ts-lg');
+      } catch (_) {}
+    })();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" defer></script>
   <script src="echelles-niveaux.js"></script>
   <link rel="stylesheet" href="carnet-test/css/tailwind.css">
   <link rel="stylesheet" href="carnet-test/css/base.css">
@@ -15,7 +29,7 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-  <div id="welcomeOverlay" class="welcome-overlay no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+  <div id="welcomeOverlay" class="welcome-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" tabindex="-1">
     <div class="welcome-card">
       <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
@@ -168,6 +182,22 @@
                   <button type="button" data-val="dark">Sombre</button>
                 </div>
               </div>
+              <div class="sp-row sp-row-palette">
+                <div class="sp-palette-header">
+                  <span>Palette</span>
+                  <span id="spPaletteName" class="sp-palette-active-name">Bleu Océan</span>
+                </div>
+                <div class="sp-palette-swatches" role="group" aria-label="Palette de couleurs">
+                  <button type="button" class="sp-swatch is-active" data-palette-val="ocean" title="Bleu Océan (Défaut)" aria-label="Bleu Océan" aria-pressed="true" style="--sw-brand:#1d4ed8; --sw-soft:#dbeafe;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="boreal" title="Indigo Boréal" aria-label="Indigo Boréal" aria-pressed="false" style="--sw-brand:#4338ca; --sw-soft:#e0e7ff;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="azur" title="Azur Nordique" aria-label="Azur Nordique" aria-pressed="false" style="--sw-brand:#0369a1; --sw-soft:#e0f2fe;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="terracotta" title="Argile &amp; Terracotta" aria-label="Argile et Terracotta" aria-pressed="false" style="--sw-brand:#b84a39; --sw-soft:#fce8e4;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="prune" title="Prune Éditoriale" aria-label="Prune Éditoriale" aria-pressed="false" style="--sw-brand:#6b2f7a; --sw-soft:#f3e5f6;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="ambre" title="Ocre &amp; Ambre" aria-label="Ocre et Ambre" aria-pressed="false" style="--sw-brand:#b45309; --sw-soft:#fef3c7;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="graphite" title="Graphite &amp; Encre" aria-label="Graphite et Encre" aria-pressed="false" style="--sw-brand:#334155; --sw-soft:#e2e8f0;"></button>
+                  <button type="button" class="sp-swatch" data-palette-val="foret" title="Vert Forêt" aria-label="Vert Forêt" aria-pressed="false" style="--sw-brand:#2f6b4f; --sw-soft:#dcfce7;"></button>
+                </div>
+              </div>
               <div class="sp-row">
                 <span>Taille du texte</span>
                 <div class="sp-seg" data-pref="textSize">
@@ -178,8 +208,10 @@
               </div>
               <div class="sp-title" style="margin-top:.6rem">Sauvegarde</div>
               <label class="sp-check"><input type="checkbox" data-pref-check="backupReminder"> <span>Rappel de sauvegarde à la fermeture</span></label>
-              <button id="btnDownloadJSON" type="button" class="sort-btn">Télécharger une copie JSON</button>
-              <button id="btnUnlinkJSON" type="button" class="sort-btn">Délier le fichier</button>
+              <div class="sp-backup-actions">
+                <button id="btnDownloadJSON" type="button" class="sort-btn">Télécharger une copie JSON</button>
+                <button id="btnUnlinkJSON" type="button" class="sort-btn">Délier le fichier</button>
+              </div>
             </div>
           </div>
           <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
@@ -207,7 +239,7 @@
     <div id="printMeta" aria-hidden="true"></div>
 
     <!-- VIEW 1: CARNET & TRAVAUX (ONLY ELEMENT THAT SCROLLS HORIZONTALLY AS WORKS ARE ADDED) -->
-    <section id="viewGradebook" class="space-y-3">
+    <section id="viewGradebook" class="hidden space-y-3">
       <div id="emptyRosterNotice" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl px-4 py-3 text-sm text-indigo-950">
         <div class="empty-roster-copy">
           <div id="emptyRosterTitle" class="font-bold">Votre carnet est prêt.</div>
@@ -236,25 +268,26 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-2 no-print">
-          <button id="btnNewEvaluation" type="button" aria-expanded="false" aria-controls="newEvaluationChoices" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
+          <div class="new-eval-popover-wrap"><button id="btnNewEvaluation" type="button" aria-expanded="false" aria-controls="newEvaluationChoices" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
             <span>＋ Nouvelle évaluation</span>
           </button>
           <div id="newEvaluationChoices" class="new-evaluation-choices hidden" role="group" aria-label="Type d’évaluation">
             <button id="btnOpenAddAssignment" type="button">Déjà réalisée</button>
-            <button id="btnAddVisualTraceFromGb" type="button" title="Remplir une grille d’observation">Observable</button>
+            <button id="btnAddVisualTraceFromGb" type="button" title="Remplir une grille d’observation">Observable</button></div>
           </div>
           <div class="gradebook-metrics">
             <div class="gradebook-metric"><span>Travaux et traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
             <div class="gradebook-metric"><span>Moyenne du groupe</span><strong id="kpiClassAverage">—</strong></div>
             <button id="btnWeightMode" type="button" aria-expanded="false" aria-controls="weightControls">Pondération</button>
-            <span id="weightControls" class="hidden">
+            <span id="weightWarningBanner" class="hidden px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 text-red-800 border border-red-300" role="alert">
+              Erreur pondération : <span id="weightTotalVal">0</span> % (doit donner 100 %)
+            </span>
+            <span id="weightControls" class="hidden inline-flex flex-wrap items-center gap-1.5">
               <button id="btnResetEqualWeights" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Répartir équitablement la pondération entre les évaluations">Répartir également</button>
+              <button id="btnUnlockAllWeights" type="button" class="px-2.5 py-1.5 rounded-lg text-[11px] font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition cursor-pointer" title="Libérer toutes les colonnes figées pour qu’elles s’ajustent à nouveau librement">Tout libérer</button>
             </span>
           </div>
           <button id="btnClearStudentFilter" type="button" class="hidden px-2 py-1 rounded-lg text-xs bg-slate-100" title="Afficher tous les élèves"></button>
-          <span id="weightWarningBanner" class="hidden px-2.5 py-1 rounded-lg text-xs font-bold bg-red-100 text-red-800 border border-red-300">
-            Total des pondérations : <span id="weightTotalVal">0</span>% (doit donner 100%)
-          </span>
         </div>
       </div>
 
@@ -324,25 +357,25 @@
             <thead>
               <tr class="bg-slate-100 text-slate-800 text-[11px]">
                 <th class="p-2 border border-slate-200 w-[15%] font-bold text-left">Critères<br>(1 choix / rangée)</th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-emerald-50/70">
-                  <div class="font-extrabold text-emerald-900">A+ (100) • A (95) • A- (90)</div>
-                  <div id="colCountBareme_A" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-emerald-300 text-emerald-800 font-bold">0</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-A">
+                  <div class="font-extrabold">A+ (100) • A (95) • A- (90)</div>
+                  <div id="colCountBareme_A" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] border grade-badge grade-badge-A font-bold">0</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-blue-50/70">
-                  <div class="font-extrabold text-blue-900">B+ (85) • B (80) • B- (75)</div>
-                  <div id="colCountBareme_B" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-blue-300 text-blue-800 font-bold">0</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-B">
+                  <div class="font-extrabold">B+ (85) • B (80) • B- (75)</div>
+                  <div id="colCountBareme_B" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] border grade-badge grade-badge-B font-bold">0</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-amber-50/70">
-                  <div class="font-extrabold text-amber-900">C+ (70) • C (65) • C- (60)</div>
-                  <div id="colCountBareme_C" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-amber-300 text-amber-800 font-bold">0</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-C">
+                  <div class="font-extrabold">C+ (70) • C (65) • C- (60)</div>
+                  <div id="colCountBareme_C" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] border grade-badge grade-badge-C font-bold">0</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-orange-50/70">
-                  <div class="font-extrabold text-orange-900">D+ (55) • D (50) • D- (45)</div>
-                  <div id="colCountBareme_D" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-orange-300 text-orange-800 font-bold">0</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-D">
+                  <div class="font-extrabold">D+ (55) • D (50) • D- (45)</div>
+                  <div id="colCountBareme_D" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] border grade-badge grade-badge-D font-bold">0</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-red-50/70">
-                  <div class="font-extrabold text-red-900">E (40)</div>
-                  <div id="colCountBareme_E" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] bg-white border border-red-300 text-red-800 font-bold">0</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-E">
+                  <div class="font-extrabold">E (40)</div>
+                  <div id="colCountBareme_E" class="mt-0.5 inline-block px-1.5 py-0.2 rounded-full text-[10px] border grade-badge grade-badge-E font-bold">0</div>
                 </th>
               </tr>
             </thead>
@@ -379,7 +412,7 @@
             <span id="qoEvaluatedCounter" class="inline-flex items-center text-[11px] font-semibold text-amber-900 px-2 py-1 rounded-lg bg-white border border-amber-200 whitespace-nowrap leading-none">
               0 évalué(s)
             </span>
-            <button id="btnCommitObsSessionToGradebook" type="button" class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-2xs transition cursor-pointer whitespace-nowrap">
+            <button id="btnCommitObsSessionToGradebook" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-2xs transition cursor-pointer whitespace-nowrap">
               <span id="btnCommitTopLabel">Enregistrer au carnet</span>
             </button>
           </div>
@@ -404,8 +437,8 @@
         <div class="bg-indigo-950 text-white rounded-xl p-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
           <div class="space-y-0.5">
             <div class="flex items-center gap-2 flex-wrap">
-              <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer la grille d’évaluation" aria-label="Imprimer la grille d’évaluation"><svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
-              <span class="text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Grille d’évaluation — <span id="sgCurrentStudentName" class="text-white font-bold">Élève</span></span>
+              <button id="btnPrintSubjectGrid" type="button" class="trace-print no-print" title="Imprimer les grilles d’évaluations" aria-label="Imprimer les grilles d’évaluations"><svg class="hdr-ico ico-print" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6zM18 12h.01"/></svg></button>
+              <span class="qo-banner-heading text-[11px] uppercase tracking-wider text-indigo-300 font-semibold">Grilles d’évaluations — <span id="sgCurrentStudentName" class="text-white font-bold">Élève</span></span>
             </div>
             <div id="sgMajorityExplanation" class="text-xs sm:text-sm text-indigo-100"></div>
           </div>
@@ -416,30 +449,51 @@
           </div>
         </div>
 
-        <p class="text-xs text-slate-600 italic">Grille locale inspirée des cadres MEQ conçue pour évaluer les apprentissages selon les attentes et le contexte.</p>
+        <!-- Choix du format d'outil d'évaluation (Grille d’appréciation / Grille pondérée MEQ) -->
+        <div id="qoToolModeBar" class="no-print flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-200 bg-slate-50/90">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Format d’outil :</span>
+            <div id="qoModeSegment" class="inline-flex items-center rounded-lg border border-slate-200 bg-white p-0.5 shadow-2xs flex-wrap" role="group" aria-label="Format de l’outil d’évaluation">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+          <span id="qoModeSubtitle" class="text-[11px] text-slate-600 font-medium"></span>
+        </div>
+
+        <!-- Configuration des pondérations officielles MEQ (Mode 2 uniquement) -->
+        <div id="qoWeightPresetBar" class="hidden no-print px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+          <!-- Populated dynamically -->
+        </div>
+
+        <p id="qoInspirationCaption" class="text-xs text-slate-600 italic">Grille locale inspirée des cadres MEQ conçue pour évaluer les apprentissages selon les attentes et le contexte.</p>
         <p id="prescoRubricNotice" class="hidden text-xs text-amber-900">Préscolaire : le bulletin utilise quatre constats qualitatifs, sans pourcentage officiel. Dans cette grille locale, A et B correspondent au même constat « se développe très bien »; C, D et E correspondent respectivement à « adéquatement », « avec certaines difficultés » et « avec des difficultés importantes ». La cote et le pourcentage calculés ici ne sont pas un constat ministériel : utilisez vos observations et votre jugement pour le bulletin.</p>
         <p id="firstCycleExplorationNotice" class="hidden text-xs text-amber-900">Au 1er cycle, cette grille est un outil local d’exploration : le cadre d’évaluation de cette discipline vise les 2e et 3e cycles. La cote affichée ici n’est pas un résultat disciplinaire ministériel pour le 1er cycle.</p>
-        <p class="no-print text-xs text-slate-500">Faites défiler la grille horizontalement au besoin.</p>
+        <p id="qoScrollHint" class="qo-scroll-hint no-print text-xs text-slate-500">Faites défiler la grille horizontalement au besoin.</p>
         <!-- Fluid 5-Column Subject Rubric Table (1 Choice Per Row, Printable) -->
-        <div class="observation-matrix w-full overflow-x-auto custom-scrollbar" tabindex="0" role="region" aria-label="Grille d'évaluation à défilement horizontal">
+        <div id="qoMatrixScrollWrap" class="observation-matrix w-full overflow-x-auto custom-scrollbar" tabindex="0" role="region" aria-label="Grille d'évaluation">
           <table class="rubric-matrix-table">
             <thead>
               <tr class="bg-slate-100 text-slate-800 text-[11px]">
                 <th class="p-2 border border-slate-200 w-[15%] font-bold text-left">Critère observé<br>(1 choix / rangée)</th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-emerald-50/70">
-                  <div class="font-extrabold text-emerald-900">Niveau A (90-100%)</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-A">
+                  <div class="font-extrabold">Niveau A</div>
+                  <div class="mt-1 text-[10px] font-semibold">90–100 %</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-blue-50/70">
-                  <div class="font-extrabold text-blue-900">Niveau B (75-85%)</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-B">
+                  <div class="font-extrabold">Niveau B</div>
+                  <div class="mt-1 text-[10px] font-semibold">75–85 %</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-amber-50/70">
-                  <div class="font-extrabold text-amber-900">Niveau C (60-70%)</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-C">
+                  <div class="font-extrabold">Niveau C</div>
+                  <div class="mt-1 text-[10px] font-semibold">60–70 %</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-orange-50/70">
-                  <div class="font-extrabold text-orange-900">Niveau D (50-55%)</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-D">
+                  <div class="font-extrabold">Niveau D</div>
+                  <div class="mt-1 text-[10px] font-semibold">50–55 %</div>
                 </th>
-                <th class="p-2 border border-slate-200 w-[17%] text-center bg-red-50/70">
-                  <div class="font-extrabold text-red-900">Niveau E (≤40%)</div>
+                <th class="p-2 border border-slate-200 w-[17%] text-center rubric-col-E">
+                  <div class="font-extrabold">Niveau E</div>
+                  <div class="mt-1 text-[10px] font-semibold">≤ 40 %</div>
                 </th>
               </tr>
             </thead>
@@ -450,49 +504,56 @@
         </div>
       </div>
 
-      <!-- Cote de la trace observable et indicateurs rapides -->
-        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h3 class="text-sm font-bold text-slate-900">Cote de la trace observable — <span id="qoBottomStudentName" class="text-indigo-600">Élève</span></h3>
+      <!-- Cote de la trace observable et indicateurs rapides (Panneau latéral ergonomique compact) -->
+        <aside id="qoSidePanel" class="qo-side-panel bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs space-y-3 no-print" aria-label="Cote de la trace observable">
+          <div class="qo-side-header flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+            <div class="min-w-0">
+              <div class="qo-side-kicker text-[10px] font-bold uppercase tracking-wider text-slate-500 leading-none">Cote de la trace observable</div>
+              <h3 id="qoBottomStudentName" class="text-sm font-extrabold text-indigo-600 truncate mt-1">Élève</h3>
+            </div>
+            <span id="qoSideLiveBadge" class="hidden shrink-0 px-2 py-0.5 rounded-md border text-[11px] font-extrabold whitespace-nowrap"></span>
           </div>
 
-          <div class="space-y-1">
-            <label class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
-              Ajuster la note
-            </label>
-            <div id="qoGradePills" class="grade-pills-single-line">
-              <!-- A+ to E buttons on a single line -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between gap-1">
+              <label class="text-[10.5px] font-bold uppercase tracking-wider text-slate-600">
+                Ajuster la note
+              </label>
+              <button id="btnQoResetOverride" type="button" class="hidden text-[10.5px] font-bold text-indigo-600 hover:underline cursor-pointer">Rétablir auto</button>
+            </div>
+            <div id="qoGradePills" class="qo-grade-matrix">
+              <!-- 3-col A+..D- & full-width E matrix populated dynamically -->
             </div>
           </div>
 
           <!-- Categorized PIA / Plan d'intervention Observable Indicators -->
-          <div class="space-y-2 pt-1 border-t border-slate-100">
-            <div class="flex items-center justify-between gap-2">
-              <label class="text-[11px] font-bold uppercase tracking-wider text-slate-700">Observations pertinentes (Plan d'intervention)</label>
-              <span id="qoSelectedTagsCount" class="text-[10px] font-semibold text-indigo-600">0 sélectionné(s)</span>
+          <div class="space-y-1.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between gap-1.5">
+              <label class="text-[10.5px] font-bold uppercase tracking-wider text-slate-700">Observations (PIA)</label>
+              <span id="qoSelectedTagsCount" class="text-[10px] font-bold text-indigo-600 whitespace-nowrap">0 sélectionné(s)</span>
             </div>
 
-            <!-- Category Tabs (6 logical PIA categories) -->
-            <div id="qoCategoryTabs" class="grid grid-cols-2 sm:grid-cols-3 gap-1">
+            <!-- Category Tabs (2-col compact tabs for readable full titles) -->
+            <div id="qoCategoryTabs" class="grid grid-cols-2 gap-1">
               <!-- Populated dynamically -->
             </div>
 
             <!-- Indicators for the active category -->
-            <div id="qoQuickTags" class="flex flex-wrap gap-1.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 min-h-[76px] items-start content-start">
+            <div id="qoQuickTags" class="flex flex-wrap gap-1 p-2 rounded-lg bg-slate-50 border border-slate-200/80 min-h-[60px] max-h-[156px] overflow-y-auto custom-scrollbar items-start content-start">
               <!-- Tags populated dynamically -->
             </div>
 
             <!-- Selected indicators summary strip -->
-            <div id="qoActiveStudentTagsStrip" class="flex flex-wrap gap-1 pt-0.5">
+            <div id="qoActiveStudentTagsStrip" class="hidden flex-wrap gap-1 pt-0.5">
               <!-- Shows currently selected tags across all categories for this student -->
             </div>
           </div>
 
-          <div class="space-y-1">
-            <label for="qoCommentInput" class="text-[11px] font-bold uppercase tracking-wider text-slate-600">Notes</label>
-            <textarea id="qoCommentInput" rows="2" placeholder="Notez vos observations pour cet élève..." class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          <div class="space-y-1 pt-1 border-t border-slate-100">
+            <label for="qoCommentInput" class="text-[10.5px] font-bold uppercase tracking-wider text-slate-600">Notes</label>
+            <textarea id="qoCommentInput" rows="3" placeholder="Notez vos observations pour cet élève..." class="w-full px-2.5 py-1.5 rounded-lg border border-slate-300 text-xs leading-snug focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"></textarea>
           </div>
-        </div>
+        </aside>
 
     </section>
 

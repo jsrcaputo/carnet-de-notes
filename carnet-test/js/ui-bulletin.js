@@ -503,9 +503,9 @@
                     <span>${r.sub.shortName}</span>
                     ${r.isModified ? `<span class="ml-1 px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-extrabold">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>` : ''}
                   </td>
-                  <td class="p-2.5 text-center border-l border-slate-100 font-semibold" data-num="1">${r.t1 !== null ? `${r.t1}% (${pctToClosestGradeCode(r.t1)})` : '—'}</td>
-                  <td class="p-2.5 text-center border-l border-slate-100 font-semibold" data-num="1">${r.t2 !== null ? `${r.t2}% (${pctToClosestGradeCode(r.t2)})` : '—'}</td>
-                  <td class="p-2.5 text-center border-l border-slate-100 font-semibold" data-num="1">${r.t3 !== null ? `${r.t3}% (${pctToClosestGradeCode(r.t3)})` : '—'}</td>
+                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>
+                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t2 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t2))}">${pctToClosestGradeCode(r.t2)} (${r.t2}%)</span>` : '—'}</td>
+                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t3 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t3))}">${pctToClosestGradeCode(r.t3)} (${r.t3}%)</span>` : '—'}</td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">
                     ${r.annualAvg !== null
                       ? `<span class="px-2 py-0.5 rounded border font-extrabold ${getBadgeColorClasses(r.annualCode)}">${r.annualCode} (${r.annualAvg}%)</span>`

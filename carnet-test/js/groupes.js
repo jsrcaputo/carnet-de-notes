@@ -13,6 +13,8 @@
       return {
         editingAssignmentId: null,
         rubricVersion: 5,
+        obsMode: 'portrait',
+        criteriaWeights: null,
         title: '',
         linkTargets: [],
         studentDrafts

@@ -104,6 +104,107 @@
       };
     }
 
+    function computeWeightedFromChecked(checkedKeys, overrideCode, scoredCriteria, weightsMap) {
+      const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
+      const pickedByCriterion = {};
+      let total = 0;
+      (checkedKeys || []).forEach(k => {
+        const parts = k.split('_');
+        const fam = parts[parts.length - 2];
+        const critId = parts.slice(0, -2).join('_');
+        if (counts[fam] !== undefined) {
+          counts[fam]++;
+          pickedByCriterion[critId] = fam;
+          total++;
+        }
+      });
+
+      const requiredCriteriaCount = scoredCriteria ? scoredCriteria.length : 0;
+      const familyWeights = { A: 95, B: 80, C: 65, D: 50, E: 40 };
+      const familyRatios = { A: 1.0, B: 0.8, C: 0.6, D: 0.4, E: 0.2 };
+      const earnedPointsMap = {};
+      let weightedPctSum = 0;
+      let evaluatedWeightSum = 0;
+      let earnedPointsTotal = 0;
+      let totalWeightSum = 0;
+
+      (scoredCriteria || []).forEach(crit => {
+        const w = Number(weightsMap && weightsMap[crit.id] !== undefined ? weightsMap[crit.id] : 0);
+        const safeW = Number.isFinite(w) && w >= 0 ? w : 0;
+        totalWeightSum += safeW;
+        const fam = pickedByCriterion[crit.id];
+        if (fam && familyWeights[fam] !== undefined) {
+          weightedPctSum += familyWeights[fam] * safeW;
+          evaluatedWeightSum += safeW;
+          const pts = Math.round(safeW * familyRatios[fam] * 10) / 10;
+          earnedPointsMap[crit.id] = pts;
+          earnedPointsTotal += pts;
+        }
+      });
+      earnedPointsTotal = Math.round(earnedPointsTotal * 10) / 10;
+      totalWeightSum = Math.round(totalWeightSum * 10) / 10;
+
+      if (overrideCode && GRADE_MAP[overrideCode]) {
+        const g = GRADE_MAP[overrideCode];
+        return {
+          hasData: true,
+          code: g.code,
+          pct: g.pct,
+          family: g.family,
+          counts,
+          total,
+          isOverride: true,
+          isComplete: requiredCriteriaCount === 0 || total >= requiredCriteriaCount,
+          hasFinalGrade: true,
+          isWeighted: true,
+          earnedPointsMap,
+          earnedPointsTotal,
+          totalWeightSum,
+          rawWeightedPct: g.pct
+        };
+      }
+
+      if (total === 0 || evaluatedWeightSum <= 0) {
+        return {
+          hasData: false,
+          code: null,
+          pct: null,
+          family: null,
+          counts,
+          total: 0,
+          isOverride: false,
+          isComplete: false,
+          hasFinalGrade: false,
+          isWeighted: true,
+          earnedPointsMap,
+          earnedPointsTotal: 0,
+          totalWeightSum,
+          rawWeightedPct: null
+        };
+      }
+
+      const avgPct = weightedPctSum / evaluatedWeightSum;
+      const closestCode = pctToClosestGradeCode(avgPct);
+      const g = GRADE_MAP[closestCode] || GRADE_SCALE[0];
+
+      return {
+        hasData: true,
+        code: g.code,
+        pct: g.pct,
+        family: g.family,
+        counts,
+        total,
+        isOverride: false,
+        isComplete: requiredCriteriaCount === 0 || total >= requiredCriteriaCount,
+        hasFinalGrade: requiredCriteriaCount === 0 || total >= requiredCriteriaCount,
+        isWeighted: true,
+        earnedPointsMap,
+        earnedPointsTotal,
+        totalWeightSum,
+        rawWeightedPct: Math.round(avgPct)
+      };
+    }
+
     function getScoredObservableCriteria(criteria) {
       return (criteria || []).filter(criterion => !criterion.formativeOnly);
     }
@@ -113,7 +214,7 @@
       'us2_traces', 'ad3_observation', 'ap3_posture', 'ap1_mise'
     ]);
 
-    function computeObservableResult(checkedKeys, overrideCode, criteria, explicitlyNotEvaluated = false) {
+    function computeObservableResult(checkedKeys, overrideCode, criteria, explicitlyNotEvaluated = false, obsOptions = null) {
       const allCriteria = criteria || [];
       const scoredCriteria = getScoredObservableCriteria(allCriteria);
       const allIds = new Set(allCriteria.map(criterion => criterion.id));
@@ -127,9 +228,27 @@
         selectedIds.add(criterionId);
         return scoredIds.has(criterionId) && ['A', 'B', 'C', 'D', 'E'].includes(family);
       });
-      const result = scoredCriteria.length
-        ? computeMajorityFromChecked(scoredKeys, overrideCode, scoredCriteria.length)
-        : computeMajorityFromChecked([], null, 0);
+
+      const isWeighted = Boolean(
+        obsOptions &&
+        obsOptions.obsMode === 'weighted' &&
+        typeof getEffectiveCriteriaWeights === 'function'
+      );
+
+      let result;
+      if (isWeighted && scoredCriteria.length) {
+        const weightsMap = getEffectiveCriteriaWeights(
+          obsOptions.subjectId || '',
+          obsOptions.cycle || 1,
+          scoredCriteria,
+          obsOptions.criteriaWeights || null
+        );
+        result = computeWeightedFromChecked(scoredKeys, overrideCode, scoredCriteria, weightsMap);
+      } else {
+        result = scoredCriteria.length
+          ? computeMajorityFromChecked(scoredKeys, overrideCode, scoredCriteria.length)
+          : computeMajorityFromChecked([], null, 0);
+      }
       result.isNotEvaluated = explicitlyNotEvaluated;
       if (explicitlyNotEvaluated) result.isComplete = true;
       result.hasEvidence = explicitlyNotEvaluated || selectedIds.size > 0 || Boolean(scoredCriteria.length && GRADE_MAP[overrideCode]);
@@ -151,8 +270,11 @@
           return; // Skip evaluations targeted at another grade level!
         }
         const rawVal = rec.scores[asg.id];
-        if (rawVal === undefined || rawVal === null || rawVal === '' || rawVal === '-' || rawVal === 'N/A') {
-          return; // Skip N/A!
+        const valUpper = String(rawVal ?? '').trim().toUpperCase();
+        if (rawVal === undefined || rawVal === null || rawVal === '' ||
+            valUpper === '-' || valUpper === 'N/A' || valUpper === 'NR' ||
+            valUpper === 'JUST' || valUpper === 'JUS' || valUpper === 'REP') {
+          return; // Exclu du calcul : non remis, justifié, en reprise ou non évalué
         }
         const numVal = Number(String(rawVal).replace(',', '.'));
         const wRaw = getAssignmentWeightForLevel(asg, stuLvl);
@@ -207,7 +329,10 @@
         sd.assignments.forEach(asg => {
           if (stObj && !isAssignmentForStudent(asg, stObj)) return;
           const raw = rec.scores[asg.id];
-          if (raw === undefined || raw === null || raw === '' || raw === '-' || raw === 'N/A') return;
+          const valUpper = String(raw ?? '').trim().toUpperCase();
+          if (raw === undefined || raw === null || raw === '' ||
+              valUpper === '-' || valUpper === 'N/A' || valUpper === 'NR' ||
+              valUpper === 'JUST' || valUpper === 'JUS' || valUpper === 'REP') return;
           const v = Number(String(raw).replace(',', '.'));
           const w = Number(getAssignmentWeightForLevel(asg, stuLvl));
           const outOf = getAssignmentOutOf(asg);
@@ -239,14 +364,10 @@
     }
 
     function getBadgeColorClasses(familyOrCode) {
-      if (!familyOrCode || familyOrCode === '—' || familyOrCode === '-') return 'bg-slate-100 text-slate-600 border-slate-200';
+      if (!familyOrCode || familyOrCode === '—' || familyOrCode === '-') return 'grade-badge grade-badge-neutral';
       const fam = familyOrCode.charAt(0);
-      if (fam === 'A') return 'bg-emerald-100 text-emerald-800 border-emerald-300';
-      if (fam === 'B') return 'bg-blue-100 text-blue-800 border-blue-300';
-      if (fam === 'C') return 'bg-amber-100 text-amber-800 border-amber-300';
-      if (fam === 'D') return 'bg-orange-100 text-orange-800 border-orange-300';
-      if (fam === 'E') return 'bg-red-100 text-red-800 border-red-300';
-      return 'bg-slate-100 text-slate-700 border-slate-200';
+      if (['A', 'B', 'C', 'D', 'E'].includes(fam)) return `grade-badge grade-badge-${fam}`;
+      return 'grade-badge grade-badge-neutral';
     }
 
     function getAssignmentOutOf(asg) {
@@ -334,8 +455,18 @@
     function parsePercentageInput(rawValue, max = 100) {
       const value = String(rawValue ?? '').trim();
       if (value === '') return { valid: true, empty: true, value: '' };
-      if (value === '-' || value.toUpperCase() === 'N/A') {
+      const upper = value.toUpperCase();
+      if (upper === '-' || upper === 'N/A' || upper === 'NA') {
         return { valid: true, empty: false, value: '-' };
+      }
+      if (upper === 'NR') {
+        return { valid: true, empty: false, value: 'NR' };
+      }
+      if (upper === 'JUST' || upper === 'JUS' || upper === 'JUSTIFIÉ' || upper === 'JUSTIFIE' || upper === 'ABS') {
+        return { valid: true, empty: false, value: 'JUST' };
+      }
+      if (upper === 'REP' || upper === 'REPRISE' || upper === 'EN REPRISE') {
+        return { valid: true, empty: false, value: 'REP' };
       }
 
       const normalized = value.replace(',', '.');

@@ -8,8 +8,16 @@
       const termId = appState.activeTerm;
       const termData = getActiveTermData();
 
+      const computedStyle = getComputedStyle(document.documentElement);
+      const toExcelHex = (cssVar, fallback) => {
+        const raw = (computedStyle.getPropertyValue(cssVar) || '').trim().replace('#', '');
+        return /^[0-9a-fA-F]{6}$/.test(raw) ? raw.toUpperCase() : fallback;
+      };
+      const brandDeepRgb = toExcelHex('--brand-deep', '1E3A8A');
+      const brandRgb = toExcelHex('--brand', '1D4ED8');
+
       const headerStyle = {
-        fill: { fgColor: { rgb: '19383B' } },
+        fill: { fgColor: { rgb: brandDeepRgb } },
         font: { name: 'Calibri', sz: 11, bold: true, color: { rgb: 'FFFFFF' } },
         alignment: { horizontal: 'center', vertical: 'center', wrapText: true },
         border: {
@@ -21,7 +29,7 @@
       };
 
       const titleStyle = {
-        fill: { fgColor: { rgb: '176B63' } },
+        fill: { fgColor: { rgb: brandRgb } },
         font: { name: 'Calibri', sz: 14, bold: true, color: { rgb: 'FFFFFF' } },
         alignment: { horizontal: 'left', vertical: 'center' }
       };
@@ -73,7 +81,20 @@
         rows.push([]);
 
         const headers = ['Élève', 'Adaptations'];
-        subData.assignments.forEach(a => headers.push(`${a.title}${getAssignmentOutOf(a) !== 100 ? ` [/${getAssignmentOutOf(a)}]` : ''} (${a.weight || 0}%)`));
+        const presentLevels = getPresentStudentLevels();
+        const isMultiLvl = presentLevels.length > 1;
+        subData.assignments.forEach(a => {
+          let wLabel = `${a.weight || 0}%`;
+          if (isMultiLvl) {
+            const targetedLvls = presentLevels.filter(lvl => isAssignmentForLevel(a, lvl));
+            const lvlWeights = targetedLvls.map(lvl => ({ lvl, w: getAssignmentWeightForLevel(a, lvl) }));
+            const allSame = lvlWeights.length === presentLevels.length && lvlWeights.every(item => item.w === lvlWeights[0].w);
+            if (!allSame && lvlWeights.length) {
+              wLabel = lvlWeights.map(item => `${formatShortLevelTag(item.lvl)}:${item.w}%`).join(' / ');
+            }
+          }
+          headers.push(`${a.title}${getAssignmentOutOf(a) !== 100 ? ` [/${getAssignmentOutOf(a)}]` : ''} (${wLabel})`);
+        });
         headers.push(
           'Moy. Travaux (/100)',
           'Barème (Cote)',
@@ -89,9 +110,15 @@
           const sum = computeStudentSubjectSummary(termId, sub.id, st.id);
           const r = [st.name, formatStudentAdaptations(st)];
           subData.assignments.forEach(a => {
+            if (!isAssignmentForStudent(a, st)) {
+              r.push('—');
+              return;
+            }
             const v = rec.scores[a.id];
-            if (v === '-' || v === 'N/A') r.push('-');
-            else r.push(v !== undefined && v !== '' ? Number(v) : '');
+            const valUpper = String(v ?? '').trim().toUpperCase();
+            if (valUpper === '-' || valUpper === 'N/A') r.push('-');
+            else if (valUpper === 'NR' || valUpper === 'JUST' || valUpper === 'REP') r.push(valUpper);
+            else r.push(v !== undefined && v !== '' && !isNaN(Number(v)) ? Number(v) : '');
           });
           r.push(
             sum.assignmentsAvg !== null ? sum.assignmentsAvg : '',
@@ -232,18 +259,34 @@
               return;
             }
             sd.assignments.forEach(a => {
+              if (!isAssignmentForStudent(a, st)) {
+                dataRows.push([
+                  ...base, a.title, a.isObservation ? 'Trace observable' : 'Évaluation',
+                  '—', a.isObservation ? 100 : getAssignmentOutOf(a), '',
+                  '—', 0, '', a.linkId ? 'Oui' : '', ...tail
+                ]);
+                return;
+              }
               const v = rec.scores[a.id];
+              const valUpper = String(v ?? '').trim().toUpperCase();
               const meta = rec.scoreMeta && rec.scoreMeta[a.id];
               const outOf = getAssignmentOutOf(a);
-              const notEval = v === '-' || v === 'N/A';
-              const num = (v !== undefined && v !== '' && !notEval) ? Number(v) : null;
+              const notEval = valUpper === '-' || valUpper === 'N/A';
+              const isSpecial = valUpper === 'NR' || valUpper === 'JUST' || valUpper === 'REP';
+              const num = (v !== undefined && v !== '' && !notEval && !isSpecial) ? Number(v) : null;
               const hasNum = num !== null && Number.isFinite(num);
               const pct = hasNum ? Math.round(num / outOf * 1000) / 10 : '';
+              let scoreCell = '';
+              if (notEval) scoreCell = '-';
+              else if (isSpecial) scoreCell = valUpper;
+              else if (hasNum) scoreCell = num;
+              const effectiveWeight = getAssignmentWeightForStudent(a, st);
+
               dataRows.push([
                 ...base, a.title, a.isObservation ? 'Trace observable' : 'Évaluation',
-                notEval ? '-' : (hasNum ? num : ''), a.isObservation ? 100 : outOf, pct,
-                (meta && meta.code) ? meta.code : (hasNum ? pctToClosestGradeCode(pct) : ''),
-                a.weight || 0, meta && meta.overrideCode ? 'Oui' : '', a.linkId ? 'Oui' : '', ...tail
+                scoreCell, a.isObservation ? 100 : outOf, pct,
+                (meta && meta.code) ? meta.code : (hasNum ? pctToClosestGradeCode(pct) : (isSpecial ? valUpper : '')),
+                effectiveWeight || 0, meta && meta.overrideCode ? 'Oui' : '', a.linkId ? 'Oui' : '', ...tail
               ]);
             });
           });

@@ -496,9 +496,13 @@
                 const criteria = subject ? getCriteriaForGradeLevel(subject, getEffectiveGradeLevel(st, subject)) : [];
                 const family = GRADE_MAP[gradeCode].family;
                 rec.scoreMeta[asgId] = {
-                  overrideCode: gradeCode,
+                  overrideCode: null,
                   checked: getScoredObservableCriteria(criteria).map(criterion => `${criterion.id}_${family}_0`),
-                  tags: studentPct >= 85 ? ['autonomie', 'demarche'] : studentPct >= 75 ? ['effort', 'collaboration'] : ['recuperation'],
+                  tags: studentPct >= 85
+                    ? ['Travail autonome dès l’explication', 'Stratégie efficace']
+                    : studentPct >= 75
+                      ? ['Persévère devant un défi', 'Collabore positivement avec ses pairs']
+                      : ['Présent à la récupération'],
                   flags,
                   comment: workComment || (type !== 'multi' || legacySeed
                     ? studentPct >= 85 ? 'Démontre une autonomie constante.' : 'Progression observée lors des ateliers.'
@@ -776,9 +780,13 @@
 
             rec.scores[asgId] = result.pct;
             rec.scoreMeta[asgId] = {
-              overrideCode: result.code,
+              overrideCode: null,
               checked,
-              tags: resultStage <= 1 ? ['autonomie', 'demarche'] : resultStage === 2 ? ['effort', 'collaboration'] : ['recuperation'],
+              tags: resultStage <= 1
+                ? ['Travail autonome dès l’explication', 'Stratégie efficace']
+                : resultStage === 2
+                  ? ['Persévère devant un défi', 'Collabore positivement avec ses pairs']
+                  : ['Présent à la récupération'],
               flags: [],
               comment: leaveWorkComment ? `Pendant le ${context.activity}, ${context.notes[resultStage]}` : ''
             };

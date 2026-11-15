@@ -391,7 +391,7 @@
 
           modTargets.forEach(target => {
             const itemWrap = document.createElement('label');
-            itemWrap.className = 'flex items-center justify-between gap-2 bg-white px-2 py-1 rounded border border-slate-200';
+            itemWrap.className = 'mod-expectation-item flex items-center justify-between gap-2 bg-white px-2 py-1 rounded border border-slate-200';
             const lbl = document.createElement('span');
             lbl.className = 'text-[11px] font-semibold text-slate-700 truncate';
             lbl.textContent = target.label;
@@ -413,7 +413,7 @@
               : '';
             sel.value = currentVal;
             if (currentVal) {
-              itemWrap.classList.add('border-amber-300', 'bg-amber-50/40');
+              itemWrap.classList.add('is-modified', 'border-amber-300', 'bg-amber-50/40');
             }
             sel.addEventListener('change', () => {
               if (!sel.value || sel.value === String(st.gradeLevel)) {

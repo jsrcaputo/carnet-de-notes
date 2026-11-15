@@ -226,6 +226,89 @@
     ];
 
     // =========================================================================
-    // GRILLES OBSERVABLES PFEQ / MEQ PAR CYCLE (1er, 2e et 3e CYCLE)
+    const WEIGHTED_RUBRIC_SUBJECT_IDS = new Set(['fra_ecriture', 'math_resoudre', 'math_raisonner']);
+
+    function getOfficialWeightPresets(subjectId, cycle, scoredCriteria = []) {
+      const ids = scoredCriteria.map(c => c.id);
+      if (subjectId === 'fra_ecriture') {
+        if (Number(cycle) === 1 || ids.length === 3) {
+          const id1 = ids[0] || 'ecr_adapt';
+          const id2 = ids[1] || 'ecr_syntaxe';
+          const id3 = ids[2] || 'ecr_ortho';
+          return [
+            {
+              id: 'meq_c1',
+              label: 'Grille pondérée (MEQ)',
+              hint: 'Pondération officielle MEQ 1er cycle : 40 % / 30 % / 30 %',
+              weights: { [id1]: 40, [id2]: 30, [id3]: 30 }
+            }
+          ];
+        }
+        const c1 = ids[0] || 'ecr_adapt';
+        const c2 = ids[1] || 'ecr_coherence';
+        const c3 = ids[2] || 'ecr_vocab';
+        const c4 = ids[3] || 'ecr_syntaxe';
+        const c5 = ids[4] || 'ecr_ortho';
+        return [
+          {
+            id: 'meq_epreuve',
+            label: 'Grille pondérée (MEQ)',
+            hint: 'Pondération officielle épreuve MEQ : 30 % / 20 % / 5 % / 25 % / 20 %',
+            weights: { [c1]: 30, [c2]: 20, [c3]: 5, [c4]: 25, [c5]: 20 }
+          }
+        ];
+      }
+      if (subjectId === 'math_resoudre') {
+        return [
+          {
+            id: 'meq_c1_math',
+            label: 'Grille pondérée (MEQ)',
+            hint: 'Pondération officielle MEQ (C1) : 40 % / 40 % / 20 %',
+            weights: { c1_comp: 40, c1_mob: 40, c1_traces: 20 }
+          }
+        ];
+      }
+      if (subjectId === 'math_raisonner') {
+        return [
+          {
+            id: 'meq_c2_action',
+            label: 'Grille pondérée (MEQ)',
+            hint: 'Pondération officielle MEQ (C2) : Analyse 30 % · Application 50 % · Justification 20 %',
+            weights: { c2_analyse: 30, c2_application: 50, c2_justif: 20 }
+          }
+        ];
+      }
+      return [];
+    }
+
+    function getEffectiveCriteriaWeights(subjectId, cycle, scoredCriteria = [], customWeights = null) {
+      const presets = getOfficialWeightPresets(subjectId, cycle, scoredCriteria);
+      const defaultMap = presets.length > 0 ? presets[0].weights : {};
+      const out = {};
+      const count = scoredCriteria.length || 1;
+      const baseInt = Math.floor(100 / count);
+      const remInt = 100 - baseInt * count;
+
+      const hasMatchingCustomWeights = Boolean(
+        customWeights &&
+        typeof customWeights === 'object' &&
+        !Array.isArray(customWeights) &&
+        scoredCriteria.length > 0 &&
+        Object.keys(customWeights).length === scoredCriteria.length &&
+        scoredCriteria.every(crit => Number.isFinite(Number(customWeights[crit.id])) && Number(customWeights[crit.id]) >= 0)
+      );
+
+      scoredCriteria.forEach((crit, idx) => {
+        if (hasMatchingCustomWeights) {
+          out[crit.id] = Math.round(Number(customWeights[crit.id]));
+        } else if (Number.isFinite(Number(defaultMap[crit.id]))) {
+          out[crit.id] = Math.round(Number(defaultMap[crit.id]));
+        } else {
+          out[crit.id] = baseInt + (idx >= count - remInt ? 1 : 0);
+        }
+      });
+      return out;
+    }
+    // =========================================================================
     // Grilles locales inspirées des cadres MEQ; certains critères sont regroupés ou ajoutés.
     // =========================================================================

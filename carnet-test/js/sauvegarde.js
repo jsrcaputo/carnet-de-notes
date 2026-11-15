@@ -5,9 +5,11 @@
     let fileWriteBlocked = false;
     let fileOperation = false;
     let pendingImportSnapshot = null;
+    const LOCAL_STORAGE_KEY = 'carnet_notes_autosave_2026_v1';
 
     function setFileSyncStatus(status, message) {
       const indicator = document.getElementById('fileSyncStatus');
+      if (!indicator) return;
       indicator.dataset.status = status;
       indicator.textContent = message;
       indicator.title = message;
@@ -15,6 +17,63 @@
 
     function serializeBackup() {
       return JSON.stringify({ ...appState, displayPreferences: { ...prefs } }, null, 2);
+    }
+
+    function saveStateToLocalStorage() {
+      try {
+        if (typeof isPristineInitialGroup === 'function' && isPristineInitialGroup()) {
+          window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+          return;
+        }
+        const payload = serializeBackup();
+        window.localStorage.setItem(LOCAL_STORAGE_KEY, payload);
+        if (!activeFileHandle) {
+          setFileSyncStatus('saved', 'Sauvegarde auto (navigateur)');
+        }
+      } catch (e) {
+        console.warn('Persistance locale indisponible :', e);
+      }
+    }
+
+    function loadStateFromLocalStorage() {
+      try {
+        const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        if (!raw) return false;
+        const { importedState, importedPrefs } = parseBackup(raw);
+        appState = importedState;
+        applyActiveSubjects(appState);
+        Object.assign(prefs, importedPrefs);
+        applyPrefs();
+        lastSavedFileSnapshot = getBackupSnapshot();
+        setFileSyncStatus('saved', 'Sauvegarde auto (navigateur)');
+        return true;
+      } catch (e) {
+        console.warn('Impossible de restaurer la sauvegarde locale :', e);
+        try { window.localStorage.removeItem(LOCAL_STORAGE_KEY); } catch (_) {}
+        return false;
+      }
+    }
+
+    function resetCarnetToBlank() {
+      try { window.localStorage.removeItem(LOCAL_STORAGE_KEY); } catch (_) {}
+      activeFileHandle = null;
+      activeFileWritable = false;
+      linkedFileText = null;
+      fileWriteBlocked = false;
+      appState = createInitialState();
+      applyActiveSubjects(appState);
+      unlockedWeights.clear();
+      weightMode = false;
+      weightLevel = '';
+      weightScope = '';
+      history.undo = [];
+      history.redo = [];
+      history.last = getEditableStateSnapshot();
+      lastSavedFileSnapshot = getBackupSnapshot();
+      updateHistoryButtons();
+      setFileSyncStatus('unlinked', 'Aucun fichier lié');
+      renderAll();
+      showToast('Carnet réinitialisé à neuf.');
     }
 
     function downloadBackup() {
