@@ -511,6 +511,18 @@
         color: var(--studio-text) !important;
         border-bottom: 1px solid var(--sidebar-border, #dde3ec) !important;
         box-shadow: none !important;
+        z-index: 32 !important;
+      }
+      /* Masque la bordure droite de la barre latérale à côté de la barre du haut pour former un seul encadré. */
+      html.design-studio header.test-topbar::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -1px;
+        width: 1px;
+        height: 100%;
+        background: var(--sidebar-bg-top, #f8f9fb);
+        pointer-events: none;
       }
       html.design-studio header.test-topbar > div:first-child {
         max-width: none;
@@ -1113,6 +1125,7 @@
         html.design-studio .test-sidebar #subjectTabsContainer button span { white-space: nowrap; }
         html.design-studio header.test-topbar, html.design-studio main.site-layout { width: 100%; margin-left: 0; }
         html.design-studio header.test-topbar { position: relative; }
+        html.design-studio header.test-topbar::before { display: none; }
         html.design-studio main.site-layout { padding: 1rem !important; }
         html.design-studio #viewQuickObs .rubric-matrix-table :is(thead th:first-child, tbody td:first-child) { position: sticky; left: 0; z-index: 2; background: var(--studio-surface) !important; }
         html.design-studio #viewQuickObs .rubric-matrix-table thead th:first-child { z-index: 3; background: var(--studio-surface-soft) !important; }
