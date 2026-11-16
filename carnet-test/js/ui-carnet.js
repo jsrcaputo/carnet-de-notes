@@ -21,7 +21,7 @@
       document.getElementById('testTermNavigation').classList.toggle('is-unavailable', !hasGroup);
       document.getElementById('testReportNavigation').classList.toggle('is-unavailable', !hasGroup);
       if (studentButton) {
-        const isStudentsView = appState.activeView === 'viewStudents';
+        const isStudentsView = hasActiveGroup() && appState.activeView === 'viewStudents';
         studentButton.setAttribute('aria-pressed', String(isStudentsView));
         studentButton.className = isStudentsView
           ? 'px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-500 text-white border border-indigo-400 flex items-center gap-1'

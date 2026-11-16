@@ -123,16 +123,19 @@
       const managedGroups = isExampleGroup(activeGroup)
         ? [...appState.groups.filter(g => !g.placeholder && isExampleGroup(g)), ...visibleGroups]
         : visibleGroups;
-      const groupLabel = count => count === 0 ? 'Groupe(s)' : count === 1 ? 'Groupe' : 'Groupes';
+      const groupLabel = () => 'Groupe';
       if (sel) {
         const choices = appState.groups.filter(g => !g.placeholder && (isExampleGroup(activeGroup) || !isExampleGroup(g)));
         const needsChoice = activeIsPlaceholder && choices.length > 0;
         const showSelect = choices.length > 0;
         document.getElementById('sidebarGroupLabel').textContent = groupLabel(choices.length);
         const single = document.getElementById('sidebarSingleGroup');
+        const hasChoice = choices.length > 0;
         single.classList.toggle('hidden', showSelect);
-        single.textContent = choices.length ? choices[0].name : 'Aucun groupe';
-        single.title = single.textContent;
+        single.textContent = hasChoice ? choices[0].name : 'Créer un groupe';
+        single.title = hasChoice ? choices[0].name : 'Créer un nouveau groupe';
+        single.classList.toggle('is-create-trigger', !hasChoice);
+        single.onclick = !hasChoice ? () => openGroupModal('new') : null;
         document.querySelector('.test-group-actions').classList.toggle('hidden', showSelect);
         sel.classList.toggle('hidden', !showSelect);
         sel.replaceChildren();
@@ -311,66 +314,172 @@
         }
         left.appendChild(profileRow);
 
-        const pillsWrap = document.createElement('div');
-        pillsWrap.className = 'flex flex-wrap items-center gap-1.5';
+        const studentUiState = renderStudentsView._state || (renderStudentsView._state = {
+          adaptStudentId: null,
+          modStudentId: null,
+          outsideBound: false
+        });
+        if (!studentUiState.outsideBound) {
+          studentUiState.outsideBound = true;
+          document.addEventListener('click', (e) => {
+            if (!studentUiState.adaptStudentId) return;
+            if (e.target && e.target.closest && (e.target.closest('.student-adapt-drawer') || e.target.closest('.btn-student-adapt'))) {
+              return;
+            }
+            studentUiState.adaptStudentId = null;
+            renderStudentsView();
+          });
+          document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && studentUiState.adaptStudentId) {
+              studentUiState.adaptStudentId = null;
+              renderStudentsView();
+            }
+          });
+        }
 
-        ADAPTATION_PRESETS.forEach(preset => {
-          const hasIt = st.adaptations.includes(preset);
-          const pBtn = document.createElement('button');
-          pBtn.type = 'button';
-          pBtn.className = hasIt
-            ? 'px-2.5 py-1 rounded-full text-xs font-bold bg-indigo-600 text-white shadow-2xs cursor-pointer transition'
-            : 'px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer transition';
-          pBtn.textContent = `${hasIt ? '✓ ' : '+ '}${preset}`;
-          pBtn.addEventListener('click', () => {
-            const idx = st.adaptations.indexOf(preset);
-            if (idx >= 0) st.adaptations.splice(idx, 1);
-            else st.adaptations.push(preset);
-            notifyUpdate(`Adaptations mises à jour pour ${st.name}`);
+        const adaptSummary = getStudentAdaptationSummary(st);
+        const hasAdaptations = adaptSummary.adaptations.length > 0;
+        const isAdaptOpen = studentUiState.adaptStudentId === st.id;
+        const hasModifiedBulletin = st.gradeLevel !== 'P' && st.adaptations.includes('Bulletin modifié');
+
+        const actionsBar = document.createElement('div');
+        actionsBar.className = 'student-options-bar flex flex-wrap items-center gap-1.5';
+
+        const adaptBtn = document.createElement('button');
+        adaptBtn.type = 'button';
+        adaptBtn.className = `student-option-btn btn-student-adapt${hasAdaptations ? ' is-active' : ''}${isAdaptOpen ? ' is-open' : ''}`;
+        adaptBtn.setAttribute('aria-expanded', String(isAdaptOpen));
+        adaptBtn.setAttribute('aria-pressed', String(hasAdaptations));
+        const syncAdaptButtonLabel = (summaryObj) => {
+          const count = summaryObj.adaptations.length;
+          adaptBtn.classList.toggle('is-active', count > 0);
+          adaptBtn.setAttribute('aria-pressed', String(count > 0));
+          adaptBtn.innerHTML = '';
+          const txt = document.createElement('span');
+          txt.textContent = 'Adaptations';
+          adaptBtn.appendChild(txt);
+          if (count > 0) {
+            const cnt = document.createElement('span');
+            cnt.className = 'student-option-count';
+            cnt.textContent = String(count);
+            adaptBtn.appendChild(cnt);
+          }
+        };
+        syncAdaptButtonLabel(adaptSummary);
+        adaptBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          studentUiState.adaptStudentId = isAdaptOpen ? null : st.id;
+          renderStudentsView();
+        });
+        actionsBar.appendChild(adaptBtn);
+
+        if (st.gradeLevel !== 'P') {
+          const modBtn = document.createElement('button');
+          modBtn.type = 'button';
+          modBtn.className = `student-option-btn btn-student-mod${hasModifiedBulletin ? ' is-active' : ''}`;
+          modBtn.setAttribute('aria-pressed', String(hasModifiedBulletin));
+          const modCount = adaptSummary.modifiedItems.length;
+          const modText = document.createElement('span');
+          modText.textContent = 'Bulletin modifié';
+          modBtn.appendChild(modText);
+          if (hasModifiedBulletin && modCount > 0) {
+            const modCnt = document.createElement('span');
+            modCnt.className = 'student-option-count';
+            modCnt.textContent = String(modCount);
+            modBtn.appendChild(modCnt);
+          }
+          modBtn.addEventListener('click', () => {
+            const idx = st.adaptations.indexOf('Bulletin modifié');
+            if (idx >= 0) {
+              st.adaptations.splice(idx, 1);
+              st.modifiedExpectations = {};
+              if (studentUiState.modStudentId === st.id) studentUiState.modStudentId = null;
+            } else {
+              st.adaptations.push('Bulletin modifié');
+              studentUiState.modStudentId = st.id;
+            }
+            if (studentUiState.adaptStudentId === st.id) {
+              studentUiState.adaptStudentId = null;
+            }
+            notifyUpdate(`Bulletin modifié ${idx >= 0 ? 'retiré' : 'activé'} pour ${st.name}`);
             renderAll();
           });
-          pillsWrap.appendChild(pBtn);
-        });
+          actionsBar.appendChild(modBtn);
+        }
 
-        const customInput = document.createElement('input');
-        customInput.type = 'text';
-        customInput.placeholder = 'Autre adaptation...';
-        customInput.value = st.customAdapt || '';
-        customInput.className = 'px-2 py-0.5 rounded-lg border border-slate-200 text-xs w-36';
-        customInput.addEventListener('input', (e) => {
-          st.customAdapt = e.target.value;
-          renderGradebookView();
-        });
-        customInput.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') {
-            e.preventDefault();
-            customInput.blur();
-          }
-        });
-        pillsWrap.appendChild(customInput);
+        left.appendChild(actionsBar);
 
-        left.appendChild(pillsWrap);
+        if (isAdaptOpen) {
+          const drawer = document.createElement('div');
+          drawer.className = 'student-adapt-drawer flex flex-wrap items-center gap-1.5';
+          drawer.addEventListener('click', (e) => e.stopPropagation());
+
+          ADAPTATION_PRESETS.forEach(preset => {
+            const hasIt = adaptSummary.adaptations.includes(preset);
+            const pBtn = document.createElement('button');
+            pBtn.type = 'button';
+            pBtn.className = `student-adapt-pill${hasIt ? ' is-active' : ''}`;
+            pBtn.textContent = `${hasIt ? '✓ ' : '+ '}${preset}`;
+            pBtn.addEventListener('click', () => {
+              st.adaptations = st.adaptations.map(normalizeAdaptationLabel);
+              const idx = st.adaptations.indexOf(preset);
+              if (idx >= 0) st.adaptations.splice(idx, 1);
+              else st.adaptations.push(preset);
+              studentUiState.adaptStudentId = st.id;
+              notifyUpdate(`Adaptations mises à jour pour ${st.name}`);
+              renderAll();
+            });
+            drawer.appendChild(pBtn);
+          });
+
+          const customInput = document.createElement('input');
+          customInput.type = 'text';
+          customInput.placeholder = 'Autre adaptation...';
+          customInput.value = st.customAdapt || '';
+          customInput.className = 'student-adapt-custom px-2 py-1 rounded-lg border border-slate-200 text-xs w-40';
+          customInput.addEventListener('input', (e) => {
+            st.customAdapt = e.target.value;
+            syncAdaptButtonLabel(getStudentAdaptationSummary(st));
+            renderGradebookView();
+            if (typeof renderGlobalReportView === 'function') renderGlobalReportView();
+          });
+          customInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              studentUiState.adaptStudentId = null;
+              renderStudentsView();
+            }
+          });
+          drawer.appendChild(customInput);
+
+          left.appendChild(drawer);
+        }
 
         // Option 2 — Bulletin modifié (Modification des attentes du PFEQ par matière)
-        if (st.gradeLevel !== 'P' && st.adaptations.includes('Bulletin modifié')) {
+        if (hasModifiedBulletin) {
           st.modifiedExpectations = (st.modifiedExpectations && typeof st.modifiedExpectations === 'object') ? st.modifiedExpectations : {};
           const modSummaryList = getStudentModifiedSummaryList(st);
           const modDetails = document.createElement('details');
           modDetails.className = 'modified-expectations mt-1 rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs';
+          if (studentUiState.modStudentId === st.id) {
+            modDetails.open = true;
+          }
+          modDetails.addEventListener('toggle', () => {
+            if (modDetails.open) {
+              studentUiState.modStudentId = st.id;
+            } else if (studentUiState.modStudentId === st.id) {
+              studentUiState.modStudentId = null;
+            }
+          });
           const modSummary = document.createElement('summary');
           modSummary.className = 'cursor-pointer font-semibold text-slate-700 flex flex-wrap items-center justify-between gap-2 select-none';
           const summaryLeft = document.createElement('span');
           summaryLeft.className = 'inline-flex flex-wrap items-center gap-1.5';
-          summaryLeft.textContent = 'Attentes modifiées par matière';
+          summaryLeft.textContent = modSummaryList.length
+            ? `Attentes modifiées : ${modSummaryList.map(item => `${item.label} (${item.levelLabel})`).join(' · ')}`
+            : 'Attentes modifiées par matière (aucune sélectionnée)';
           modSummary.appendChild(summaryLeft);
           modDetails.appendChild(modSummary);
-
-          const modStatus = document.createElement('p');
-          modStatus.className = 'mt-2 text-[11px] text-slate-500';
-          modStatus.textContent = modSummaryList.length
-            ? modSummaryList.map(item => `${item.label} : ${item.levelLabel}`).join(' · ')
-            : 'Aucune (programme régulier partout)';
-          modDetails.appendChild(modStatus);
 
           const modGrid = document.createElement('div');
           modGrid.className = 'mt-2 pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2';
@@ -421,6 +530,7 @@
               } else {
                 st.modifiedExpectations[target.key] = sel.value;
               }
+              studentUiState.modStudentId = st.id;
               notifyUpdate(`Attentes mises à jour pour ${st.name} (${target.label})`);
               renderAll();
             });

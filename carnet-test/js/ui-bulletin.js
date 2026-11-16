@@ -188,20 +188,16 @@
       const selectedScale = selectedTab.scales.find(scale => scale.id === competencyScaleSelected[selectedTab.id]) || selectedTab.scales[0] || null;
       if (selectedScale) competencyScaleSelected[selectedTab.id] = selectedScale.id;
       const getCompetencyResult = scale => computeCompetencyResult(scale, compPicks[scale.id]);
-      const levelSummaryHtml = `
-        <div class="comp-recap" id="grCompetencyLevelSummary" aria-label="Niveaux de compétence par matière">
-          <span class="comp-recap-title">Niveaux de compétence</span>
-          <button type="button" class="comp-recap-print no-print" data-comp-print="1" aria-label="Imprimer les niveaux de compétence" title="Imprimer les niveaux de compétence">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-          </button>
-          ${competencyTabs.flatMap(tab => tab.scales.map(scale => ({ scale, tabId: tab.id }))).map(({ scale, tabId }) => {
-            const result = getCompetencyResult(scale);
-            const meqChip = result ? getMeqFinal(st, compTerm, scale, tabId, compPicks[scale.id]) : null;
+      const establishedScales = competencyTabs
+        .flatMap(tab => tab.scales.map(scale => ({ scale, tabId: tab.id, result: getCompetencyResult(scale) })))
+        .filter(entry => Boolean(entry.result));
+      const establishedChipsHtml = establishedScales.length
+        ? establishedScales.map(({ scale, tabId, result }) => {
+            const meqChip = getMeqFinal(st, compTerm, scale, tabId, compPicks[scale.id]);
             const meqChipHtml = meqChip && meqChip.level ? ` <span class="comp-chip-meq" title="Repère indicatif sur l’échelle du MEQ : ${escapeHtml(MEQ5_LEVELS[meqChip.level].label)}">· MEQ ${meqChip.level}/5</span>` : '';
-            return `<span class="comp-chip${result ? ' is-set' : ''}">${escapeHtml(scale.chip)} <b>${result ? `${result.level}/${scale.max}` : '—'}</b>${meqChipHtml}</span>`;
-          }).join('')}
-        </div>
-      `;
+            return `<span class="comp-chip is-set">${escapeHtml(scale.chip)} <b>${result.level}/${scale.max}</b>${meqChipHtml}</span>`;
+          }).join('')
+        : '<span class="comp-summary-empty">Aucun niveau établi pour le moment — cliquez pour ouvrir les échelles.</span>';
       const renderScaleSection = scale => {
         const model = getCompetencyScaleModel(scale);
         if (!model.levels.length) {
@@ -331,15 +327,24 @@
 
       const competencyModuleHtml = `
         <details id="competencyPositioning" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" ${competencyPanelOpen ? 'open' : ''}>
-          <summary class="px-4 py-3 bg-slate-50 cursor-pointer flex flex-wrap items-center justify-between gap-2">
-            <span>
-              <span class="block text-sm font-bold text-slate-900">Niveau de compétence</span>
-              <span class="mt-0.5 block text-xs text-slate-600">Échelles des niveaux de compétence — enseignement primaire</span>
-            </span>
-            <span class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
-              ${studentCycle ? escapeHtml(CYCLE_LABELS[studentCycle]) : 'Cycle à préciser'}
-              <svg class="competency-chevron h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 7.5 5 5 5-5"/></svg>
-            </span>
+          <summary class="comp-card-summary px-4 py-3 bg-slate-50 cursor-pointer flex flex-col gap-2.5">
+            <div class="comp-card-summary-top flex flex-wrap items-center justify-between gap-2 w-full">
+              <span>
+                <span class="block text-sm font-bold text-slate-900">Niveaux de compétence</span>
+                <span class="mt-0.5 block text-xs text-slate-600">Échelles du primaire · ${studentCycle ? escapeHtml(CYCLE_LABELS[studentCycle]) : 'Cycle à préciser'}</span>
+              </span>
+              <span class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
+                <button type="button" class="comp-recap-print no-print" data-comp-print="1" aria-label="Imprimer les niveaux de compétence" title="Imprimer les niveaux de compétence">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                </button>
+                <span class="comp-toggle-label-closed">Échelles</span>
+                <span class="comp-toggle-label-open">Réduire</span>
+                <svg class="competency-chevron h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m5 7.5 5 5 5-5"/></svg>
+              </span>
+            </div>
+            <div class="comp-summary-strip" id="grCompetencyLevelSummary" aria-label="Niveaux de compétence établis">
+              ${establishedChipsHtml}
+            </div>
           </summary>
           <div class="p-4 border-t border-slate-200 space-y-3">
             <div class="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-600">
@@ -414,13 +419,32 @@
         ? 'Pondéré MEQ (20 % / 20 % / 60 %)'
         : 'Moyenne simple des étapes';
 
+      const adaptSummary = getStudentAdaptationSummary(st);
+      const adaptationsHtml = (() => {
+        if (!adaptSummary.adaptations.length && !adaptSummary.hasModifiedBulletin) {
+          return '<span class="gr-adapt-empty">Aucune adaptation consignée</span>';
+        }
+        const generalPills = adaptSummary.adaptations
+          .map(item => `<span class="gr-adapt-pill">${escapeHtml(item)}</span>`)
+          .join('');
+        const modPill = adaptSummary.hasModifiedBulletin
+          ? `<span class="gr-mod-pill">${adaptSummary.modifiedItems.length ? `Bulletin modifié · ${adaptSummary.modifiedItems.map(m => `${escapeHtml(m.label)} (${escapeHtml(m.levelLabel)})`).join(', ')}` : 'Bulletin modifié'}</span>`
+          : '';
+        return `${generalPills}${modPill}`;
+      })();
+
       container.innerHTML = `
         <!-- Header Identity Card -->
         <div class="bg-white text-slate-900 rounded-xl p-4 sm:p-5 shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div class="space-y-1">
+          <div class="gr-identity-main min-w-0 flex-1">
             <div class="text-xs uppercase tracking-wider text-indigo-700 font-bold">Portrait de l’élève · 2026-2027</div>
-            <h3 class="text-xl sm:text-2xl font-extrabold">${escapeHtml(st.name)}</h3>
-            <div class="text-xs text-slate-600">Niveau : <strong class="text-slate-900">${GRADE_LEVEL_LABELS[st.gradeLevel] || 'à choisir'}</strong> · Adaptations : <strong class="text-slate-900">${escapeHtml(formatStudentAdaptations(st))}</strong></div>
+            <div class="gr-identity-title-row">
+              <h3 class="text-xl sm:text-2xl font-extrabold">${escapeHtml(st.name)}</h3>
+              <span class="gr-grade-meta">Niveau : <strong>${GRADE_LEVEL_LABELS[st.gradeLevel] || 'À choisir'}</strong></span>
+            </div>
+            <div class="gr-adaptations-row" aria-label="Adaptations et mesures de soutien">
+              ${adaptationsHtml}
+            </div>
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
@@ -528,8 +552,6 @@
           </div>
         </div>
 
-        ${levelSummaryHtml}
-
         ${competencyModuleHtml}
       `;
 
@@ -538,7 +560,14 @@
         document.getElementById('grTeacherCommentPrint').textContent = event.target.value;
         scheduleAppStateSave();
       });
-      document.querySelector('#grCompetencyLevelSummary [data-comp-print]').addEventListener('click', () => printCompetencySheet(st, compTerm));
+      const compPrintBtn = document.querySelector('#competencyPositioning [data-comp-print]');
+      if (compPrintBtn) {
+        compPrintBtn.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          printCompetencySheet(st, compTerm);
+        });
+      }
 
       const competencyDetails = document.getElementById('competencyPositioning');
       if (competencyDetails) {

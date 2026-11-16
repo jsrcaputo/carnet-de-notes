@@ -91,7 +91,7 @@
           'Utilise ses outils PIA sur rappel de l’adulte',
           'Oublie ou refuse d’utiliser ses aides',
           'Synthèse vocale efficace (soutient la compréhension)',
-          'WordQ Écriture aidant (fluidité et mise en mots)',
+          'Prédicteur de mots aidant (fluidité et mise en mots)',
           'Utilise efficacement le correcteur pour se réviser',
           'Matériel concret / manipulation bénéfique'
         ]
@@ -124,11 +124,13 @@
 
     const ADAPTATION_PRESETS = [
       'Correcteur',
-      'WordQ Écriture',
+      'Prédicteur de mots',
       'Synthèse vocale',
       'Temps supplémentaire',
-      'PIA',
-      'Bulletin modifié'
+      'Lecture des consignes',
+      'Consignes fractionnées',
+      'Pauses planifiées',
+      'PIA'
     ];
 
     // Marqueurs rapides sur cellule : sobres, typographiques, monochromes (ton sur ton)
@@ -214,7 +216,7 @@
       },
       {
         id: 'externes',
-        title: '5. Mobilisation des ressources externes (Outils, WordQ, Pairs)',
+        title: '5. Mobilisation des ressources externes (Outils, Prédicteur, Pairs)',
         cells: {
           A: ['Utilise spontanément les ressources externes (enseignant, pairs, documents, outils technologiques)'],
           B: ['Utilise souvent les ressources externes (enseignant, pairs, documents, outils technologiques)'],

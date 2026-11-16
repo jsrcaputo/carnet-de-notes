@@ -43,7 +43,7 @@
         firstName: typeof st.firstName === 'string' ? st.firstName.trim() : String(st.name || '').trim() || 'Élève',
         lastName: typeof st.lastName === 'string' ? st.lastName.trim() : '',
         gradeLevel: GRADE_LEVEL_LABELS[String(st.gradeLevel)] ? String(st.gradeLevel) : '',
-        adaptations: Array.isArray(st.adaptations) ? st.adaptations : [],
+        adaptations: Array.isArray(st.adaptations) ? [...new Set(st.adaptations.map(a => a === 'WordQ Écriture' ? 'Prédicteur de mots' : a).filter(Boolean))] : [],
         customAdapt: typeof st.customAdapt === 'string' ? st.customAdapt : '',
         modifiedExpectations: (() => {
           const raw = st.modifiedExpectations;
@@ -348,17 +348,38 @@
       });
     }
 
-    function formatStudentAdaptations(st) {
-      const list = Array.isArray(st.adaptations) ? st.adaptations.slice() : [];
-      if (st.customAdapt && st.customAdapt.trim()) {
-        list.push(st.customAdapt.trim());
+    function normalizeAdaptationLabel(label) {
+      const value = String(label || '').trim();
+      return value === 'WordQ Écriture' ? 'Prédicteur de mots' : value;
+    }
+
+    function getStudentAdaptationSummary(st) {
+      const raw = Array.isArray(st && st.adaptations)
+        ? [...new Set(st.adaptations.map(normalizeAdaptationLabel).filter(Boolean))]
+        : [];
+      const adaptations = raw.filter(a => a !== 'Bulletin modifié');
+      const customAdapt = st && st.customAdapt ? st.customAdapt.trim() : '';
+      if (customAdapt && !adaptations.includes(customAdapt)) {
+        adaptations.push(customAdapt);
       }
-      const modList = getStudentModifiedSummaryList(st);
-      if (modList.length > 0) {
-        const label = `Bulletin modifié (${modList.map(m => `${m.label} : ${m.levelLabel}`).join(', ')})`;
-        const index = list.indexOf('Bulletin modifié');
-        if (index >= 0) list[index] = label;
-        else list.push(label);
+      const modList = typeof getStudentModifiedSummaryList === 'function' ? getStudentModifiedSummaryList(st) : [];
+      const hasModifiedBulletin = Boolean(st && st.gradeLevel !== 'P' && raw.includes('Bulletin modifié'));
+      return {
+        adaptations,
+        customAdapt,
+        hasModifiedBulletin,
+        modifiedItems: hasModifiedBulletin ? modList : []
+      };
+    }
+
+    function formatStudentAdaptations(st) {
+      const summary = getStudentAdaptationSummary(st);
+      const list = summary.adaptations.slice();
+      if (summary.hasModifiedBulletin) {
+        const label = summary.modifiedItems.length > 0
+          ? `Bulletin modifié (${summary.modifiedItems.map(m => `${m.label} : ${m.levelLabel}`).join(', ')})`
+          : 'Bulletin modifié';
+        list.push(label);
       }
       return list.length > 0 ? list.join(' • ') : 'Aucune adaptation';
     }
