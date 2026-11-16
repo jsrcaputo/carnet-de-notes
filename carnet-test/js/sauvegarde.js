@@ -6,6 +6,8 @@
     let fileOperation = false;
     let pendingImportSnapshot = null;
     let activeBackupEncryption = null;
+    // Vrai dès qu'un carnet a été ouvert ou enregistré dans cette session.
+    let carnetIsSaved = false;
     const LOCAL_STORAGE_KEY = 'carnet_notes_autosave_2026_v1';
     const ENCRYPTED_BACKUP_FORMAT = 'carnet-notes-chiffre';
     const ENCRYPTED_EXCEL_FORMAT = 'carnet-excel-chiffre';
@@ -210,6 +212,7 @@
     }
 
     function resetCarnetToBlank() {
+      carnetIsSaved = false;
       activeFileHandle = null;
       activeFileWritable = false;
       activeBackupEncryption = null;
@@ -238,6 +241,7 @@
         const payload = encryption ? await encryptBackup(cleartext, encryption) : cleartext;
         const data = new Blob([payload], { type: 'application/json;charset=utf-8' });
         downloadBlob(data, `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}.json`);
+        carnetIsSaved = true;
         if (!activeFileHandle) {
           lastSavedFileSnapshot = snapshot;
           setFileSyncStatus('unlinked', 'Copie téléchargée : non liée');
@@ -344,6 +348,7 @@
         const existingText = await (await handle.getFile()).text();
         if (existingText && !window.confirm(`Le fichier « ${handle.name} » contient déjà des données. Le remplacer par ce carnet ?`)) return;
         activeFileHandle = handle;
+        carnetIsSaved = true;
         activeFileWritable = true;
         linkedFileText = existingText;
         fileWriteBlocked = false;
@@ -431,6 +436,7 @@
         weightLevel = '';
         weightScope = '';
         Object.assign(prefs, importedPrefs);
+        carnetIsSaved = true;
         applyPrefs();
         renderAll();
         recordHistory();

@@ -10,9 +10,8 @@
         var raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
         var p = raw ? JSON.parse(raw) : null;
         var root = document.documentElement;
-        var valid = ['ocean', 'foret', 'boreal', 'terracotta', 'prune', 'ambre', 'graphite'];
-        root.setAttribute('data-palette', p && valid.indexOf(p.palette) !== -1 ? p.palette : 'ocean');
-        if (p && p.theme === 'dark') root.classList.add('theme-dark');
+        // L'accueil d'un carnet non enregistré s'ouvre toujours en clair, palette bleue.
+        root.setAttribute('data-palette', 'ocean');
         if (p && ['xs', 'sm', 'lg', 'xl'].indexOf(p.textSize) !== -1) root.classList.add('ts-' + p.textSize);
       } catch (_) {}
     })();

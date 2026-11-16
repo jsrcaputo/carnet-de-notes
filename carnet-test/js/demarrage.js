@@ -53,12 +53,18 @@
     ];
 
     function showWelcome() {
+      // Un carnet non enregistré s'accueille toujours en affichage clair, palette bleue.
+      if (!carnetIsSaved) {
+        document.documentElement.setAttribute('data-palette', 'ocean');
+        document.documentElement.classList.remove('theme-dark');
+      }
       document.getElementById('welcomeOverlay').classList.remove('hidden');
       document.getElementById('welcomeOverlay').focus({ preventScroll: true });
     }
 
     function hideWelcome() {
       document.getElementById('welcomeOverlay').classList.add('hidden');
+      applyPrefs();
     }
 
     function dismissWelcome() {
