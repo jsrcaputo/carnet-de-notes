@@ -2,16 +2,18 @@
 
 - [index.html](index.html) : version publiée ; elle utilise le dossier [carnet-test](carnet-test/).
 - [index-test.html](index-test.html) : page de test utilisant les mêmes ressources.
-- [index-Backup.html](index-Backup.html) : sauvegarde de la version publiée précédente.
+- [index-Backup.html](index-Backup.html) : copie de la page avant les dernières modifications. Elle utilise les mêmes fichiers CSS et JavaScript que la page principale et ne constitue donc pas une sauvegarde autonome de l'application.
 - [echelles-niveaux.js](echelles-niveaux.js) : échelles du primaire.
 
 Pour utiliser le carnet, ouvrir `index.html` avec son dossier `carnet-test` et `echelles-niveaux.js` à leurs emplacements respectifs. Le site peut aussi être servi en statique, notamment sur GitHub Pages ; aucun serveur backend n'est requis.
 
-À l’accueil, **Démonstration** charge trois groupes fictifs : Test-001 (préscolaire), Test-201 (2e année) et Test-503 (multi 5e/6e). Fermer l’accueil ou créer son propre groupe ne charge pas ces groupes. La démonstration conserve les groupes existants.
+À chaque ouverture, l’accueil apparaît sans effacer le carnet restauré depuis le navigateur. **Démonstration** charge trois groupes fictifs : Test-001 (préscolaire), Test-201 (2e année) et Test-503 (multi 5e/6e). Fermer l’accueil ou créer son propre groupe ne charge pas ces groupes. La démonstration conserve les groupes existants.
 
 ## Sauvegarde des données
 
 Dans un navigateur compatible avec l'accès aux fichiers, **Sauvegarder** permet de choisir un fichier JSON. Les modifications suivantes y sont enregistrées automatiquement après un court délai. Après **Charger**, il peut être nécessaire de cliquer sur **Sauvegarder** pour autoriser l'écriture. La liaison ne survit pas à la fermeture ou au rechargement de la page : il faut rouvrir le fichier.
+
+Le navigateur conserve aussi automatiquement une copie locale du carnet pour le restaurer à la prochaine ouverture. Cette copie et les fichiers JSON ne sont pas chiffrés par l'application; utilisez des données fictives jusqu'à ce que l'utilisation de données réelles ait été approuvée par votre organisation. La copie du navigateur ne remplace pas une sauvegarde indépendante.
 
 L'état de la liaison apparaît en haut de la page. Si le fichier est modifié ailleurs, ou si une écriture échoue, l'enregistrement automatique s'arrête et un message est affiché. Utiliser **Options → Télécharger une copie JSON** pour préserver le travail, puis délier ou recharger le fichier. Conserver des copies de sauvegarde indépendantes ; la détection d'une modification externe n'est pas un verrou entre applications.
 

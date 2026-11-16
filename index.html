@@ -10,11 +10,10 @@
         var raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
         var p = raw ? JSON.parse(raw) : null;
         var root = document.documentElement;
-        var valid = ['ocean', 'foret', 'boreal', 'azur', 'terracotta', 'prune', 'ambre', 'graphite'];
+        var valid = ['ocean', 'foret', 'boreal', 'terracotta', 'prune', 'ambre', 'graphite'];
         root.setAttribute('data-palette', p && valid.indexOf(p.palette) !== -1 ? p.palette : 'ocean');
         if (p && p.theme === 'dark') root.classList.add('theme-dark');
-        if (p && p.textSize === 'sm') root.classList.add('ts-sm');
-        if (p && p.textSize === 'lg') root.classList.add('ts-lg');
+        if (p && ['xs', 'sm', 'lg', 'xl'].indexOf(p.textSize) !== -1) root.classList.add('ts-' + p.textSize);
       } catch (_) {}
     })();
   </script>
@@ -51,6 +50,16 @@
         <button id="tourSkip" type="button">Passer le tutoriel</button>
         <button id="tourNext" type="button">Suivant →</button>
       </div>
+      <div id="weightGuide" class="weight-guide hidden no-print" role="dialog" aria-modal="true" aria-labelledby="weightGuideTitle" aria-describedby="weightGuideDescription">
+        <div class="weight-guide-shade" data-side="top"></div><div class="weight-guide-shade" data-side="bottom"></div>
+        <div class="weight-guide-shade" data-side="left"></div><div class="weight-guide-shade" data-side="right"></div>
+        <div id="weightGuideHighlight" class="weight-guide-highlight" aria-hidden="true"></div>
+        <div id="weightGuideCard" class="tour-card">
+          <h2 id="weightGuideTitle">Pondération en groupe multiniveau</h2>
+          <p id="weightGuideDescription">Les évaluations peuvent différer d’un niveau à l’autre. Sélectionnez chaque niveau dans la section Élèves pour vérifier et ajuster sa pondération séparément. La répartition égale peut aussi être appliquée automatiquement.</p>
+          <div class="tour-actions"><button id="weightGuideDone" type="button">J’ai compris</button></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -61,7 +70,7 @@
     </div>
     <div class="test-sidebar-sections">
       <section class="test-sidebar-section">
-        <div class="test-sidebar-heading">
+        <div class="test-sidebar-heading sidebar-legacy-group">
           <h2 id="sidebarGroupLabel" class="test-sidebar-label">Groupe</h2>
           <button id="sidebarSingleGroup" type="button" class="test-single-group">Créer un groupe</button>
           <select id="headerGroupSelect" class="hidden" aria-label="Groupe actif" title="Changer de groupe"></select>
@@ -73,7 +82,12 @@
             </div>
           </div>
         </div>
-        <nav id="testClassNavigation" class="test-sidebar-nav" aria-label="Groupe et élèves"></nav>
+        <nav id="testClassNavigation" class="test-sidebar-nav" aria-label="Groupe et élèves">
+          <button id="btnSidebarGroupChoice" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="sidebarChoiceMenu">
+            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+            <span>Groupe</span><span id="sidebarActiveGroup" class="sidebar-active-group"></span><span aria-hidden="true">▾</span>
+          </button>
+        </nav>
       </section>
       <section class="test-sidebar-section">
         <h2 class="test-sidebar-label">Étape et bulletin</h2>
@@ -99,6 +113,7 @@
       </button>
     </nav>
   </aside>
+  <div id="sidebarChoiceMenu" class="sidebar-choice-menu hidden no-print" role="menu" aria-label="Choisir ou gérer les groupes"></div>
 
   <!-- TOP HEADER (ERGONOMIC, ZERO HORIZONTAL OVERFLOW AT ANY WIDTH) -->
   <header class="test-topbar bg-slate-900 text-white sticky top-0 z-30 shadow-md no-print w-full">
@@ -160,6 +175,7 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
           <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
           <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
 
@@ -193,7 +209,6 @@
                 <div class="sp-palette-swatches" role="group" aria-label="Palette de couleurs">
                   <button type="button" class="sp-swatch is-active" data-palette-val="ocean" title="Bleu Océan (Défaut)" aria-label="Bleu Océan" aria-pressed="true" style="--sw-brand:#1d4ed8; --sw-soft:#dbeafe;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="boreal" title="Indigo Boréal" aria-label="Indigo Boréal" aria-pressed="false" style="--sw-brand:#4338ca; --sw-soft:#e0e7ff;"></button>
-                  <button type="button" class="sp-swatch" data-palette-val="azur" title="Azur Nordique" aria-label="Azur Nordique" aria-pressed="false" style="--sw-brand:#0369a1; --sw-soft:#e0f2fe;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="terracotta" title="Argile &amp; Terracotta" aria-label="Argile et Terracotta" aria-pressed="false" style="--sw-brand:#b84a39; --sw-soft:#fce8e4;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="prune" title="Prune Éditoriale" aria-label="Prune Éditoriale" aria-pressed="false" style="--sw-brand:#6b2f7a; --sw-soft:#f3e5f6;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="ambre" title="Ocre &amp; Ambre" aria-label="Ocre et Ambre" aria-pressed="false" style="--sw-brand:#b45309; --sw-soft:#fef3c7;"></button>
@@ -201,23 +216,19 @@
                   <button type="button" class="sp-swatch" data-palette-val="foret" title="Vert Forêt" aria-label="Vert Forêt" aria-pressed="false" style="--sw-brand:#2f6b4f; --sw-soft:#dcfce7;"></button>
                 </div>
               </div>
-              <div class="sp-row">
-                <span>Taille du texte</span>
-                <div class="sp-seg" data-pref="textSize">
-                  <button type="button" data-val="sm" style="font-size:11px">A</button>
-                  <button type="button" data-val="md" style="font-size:13px">A</button>
-                  <button type="button" data-val="lg" style="font-size:16px">A</button>
-                </div>
+              <div class="sp-row sp-text-size">
+                <label for="spTextSize">Taille du texte</label>
+                <input id="spTextSize" type="range" min="0" max="4" step="1" value="2" aria-label="Taille du texte">
+                <output id="spTextSizeValue" for="spTextSize">3 / 5</output>
               </div>
               <div class="sp-title" style="margin-top:.6rem">Sauvegarde</div>
               <label class="sp-check"><input type="checkbox" data-pref-check="backupReminder"> <span>Rappel de sauvegarde à la fermeture</span></label>
               <div class="sp-backup-actions">
                 <button id="btnDownloadJSON" type="button" class="sort-btn">Télécharger une copie JSON</button>
-                <button id="btnUnlinkJSON" type="button" class="sort-btn">Délier le fichier</button>
+                <button id="btnUnlinkJSON" type="button" class="sort-btn" disabled>Aucun fichier lié</button>
               </div>
             </div>
           </div>
-          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
           <span class="hdr-sep" aria-hidden="true"></span>
           <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" aria-label="Plein écran" title="Basculer en plein écran">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -296,8 +307,9 @@
 
       <!-- Gradebook Table: THE ONLY CONTAINER WITH HORIZONTAL SCROLL AS COLUMNS GROW -->
       <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+        <div id="gradebookTopScroll" class="gradebook-top-scroll custom-scrollbar no-print" tabindex="0" role="region" aria-label="Défilement horizontal du carnet"><div></div></div>
         <div id="gradebookScrollContainer" class="overflow-x-auto custom-scrollbar w-full">
-          <table class="w-full min-w-max text-left border-collapse">
+          <table class="w-full text-left border-collapse">
             <thead>
               <tr id="gradebookHeaderRow" class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
                 <!-- Populated dynamically -->
@@ -947,7 +959,7 @@
           <label for="cbTextarea" class="font-bold text-slate-800">Texte du commentaire (éditable)</label>
           <div class="flex items-center gap-2">
             <span id="cbCharCount" class="text-[11px] font-semibold text-slate-500 tabular-nums">0 caract.</span>
-            <button id="btnCbClear" type="button" class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline cursor-pointer">Effacer</button>
+            <button id="btnCbClear" type="button" class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline cursor-pointer" title="Effacer le texte et les énoncés sélectionnés">Réinitialiser</button>
           </div>
         </div>
         <textarea id="cbTextarea" rows="3" placeholder="Cliquez sur des énoncés ci-dessus ou sur « Synthèse selon le dossier » pour composer un commentaire fluide sans répétition du prénom…" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>

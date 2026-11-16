@@ -8,6 +8,11 @@
     const LOCAL_STORAGE_KEY = 'carnet_notes_autosave_2026_v1';
 
     function setFileSyncStatus(status, message) {
+      const unlink = document.getElementById('btnUnlinkJSON');
+      if (unlink) {
+        unlink.disabled = !activeFileHandle;
+        unlink.textContent = activeFileHandle ? 'Délier le fichier' : 'Aucun fichier lié';
+      }
       const indicator = document.getElementById('fileSyncStatus');
       if (!indicator) return;
       indicator.dataset.status = status;

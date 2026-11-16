@@ -26,7 +26,7 @@
     let appState = createInitialState();
     applyActiveSubjects(appState);
     let competencyPanelOpen = false;
-    let competencySubjectSelected = SUBJECTS_CONFIG[0].id;
+    let competencySubjectSelected = null;
     const competencyScaleSelected = {};
     let competencyTermSelected = null;
     let observationDraftBaseline = null;
@@ -877,12 +877,11 @@
       }
     }
 
-    const VALID_PALETTES = ['ocean', 'foret', 'boreal', 'azur', 'terracotta', 'prune', 'ambre', 'graphite'];
+    const VALID_PALETTES = ['ocean', 'foret', 'boreal', 'terracotta', 'prune', 'ambre', 'graphite'];
     const PALETTE_LABELS = {
       ocean: 'Bleu Océan',
       foret: 'Vert Forêt',
       boreal: 'Indigo Boréal',
-      azur: 'Azur Nordique',
       terracotta: 'Argile & Terracotta',
       prune: 'Prune Éditoriale',
       ambre: 'Ocre & Ambre',
@@ -894,7 +893,7 @@
       if (savedPrefs && typeof savedPrefs === 'object') {
         if (['light', 'dark'].includes(savedPrefs.theme)) prefs.theme = savedPrefs.theme;
         if (VALID_PALETTES.includes(savedPrefs.palette)) prefs.palette = savedPrefs.palette;
-        if (['sm', 'md', 'lg'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
+        if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
       }
     } catch (_) {}
@@ -931,8 +930,15 @@
       prefs.palette = activePalette;
       root.setAttribute('data-palette', activePalette);
       root.classList.toggle('theme-dark', prefs.theme === 'dark');
-      root.classList.toggle('ts-sm', prefs.textSize === 'sm');
-      root.classList.toggle('ts-lg', prefs.textSize === 'lg');
+      ['xs', 'sm', 'lg', 'xl'].forEach(size => root.classList.toggle('ts-' + size, prefs.textSize === size));
+      const sizeIndex = ['xs', 'sm', 'md', 'lg', 'xl'].indexOf(prefs.textSize);
+      const sizeSlider = document.getElementById('spTextSize');
+      const sizeValue = document.getElementById('spTextSizeValue');
+      if (sizeSlider && sizeValue) {
+        sizeSlider.value = String(sizeIndex);
+        sizeSlider.setAttribute('aria-valuetext', `${sizeIndex + 1} sur 5`);
+        sizeValue.textContent = `${sizeIndex + 1} / 5`;
+      }
       document.querySelectorAll('#settingsPanel .sp-seg').forEach(seg => {
         const key = seg.getAttribute('data-pref');
         if (key && prefs[key] !== undefined) {
@@ -973,11 +979,11 @@
       if (value === undefined) return { ...prefs };
       if (!value || typeof value !== 'object' || Array.isArray(value) ||
           !['light', 'dark'].includes(value.theme) ||
-          !['sm', 'md', 'lg'].includes(value.textSize) ||
+          !['xs', 'sm', 'md', 'lg', 'xl'].includes(value.textSize) ||
           typeof value.backupReminder !== 'boolean') {
         throw new Error('Les paramètres d’affichage de ce fichier sont invalides.');
       }
-      const palette = VALID_PALETTES.includes(value.palette) ? value.palette : (prefs.palette || 'ocean');
+      const palette = value.palette === 'azur' ? 'ocean' : (VALID_PALETTES.includes(value.palette) ? value.palette : (prefs.palette || 'ocean'));
       return { theme: value.theme, palette, textSize: value.textSize, backupReminder: value.backupReminder };
     }
 

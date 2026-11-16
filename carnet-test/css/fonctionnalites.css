@@ -27,8 +27,10 @@
     #settingsPanel .sp-seg button.is-on { background: var(--brand); color: #fff; }
     #settingsPanel .sp-check { display: flex; align-items: center; gap: .5rem; padding: .22rem 0; cursor: pointer; font-weight: 500; }
     #settingsPanel .sp-check input { accent-color: var(--brand); width: 14px; height: 14px; }
-    html.ts-sm { font-size: 14.5px; }
-    html.ts-lg { font-size: 18px; }
+    html.ts-xs { font-size: 14.5px; }
+    html.ts-sm { font-size: 15.25px; }
+    html.ts-lg { font-size: 16.75px; }
+    html.ts-xl { font-size: 17.5px; }
     @media screen {
       html.theme-dark {
         color-scheme: dark;

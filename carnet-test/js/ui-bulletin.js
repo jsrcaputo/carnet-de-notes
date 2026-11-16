@@ -181,11 +181,11 @@
       const compPicks = getAnnualCompetencyPicks(st);
       const hasHistoricalCompetencies = ['1', '2', '3'].some(term => st.competencyTerms[term] && Object.keys(st.competencyTerms[term]).length);
       const competencyTabs = getCompetencyTabs();
-      const selectedTab = competencyTabs.find(tab => tab.id === competencySubjectSelected && !tab.disabled)
-        || competencyTabs.find(tab => !tab.disabled)
-        || { id: '', label: '', scales: [] };
-      competencySubjectSelected = selectedTab.id;
-      const selectedScale = selectedTab.scales.find(scale => scale.id === competencyScaleSelected[selectedTab.id]) || selectedTab.scales[0] || null;
+      const selectedTab = competencyTabs.find(tab => tab.id === competencySubjectSelected && !tab.disabled) || null;
+      if (!selectedTab) competencySubjectSelected = null;
+      const selectedScale = selectedTab
+        ? selectedTab.scales.find(scale => scale.id === competencyScaleSelected[selectedTab.id]) || selectedTab.scales[0] || null
+        : null;
       if (selectedScale) competencyScaleSelected[selectedTab.id] = selectedScale.id;
       const getCompetencyResult = scale => computeCompetencyResult(scale, compPicks[scale.id]);
       const establishedScales = competencyTabs
@@ -312,18 +312,18 @@
         `;
       };
 
-      const refSubject = SUBJECTS_CONFIG.find(s => (s.group || s.id) === ({ sciences_global: 'sciences', univers_social: 'social' }[selectedTab.id] || selectedTab.id));
-      const refCycle = getCompetencyEffectiveCycle(st, selectedTab.id) || studentCycle;
+      const refSubject = selectedTab && SUBJECTS_CONFIG.find(s => (s.group || s.id) === ({ sciences_global: 'sciences', univers_social: 'social' }[selectedTab.id] || selectedTab.id));
+      const refCycle = selectedTab && (getCompetencyEffectiveCycle(st, selectedTab.id) || studentCycle);
       const refAnchor = (href, label, strong) => href
         ? `<a href="${href}" target="_blank" rel="noopener noreferrer" class="${strong ? 'is-main' : ''}">${label} ↗</a>` : '';
-      const referentielsHtml = `
+      const referentielsHtml = selectedTab ? `
         <div class="comp-refs no-print" aria-label="Référentiels officiels">
           <span class="comp-refs-title">Référentiels</span>
           ${refCycle && CYCLE_SCALE_URLS[refCycle] ? refAnchor(getMeqScaleUrl(refCycle, selectedTab.id), `Échelle MEQ · ${escapeHtml(selectedTab.label)} · ${escapeHtml(CYCLE_LABELS[refCycle])}`, true) : ''}
           ${[1, 2, 3].filter(c => c !== refCycle).map(c => refAnchor(getMeqScaleUrl(c, selectedTab.id), escapeHtml(CYCLE_LABELS[c]))).join('')}
           ${refSubject && refSubject.refUrl ? refAnchor(refSubject.refUrl, 'Cadre d’évaluation (PFEQ)') : ''}
           ${refAnchor((refSubject && refSubject.cssmbUrl) || 'https://sre.servicescsmb.com/disciplines/', 'Ressources CSSMB')}
-        </div>`;
+        </div>` : '';
 
       const competencyModuleHtml = `
         <details id="competencyPositioning" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" ${competencyPanelOpen ? 'open' : ''}>
@@ -347,20 +347,21 @@
             </div>
           </summary>
           <div class="p-4 border-t border-slate-200 space-y-3">
-            <div class="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-600">
-              <p class="max-w-3xl">Les échelles décrivent un portrait global : ce repère ne remplace pas votre jugement professionnel.${hasHistoricalCompetencies ? ' Pour chaque échelle, le dernier choix par étape a été repris; les anciens choix restent dans la sauvegarde.' : ''}</p>
-              ${referentielsHtml}
-            </div>
             <div class="comp-tabs" role="group" aria-label="Choisir une matière">
               ${competencyTabs.map(tab => tab.disabled ? `
                 <button type="button" class="competency-subject-button comp-tab is-disabled" disabled aria-disabled="true">
                   ${escapeHtml(tab.label)} <span class="comp-tab-note">Aucune échelle</span>
                 </button>
               ` : `
-                <button type="button" class="competency-subject-button comp-tab${tab.id === selectedTab.id ? ' is-active' : ''}" data-competency-subject="${tab.id}" aria-pressed="${tab.id === selectedTab.id}">
+                <button type="button" class="competency-subject-button comp-tab${selectedTab && tab.id === selectedTab.id ? ' is-active' : ''}" data-competency-subject="${tab.id}" aria-pressed="${Boolean(selectedTab && tab.id === selectedTab.id)}">
                   ${escapeHtml(tab.label)}
                 </button>
               `).join('')}
+            </div>
+            ${selectedTab ? `
+            <div class="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-600">
+              <p class="max-w-3xl">Les échelles décrivent un portrait global : ce repère ne remplace pas votre jugement professionnel.${hasHistoricalCompetencies ? ' Pour chaque échelle, le dernier choix par étape a été repris; les anciens choix restent dans la sauvegarde.' : ''}</p>
+              ${referentielsHtml}
             </div>
             ${selectedTab.scales.length > 1 ? `
               <div class="comp-subtabs" role="group" aria-label="Compétence de ${escapeHtml(selectedTab.label)}">
@@ -372,6 +373,7 @@
               </div>
             ` : ''}
             ${selectedScale ? renderScaleSection(selectedScale) : '<p class="text-sm text-slate-600">Aucune échelle de niveaux de compétence pour les matières de ce groupe.</p>'}
+            ` : ''}
           </div>
         </details>
       `;
@@ -399,7 +401,7 @@
       const chartBarsHtml = subjectRows.map(r => {
         const pct = r.annualAvg !== null ? r.annualAvg : 0;
         const modTag = r.isModified
-          ? `<span class="ml-1.5 px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-extrabold" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>`
+          ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>`
           : '';
         return `
           <div class="space-y-1">
@@ -504,7 +506,7 @@
 
         <!-- Tableau récapitulatif des étapes -->
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-          <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
+          <div class="gr-results-heading px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <h4 class="text-sm font-bold text-slate-900">Résultats des trois étapes par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
             <span class="gr-weight-label">${weightModeLabel}</span>
           </div>
@@ -525,7 +527,7 @@
                 <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
                   <td class="p-2.5 font-bold text-slate-900">
                     <span>${r.sub.shortName}</span>
-                    ${r.isModified ? `<span class="ml-1 px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-extrabold">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>` : ''}
+                    ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>` : ''}
                   </td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t2 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t2))}">${pctToClosestGradeCode(r.t2)} (${r.t2}%)</span>` : '—'}</td>
@@ -572,7 +574,16 @@
       const competencyDetails = document.getElementById('competencyPositioning');
       if (competencyDetails) {
         competencyDetails.addEventListener('toggle', () => {
-          if (competencyDetails.isConnected) competencyPanelOpen = competencyDetails.open;
+          if (!competencyDetails.isConnected) return;
+          competencyPanelOpen = competencyDetails.open;
+          if (!competencyDetails.open && competencySubjectSelected !== null) {
+            competencySubjectSelected = null;
+            const restoreFocus = competencyDetails.contains(document.activeElement);
+            const scrollY = window.scrollY;
+            renderGlobalReportView();
+            if (restoreFocus) document.querySelector('#competencyPositioning > summary').focus({ preventScroll: true });
+            window.scrollTo(0, scrollY);
+          }
         });
 
         const commitCompetencyChange = () => {

@@ -124,6 +124,8 @@
         ? [...appState.groups.filter(g => !g.placeholder && isExampleGroup(g)), ...visibleGroups]
         : visibleGroups;
       const groupLabel = () => 'Groupe';
+      const activeGroupLabel = document.getElementById('sidebarActiveGroup');
+      if (activeGroupLabel) activeGroupLabel.textContent = activeIsPlaceholder ? '' : (activeGroup.name || '');
       if (sel) {
         const choices = appState.groups.filter(g => !g.placeholder && (isExampleGroup(activeGroup) || !isExampleGroup(g)));
         const needsChoice = activeIsPlaceholder && choices.length > 0;

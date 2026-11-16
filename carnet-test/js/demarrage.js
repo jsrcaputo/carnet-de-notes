@@ -65,6 +65,56 @@
       hideWelcome();
     }
 
+    function updateGradebookTopScroll() {
+      const top = document.getElementById('gradebookTopScroll');
+      const bottom = document.getElementById('gradebookScrollContainer');
+      if (!top || !bottom) return;
+      const table = bottom.querySelector('table');
+      top.firstElementChild.style.width = `${table.scrollWidth}px`;
+      top.classList.toggle('is-visible', bottom.scrollWidth > bottom.clientWidth + 1);
+      top.scrollLeft = bottom.scrollLeft;
+    }
+
+    function positionWeightGuide() {
+      const guide = document.getElementById('weightGuide');
+      if (!guide || guide.classList.contains('hidden')) return;
+      const target = document.getElementById('gbLevelFilterBar');
+      if (!target) return;
+      const rect = target.getBoundingClientRect();
+      const left = Math.max(0, rect.left - 4);
+      const top = Math.max(0, rect.top - 4);
+      const right = Math.min(window.innerWidth, rect.right + 4);
+      const bottom = Math.min(window.innerHeight, rect.bottom + 4);
+      const setRect = (element, x, y, width, height) => {
+        Object.assign(element.style, { left: `${x}px`, top: `${y}px`, width: `${Math.max(0, width)}px`, height: `${Math.max(0, height)}px` });
+      };
+      setRect(guide.querySelector('[data-side="top"]'), 0, 0, window.innerWidth, top);
+      setRect(guide.querySelector('[data-side="bottom"]'), 0, bottom, window.innerWidth, window.innerHeight - bottom);
+      setRect(guide.querySelector('[data-side="left"]'), 0, top, left, bottom - top);
+      setRect(guide.querySelector('[data-side="right"]'), right, top, window.innerWidth - right, bottom - top);
+      setRect(document.getElementById('weightGuideHighlight'), left, top, right - left, bottom - top);
+      const card = document.getElementById('weightGuideCard');
+      const cardLeft = Math.max(12, Math.min(window.innerWidth - card.offsetWidth - 12, left));
+      const cardTop = bottom + 12 + card.offsetHeight <= window.innerHeight - 12
+        ? bottom + 12 : Math.max(12, top - card.offsetHeight - 12);
+      Object.assign(card.style, { left: `${cardLeft}px`, top: `${cardTop}px` });
+    }
+
+    function showFirstMultiWeightTip() {
+      if (!isMultiLevelGroup() || !document.getElementById('weightGuide')) return;
+      try {
+        if (window.localStorage.getItem('carnet_notes_weight_guide_seen_v1') === '1') return;
+      } catch (error) {
+        console.warn('Impossible de lire la préférence du guide de pondération.', error);
+      }
+      const target = document.getElementById('gbLevelFilterBar');
+      if (!target) return;
+      target.scrollIntoView({ block: 'center', inline: 'nearest' });
+      document.getElementById('weightGuide').classList.remove('hidden');
+      positionWeightGuide();
+      document.getElementById('weightGuideDone').focus();
+    }
+
     function isPristineInitialGroup() {
       const initial = createInitialState();
       const terms = JSON.parse(JSON.stringify(appState.terms));
@@ -143,6 +193,37 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      const topScroll = document.getElementById('gradebookTopScroll');
+      const gradebookScroll = document.getElementById('gradebookScrollContainer');
+      if (topScroll && gradebookScroll) {
+        topScroll.addEventListener('scroll', () => { gradebookScroll.scrollLeft = topScroll.scrollLeft; });
+        gradebookScroll.addEventListener('scroll', () => { topScroll.scrollLeft = gradebookScroll.scrollLeft; });
+        if (window.ResizeObserver) {
+          const observer = new ResizeObserver(updateGradebookTopScroll);
+          observer.observe(gradebookScroll);
+          observer.observe(gradebookScroll.querySelector('table'));
+        }
+        window.addEventListener('resize', updateGradebookTopScroll);
+      }
+      const closeWeightGuide = () => {
+        document.getElementById('weightGuide').classList.add('hidden');
+        try {
+          window.localStorage.setItem('carnet_notes_weight_guide_seen_v1', '1');
+        } catch (error) {
+          console.warn('Impossible de mémoriser le guide de pondération.', error);
+        }
+        document.getElementById('btnWeightMode').focus();
+      };
+      const weightGuide = document.getElementById('weightGuide');
+      if (weightGuide) {
+        document.getElementById('weightGuideDone').addEventListener('click', closeWeightGuide);
+        weightGuide.addEventListener('keydown', event => {
+          if (event.key === 'Escape') { event.preventDefault(); closeWeightGuide(); }
+          if (event.key === 'Tab') { event.preventDefault(); document.getElementById('weightGuideDone').focus(); }
+        });
+        window.addEventListener('resize', positionWeightGuide);
+        window.addEventListener('scroll', positionWeightGuide, true);
+      }
       document.getElementById('welcomeClose').addEventListener('click', event => {
         event.stopPropagation();
         dismissWelcome();
@@ -307,6 +388,7 @@
         document.getElementById('btnCbClear').addEventListener('click', () => {
           const area = document.getElementById('cbTextarea');
           area.value = '';
+          activeCommentBankCategoryId = COMMENT_BANK_CATEGORIES[0].id;
           updateCommentBankCharCount();
           renderCommentBankPhrases();
           area.focus();
@@ -374,6 +456,71 @@
         closeSidebarGroupMenu();
         navigateToView('viewStudents');
       });
+      const groupChoiceButton = document.getElementById('btnSidebarGroupChoice');
+      const groupChoiceMenu = document.getElementById('sidebarChoiceMenu');
+      if (groupChoiceButton && groupChoiceMenu) {
+        const closeGroupChoice = () => {
+          groupChoiceMenu.classList.add('hidden');
+          groupChoiceButton.setAttribute('aria-expanded', 'false');
+        };
+        groupChoiceButton.addEventListener('click', () => {
+          if (!groupChoiceMenu.classList.contains('hidden')) { closeGroupChoice(); return; }
+          groupChoiceMenu.replaceChildren();
+          const choices = [...document.querySelectorAll('#headerGroupSelect option')].filter(option => !option.disabled && !option.dataset.action);
+          choices.forEach(option => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'menuitemradio');
+            button.setAttribute('aria-checked', String(option.value === appState.activeGroupId));
+            button.textContent = option.textContent;
+            button.addEventListener('click', () => {
+              closeGroupChoice();
+              groupChoiceButton.focus();
+              requestObservationDraftExit(() => switchGroup(option.value));
+            });
+            groupChoiceMenu.appendChild(button);
+          });
+          const addAction = (label, action) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'menuitem');
+            button.textContent = label;
+            button.addEventListener('click', () => { closeGroupChoice(); action(); });
+            groupChoiceMenu.appendChild(button);
+          };
+          addAction('＋ Créer un groupe', startNewGroup);
+          if (choices.length) addAction('Gérer les groupes', () => navigateToView('viewStudents'));
+          groupChoiceMenu.classList.remove('hidden');
+          groupChoiceButton.setAttribute('aria-expanded', 'true');
+          const rect = groupChoiceButton.getBoundingClientRect();
+          const width = groupChoiceMenu.offsetWidth;
+          const height = groupChoiceMenu.offsetHeight;
+          const rightFits = rect.right + width + 8 <= window.innerWidth;
+          const leftFits = rect.left - width - 8 >= 0;
+          const left = rightFits ? rect.right + 8 : leftFits ? rect.left - width - 8 : Math.max(8, Math.min(rect.left, window.innerWidth - width - 8));
+          const preferredTop = rightFits || leftFits ? rect.top : rect.bottom + 8;
+          const top = Math.max(8, Math.min(preferredTop, window.innerHeight - height - 8));
+          Object.assign(groupChoiceMenu.style, { left: `${left}px`, top: `${top}px` });
+          groupChoiceMenu.querySelector('button').focus();
+        });
+        document.addEventListener('click', event => {
+          if (!groupChoiceMenu.contains(event.target) && !groupChoiceButton.contains(event.target)) closeGroupChoice();
+        });
+        document.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && !groupChoiceMenu.classList.contains('hidden')) {
+            closeGroupChoice();
+            groupChoiceButton.focus();
+          } else if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) && groupChoiceMenu.contains(document.activeElement)) {
+            event.preventDefault();
+            const items = [...groupChoiceMenu.querySelectorAll('button')];
+            const index = items.indexOf(document.activeElement);
+            const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1
+              : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+            items[next].focus();
+          }
+        });
+        window.addEventListener('resize', closeGroupChoice);
+      }
       document.addEventListener('click', event => {
         if (!sidebarGroupMenu.contains(event.target) && !sidebarGroupButton.contains(event.target)) closeSidebarGroupMenu();
       });
@@ -482,10 +629,11 @@
           closeWeightMode();
         } else {
           renderGradebookView();
+          showFirstMultiWeightTip();
         }
       });
       document.addEventListener('pointerdown', event => {
-        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookScrollContainer')) return;
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookTopScroll, #gradebookScrollContainer, #weightGuide')) return;
         setTimeout(() => {
           if (weightMode) closeWeightMode();
         }, 0);
@@ -524,10 +672,6 @@
           return;
         }
         modalAddAsgTargetLevels = modalAddAsgTargetLevels.filter(l => presentLevels.includes(l));
-        if (modalAddAsgTargetLevels.length === presentLevels.length) {
-          modalAddAsgTargetLevels = [];
-        }
-
         const isAll = modalAddAsgTargetLevels.length === 0;
 
         const allLbl = document.createElement('label');
@@ -548,12 +692,15 @@
           lvlLbl.querySelector('input').addEventListener('change', (e) => {
             if (isAll) modalAddAsgTargetLevels = [];
             if (e.target.checked) {
-              if (!modalAddAsgTargetLevels.includes(lvl)) modalAddAsgTargetLevels.push(lvl);
+              if (!isAll && presentLevels.length === 2 && modalAddAsgTargetLevels.length === 1) modalAddAsgTargetLevels = [lvl];
+              else if (!modalAddAsgTargetLevels.includes(lvl)) modalAddAsgTargetLevels.push(lvl);
             } else {
+              if (modalAddAsgTargetLevels.length === 1) {
+                showToast('Choisissez au moins un niveau ou tout le groupe.');
+                renderModalAddAsgTargetLevels();
+                return;
+              }
               modalAddAsgTargetLevels = modalAddAsgTargetLevels.filter(x => x !== lvl);
-            }
-            if (modalAddAsgTargetLevels.length === 0 || modalAddAsgTargetLevels.length === presentLevels.length) {
-              modalAddAsgTargetLevels = [];
             }
             renderModalAddAsgTargetLevels();
           });
@@ -998,7 +1145,7 @@
       });
 
       applyPrefs();
-      const restoredFromLocal = typeof loadStateFromLocalStorage === 'function' ? loadStateFromLocalStorage() : false;
+      loadStateFromLocalStorage();
       ['input', 'change', 'click', 'drop', 'dragend'].forEach(eventName => {
         document.addEventListener(eventName, scheduleAppStateSave);
       });
@@ -1007,8 +1154,7 @@
       initialEditableSnapshot = getEditableStateSnapshot();
       lastSavedFileSnapshot = getBackupSnapshot();
       updateHistoryButtons();
-      if (!hasActiveGroup() && (!appState.students || appState.students.length === 0)) showWelcome();
-      else hideWelcome();
+      showWelcome();
 
       // Recherche et tri des élèves
       document.getElementById('studentSearch').addEventListener('input', e => {
@@ -1114,6 +1260,14 @@
         prefs[b.parentElement.getAttribute('data-pref')] = b.getAttribute('data-val');
         applyPrefs();
       }));
+      const textSizeSlider = document.getElementById('spTextSize');
+      if (textSizeSlider) {
+        textSizeSlider.addEventListener('input', event => {
+          prefs.textSize = ['xs', 'sm', 'md', 'lg', 'xl'][Number(event.target.value)];
+          applyPrefs();
+          scheduleAppStateSave();
+        });
+      }
       settingsPanel.querySelectorAll('[data-palette-val]').forEach(b => b.addEventListener('click', () => {
         prefs.palette = b.getAttribute('data-palette-val');
         applyPrefs();

@@ -323,7 +323,7 @@
     #competencyPositioning .comp-subtab.is-active { background: var(--brand); border-color: var(--brand); color: #fff; }
     #competencyPositioning .comp-subtab.is-active b { color: #fff; }
     #competencyPositioning .comp-scale { display: flex; flex-direction: column; gap: .75rem; }
-    #competencyPositioning .comp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); gap: .5rem; align-items: start; max-width: 1000px; }
+    #competencyPositioning .comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: .5rem; align-items: start; }
     #competencyPositioning .comp-card { border: 1px solid var(--line); border-radius: 10px; background: #fffefa; padding: .6rem .7rem; }
     #competencyPositioning .comp-card.is-level { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); background: var(--brand-soft); }
     #competencyPositioning .comp-card-head { display: flex; justify-content: space-between; align-items: center; gap: .5rem; margin-bottom: .3rem; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--studio-ink-2, #475569); }

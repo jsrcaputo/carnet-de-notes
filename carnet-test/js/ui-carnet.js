@@ -226,6 +226,8 @@
       const visibleAssignments = (isMulti && activeLvlFilter !== 'ALL')
         ? subData.assignments.filter(a => isAssignmentForLevel(a, activeLvlFilter))
         : subData.assignments;
+      const gradebookTable = scrollContainerEl.querySelector('table');
+      gradebookTable.style.width = `max(100%, ${760 + visibleAssignments.length * 162}px)`;
 
       const hasWorks = subData.assignments.length > 0;
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
@@ -249,6 +251,7 @@
 
       const thStudent = document.createElement('th');
       thStudent.className = 'p-2.5 font-bold min-w-[185px] sticky left-0 bg-slate-900 z-10';
+      thStudent.style.width = '185px';
       const studentHeading = document.createElement('div');
       studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
       const sortBtn = document.createElement('button');
@@ -292,6 +295,7 @@
       visibleAssignments.forEach(asg => {
         const th = document.createElement('th');
         th.className = 'p-2 font-semibold text-center min-w-[162px] border-l border-slate-800';
+        th.style.width = '162px';
         const boxValid = isAssignmentWeightBoxValid(subData, asg);
         const weightBoxClasses = boxValid
           ? 'bg-slate-800 border-slate-700 text-indigo-200 focus-within:ring-1 focus-within:ring-indigo-400'
@@ -348,15 +352,16 @@
       });
 
       const extraHeaders = [
-        { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]' },
-        { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]' },
-        { label: 'Note finale', sub: 'Jugement', minW: 'min-w-[135px]' },
-        { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]' }
+        { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
+        { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
+        { label: 'Note finale', sub: 'Jugement', minW: 'min-w-[135px]', width: 135 },
+        { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]', width: 210 }
       ];
 
       extraHeaders.forEach(eh => {
         const th = document.createElement('th');
         th.className = `p-2 font-semibold text-center border-l border-slate-800 ${eh.minW}`;
+        th.style.width = `${eh.width}px`;
         th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>`;
         headerRow.appendChild(th);
       });
@@ -475,12 +480,15 @@
             lvlLbl.querySelector('input').addEventListener('change', (e) => {
               if (isAll) currentTargets = [];
               if (e.target.checked) {
-                if (!currentTargets.includes(lvl)) currentTargets.push(lvl);
+                if (!isAll && presentLevels.length === 2 && currentTargets.length === 1) currentTargets = [lvl];
+                else if (!currentTargets.includes(lvl)) currentTargets.push(lvl);
               } else {
+                if (currentTargets.length === 1) {
+                  showToast('Choisissez au moins un niveau ou tout le groupe.');
+                  renderCheckboxes();
+                  return;
+                }
                 currentTargets = currentTargets.filter(x => x !== lvl);
-              }
-              if (currentTargets.length === 0 || currentTargets.length === presentLevels.length) {
-                currentTargets = [];
               }
               renderCheckboxes();
             });
@@ -542,6 +550,7 @@
             const id = box.getAttribute('data-weight-box');
             pendingWeightFocusSelector = `[data-weight-input="${id}"]`;
             renderGradebookView();
+            showFirstMultiWeightTip();
           }
         });
       });
@@ -1022,6 +1031,7 @@
       if (scrollContainerEl && savedScrollLeft > 0) {
         scrollContainerEl.scrollLeft = savedScrollLeft;
       }
+      updateGradebookTopScroll();
       if (pendingWeightFocusSelector) {
         const sel = pendingWeightFocusSelector;
         pendingWeightFocusSelector = null;
