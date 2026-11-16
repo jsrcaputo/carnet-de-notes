@@ -1,4 +1,4 @@
-    function exportFormattedExcelWorkbook() {
+    async function exportFormattedExcelWorkbook(encryption = null) {
       if (typeof XLSX === 'undefined') {
         showToast('Bibliothèque Excel non chargée');
         return;
@@ -87,7 +87,7 @@
           let wLabel = `${a.weight || 0}%`;
           if (isMultiLvl) {
             const targetedLvls = presentLevels.filter(lvl => isAssignmentForLevel(a, lvl));
-            const lvlWeights = targetedLvls.map(lvl => ({ lvl, w: getAssignmentWeightForLevel(a, lvl) }));
+            const lvlWeights = targetedLvls.map(lvl => ({ lvl, w: getAssignmentWeightForLevel(a, lvl, sub, termData) }));
             const allSame = lvlWeights.length === presentLevels.length && lvlWeights.every(item => item.w === lvlWeights[0].w);
             if (!allSame && lvlWeights.length) {
               wLabel = lvlWeights.map(item => `${formatShortLevelTag(item.lvl)}:${item.w}%`).join(' / ');
@@ -162,7 +162,7 @@
         [`JOURNAL DES TRACES OBSERVABLES — ÉTAPE ${termId}`],
         ['Traces observables enregistrées au carnet'],
         [],
-        ['Date', 'Élève', 'Matière / Compétence', 'Trace observable', 'Cote', 'Pourcentage', 'Indicateurs rapides', 'Commentaire / Verbatim']
+        ['Date', 'Élève', 'Matière / Compétence', 'Trace observable', 'Cote', 'Pourcentage', 'Indicateurs rapides', 'Forces', 'Défis', 'Commentaire / Verbatim']
       ];
       termData.observations.forEach(o => {
         const stu = appState.students.find(s => s.id === o.studentId);
@@ -176,14 +176,16 @@
           o.gradeCode,
           gObj ? gObj.pct : '',
           (o.tags || []).join(', '),
+          o.strengths || '',
+          o.challenges || '',
           o.comment || ''
         ]);
       });
       const wsObs = XLSX.utils.aoa_to_sheet(obsRows);
       wsObs['!cols'] = [
-        { wch: 14 }, { wch: 16 }, { wch: 32 }, { wch: 24 }, { wch: 10 }, { wch: 12 }, { wch: 28 }, { wch: 45 }
+        { wch: 14 }, { wch: 16 }, { wch: 32 }, { wch: 24 }, { wch: 10 }, { wch: 12 }, { wch: 28 }, { wch: 35 }, { wch: 35 }, { wch: 45 }
       ];
-      styleSheetHelper(wsObs, obsRows.length, 8, titleStyle, headerStyle, cellBorder, 3);
+      styleSheetHelper(wsObs, obsRows.length, 10, titleStyle, headerStyle, cellBorder, 3);
       XLSX.utils.book_append_sheet(wb, wsObs, 'Traces_Visuelles');
 
       const competencyTabs = getCompetencyTabs();
@@ -280,7 +282,7 @@
               if (notEval) scoreCell = '-';
               else if (isSpecial) scoreCell = valUpper;
               else if (hasNum) scoreCell = num;
-              const effectiveWeight = getAssignmentWeightForStudent(a, st);
+              const effectiveWeight = getAssignmentWeightForLevel(a, st.gradeLevel, sub, td);
 
               dataRows.push([
                 ...base, a.title, a.isObservation ? 'Trace observable' : 'Évaluation',
@@ -350,8 +352,79 @@
         ws['!freeze'] = { xSplit: 1, ySplit: 4 };
       });
 
-      XLSX.writeFile(wb, `Carnet_de_notes_2026_2027_Etape_${termId}.xlsx`);
-      showToast(`Export Excel (Étape ${termId}) téléchargé!`);
+      if (encryption) {
+        const bytes = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const workbook = await XlsxPopulate.fromDataAsync(bytes);
+        const encrypted = await workbook.outputAsync({ password: encryption });
+        downloadBlob(encrypted, `Carnet_de_notes_chiffre_Etape_${termId}.xlsx`);
+        showToast('Excel chiffré téléchargé. Ouvrez-le directement dans Excel avec votre phrase secrète.');
+      } else {
+        XLSX.writeFile(wb, `Carnet_de_notes_2026_2027_Etape_${termId}.xlsx`);
+        showToast(`Export Excel (Étape ${termId}) téléchargé!`);
+      }
+    }
+
+    let encryptedExcelLibraryPromise = null;
+
+    function loadEncryptedExcelLibrary() {
+      if (typeof XlsxPopulate !== 'undefined') return Promise.resolve();
+      if (!encryptedExcelLibraryPromise) {
+        encryptedExcelLibraryPromise = new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/xlsx-populate@1.21.0/browser/xlsx-populate.min.js';
+          script.integrity = 'sha384-YnsK3VaaV54M5EcU58Pt9SdJqzL0iZpQzQAcav+18Kgn5tbwk16y/3g6FpT2d83h';
+          script.crossOrigin = 'anonymous';
+          script.onload = () => {
+            if (typeof XlsxPopulate === 'undefined') {
+              script.remove();
+              reject(new Error('La bibliothèque Excel chiffré est invalide.'));
+            } else resolve();
+          };
+          script.onerror = () => {
+            script.remove();
+            reject(new Error('Impossible de charger la bibliothèque Excel chiffré. Vérifiez la connexion Internet.'));
+          };
+          document.head.appendChild(script);
+        }).catch(error => {
+          encryptedExcelLibraryPromise = null;
+          throw error;
+        });
+      }
+      return encryptedExcelLibraryPromise;
+    }
+
+    async function exportEncryptedExcel() {
+      const button = document.getElementById('btnExportEncryptedExcel');
+      button.disabled = true;
+      try {
+        if (typeof XLSX === 'undefined') throw new Error('Bibliothèque Excel non chargée.');
+        if (!window.crypto || !window.crypto.subtle) throw new Error('Le chiffrement nécessite un contexte sécurisé (HTTPS ou fichier local).');
+        await loadEncryptedExcelLibrary();
+        const password = await requestBackupPassword(true, '', true);
+        if (password === null) return;
+        showToast('Création de l’Excel chiffré en cours…');
+        await new Promise(resolve => setTimeout(resolve, 30));
+        await exportFormattedExcelWorkbook(password);
+      } catch (error) {
+        console.error('Échec de l’export Excel chiffré.', error);
+        showToast(error instanceof Error ? error.message : 'Impossible de créer l’export Excel chiffré.');
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    async function openEncryptedExcel(file) {
+      try {
+        const decrypted = await decryptBackup(await file.text(), ENCRYPTED_EXCEL_FORMAT);
+        if (!decrypted) return;
+        const bytes = backupBase64ToBytes(decrypted.text);
+        if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('Le classeur déchiffré est invalide.');
+        downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Carnet_Excel_dechiffre.xlsx');
+        showToast('Classeur déchiffré téléchargé : ce fichier Excel n’est pas protégé par mot de passe.');
+      } catch (error) {
+        console.error('Impossible d’ouvrir l’export Excel chiffré.', error);
+        showToast(error instanceof SyntaxError ? 'Ce fichier chiffré est invalide.' : (error instanceof Error ? error.message : 'Impossible d’ouvrir l’export Excel chiffré.'));
+      }
     }
 
     function styleSheetHelper(ws, maxRow, maxCol, titleStyle, headerStyle, cellBorder, headerRowIndexZeroBased) {

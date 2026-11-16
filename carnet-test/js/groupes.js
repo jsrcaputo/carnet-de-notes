@@ -6,6 +6,8 @@
           overrideCode: null,
           tags: [],
           comment: '',
+          strengths: '',
+          challenges: '',
           gradeLevel: st.gradeLevel || '',
           notEvaluated: false
         };

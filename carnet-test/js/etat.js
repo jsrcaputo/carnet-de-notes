@@ -214,6 +214,8 @@
             draft.overrideCode = draft.overrideCode || null;
             draft.tags = Array.isArray(draft.tags) ? draft.tags : [];
             draft.comment = typeof draft.comment === 'string' ? draft.comment : '';
+            draft.strengths = typeof draft.strengths === 'string' ? draft.strengths : '';
+            draft.challenges = typeof draft.challenges === 'string' ? draft.challenges : '';
             draft.notEvaluated = draft.notEvaluated === true;
             draft.gradeLevel = GRADE_LEVEL_LABELS[String(draft.gradeLevel)]
               ? String(draft.gradeLevel)
@@ -266,7 +268,9 @@
               checked: [],
               overrideCode: null,
               tags: [],
-              comment: ''
+              comment: '',
+              strengths: '',
+              challenges: ''
             };
           }
           if (!td.subjectData[sub.id].studentRecords[st.id].scoreMeta) {
@@ -301,6 +305,8 @@
               overrideCode: meta.overrideCode || null,
               tags: Array.isArray(meta.tags) ? meta.tags.slice() : [],
               comment: meta.comment || '',
+              strengths: typeof meta.strengths === 'string' ? meta.strengths : '',
+              challenges: typeof meta.challenges === 'string' ? meta.challenges : '',
               gradeLevel: meta.gradeLevel || st.gradeLevel || '',
               notEvaluated: meta.notEvaluated === true
             };
@@ -438,12 +444,11 @@
       return targets.map(formatShortLevelTag).join('/');
     }
 
-    function getAssignmentWeightForLevel(asg, level) {
+    function getAssignmentWeightForLevel(asg, level, subject = SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId), termData) {
       if (!asg) return 100;
       let sourceAsg = asg;
-      const activeSub = SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId);
-      if (asg.linkId && asg.linkOrigin === false && activeSub && activeSub.singleResult) {
-        const origin = getLinkedAssignments(asg).find(l => l.asg.linkOrigin !== false);
+      if (asg.linkId && asg.linkOrigin === false && subject && subject.singleResult) {
+        const origin = getLinkedAssignments(asg, termData).find(l => l.asg.linkOrigin !== false);
         if (origin && origin.asg) sourceAsg = origin.asg;
       }
       const lvl = String(level || '');
@@ -972,7 +977,7 @@
     }
 
     function getBackupSnapshot() {
-      return JSON.stringify({ carnet: getEditableStateSnapshot(), displayPreferences: prefs });
+      return JSON.stringify({ carnet: getEditableStateSnapshot(), annualWeightMode: appState.annualWeightMode, displayPreferences: prefs, customWeightedPresets: loadAllCustomWeightedPresets() });
     }
 
     function readDisplayPreferences(value) {

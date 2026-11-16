@@ -847,6 +847,8 @@
           overrideCode: null,
           tags: [],
           comment: '',
+          strengths: '',
+          challenges: '',
           notEvaluated: true
         };
         notifyUpdate('Élève remis à N/A (« - ») pour cette trace');
@@ -865,14 +867,28 @@
         }
       });
 
-      document.getElementById('qoCommentInput').addEventListener('input', (e) => {
-        const termData = getActiveTermData();
-        const draft = termData.subjectData[appState.activeSubjectId].currentObsSession.studentDrafts[appState.selectedStudentId];
-        if (draft) {
-          draft.comment = e.target.value;
-          if (e.target.value.trim()) draft.notEvaluated = false;
-          renderQuickObsView();
-        }
+      [['qoCommentInput', 'comment'], ['qoStrengthsInput', 'strengths'], ['qoChallengesInput', 'challenges']].forEach(([id, field]) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+          const termData = getActiveTermData();
+          const draft = termData.subjectData[appState.activeSubjectId].currentObsSession.studentDrafts[appState.selectedStudentId];
+          if (draft) {
+            draft[field] = e.target.value;
+            if (e.target.value.trim()) draft.notEvaluated = false;
+            renderQuickObsView();
+          }
+        });
+      });
+      document.querySelectorAll('[data-obs-suggestion]').forEach(button => {
+        button.addEventListener('click', () => {
+          const input = document.getElementById(button.dataset.obsSuggestion);
+          if (input.disabled) return;
+          const suggestion = button.textContent.trim();
+          if (!input.value.split('\n').some(line => line.trim() === suggestion)) {
+            input.value = input.value.trim() ? `${input.value.trimEnd()}\n${suggestion}` : suggestion;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+          input.focus();
+        });
       });
 
       // Commit Visual Trace Session to Gradebook (Top & Bottom buttons)
@@ -1052,7 +1068,9 @@
                 checked: [],
                 overrideCode: null,
                 tags: [],
-                comment: ''
+                comment: '',
+                strengths: '',
+                challenges: ''
               };
             }
           });
@@ -1079,9 +1097,9 @@
       });
 
       // Excel Export
-      document.getElementById('btnExportExcel').addEventListener('click', () => {
+      document.getElementById('btnExportExcel').addEventListener('click', async () => {
         try {
-          exportFormattedExcelWorkbook();
+          await exportFormattedExcelWorkbook();
         } catch (error) {
           console.error('Échec de la création du classeur Excel.', error);
           showToast('Impossible de créer le fichier Excel. Réessayez ou utilisez la sauvegarde JSON.');
@@ -1112,7 +1130,15 @@
         backupLoadDialog.close();
         chooseBackupFile();
       });
-      document.getElementById('btnDownloadJSON').addEventListener('click', downloadBackup);
+      document.getElementById('btnDownloadJSON').addEventListener('click', () => downloadBackup());
+      document.getElementById('btnDownloadEncryptedJSON').addEventListener('click', downloadEncryptedBackup);
+      document.getElementById('btnExportEncryptedExcel').addEventListener('click', exportEncryptedExcel);
+      document.getElementById('btnOpenEncryptedExcel').addEventListener('click', () => document.getElementById('inputEncryptedExcel').click());
+      document.getElementById('inputEncryptedExcel').addEventListener('change', async event => {
+        const file = event.target.files && event.target.files[0];
+        event.target.value = '';
+        if (file) await openEncryptedExcel(file);
+      });
       document.getElementById('btnUnlinkJSON').addEventListener('click', async () => {
         if (fileOperation || !activeFileHandle) return;
         fileOperation = true;
@@ -1123,7 +1149,9 @@
         fileWriteBlocked = false;
         fileOperation = false;
         setFileSyncStatus('unlinked', 'Aucun fichier lié');
-        showToast('Fichier délié. Les modifications ne seront plus enregistrées automatiquement.');
+        showToast(activeBackupEncryption
+          ? 'Fichier délié. Les prochaines copies restent chiffrées avec la même phrase secrète.'
+          : 'Fichier délié. Les modifications ne seront plus enregistrées automatiquement.');
       });
 
       document.getElementById('inputImportJSON').addEventListener('change', async (e) => {

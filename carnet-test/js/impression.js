@@ -135,6 +135,12 @@
             if (meta && Array.isArray(meta.tags)) {
               meta.tags.forEach(tg => { tagFrequency[tg] = (tagFrequency[tg] || 0) + 1; });
             }
+            if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
+            }
+            if (meta && typeof meta.challenges === 'string' && meta.challenges.trim()) {
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
+            }
             if (meta && meta.comment && meta.comment.trim()) {
               recordedComments.push({
                 term: tKey,
@@ -144,7 +150,9 @@
               });
             }
 
-            const hasNotEval = Boolean((meta && meta.notEvaluated) || upper === '-');
+            const hasTraceFeedback = Boolean(asg.isObservation && meta &&
+              (hasObservationFeedback(meta) || (Array.isArray(meta.checked) && meta.checked.length)));
+            const hasNotEval = Boolean((meta && meta.notEvaluated) || (upper === '-' && !hasTraceFeedback));
             if (!raw && !hasNotEval) return;
 
             const w = getAssignmentWeightForLevel(asg, effLevel);
@@ -166,9 +174,13 @@
               resultDisplay = 'Exempté (-)';
               statusClass = 'sis-badge-na';
             } else if (asg.isObservation) {
-              const num = Number(raw);
-              const code = (meta && meta.code) ? meta.code : (Number.isFinite(num) ? pctToClosestGradeCode(num) : '');
-              resultDisplay = Number.isFinite(num) ? `${code} (${Math.round(num)} %)` : raw;
+              if (upper === '-' && hasTraceFeedback) {
+                resultDisplay = 'En cours / rétroaction';
+              } else {
+                const num = Number(raw);
+                const code = (meta && meta.code) ? meta.code : (Number.isFinite(num) ? pctToClosestGradeCode(num) : '');
+                resultDisplay = Number.isFinite(num) ? `${code} (${Math.round(num)} %)` : raw;
+              }
             } else {
               const outOf = getAssignmentOutOf(asg);
               const num = Number(raw.replace(',', '.'));
@@ -245,6 +257,8 @@
       const overallAnnualAvg = populatedSubjects.length > 0
         ? Math.round(populatedSubjects.reduce((total, row) => total + row.annualAvg, 0) / populatedSubjects.length)
         : null;
+      const overallProvisional = populatedSubjects.length < subjectRows.length ||
+        populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
       const adaptationsList = Array.isArray(st.adaptations) ? st.adaptations.filter(Boolean) : [];
       const flagsEntries = Object.entries(flagFrequency).sort((a, b) => b[1] - a[1]);
@@ -278,7 +292,7 @@
                   <td class="sis-num">${fmtCell(r.t1)}</td>
                   <td class="sis-num">${fmtCell(r.t2)}</td>
                   <td class="sis-num">${fmtCell(r.t3)}</td>
-                  <td class="sis-num sis-annual">${fmtCell(r.annualAvg)}</td>
+                  <td class="sis-num sis-annual">${fmtCell(r.annualAvg)}${getAnnualResultInfo(r.t1, r.t2, r.t3).provisional ? `<br><small>Provisoire · ${getAnnualResultInfo(r.t1, r.t2, r.t3).weight} % des poids prévus</small>` : ''}</td>
                   <td class="sis-num">${escapeHtml(deltaStr)}</td>
                 </tr>`;
             }).join('')}
@@ -364,17 +378,18 @@
               <span><strong>Date :</strong> ${escapeHtml(todayStr)}</span>
             </div>
           </div>
-          <div class="sis-overall-box">
-            <div class="sis-overall-label">Moyenne générale</div>
+          ${st.gradeLevel === 'P' ? '' : `<div class="sis-overall-box">
+            <div class="sis-overall-label">Moyenne indicative${overallProvisional ? ' · provisoire' : ''}</div>
             <div class="sis-overall-val">${overallAnnualAvg !== null ? `${overallAnnualAvg} % (${escapeHtml(pctToClosestGradeCode(overallAnnualAvg))})` : '—'}</div>
-          </div>
+          </div>`}
         </header>
         ${supportsHtml}
         ${pendingHtml}
-        <div class="sis-section-title">Portrait des résultats par matière</div>
-        ${summaryTableHtml}
+        ${st.gradeLevel === 'P'
+          ? `<div class="sis-section-title">Portrait qualitatif</div><p>Observations consignées à interpréter selon le jugement professionnel; ce portrait ne constitue pas un bulletin officiel.</p>${st.reportComment ? `<p>${escapeHtml(st.reportComment)}</p>` : ''}${commentsHtml}`
+          : `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}`}
         ${detailsHtml}
-        ${commentsHtml}
+        ${st.gradeLevel === 'P' ? '' : commentsHtml}
       `;
 
       document.body.classList.add('print-student-sheet');

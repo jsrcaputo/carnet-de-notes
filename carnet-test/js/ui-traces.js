@@ -600,7 +600,7 @@
         const r = computeObservableResult(d.checked, d.overrideCode, studentCriteria, d.notEvaluated, buildStudentObsOptions(session, sub, stuLvl));
         if (r.hasFinalGrade || r.isNotEvaluated) evaluatedCount++;
         else if (r.hasData) partialCount++;
-        else if (r.hasEvidence) feedbackCount++;
+        else if (r.hasEvidence || hasObservationFeedback(d)) feedbackCount++;
       });
       const counterEl = document.getElementById('qoEvaluatedCounter');
       if (counterEl) {
@@ -630,7 +630,7 @@
             ? `<span class="px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getBadgeColorClasses(stuRes.code)}">${stuRes.code} (${stuRes.pct}%)${d.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement">*</span>' : ''}</span>`
             : stuRes.hasData
               ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-900 font-bold">${stuRes.total}/${getScoredObservableCriteria(studentCriteria).length}</span>`
-            : stuRes.hasEvidence
+            : stuRes.hasEvidence || hasObservationFeedback(d)
               ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-indigo-100 text-indigo-800 font-bold">Obs.</span>`
               : `<span class="px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-500 font-bold">-</span>`
           }
@@ -644,6 +644,7 @@
 
       const liveBadgeEmpty = document.getElementById('qoSideLiveBadge');
       const resetOverrideBtnEmpty = document.getElementById('btnQoResetOverride');
+      document.querySelectorAll('[data-obs-suggestion]').forEach(button => { button.disabled = !st; });
       if (liveBadgeEmpty) {
         liveBadgeEmpty.classList.add('hidden');
         liveBadgeEmpty.textContent = '';
@@ -654,8 +655,6 @@
         document.getElementById('sgMajorityExplanation').textContent = 'Sélectionner un nom ci-dessus pour remplir la grille d’évaluation.';
         document.getElementById('sgMatrixBody').innerHTML =
           '<tr><td colspan="6" class="p-6 text-center text-sm font-semibold text-slate-600 bg-slate-50">Sélectionner un nom ci-dessus pour afficher et remplir la grille d’évaluation de l’élève.</td></tr>';
-        document.getElementById('qoGradePills').innerHTML =
-          '<div class="col-span-full text-xs text-slate-500 py-1">Sélectionner un nom pour ajuster la note.</div>';
         const selCountElEmpty = document.getElementById('qoSelectedTagsCount');
         if (selCountElEmpty) selCountElEmpty.textContent = '0 sélectionné(s)';
         const catTabsEmpty = document.getElementById('qoCategoryTabs');
@@ -668,12 +667,11 @@
           activeStripEmpty.classList.add('hidden');
           activeStripEmpty.classList.remove('flex');
         }
-        const commInputEmpty = document.getElementById('qoCommentInput');
-        if (commInputEmpty) {
-          commInputEmpty.value = '';
-          commInputEmpty.disabled = true;
-          commInputEmpty.placeholder = 'Sélectionner un nom pour noter vos observations...';
-        }
+        ['qoCommentInput', 'qoStrengthsInput', 'qoChallengesInput'].forEach(id => {
+          const input = document.getElementById(id);
+          input.value = '';
+          input.disabled = true;
+        });
         return;
       }
 
@@ -711,10 +709,10 @@
       }
 
       if (res.isNotEvaluated) {
-        expEl.textContent = 'N/A — élève non évalué pour cette trace. Vous pouvez encore sélectionner des critères ou une cote.';
+        expEl.textContent = 'N/A — élève non évalué pour cette trace. Vous pouvez encore sélectionner des critères.';
       } else if (res.hasData) {
-        const weightedSummaryHtml = (effectiveObsMode === 'weighted' && res.isWeighted)
-          ? `<span class="mr-1.5 text-indigo-300">Score analytique : <strong>${res.earnedPointsTotal} / ${res.totalWeightSum} pts</strong> (${res.rawWeightedPct} %) ·</span>`
+        const weightedSummaryHtml = (effectiveObsMode === 'weighted' && res.isWeighted && res.rawWeightedPct !== null)
+          ? `<span class="mr-1.5 text-indigo-300">Score analytique${res.isComplete ? '' : ' provisoire'} : <strong>${formatScoreNumber(res.earnedPointsTotal)} / ${formatScoreNumber(res.evaluatedWeightSum)} pts</strong> (${res.rawWeightedPct} % des critères cotés) ·</span>`
           : '';
         expEl.innerHTML = `
           ${weightedSummaryHtml}<strong>${res.total} / ${scoredCriteriaCount} critère(s) coté(s)</strong>
@@ -746,8 +744,6 @@
         tr.appendChild(td);
         tbody.appendChild(tr);
       }
-
-      const familyPointRatios = { A: 1.0, B: 0.8, C: 0.6, D: 0.4, E: 0.2 };
 
       criteria.forEach(crit => {
         const tr = document.createElement('tr');
@@ -796,7 +792,7 @@
           td.className = 'p-1.5 border border-slate-200 space-y-1';
           const statements = crit.cells[fam] || [];
           const cellPts = (critWeight !== null && critWeight > 0)
-            ? Math.round(critWeight * familyPointRatios[fam] * 10) / 10
+            ? Math.round(critWeight * OBSERVATION_FAMILY_PERCENTAGES[fam]) / 100
             : null;
           statements.forEach((stmtText, idx) => {
             const key = `${crit.id}_${fam}_${idx}`;
@@ -844,41 +840,7 @@
         tbody.appendChild(tr);
       });
 
-      // 4. Cote de la trace observable (Matrice hiérarchique 3×4 A+..D- et rangée E)
-      const gradePills = document.getElementById('qoGradePills');
-      gradePills.innerHTML = '';
-      GRADE_SCALE.forEach(g => {
-        const isSel = res.isOverride && res.code === g.code;
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.disabled = !scoredCriteriaCount;
-        btn.className = isSel
-          ? 'qo-grade-btn grade-pill-compact grade-pill-selected cursor-pointer'
-          : `qo-grade-btn grade-pill-compact font-bold border cursor-pointer ${getBadgeColorClasses(g.code)} ${scoredCriteriaCount ? '' : 'opacity-50 cursor-not-allowed'}`;
-        if (g.code === 'E') {
-          btn.classList.add('qo-grade-e');
-          btn.innerHTML = `<span>E · ${g.pct} %</span><span class="text-[9px] font-medium opacity-85">Sous le seuil</span>`;
-        } else {
-          btn.innerHTML = `<span class="text-[11px] font-extrabold leading-none">${g.code}</span><span class="text-[9px] font-semibold opacity-80 leading-none mt-0.5">${g.pct}%</span>`;
-        }
-        if (res.isOverride && !isSel) btn.classList.add('grade-pill-dim');
-        btn.title = scoredCriteriaCount
-          ? `${g.code} (${g.pct}%) — ajuster la note`
-          : CYCLE_RUBRIC_UNAVAILABLE_MESSAGES[sub.id] || 'Aucun critère coté n’est disponible pour ce niveau.';
-        btn.addEventListener('click', () => {
-          if (!scoredCriteriaCount) return;
-          draft.notEvaluated = false;
-          if (draft.overrideCode === g.code) {
-            draft.overrideCode = null;
-          } else {
-            draft.overrideCode = g.code;
-          }
-          renderQuickObsView();
-        });
-        gradePills.appendChild(btn);
-      });
-
-      // 5. Categorized PIA Quick Tags for current student
+      // Categorized quick tags for current student
       const categories = appState.tagCategories || PIA_TAG_CATEGORIES;
       if (!appState.activeTagCategoryId) appState.activeTagCategoryId = categories[0].id;
       const activeCat = categories.find(c => c.id === appState.activeTagCategoryId) || categories[0];
@@ -951,16 +913,18 @@
         }
       }
 
-      // 6. Comment textarea for current student
-      const commInput = document.getElementById('qoCommentInput');
-      if (commInput) {
-        commInput.disabled = false;
-        commInput.placeholder = 'Notez vos observations pour cet élève...';
-        if (document.activeElement !== commInput) {
-          commInput.value = draft.comment || '';
-        }
-      }
+      [['qoCommentInput', 'comment'], ['qoStrengthsInput', 'strengths'], ['qoChallengesInput', 'challenges']].forEach(([id, field]) => {
+        const input = document.getElementById(id);
+        input.disabled = false;
+        if (document.activeElement !== input) input.value = draft[field] || '';
+      });
 
+    }
+
+    function hasObservationFeedback(draft) {
+      const hasText = value => typeof value === 'string' && value.trim();
+      return Boolean(hasText(draft.comment) || hasText(draft.strengths) ||
+        hasText(draft.challenges) || (Array.isArray(draft.tags) && draft.tags.length));
     }
 
     function commitObservationSessionToGradebook() {
@@ -988,11 +952,11 @@
         const stuLvl = getObservationDraftGradeLevel(d, st, session);
         const criteria = getObservationCriteria(sub, stuLvl, session);
         const r = computeObservableResult(d.checked, d.overrideCode, criteria, d.notEvaluated, buildStudentObsOptions(session, sub, stuLvl));
-        if (r.hasEvidence || d.comment.trim() || d.tags.length) draftsWithData++;
+        if (r.hasEvidence || hasObservationFeedback(d)) draftsWithData++;
       });
 
       if (draftsWithData === 0) {
-        showToast('Ajoutez au moins un critère, une cote, une note ou un indicateur.');
+        showToast('Ajoutez au moins un critère ou une observation.');
         return;
       }
 
@@ -1066,9 +1030,9 @@
         const r = computeObservableResult(d.checked, d.overrideCode, criteria, d.notEvaluated, buildStudentObsOptions(session, sub, gradeLevel));
 
         if (rec.scoreMeta[targetAsgId] && rec.scoreMeta[targetAsgId].linkedCopy &&
-            !r.hasEvidence && !d.comment.trim() && !d.tags.length && !d.notEvaluated) return;
+            !r.hasEvidence && !hasObservationFeedback(d) && !d.notEvaluated) return;
 
-        if (r.hasEvidence || d.comment.trim() || d.tags.length) {
+        if (r.hasEvidence || hasObservationFeedback(d)) {
           rec.scores[targetAsgId] = r.hasFinalGrade ? r.pct : '-';
           rec.scoreMeta[targetAsgId] = {
             checked: d.checked.slice(),
@@ -1077,6 +1041,8 @@
             pct: r.hasFinalGrade ? r.pct : null,
             tags: d.tags.slice(),
             comment: d.comment,
+            strengths: d.strengths || '',
+            challenges: d.challenges || '',
             gradeLevel,
             isComplete: r.isComplete,
             notEvaluated: r.isNotEvaluated,
@@ -1095,7 +1061,9 @@
             activity: actTitle,
             gradeCode: r.isNotEvaluated ? 'N/A' : r.hasFinalGrade ? r.code : r.hasData ? 'En cours' : 'Rétroaction',
             tags: d.tags.slice(),
-            comment: d.comment
+            comment: d.comment,
+            strengths: d.strengths || '',
+            challenges: d.challenges || ''
           });
         } else {
           rec.scores[targetAsgId] = '-'; // Dash for non-evaluated students (never 0!)
@@ -1150,7 +1118,8 @@
             if (srcMeta && srcMeta.linkedCopy) return;
             if (dstMeta && !dstMeta.linkedCopy &&
                 ((Array.isArray(dstMeta.checked) && dstMeta.checked.length) || dstMeta.overrideCode ||
-                 dstMeta.comment || (Array.isArray(dstMeta.tags) && dstMeta.tags.length) || dstMeta.notEvaluated)) return;
+                 dstMeta.comment || dstMeta.strengths || dstMeta.challenges ||
+                 (Array.isArray(dstMeta.tags) && dstMeta.tags.length) || dstMeta.notEvaluated)) return;
             if ((!dstMeta || !dstMeta.linkedCopy) && dstScore !== undefined && dstScore !== '' && dstScore !== '-') return;
             const dstFlags = getCellFlags(dst, other.id);
             dst.scores[other.id] = src.scores[targetAsgId];

@@ -1,3 +1,5 @@
+    const OBSERVATION_FAMILY_PERCENTAGES = { A: 95, B: 80, C: 65, D: 50, E: 40 };
+
     function computeMajorityFromChecked(checkedKeys, overrideCode, requiredCriteriaCount) {
       const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
       let total = 0;
@@ -39,7 +41,7 @@
         };
       }
 
-      const familyWeights = { A: 95, B: 80, C: 65, D: 50, E: 40 };
+      const familyWeights = OBSERVATION_FAMILY_PERCENTAGES;
       let maxCount = -1;
       let topFamilies = [];
       ['A', 'B', 'C', 'D', 'E'].forEach(f => {
@@ -120,8 +122,7 @@
       });
 
       const requiredCriteriaCount = scoredCriteria ? scoredCriteria.length : 0;
-      const familyWeights = { A: 95, B: 80, C: 65, D: 50, E: 40 };
-      const familyRatios = { A: 1.0, B: 0.8, C: 0.6, D: 0.4, E: 0.2 };
+      const familyWeights = OBSERVATION_FAMILY_PERCENTAGES;
       const earnedPointsMap = {};
       let weightedPctSum = 0;
       let evaluatedWeightSum = 0;
@@ -136,12 +137,12 @@
         if (fam && familyWeights[fam] !== undefined) {
           weightedPctSum += familyWeights[fam] * safeW;
           evaluatedWeightSum += safeW;
-          const pts = Math.round(safeW * familyRatios[fam] * 10) / 10;
-          earnedPointsMap[crit.id] = pts;
+          const pts = safeW * familyWeights[fam] / 100;
+          earnedPointsMap[crit.id] = Math.round(pts * 100) / 100;
           earnedPointsTotal += pts;
         }
       });
-      earnedPointsTotal = Math.round(earnedPointsTotal * 10) / 10;
+      earnedPointsTotal = Math.round(earnedPointsTotal * 100) / 100;
       totalWeightSum = Math.round(totalWeightSum * 10) / 10;
 
       if (overrideCode && GRADE_MAP[overrideCode]) {
@@ -160,7 +161,8 @@
           earnedPointsMap,
           earnedPointsTotal,
           totalWeightSum,
-          rawWeightedPct: g.pct
+          evaluatedWeightSum,
+          rawWeightedPct: evaluatedWeightSum > 0 ? Math.round(weightedPctSum / evaluatedWeightSum) : null
         };
       }
 
@@ -179,6 +181,7 @@
           earnedPointsMap,
           earnedPointsTotal: 0,
           totalWeightSum,
+          evaluatedWeightSum,
           rawWeightedPct: null
         };
       }
@@ -201,6 +204,7 @@
         earnedPointsMap,
         earnedPointsTotal,
         totalWeightSum,
+        evaluatedWeightSum,
         rawWeightedPct: Math.round(avgPct)
       };
     }
@@ -258,6 +262,7 @@
     function computeStudentSubjectSummary(termId, subjectId, studentId) {
       const termData = appState.terms[termId];
       const subData = termData.subjectData[subjectId];
+      const subject = ALL_SUBJECTS_CONFIG.find(s => s.id === subjectId);
       const rec = subData.studentRecords[studentId];
       const stObj = (appState.students || []).find(s => s.id === studentId) || null;
       const stuLvl = stObj && stObj.gradeLevel ? String(stObj.gradeLevel) : '';
@@ -265,24 +270,31 @@
       // 1. Weighted average of /100 assignments & visual traces (filtered by student grade level in multi-level groups)
       let weightedSum = 0;
       let totalWeightUsed = 0;
+      const weightDetails = [];
       subData.assignments.forEach(asg => {
         if (stObj && !isAssignmentForStudent(asg, stObj)) {
           return; // Skip evaluations targeted at another grade level!
         }
         const rawVal = rec.scores[asg.id];
         const valUpper = String(rawVal ?? '').trim().toUpperCase();
+        const wRaw = getAssignmentWeightForLevel(asg, stuLvl, subject, termData);
+        const w = (!isNaN(Number(wRaw)) && Number(wRaw) > 0) ? Number(wRaw) : 0;
+        const detail = { title: asg.title, weight: w, status: '' };
+        weightDetails.push(detail);
         if (rawVal === undefined || rawVal === null || rawVal === '' ||
             valUpper === '-' || valUpper === 'N/A' || valUpper === 'NR' ||
             valUpper === 'JUST' || valUpper === 'JUS' || valUpper === 'REP') {
+          detail.status = ({ '-': 'non évalué', 'N/A': 'non évalué', NR: 'non remis', JUST: 'justifié', JUS: 'justifié', REP: 'en reprise' })[valUpper] || 'sans note';
           return; // Exclu du calcul : non remis, justifié, en reprise ou non évalué
         }
         const numVal = Number(String(rawVal).replace(',', '.'));
-        const wRaw = getAssignmentWeightForLevel(asg, stuLvl);
-        const w = (!isNaN(Number(wRaw)) && Number(wRaw) > 0) ? Number(wRaw) : 0;
         const outOf = getAssignmentOutOf(asg);
         if (Number.isFinite(numVal) && numVal >= 0 && numVal <= outOf && w > 0) {
           weightedSum += (numVal / outOf * 100) * w;
           totalWeightUsed += w;
+          detail.status = 'utilisé';
+        } else {
+          detail.status = w <= 0 ? 'poids nul' : 'note invalide';
         }
       });
       const assignmentsAvg = totalWeightUsed > 0
@@ -308,6 +320,8 @@
 
       return {
         assignmentsAvg,
+        totalWeightUsed,
+        weightDetails,
         baremeRes,
         autoCombinedPct,
         finalPct,
@@ -334,7 +348,7 @@
               valUpper === '-' || valUpper === 'N/A' || valUpper === 'NR' ||
               valUpper === 'JUST' || valUpper === 'JUS' || valUpper === 'REP') return;
           const v = Number(String(raw).replace(',', '.'));
-          const w = Number(getAssignmentWeightForLevel(asg, stuLvl));
+          const w = Number(getAssignmentWeightForLevel(asg, stuLvl, sub, appState.terms[termId]));
           const outOf = getAssignmentOutOf(asg);
           if (!Number.isFinite(v) || v < 0 || v > outOf || !(w > 0)) return;
           if (asg.linkId) {
@@ -375,9 +389,9 @@
       return !asg || asg.isObservation || !Number.isFinite(n) || n <= 0 ? 100 : n;
     }
 
-    function getLinkedAssignments(asg) {
+    function getLinkedAssignments(asg, termData) {
       if (!asg || !asg.linkId) return [];
-      const termData = getActiveTermData();
+      termData = termData || getActiveTermData();
       const found = [];
       ALL_SUBJECTS_CONFIG.forEach(s => {
         const sd = termData.subjectData[s.id];
@@ -446,6 +460,14 @@
       const wSum = entries.reduce((acc, item) => acc + item.w, 0);
       const weighted = entries.reduce((acc, item) => acc + Number(item.val) * item.w, 0);
       return wSum > 0 ? Math.round(weighted / wSum) : null;
+    }
+
+    function getAnnualResultInfo(t1, t2, t3) {
+      const values = [t1, t2, t3];
+      const available = values.map((value, i) => value !== null && value !== undefined && Number.isFinite(Number(value)) ? i + 1 : null).filter(Boolean);
+      const missing = [1, 2, 3].filter(term => !available.includes(term));
+      const weight = available.reduce((sum, term) => sum + OFFICIAL_TERM_WEIGHTS[String(term)], 0);
+      return { available, missing, weight, provisional: available.length > 0 && missing.length > 0 };
     }
 
     function formatScoreNumber(n) {

@@ -1,3 +1,16 @@
+    function renderAssignmentAverage(summary) {
+      const value = summary.assignmentsAvg !== null ? `${summary.assignmentsAvg} %` : '—';
+      if (!summary.weightDetails.length) return value;
+      return `${value}
+        <details class="gb-weight-details">
+          <summary>Poids utilisé : ${formatScoreNumber(summary.totalWeightUsed)} %</summary>
+          <div class="gb-weight-explanation">
+            <p>Poids prévu pour chaque évaluation applicable; seuls les résultats valides avec un poids positif sont utilisés. La moyenne est recalculée sur ces poids, sans transformer les statuts en zéro.</p>
+            <ul>${summary.weightDetails.map(item => `<li>${escapeHtml(item.title)} : ${formatScoreNumber(item.weight)} % — ${escapeHtml(item.status)}</li>`).join('')}</ul>
+          </div>
+        </details>`;
+    }
+
     function renderAll() {
       renderTermSwitcher();
       renderSubjectTabs();
@@ -193,6 +206,7 @@
       const subjectTitle = `${sub.fullName} (Étape ${appState.activeTerm})`;
       document.getElementById('gbSubjectTitle').textContent = subjectTitle;
       document.getElementById('gbSubjectTitle').title = subjectTitle;
+      document.getElementById('gbSubjectIcon').innerHTML = subjectIcons[sub.group || (sub.id === 'ccq_global' ? 'ccq' : 'maths')] || '';
       const subjectAtmosphere = document.getElementById('gbSubjectAtmosphere');
       const heroImageUrl = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
       if (subjectAtmosphere && heroImageUrl) subjectAtmosphere.src = heroImageUrl;
@@ -227,7 +241,7 @@
         ? subData.assignments.filter(a => isAssignmentForLevel(a, activeLvlFilter))
         : subData.assignments;
       const gradebookTable = scrollContainerEl.querySelector('table');
-      gradebookTable.style.width = `max(100%, ${760 + visibleAssignments.length * 162}px)`;
+      gradebookTable.style.width = `${760 + visibleAssignments.length * 162}px`;
 
       const hasWorks = subData.assignments.length > 0;
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
@@ -354,7 +368,7 @@
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
-        { label: 'Note finale', sub: 'Jugement', minW: 'min-w-[135px]', width: 135 },
+        { label: 'Note finale', sub: 'Jugement', hint: 'Cliquer sur la note pour l’ajuster', minW: 'min-w-[135px]', width: 135 },
         { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]', width: 210 }
       ];
 
@@ -362,7 +376,7 @@
         const th = document.createElement('th');
         th.className = `p-2 font-semibold text-center border-l border-slate-800 ${eh.minW}`;
         th.style.width = `${eh.width}px`;
-        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>`;
+        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>${eh.hint ? `<div class="text-[10px] text-slate-400 font-normal italic leading-tight mt-1">${eh.hint}</div>` : ''}`;
         headerRow.appendChild(th);
       });
 
@@ -760,8 +774,10 @@
             const traceObsRes = meta ? computeObservableResult(meta.checked, meta.overrideCode, traceCriteria, meta.notEvaluated, traceObsOptions) : null;
             const scoredTraceCriteriaCount = getScoredObservableCriteria(traceCriteria).length;
             const hasPartialTrace = !hasScore && !isStatusNR && !isStatusJUST && !isStatusREP && traceObsRes && traceObsRes.hasData;
-            const hasNotEvaluatedTrace = Boolean((meta && meta.notEvaluated) || upperRaw === '-');
-            const hasFormativeOnlyTrace = !hasScore && !hasPartialTrace && !hasNotEvaluatedTrace && !isStatusNR && !isStatusJUST && !isStatusREP && traceObsRes && traceObsRes.hasEvidence;
+            const hasNotEvaluatedTrace = Boolean((meta && meta.notEvaluated) ||
+              (upperRaw === '-' && !(traceObsRes && (traceObsRes.hasEvidence || hasObservationFeedback(meta)))));
+            const hasFormativeOnlyTrace = !hasScore && !hasPartialTrace && !hasNotEvaluatedTrace && !isStatusNR && !isStatusJUST && !isStatusREP &&
+              traceObsRes && (traceObsRes.hasEvidence || hasObservationFeedback(meta));
             const codeStr = (meta && meta.code) ? meta.code : (hasScore ? pctToClosestGradeCode(scoreNumber) : '-');
             const badgeStyle = isStatusNR
               ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
@@ -930,7 +946,7 @@
         const tdAvg = document.createElement('td');
         tdAvg.className = 'p-2 text-center font-bold text-slate-800 border-r border-slate-100 whitespace-nowrap';
         tdAvg.id = `cell_avg_${st.id}`;
-        tdAvg.textContent = summary.assignmentsAvg !== null ? `${summary.assignmentsAvg} %` : '—';
+        tdAvg.innerHTML = renderAssignmentAverage(summary);
         tr.appendChild(tdAvg);
 
         // 4. Barème button
@@ -1492,7 +1508,7 @@
         }
         const avgCell = document.getElementById(`cell_avg_${st.id}`);
         if (avgCell) {
-          avgCell.textContent = summary.assignmentsAvg !== null ? `${summary.assignmentsAvg} %` : '—';
+          avgCell.innerHTML = renderAssignmentAverage(summary);
         }
         const finalBadge = document.getElementById(`cell_final_badge_${st.id}`);
         if (finalBadge) {

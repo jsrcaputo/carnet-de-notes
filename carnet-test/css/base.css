@@ -10,7 +10,7 @@
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       background-color: #f8fafc;
       color: #0f172a;
-      overflow-x: hidden;
+      overflow-x: clip;
       width: 100%;
       margin: 0;
       padding: 0;

@@ -3,7 +3,7 @@
         id: 'art_dram_c1c2',
         group: 'art_dram',
         groupLabel: 'Art dramatique',
-        partLabel: 'Inventer et interpréter (C1 – C2)',
+        partLabel: 'Inventer / interpréter (C1-C2)',
         shortName: 'Art Dram. • Inventer/Interpréter',
         fullName: 'Art dramatique — C1/C2 : Inventer et interpréter des séquences dramatiques',
         imageUrl: 'https://images.unsplash.com/photo-1503095396549-807759245b35?auto=format&fit=crop&w=960&q=70',

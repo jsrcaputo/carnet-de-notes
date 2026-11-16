@@ -96,6 +96,12 @@
                 if (VALID_CELL_FLAG_CODES.has(fl)) {
                   flagFrequency[fl] = (flagFrequency[fl] || 0) + 1;
                 }
+                if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
+                  recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
+                }
+                if (meta && typeof meta.challenges === 'string' && meta.challenges.trim()) {
+                  recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
+                }
               });
             }
             if (meta && meta.comment && meta.comment.trim()) {
@@ -172,6 +178,8 @@
       const overallAnnualAvg = populatedSubjects.length > 0
         ? Math.round(populatedSubjects.reduce((total, row) => total + row.annualAvg, 0) / populatedSubjects.length)
         : null;
+      const overallProvisional = populatedSubjects.length < subjectRows.length ||
+        populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
       // Sort tags by frequency
       const sortedTags = Object.entries(tagFrequency).sort((a, b) => b[1] - a[1]);
@@ -400,6 +408,7 @@
 
       const chartBarsHtml = subjectRows.map(r => {
         const pct = r.annualAvg !== null ? r.annualAvg : 0;
+        const info = getAnnualResultInfo(r.t1, r.t2, r.t3);
         const modTag = r.isModified
           ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>`
           : '';
@@ -407,7 +416,7 @@
           <div class="space-y-1">
             <div class="flex items-center justify-between text-xs gap-2">
               <span class="font-semibold text-slate-700 truncate flex items-center">${r.sub.shortName}${modTag}</span>
-              <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})` : '—'}</span>
+              <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})${info.provisional ? ' · provisoire' : ''}` : '—'}</span>
             </div>
             <div class="bar-track-wrap">
               <div class="bar-fill-inner" style="width: ${pct}%;"></div>
@@ -420,6 +429,13 @@
       const weightModeLabel = weightMode === 'official'
         ? 'Pondéré MEQ (20 % / 20 % / 60 %)'
         : 'Moyenne simple des étapes';
+      const preschoolNotesHtml = SUBJECTS_CONFIG.map(sub => {
+        const comments = recordedComments.filter(item => item.subject === sub.shortName);
+        return `<div class="space-y-1">
+          <h5 class="text-xs font-bold text-slate-800">${escapeHtml(sub.shortName)}</h5>
+          ${comments.length ? comments.map(item => `<p class="text-xs text-slate-700"><strong>Étape ${escapeHtml(item.term)} · ${escapeHtml(item.context)} :</strong> ${escapeHtml(item.text)}</p>`).join('') : '<p class="text-xs text-slate-500">Aucune observation écrite consignée.</p>'}
+        </div>`;
+      }).join('');
 
       const adaptSummary = getStudentAdaptationSummary(st);
       const adaptationsHtml = (() => {
@@ -470,11 +486,11 @@
           <!-- Résultats par matière -->
           <div class="lg:col-span-6 bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
-              <h4 class="text-sm font-bold text-slate-900">Résultats annuels par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
-              <span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>
+              <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Observations par compétence' : 'Résultats annuels par matière'}</h4>
+              ${st.gradeLevel === 'P' ? '' : '<span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>'}
             </div>
             <div class="space-y-2.5">
-              ${chartBarsHtml}
+              ${st.gradeLevel === 'P' ? `<p class="text-xs text-slate-600">Portrait à partir des observations écrites; il ne constitue pas un bulletin officiel. Complétez-le selon votre jugement professionnel.</p>${preschoolNotesHtml}` : `${chartBarsHtml}<p class="text-xs text-slate-500">Un résultat provisoire utilise uniquement les étapes disponibles; leurs poids sont réajustés proportionnellement.</p>`}
             </div>
           </div>
 
@@ -505,11 +521,13 @@
         </div>
 
         <!-- Tableau récapitulatif des étapes -->
+        ${st.gradeLevel === 'P' ? '<details class="bg-white rounded-xl border border-slate-200"><summary class="p-4 text-sm font-bold cursor-pointer">Voir les résultats numériques conservés</summary><p class="px-4 pb-3 text-xs text-slate-600">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="gr-results-heading px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <h4 class="text-sm font-bold text-slate-900">Résultats des trois étapes par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
-            <span class="gr-weight-label">${weightModeLabel}</span>
+            <span class="gr-weight-label">${st.gradeLevel === 'P' ? 'Calcul local indicatif (20 % / 20 % / 60 %)' : weightModeLabel}</span>
           </div>
+          <p class="px-4 py-2 text-xs text-slate-600">Provisoire : une ou plusieurs étapes manquent. La moyenne est calculée sur les poids disponibles, réajustés proportionnellement; elle n’est pas un résultat annuel complet.</p>
           <div class="gr-results-scroll">
           <table class="w-full table-fixed text-left border-collapse text-xs">
             <thead>
@@ -534,7 +552,7 @@
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t3 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t3))}">${pctToClosestGradeCode(r.t3)} (${r.t3}%)</span>` : '—'}</td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">
                     ${r.annualAvg !== null
-                      ? `<span class="px-2 py-0.5 rounded border font-extrabold ${getBadgeColorClasses(r.annualCode)}">${r.annualCode} (${r.annualAvg}%)</span>`
+                      ? `<span class="px-2 py-0.5 rounded border font-extrabold ${getBadgeColorClasses(r.annualCode)}">${r.annualCode} (${r.annualAvg}%)</span>${getAnnualResultInfo(r.t1, r.t2, r.t3).provisional ? `<span class="block mt-1 text-[10px] font-semibold text-slate-600">Provisoire · ${getAnnualResultInfo(r.t1, r.t2, r.t3).weight} % des poids prévus</span>` : ''}`
                       : '—'}
                   </td>
                   <td class="p-2.5 text-center border-l border-slate-100">
@@ -546,13 +564,14 @@
             <tfoot>
               <tr class="gr-average-row">
                 <th scope="row">Moyenne indicative</th>
-                ${[avgT1, avgT2, avgT3, overallAnnualAvg].map(value => `<td>${value !== null ? `${value}%` : '—'}</td>`).join('')}
+                ${[avgT1, avgT2, avgT3, overallAnnualAvg].map((value, i) => `<td>${value !== null ? `${value}%${i === 3 && overallProvisional ? ' · provisoire' : ''}` : '—'}</td>`).join('')}
                 <td>—</td>
               </tr>
             </tfoot>
           </table>
           </div>
         </div>
+        ${st.gradeLevel === 'P' ? '</details>' : ''}
 
         ${competencyModuleHtml}
       `;

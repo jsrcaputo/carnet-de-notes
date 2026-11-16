@@ -13,11 +13,23 @@ Pour utiliser le carnet, ouvrir `index.html` avec son dossier `carnet-test` et `
 
 Dans un navigateur compatible avec l'accès aux fichiers, **Sauvegarder** permet de choisir un fichier JSON. Les modifications suivantes y sont enregistrées automatiquement après un court délai. Après **Charger**, il peut être nécessaire de cliquer sur **Sauvegarder** pour autoriser l'écriture. La liaison ne survit pas à la fermeture ou au rechargement de la page : il faut rouvrir le fichier.
 
-Le navigateur conserve aussi automatiquement une copie locale du carnet pour le restaurer à la prochaine ouverture. Cette copie et les fichiers JSON ne sont pas chiffrés par l'application; utilisez des données fictives jusqu'à ce que l'utilisation de données réelles ait été approuvée par votre organisation. La copie du navigateur ne remplace pas une sauvegarde indépendante.
+Le navigateur conserve aussi automatiquement une copie locale du carnet pour le restaurer à la prochaine ouverture. Cette copie n'est pas chiffrée par l'application; utilisez des données fictives jusqu'à ce que l'utilisation de données réelles ait été approuvée par votre organisation. La copie du navigateur ne remplace pas une sauvegarde indépendante.
+
+**Options → Télécharger une copie chiffrée** crée un JSON protégé par une phrase secrète (AES-GCM et PBKDF2). Gardez cette phrase séparément : il n'existe aucun moyen de récupérer le fichier si elle est perdue. Pour l'ouvrir sur un autre ordinateur, utilisez le site et **Charger**, puis entrez la même phrase. Après le chargement d'un fichier chiffré, les sauvegardes suivantes restent chiffrées avec la même phrase pendant la session, même après déliaison. À la réouverture de la page, il faut le charger de nouveau : la copie restaurée du navigateur n'est pas chiffrée. Créer une copie chiffrée ne chiffre pas un fichier déjà lié en clair ni les autres copies ordinaires. Le chiffrement exige HTTPS ou l'ouverture locale du site dans un navigateur compatible.
+
+L'export Excel ordinaire n'est pas chiffré. **Options → Exporter un Excel chiffré** télécharge un fichier `.xlsx` protégé par une phrase secrète, à saisir directement dans Excel. Une connexion Internet est nécessaire pour charger la bibliothèque de chiffrement. Une phrase perdue rend le fichier irrécupérable; protégez aussi toute copie non chiffrée. L'option **Récupérer un ancien export (.json)** ne sert qu'aux enveloppes créées par l'ancienne version et télécharge un classeur non chiffré. Aucun export Excel ne permet de recharger un carnet dans l'application.
+
+La sauvegarde comprend les groupes, les élèves, les données des trois étapes, les brouillons de traces (y compris les forces et défis), les préférences d'affichage et les pondérations personnalisées. Les anciens fichiers sans pondérations personnalisées conservent celles déjà présentes dans le navigateur ; l'historique d'annulation et les éléments temporaires de navigation ne sont pas sauvegardés.
 
 L'état de la liaison apparaît en haut de la page. Si le fichier est modifié ailleurs, ou si une écriture échoue, l'enregistrement automatique s'arrête et un message est affiché. Utiliser **Options → Télécharger une copie JSON** pour préserver le travail, puis délier ou recharger le fichier. Conserver des copies de sauvegarde indépendantes ; la détection d'une modification externe n'est pas un verrou entre applications.
 
 Si l'accès direct aux fichiers n'est pas disponible, **Sauvegarder** télécharge une copie JSON : les changements ultérieurs ne sont pas enregistrés dans cette copie. L'export Excel dépend encore d'une bibliothèque chargée sur Internet ; l'ouverture locale n'implique donc pas un fonctionnement entièrement hors ligne.
+
+## Résultats et pondérations
+
+Dans le carnet, le détail « Poids utilisé » indique les évaluations applicables, leur poids prévu et celles exclues. Les notes manquantes, non évaluées, non remises, justifiées ou en reprise ne valent pas zéro : la moyenne utilise seulement les poids des résultats disponibles.
+
+Le résultat annuel est provisoire tant qu'une étape manque. Il est alors recalculé sur les poids disponibles, proportionnellement; la moyenne générale reste indicative et provisoire si des matières ou des étapes manquent. Au préscolaire, le portrait met les observations écrites en avant. Les résultats numériques historiques restent accessibles séparément : leur calcul local ne constitue pas un bulletin officiel ni une méthode ministérielle pour le préscolaire.
 
 ## Carte de l'application
 

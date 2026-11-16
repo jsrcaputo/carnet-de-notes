@@ -5,7 +5,146 @@
     let fileWriteBlocked = false;
     let fileOperation = false;
     let pendingImportSnapshot = null;
+    let activeBackupEncryption = null;
+    let localBackupRestoreFailed = false;
+    let localBackupFailureReported = false;
     const LOCAL_STORAGE_KEY = 'carnet_notes_autosave_2026_v1';
+    const ENCRYPTED_BACKUP_FORMAT = 'carnet-notes-chiffre';
+    const ENCRYPTED_EXCEL_FORMAT = 'carnet-excel-chiffre';
+    const BACKUP_KEY_ITERATIONS = 600000;
+
+    function backupBytesToBase64(bytes) {
+      let text = '';
+      for (let i = 0; i < bytes.length; i += 0x8000) {
+        text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+      }
+      return btoa(text);
+    }
+
+    function backupBase64ToBytes(value) {
+      if (typeof value !== 'string' || value.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(value)) {
+        throw new Error('La sauvegarde chiffrée est invalide.');
+      }
+      try {
+        const binary = atob(value);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes;
+      } catch (error) {
+        if (error.name !== 'InvalidCharacterError') throw error;
+        throw new Error('La sauvegarde chiffrée est invalide.');
+      }
+    }
+
+    async function deriveBackupKey(password, salt) {
+      if (!window.crypto || !window.crypto.subtle) throw new Error('Le chiffrement nécessite un contexte sécurisé (HTTPS ou fichier local).');
+      const material = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+      return crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: BACKUP_KEY_ITERATIONS, hash: 'SHA-256' },
+        material, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+      );
+    }
+
+    async function encryptBackup(text, encryption, format = ENCRYPTED_BACKUP_FORMAT) {
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+      const ciphertext = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, encryption.key, new TextEncoder().encode(text));
+      return JSON.stringify({
+        format, version: 1,
+        salt: backupBytesToBase64(encryption.salt), iv: backupBytesToBase64(iv),
+        ciphertext: backupBytesToBase64(new Uint8Array(ciphertext))
+      }, null, 2);
+    }
+
+    function requestBackupPassword(creating, errorMessage = '', isExcel = false) {
+      const dialog = document.getElementById('backupPasswordDialog');
+      const form = document.getElementById('backupPasswordForm');
+      const password = document.getElementById('backupPassword');
+      const confirmation = document.getElementById('backupPasswordConfirm');
+      const error = document.getElementById('backupPasswordError');
+      document.getElementById('backupPasswordTitle').textContent = isExcel
+        ? (creating ? 'Protéger l’export Excel' : 'Ouvrir l’export Excel chiffré')
+        : (creating ? 'Protéger la sauvegarde' : 'Ouvrir la sauvegarde chiffrée');
+      document.getElementById('backupPasswordHelp').textContent = creating
+        ? (isExcel
+          ? 'Choisissez une phrase secrète de 12 à 255 caractères. Vous la saisirez directement dans Excel. Si vous la perdez, le fichier sera irrécupérable.'
+          : 'Choisissez une phrase secrète de 12 caractères ou plus. Si vous la perdez, le fichier sera irrécupérable. Cette copie ne chiffre ni le fichier déjà lié ni la copie du navigateur.')
+        : 'Entrez la phrase secrète utilisée pour protéger ce fichier.';
+      document.getElementById('backupPasswordConfirmRow').hidden = !creating;
+      password.value = '';
+      confirmation.value = '';
+      error.textContent = errorMessage;
+      return new Promise(resolve => {
+        const finish = value => {
+          form.removeEventListener('submit', submit);
+          dialog.removeEventListener('cancel', cancel);
+          document.getElementById('btnCancelBackupPassword').removeEventListener('click', cancel);
+          password.value = '';
+          confirmation.value = '';
+          dialog.close();
+          resolve(value);
+        };
+        const submit = event => {
+          event.preventDefault();
+          if (creating && password.value.length < 12) {
+            error.textContent = 'Utilisez au moins 12 caractères.';
+            return;
+          }
+          if (creating && isExcel && password.value.length > 255) {
+            error.textContent = 'Utilisez au plus 255 caractères pour Excel.';
+            return;
+          }
+          if (creating && password.value !== confirmation.value) {
+            error.textContent = 'Les deux phrases secrètes ne correspondent pas.';
+            return;
+          }
+          finish(password.value);
+        };
+        const cancel = event => { event.preventDefault(); finish(null); };
+        form.addEventListener('submit', submit);
+        dialog.addEventListener('cancel', cancel);
+        document.getElementById('btnCancelBackupPassword').addEventListener('click', cancel);
+        dialog.showModal();
+        password.focus();
+      });
+    }
+
+    async function decryptBackup(text, expectedFormat = ENCRYPTED_BACKUP_FORMAT) {
+      const envelope = JSON.parse(text);
+      if (!envelope || envelope.format !== expectedFormat) {
+        if (expectedFormat === ENCRYPTED_EXCEL_FORMAT) throw new Error('Ce fichier n’est pas un export Excel chiffré du carnet.');
+        if (envelope && envelope.format === ENCRYPTED_EXCEL_FORMAT) throw new Error('Pour cet ancien export, utilisez « Récupérer un ancien export » dans les options.');
+        return { text, encryption: null };
+      }
+      if (envelope.version !== 1) throw new Error('Cette version de sauvegarde chiffrée n’est pas prise en charge.');
+      const salt = backupBase64ToBytes(envelope.salt);
+      const iv = backupBase64ToBytes(envelope.iv);
+      const ciphertext = backupBase64ToBytes(envelope.ciphertext);
+      if (salt.length !== 16 || iv.length !== 12 || ciphertext.length < 16) throw new Error('La sauvegarde chiffrée est invalide.');
+      let message = '';
+      while (true) {
+        const password = await requestBackupPassword(false, message, expectedFormat === ENCRYPTED_EXCEL_FORMAT);
+        if (password === null) return null;
+        const key = await deriveBackupKey(password, salt);
+        try {
+          const clear = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ciphertext);
+          return { text: new TextDecoder('utf-8', { fatal: true }).decode(clear), encryption: { key, salt } };
+        } catch (error) {
+          if (error.name !== 'OperationError') throw error;
+          message = 'Phrase secrète incorrecte ou fichier endommagé.';
+        }
+      }
+    }
+
+    function downloadBlob(data, filename) {
+      const url = URL.createObjectURL(data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
 
     function setFileSyncStatus(status, message) {
       const unlink = document.getElementById('btnUnlinkJSON');
@@ -13,6 +152,12 @@
         unlink.disabled = !activeFileHandle;
         unlink.textContent = activeFileHandle ? 'Délier le fichier' : 'Aucun fichier lié';
       }
+      const download = document.getElementById('btnDownloadJSON');
+      if (download) download.textContent = activeBackupEncryption ? 'Télécharger une copie JSON chiffrée' : 'Télécharger une copie JSON';
+      const notice = document.getElementById('backupEncryptionNotice');
+      if (notice) notice.textContent = activeBackupEncryption
+        ? `Ce carnet utilise une phrase secrète : ses copies JSON restent chiffrées avec la même phrase${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. La copie automatique du navigateur n’est pas chiffrée.`
+        : 'La copie automatique du navigateur n’est pas chiffrée. Utilisez « Télécharger une copie chiffrée » pour protéger un fichier JSON.';
       const indicator = document.getElementById('fileSyncStatus');
       if (!indicator) return;
       indicator.dataset.status = status;
@@ -21,10 +166,11 @@
     }
 
     function serializeBackup() {
-      return JSON.stringify({ ...appState, displayPreferences: { ...prefs } }, null, 2);
+      return JSON.stringify({ ...appState, displayPreferences: { ...prefs }, customWeightedPresets: loadAllCustomWeightedPresets() }, null, 2);
     }
 
     function saveStateToLocalStorage() {
+      if (localBackupRestoreFailed) return;
       try {
         if (typeof isPristineInitialGroup === 'function' && isPristineInitialGroup()) {
           window.localStorage.removeItem(LOCAL_STORAGE_KEY);
@@ -32,11 +178,17 @@
         }
         const payload = serializeBackup();
         window.localStorage.setItem(LOCAL_STORAGE_KEY, payload);
+        localBackupFailureReported = false;
         if (!activeFileHandle) {
           setFileSyncStatus('saved', 'Sauvegarde auto (navigateur)');
         }
       } catch (e) {
         console.warn('Persistance locale indisponible :', e);
+        if (!localBackupFailureReported) {
+          localBackupFailureReported = true;
+          setFileSyncStatus('error', 'Copie navigateur indisponible');
+          showToast('La sauvegarde dans le navigateur a échoué. Vérifiez le fichier lié ou téléchargez une copie JSON.');
+        }
       }
     }
 
@@ -44,7 +196,8 @@
       try {
         const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
         if (!raw) return false;
-        const { importedState, importedPrefs } = parseBackup(raw);
+        const { importedState, importedPrefs, importedPresets } = parseBackup(raw);
+        restoreCustomWeightedPresets(importedPresets);
         appState = importedState;
         applyActiveSubjects(appState);
         Object.assign(prefs, importedPrefs);
@@ -54,7 +207,9 @@
         return true;
       } catch (e) {
         console.warn('Impossible de restaurer la sauvegarde locale :', e);
-        try { window.localStorage.removeItem(LOCAL_STORAGE_KEY); } catch (_) {}
+        localBackupRestoreFailed = true;
+        setFileSyncStatus('error', 'Restauration locale impossible : chargez une sauvegarde');
+        showToast('Restauration locale impossible. Chargez une sauvegarde JSON; la copie du navigateur a été conservée.');
         return false;
       }
     }
@@ -63,6 +218,8 @@
       try { window.localStorage.removeItem(LOCAL_STORAGE_KEY); } catch (_) {}
       activeFileHandle = null;
       activeFileWritable = false;
+      activeBackupEncryption = null;
+      localBackupRestoreFailed = false;
       linkedFileText = null;
       fileWriteBlocked = false;
       appState = createInitialState();
@@ -81,23 +238,32 @@
       showToast('Carnet réinitialisé à neuf.');
     }
 
-    function downloadBackup() {
+    async function downloadBackup(encryption = activeBackupEncryption) {
       try {
         const snapshot = getBackupSnapshot();
-        const data = new Blob([serializeBackup()], { type: 'application/json;charset=utf-8' });
-        const url = URL.createObjectURL(data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}.json`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        const cleartext = serializeBackup();
+        const payload = encryption ? await encryptBackup(cleartext, encryption) : cleartext;
+        const data = new Blob([payload], { type: 'application/json;charset=utf-8' });
+        downloadBlob(data, `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}.json`);
         if (!activeFileHandle) lastSavedFileSnapshot = snapshot;
-        showToast('Copie JSON téléchargée. Elle ne se met pas à jour automatiquement.');
+        showToast(`Copie JSON${encryption ? ' chiffrée' : ''} téléchargée. Elle ne se met pas à jour automatiquement.`);
       } catch (error) {
         console.error('Échec de la création de la sauvegarde JSON.', error);
         showToast('Impossible de créer la copie JSON.');
+      }
+    }
+
+    async function downloadEncryptedBackup() {
+      try {
+        if (!window.crypto || !window.crypto.subtle) throw new Error('Le chiffrement nécessite un contexte sécurisé (HTTPS ou fichier local).');
+        const password = await requestBackupPassword(true);
+        if (password === null) return;
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const key = await deriveBackupKey(password, salt);
+        await downloadBackup({ key, salt });
+      } catch (error) {
+        console.error('Impossible de chiffrer la sauvegarde.', error);
+        showToast(error instanceof Error ? error.message : 'Impossible de chiffrer la sauvegarde.');
       }
     }
 
@@ -111,9 +277,10 @@
                (first || getBackupSnapshot() !== lastSavedFileSnapshot)) {
           first = false;
           const snapshot = getBackupSnapshot();
-          const payload = serializeBackup();
+          const cleartext = serializeBackup();
           setFileSyncStatus('saving', 'Enregistrement en cours…');
           try {
+            const payload = activeBackupEncryption ? await encryptBackup(cleartext, activeBackupEncryption) : cleartext;
             const currentText = await (await handle.getFile()).text();
             if (currentText !== linkedFileText) {
               fileWriteBlocked = true;
@@ -139,7 +306,7 @@
             return false;
           }
         }
-        if (handle === activeFileHandle) setFileSyncStatus('saved', `Fichier lié : ${handle.name}`);
+        if (handle === activeFileHandle) setFileSyncStatus('saved', `Fichier lié${activeBackupEncryption ? ' chiffré' : ''} : ${handle.name}`);
         return true;
       })().finally(() => { activeFileWrite = null; });
       return activeFileWrite;
@@ -169,7 +336,7 @@
         return;
       }
       if (typeof window.showSaveFilePicker !== 'function') {
-        downloadBackup();
+        await downloadBackup();
         return;
       }
       fileOperation = true;
@@ -202,22 +369,43 @@
     function parseBackup(text) {
       const fileData = JSON.parse(text);
       const importedPrefs = readDisplayPreferences(fileData && fileData.displayPreferences);
-      if (fileData && typeof fileData === 'object') delete fileData.displayPreferences;
+      const importedPresets = fileData && fileData.customWeightedPresets;
+      if (importedPresets !== undefined && (!importedPresets || typeof importedPresets !== 'object' || Array.isArray(importedPresets) ||
+          Object.values(importedPresets).some(weights => !weights || typeof weights !== 'object' || Array.isArray(weights) ||
+            Object.values(weights).some(weight => typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0)))) {
+        throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+      }
+      if (fileData && typeof fileData === 'object') {
+        delete fileData.displayPreferences;
+        delete fileData.customWeightedPresets;
+      }
       const previousSubjects = SUBJECTS_CONFIG.slice();
       try {
         const importedState = normalizeImportedState(fileData);
         importedState.groups.forEach(updateExampleGroupName);
-        return { importedState, importedPrefs };
+        return { importedState, importedPrefs, importedPresets };
       } finally {
         SUBJECTS_CONFIG.length = 0;
         SUBJECTS_CONFIG.push(...previousSubjects);
       }
     }
 
+    function restoreCustomWeightedPresets(presets) {
+      if (presets === undefined) return;
+      try {
+        window.localStorage.setItem(CUSTOM_RUBRICS_STORAGE_KEY, JSON.stringify(presets));
+      } catch (error) {
+        console.error('Impossible de restaurer les pondérations personnalisées.', error);
+        throw new Error('Impossible de restaurer les pondérations personnalisées dans ce navigateur.');
+      }
+    }
+
     async function loadBackupFile(file, handle, expectedSnapshot, writable = false) {
       try {
         const text = await file.text();
-        const { importedState, importedPrefs } = parseBackup(text);
+        const decrypted = await decryptBackup(text);
+        if (!decrypted) return false;
+        const { importedState, importedPrefs, importedPresets } = parseBackup(decrypted.text);
         if (activeFileWrite) await activeFileWrite;
         if (activeFileHandle && getBackupSnapshot() !== lastSavedFileSnapshot) {
           if (fileWriteBlocked || !activeFileWritable) {
@@ -237,6 +425,7 @@
           clearTimeout(autosaveTimer);
           autosaveTimer = null;
         }
+        restoreCustomWeightedPresets(importedPresets);
         appState = importedState;
         applyActiveSubjects(appState);
         gbFilter = '';
@@ -251,10 +440,12 @@
         recordHistory();
         activeFileHandle = handle;
         activeFileWritable = !!handle && writable;
+        activeBackupEncryption = decrypted.encryption;
+        localBackupRestoreFailed = false;
         linkedFileText = handle ? text : null;
         fileWriteBlocked = false;
         lastSavedFileSnapshot = getBackupSnapshot();
-        setFileSyncStatus(handle ? (writable ? 'saved' : 'pending') : 'unlinked', handle ? (writable ? `Fichier lié : ${handle.name}` : 'Lecture seule : cliquez sur Sauvegarder') : 'Aucun fichier lié');
+        setFileSyncStatus(handle ? (writable ? 'saved' : 'pending') : 'unlinked', handle ? (writable ? `Fichier lié${activeBackupEncryption ? ' chiffré' : ''} : ${handle.name}` : 'Lecture seule : cliquez sur Sauvegarder') : 'Aucun fichier lié');
         notifyUpdate(handle ? (writable ? 'Fichier chargé et lié pour la sauvegarde automatique.' : 'Fichier chargé. Cliquez sur Sauvegarder pour autoriser l’écriture.') : 'Fichier chargé. Sauvegardez une copie après vos modifications.');
         return true;
       } catch (error) {

@@ -460,7 +460,7 @@
       html.design-studio #subjectTabsContainer > button[aria-expanded="true"]:not([aria-pressed="true"]) { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
       html.design-studio .test-sidebar button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
       #headerStudentCount { margin-left: auto; background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
-      .test-sidebar .subject-icon { flex: 0 0 1rem; width: 1rem; height: 1rem; }
+      .test-sidebar .subject-icon { flex: 0 0 1rem; width: 1rem; height: 1rem; color: var(--brand); }
       .test-sidebar #subjectTabsContainer { display: flex !important; flex-direction: column; align-items: stretch !important; gap: .2rem !important; }
       .test-subject-empty { width: 100%; padding: .25rem .55rem; color: #94a3b8; font-size: .81rem; font-weight: 400; text-align: center; }
       .test-subject-empty.hidden, .test-sidebar-nav.is-unavailable { display: none; }
@@ -497,6 +497,7 @@
         text-align: left;
       }
       html.design-studio .test-sidebar #subjectSubTabsContainer > button::before { content: ""; flex: 0 0 .25rem; width: .25rem; height: .25rem; border-radius: 50%; background: currentColor; opacity: .5; }
+      html.design-studio .test-sidebar #subjectSubTabsContainer > button[data-subject-id="art_dram_c1c2"] { white-space: nowrap; font-size: .76rem !important; }
       html.design-studio .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"]::before { opacity: 1; }
       html.design-studio .test-sidebar #subjectSubTabsContainer > button:hover { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
       html.design-studio .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"] { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: transparent !important; font-weight: 800; }
@@ -554,7 +555,7 @@
         border: 1px solid var(--studio-border-strong) !important;
         box-shadow: none !important;
       }
-      .file-sync-status { color: var(--studio-text-muted); font-size: .68rem; font-weight: 600; }
+      .file-sync-status { max-width: 150px; color: var(--studio-text-muted); font-size: .68rem; font-weight: 600; line-height: 1.25; overflow-wrap: anywhere; }
       .file-sync-status[data-status="error"] { color: #b91c1c; }
       html.design-studio.theme-dark .file-sync-status[data-status="error"] { color: #f2b8b5; }
       .backup-dialog { width: min(520px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem); max-height: calc(100dvh - 2rem); overflow-y: auto; padding: 1.3rem; border: 1px solid var(--studio-border); border-radius: 16px; background: var(--studio-surface); color: var(--studio-text); box-shadow: 0 16px 48px rgba(15, 23, 42, .25); font-size: .9rem; line-height: 1.55; }
@@ -580,7 +581,8 @@
       html.design-studio #modalUnsavedObservation #btnLeaveObservation { background: var(--brand) !important; color: #fff !important; border-color: var(--brand) !important; }
       html.design-studio #modalUnsavedObservation #btnLeaveObservation:hover { background: var(--brand-deep) !important; }
       html.design-studio #modalUnsavedObservation button:focus-visible { outline: 2px solid var(--brand) !important; outline-offset: 2px; }
-      html.design-studio .test-topbar :is(button, label):hover:not(:disabled) { border-color: var(--brand) !important; }
+      html.design-studio .test-topbar :is(button, label, a):hover:not(:disabled) { border-color: var(--brand) !important; }
+      .feedback-link { display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; text-decoration: none; }
       html.design-studio .test-topbar #btnExportExcel svg { color: var(--brand); }
       html.design-studio .test-topbar .test-old-subject-bar { display: none; }
       html.design-studio main.site-layout {
@@ -726,7 +728,8 @@
       html.design-studio #competencyPositioning :is(.comp-sentence:hover, .comp-sentence.is-sibling, .comp-meter-cell.in-range, .comp-meq-btn:hover) { background: var(--brand-soft); color: var(--brand-deep); }
       html.design-studio #competencyPositioning .comp-sentence.is-picked { background: var(--brand-soft); color: var(--brand-deep); box-shadow: inset 0 -2px 0 var(--brand); }
       html.design-studio #gradebookScrollContainer { border-radius: 12px !important; }
-      html.design-studio #gradebookScrollContainer table { table-layout: fixed; min-width: 100%; }
+      html.design-studio #gradebookScrollContainer table { table-layout: fixed; }
+      .gb-subject-icon { width: 1.25rem; height: 1.25rem; flex: none; color: var(--brand); }
       html.design-studio #gradebookScrollContainer .weight-input { width: 2.5rem; }
       html.design-studio #gradebookScrollContainer .weight-tools { flex-wrap: wrap; justify-content: center; }
       .gradebook-top-scroll { display: none; overflow-x: auto; overflow-y: hidden; height: 14px; background: var(--studio-surface-soft); border-bottom: 1px solid var(--studio-border); }
@@ -908,6 +911,7 @@
       html.design-studio.theme-dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #8b9bb3; border-color: #292a2d; }
       html.design-studio.theme-dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: var(--brand); }
       html.design-studio #viewQuickObs .rubric-matrix-table { min-width: 720px; }
+      html.design-studio #viewQuickObs:not(.hidden) { grid-template-columns: minmax(0, 1fr); }
       html.design-studio #viewQuickObs .rubric-matrix-table th,
       html.design-studio #viewQuickObs .rubric-matrix-table td { padding: 0.28rem; }
       html.design-studio #viewQuickObs .rubric-stmt-btn { padding: 0.35rem 0.4rem; font-size: 11px; line-height: 1.35; }
@@ -918,35 +922,16 @@
       html.design-studio #qoModeSegment button[aria-pressed="true"],
       html.design-studio #qoWeightPresetBar button[aria-pressed="true"],
       html.design-studio #qoQuickTags button.bg-indigo-600 { background: var(--brand) !important; border-color: var(--brand) !important; color: #ffffff !important; }
-      html.design-studio #qoSidePanel .qo-grade-matrix {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.28rem;
-        width: 100%;
-      }
-      html.design-studio #qoSidePanel .qo-grade-btn {
-        min-height: 32px;
-        padding: 0.22rem 0.3rem;
-        border-radius: 0.45rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        transition: transform .1s ease, box-shadow .15s ease, opacity .15s ease;
-      }
-      html.design-studio #qoSidePanel .qo-grade-btn.qo-grade-e {
-        grid-column: 1 / -1;
-        flex-direction: row;
-        justify-content: center;
-        gap: 0.45rem;
-        min-height: 28px;
-      }
-      html.design-studio #qoSidePanel .qo-grade-btn:not(:disabled):hover { transform: translateY(-1px); }
       html.design-studio #qoSidePanel #qoBottomStudentName { color: var(--brand-deep) !important; }
       html.design-studio #qoSidePanel #btnQoResetOverride { color: var(--brand-deep) !important; }
-      @media (min-width: 1150px) {
+      .qo-suggestions summary { color: var(--brand-deep); font-size: .68rem; font-weight: 600; cursor: pointer; }
+      .qo-suggestions > div { display: flex; flex-wrap: wrap; gap: .3rem; padding-top: .35rem; }
+      .qo-suggestions button { padding: .25rem .45rem; border: 1px solid var(--studio-border); border-radius: .4rem; background: var(--studio-surface-soft); color: var(--studio-text); font-size: .68rem; text-align: left; cursor: pointer; }
+      .qo-suggestions button:hover { border-color: var(--brand); background: var(--brand-soft); }
+      .qo-suggestions button:disabled { opacity: .5; cursor: not-allowed; }
+      @media (min-width: 1400px) {
         html.design-studio #viewQuickObs:not(.hidden) {
-          grid-template-columns: minmax(0, 1fr) 280px;
+          grid-template-columns: minmax(720px, 1fr) 300px;
           align-items: start;
           gap: 0.9rem;
         }
@@ -954,22 +939,8 @@
         html.design-studio #viewQuickObs > #qoStudentBox {
           grid-column: 1 / -1;
         }
-        html.design-studio #qoSidePanel {
-          position: sticky;
-          top: 5.25rem;
-        }
-        html.design-studio #viewQuickObs .rubric-matrix-table {
-          min-width: 0;
-          width: 100%;
-          table-layout: fixed;
-        }
         html.design-studio #viewQuickObs .qo-scroll-hint {
           display: none !important;
-        }
-      }
-      @media (min-width: 1400px) {
-        html.design-studio #viewQuickObs:not(.hidden) {
-          grid-template-columns: minmax(0, 1fr) 300px;
         }
       }
       html.design-studio .welcome-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
@@ -1107,7 +1078,18 @@
         html.design-studio #viewQuickObs .rubric-matrix-table :is(thead th:first-child, tbody td:first-child) { position: sticky; left: 0; z-index: 2; background: var(--studio-surface) !important; }
         html.design-studio #viewQuickObs .rubric-matrix-table thead th:first-child { z-index: 3; background: var(--studio-surface-soft) !important; }
       }
-      @media (max-width: 1150px) {
+      @media (min-width: 901px) and (max-width: 1100px) {
+        html.design-studio header.test-topbar > div:first-child { flex-wrap: wrap; }
+        html.design-studio .test-topbar > div:first-child > div:nth-child(2) { flex-basis: 100%; }
+      }
+      @media (min-width: 601px) and (max-width: 900px) {
+        html.design-studio header.test-topbar > div:first-child { flex-wrap: wrap; }
+        html.design-studio .test-topbar > div:first-child > div:nth-child(2) { flex: 1 1 100%; }
+      }
+      @media (min-width: 601px) and (max-width: 640px) {
+        .test-topbar > div:first-child > div:nth-child(2) { flex-wrap: wrap !important; }
+      }
+      @media (max-width: 1500px) {
         .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) > span { display: none; }
         .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
       }
@@ -1117,6 +1099,7 @@
         #settingsPanel { right: 1rem; width: min(270px, calc(100vw - 2rem)); }
         .test-topbar > div:first-child > div:nth-child(2) { flex: 1 1 100%; flex-wrap: wrap !important; }
         .test-topbar > div:first-child > div:nth-child(2) { justify-content: flex-start; }
+        .test-topbar > div:first-child > div:nth-child(2) > div:first-child { max-width: 100%; flex-wrap: wrap !important; }
         .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) > span { display: none; }
         .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
         html.design-studio header.test-topbar > div:first-child { padding: .65rem 1rem !important; }
@@ -1125,6 +1108,17 @@
         html.design-studio #gradebookBody tr > td:first-child { width: 120px; min-width: 120px; max-width: 120px; overflow-wrap: anywhere; }
         html.design-studio #gbLevelFilterBar { display: flex; max-width: 100%; }
       }
+
+      .gb-weight-details { margin-top: .25rem; font-size: 10px; font-weight: 500; white-space: normal; color: var(--studio-text-muted); }
+      .gb-weight-details summary { cursor: pointer; }
+      .gb-weight-explanation { margin-top: .35rem; text-align: left; line-height: 1.4; overflow-wrap: anywhere; }
+      .gb-weight-explanation ul { margin-top: .25rem; }
+      html.design-studio #emptyRosterNotice:not(.hidden) { padding-right: 1.5rem; }
+      html.theme-dark #referencesDialog { background: var(--surface); color: var(--ink); border-color: var(--line); }
+      html.theme-dark #referencesDialog details.bg-white { background: var(--surface) !important; color: var(--ink); border-color: var(--line); }
+      html.theme-dark #referencesDialog :is(details.bg-slate-50, #btnCloseReferences) { background: var(--studio-surface-soft) !important; color: var(--ink); }
+      html.theme-dark #referencesDialog :is(.text-slate-800, .text-slate-700) { color: var(--ink) !important; }
+      html.theme-dark #referencesDialog a { color: var(--brand-deep) !important; }
 
       /* Focus initial du pop-up d'accueil sans contour vert */
       #welcomeOverlay:focus,
@@ -1203,6 +1197,7 @@
       #settingsPanel .sp-backup-actions > button {
         margin: 0 !important;
       }
+      #settingsPanel .sp-backup-notice { margin-top: 8px; color: var(--studio-text-muted); font-size: 11px; line-height: 1.4; }
 
       /* Tâche 3 : Pop-up "+ Nouvelle évaluation" toujours au-dessus de la banderole et des en-têtes du tableau */
       html.design-studio #newEvaluationChoices {
@@ -1708,6 +1703,31 @@
       html.design-studio.theme-dark :is(#gradebookScrollContainer, #viewQuickObs, #viewBareme, .gr-results-scroll) {
         scrollbar-color: #4b5563 #1e1f20;
       }
+    }
+
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th[class*="rubric-col-"] {
+      background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface)) !important;
+      color: var(--studio-text) !important;
+      border-color: var(--studio-border) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) table.rubric-matrix-table thead th[class*="rubric-col-"] :is(.font-extrabold, .mt-1) {
+      color: var(--studio-text) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) .rubric-stmt-btn[aria-pressed="true"] {
+      background: var(--brand-soft) !important;
+      color: var(--brand-deep) !important;
+      border-color: var(--studio-border-strong) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) .rubric-matrix-table tbody td:first-child,
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row {
+      background: var(--studio-surface-soft) !important;
+      color: var(--studio-text) !important;
+      border-color: var(--studio-border) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .qo-badge-formative {
+      background: var(--brand-soft) !important;
+      color: var(--brand-deep) !important;
+      border-color: var(--studio-border-strong) !important;
     }
 
     @media print {
