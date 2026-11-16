@@ -101,7 +101,7 @@
           'Barème (%)',
           'Jugement Final (%)',
           'Cote Finale',
-          'Commentaires'
+          'Commentaires au bulletin'
         );
         rows.push(headers);
 
@@ -358,7 +358,7 @@
         const workbook = await XlsxPopulate.fromDataAsync(bytes);
         const encrypted = await workbook.outputAsync({ password: encryption });
         downloadBlob(encrypted, `Carnet_de_notes_chiffre_Etape_${termId}.xlsx`);
-        showToast('Excel chiffré téléchargé. Ouvrez-le directement dans Excel avec votre phrase secrète.');
+        showToast('Excel chiffré téléchargé. Ouvrez-le directement dans Excel avec votre mot de passe.');
       } else {
         XLSX.writeFile(wb, `Carnet_de_notes_2026_2027_Etape_${termId}.xlsx`);
         showToast(`Export Excel (Étape ${termId}) téléchargé!`);

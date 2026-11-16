@@ -201,7 +201,6 @@
     function renderStudentsView() {
       renderGroupBar();
       const hasGroup = hasActiveGroup();
-      document.getElementById('btnBackToGradebookFromStudents').classList.toggle('hidden', !hasGroup || !appState.students.length);
       const notice = document.getElementById('noGroupNotice');
       notice.classList.toggle('hidden', hasGroup);
       const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId);

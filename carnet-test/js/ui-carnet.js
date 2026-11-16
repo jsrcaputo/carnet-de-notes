@@ -1,14 +1,5 @@
     function renderAssignmentAverage(summary) {
-      const value = summary.assignmentsAvg !== null ? `${summary.assignmentsAvg} %` : '—';
-      if (!summary.weightDetails.length) return value;
-      return `${value}
-        <details class="gb-weight-details">
-          <summary>Poids utilisé : ${formatScoreNumber(summary.totalWeightUsed)} %</summary>
-          <div class="gb-weight-explanation">
-            <p>Poids prévu pour chaque évaluation applicable; seuls les résultats valides avec un poids positif sont utilisés. La moyenne est recalculée sur ces poids, sans transformer les statuts en zéro.</p>
-            <ul>${summary.weightDetails.map(item => `<li>${escapeHtml(item.title)} : ${formatScoreNumber(item.weight)} % — ${escapeHtml(item.status)}</li>`).join('')}</ul>
-          </div>
-        </details>`;
+      return summary.assignmentsAvg !== null ? `${summary.assignmentsAvg} %` : '—';
     }
 
     function renderAll() {
@@ -369,14 +360,14 @@
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
         { label: 'Note finale', sub: 'Jugement', hint: 'Cliquer sur la note pour l’ajuster', minW: 'min-w-[135px]', width: 135 },
-        { label: 'Commentaires', sub: 'Notes', minW: '', width: 420 }
+        { label: 'Commentaires au bulletin', sub: 'Rédaction', minW: '', width: 420 }
       ];
 
       extraHeaders.forEach(eh => {
         const th = document.createElement('th');
         th.className = `p-2 font-semibold text-center border-l border-slate-800 ${eh.minW}`;
         th.style.width = `${eh.width}px`;
-        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>${eh.hint ? `<div class="text-[10px] text-slate-400 font-normal italic leading-tight mt-1">${eh.hint}</div>` : ''}`;
+        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>${eh.hint ? `<div class="gb-adjust-hint">${eh.hint}</div>` : ''}`;
         headerRow.appendChild(th);
       });
 
@@ -1020,7 +1011,7 @@
         commWrap.className = 'comment-cell-wrap';
         const inputComm = document.createElement('input');
         inputComm.type = 'text';
-        inputComm.placeholder = 'Note / commentaire...';
+        inputComm.placeholder = 'Commentaire au bulletin…';
         inputComm.value = rec.comment || '';
         inputComm.id = `cell_comm_${st.id}`;
         inputComm.className = 'w-full px-2 py-1 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500';
@@ -1303,7 +1294,6 @@
 
     // Modale Banque & Assistant de commentaires
     let activeCommentBankContext = null;
-    let activeCommentBankCategoryId = COMMENT_BANK_CATEGORIES[0].id;
 
     function updateCommentBankCharCount() {
       const area = document.getElementById('cbTextarea');
@@ -1319,25 +1309,9 @@
       if (!st) return;
       const modeSelect = document.getElementById('cbPronounSelect');
       const mode = (modeSelect && modeSelect.value) || st.pronoun || 'prenom';
-      const tabsEl = document.getElementById('cbCategoryTabs');
       const listEl = document.getElementById('cbPhraseList');
       const area = document.getElementById('cbTextarea');
-      if (!tabsEl || !listEl || !area) return;
-
-      tabsEl.innerHTML = '';
-      COMMENT_BANK_CATEGORIES.forEach(cat => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `cb-tab-btn${cat.id === activeCommentBankCategoryId ? ' is-active' : ''}`;
-        btn.textContent = cat.label.replace(/ & /g, ' et ');
-        btn.addEventListener('click', () => {
-          activeCommentBankCategoryId = cat.id;
-          renderCommentBankPhrases();
-        });
-        tabsEl.appendChild(btn);
-      });
-
-      const activeCat = COMMENT_BANK_CATEGORIES.find(c => c.id === activeCommentBankCategoryId) || COMMENT_BANK_CATEGORIES[0];
+      if (!listEl || !area) return;
       listEl.innerHTML = '';
       const firstName = extractStudentFirstName(st);
       const isFem = mode === 'elle' || mode === 'prenom_elle';
@@ -1357,51 +1331,63 @@
         return variants.find(v => v && text.includes(v)) || null;
       };
 
-      activeCat.phrases.forEach(rawPhrase => {
-        const previewWithPronoun = personalizeSingleSentence(rawPhrase, firstName, pron, false);
-        const previewWithName = personalizeSingleSentence(rawPhrase, firstName, pron, mode === 'prenom' || mode === 'prenom_elle');
-        const matchedNow = findMatchedVariant(currentTextNow, rawPhrase);
-        const isAlreadyInText = Boolean(matchedNow);
+      COMMENT_BANK_CATEGORIES.forEach(category => {
+        const column = document.createElement('fieldset');
+        column.className = 'qo-choice-column';
+        const legend = document.createElement('legend');
+        legend.textContent = category.label.replace(/ & /g, ' et ');
+        column.appendChild(legend);
+        category.phrases.forEach((rawPhrase, index) => {
+          const previewWithPronoun = personalizeSingleSentence(rawPhrase, firstName, pron, false);
+          const previewWithName = personalizeSingleSentence(rawPhrase, firstName, pron, mode === 'prenom' || mode === 'prenom_elle');
+          const matchedNow = findMatchedVariant(currentTextNow, rawPhrase);
+          const isAlreadyInText = Boolean(matchedNow);
 
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = `cb-phrase-item${isAlreadyInText ? ' is-selected' : ''}`;
-        btn.setAttribute('aria-pressed', String(isAlreadyInText));
-        btn.innerHTML = `
-          <span>${escapeHtml(previewWithName)}</span>
-          <span class="text-[11px] font-bold ${isAlreadyInText ? 'text-indigo-800' : 'text-slate-500'} shrink-0">${isAlreadyInText ? '✓ Ajouté · retirer' : '＋ Insérer'}</span>
-        `;
-        btn.addEventListener('click', () => {
-          const textNow = area.value.trim();
-          const existingMatch = findMatchedVariant(textNow, rawPhrase);
-          if (existingMatch) {
-            // Bascule : retire l'énoncé sans jamais le dupliquer
-            let nextText = textNow.replace(existingMatch, '').replace(/\s{2,}/g, ' ').trim();
-            // Si on utilisait le prénom et que la phrase retirée était la première (celle qui portait le prénom),
-            // on rétablit le prénom sur la nouvelle première phrase si elle provient de la banque
-            if (nextText && (mode === 'prenom' || mode === 'prenom_elle') && !nextText.toLowerCase().includes(firstName.toLowerCase())) {
-              const allRaw = COMMENT_BANK_CATEGORIES.flatMap(c => c.phrases);
-              for (const candidateRaw of allRaw) {
-                const pronVar = personalizeSingleSentence(candidateRaw, firstName, pron, false);
-                if (pronVar && nextText.startsWith(pronVar)) {
-                  const nameVar = personalizeSingleSentence(candidateRaw, firstName, pron, true);
-                  nextText = nameVar + nextText.slice(pronVar.length);
-                  break;
+          const choice = document.createElement('label');
+          choice.className = 'qo-choice';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.id = `cb-${category.id}-${index}`;
+          checkbox.checked = isAlreadyInText;
+          choice.appendChild(checkbox);
+          choice.insertAdjacentHTML('beforeend', `
+            <span>${escapeHtml(previewWithName)}</span>
+          `);
+          checkbox.addEventListener('change', () => {
+            const scrollTop = listEl.scrollTop;
+            const checkboxId = checkbox.id;
+            const textNow = area.value.trim();
+            const existingMatch = findMatchedVariant(textNow, rawPhrase);
+            if (existingMatch) {
+              // Bascule : retire l'énoncé sans jamais le dupliquer
+              let nextText = textNow.replace(existingMatch, '').replace(/\s{2,}/g, ' ').trim();
+              // Rétablir le prénom si l'énoncé retiré était le seul à le porter.
+              if (nextText && (mode === 'prenom' || mode === 'prenom_elle') && !nextText.toLowerCase().includes(firstName.toLowerCase())) {
+                const allRaw = COMMENT_BANK_CATEGORIES.flatMap(c => c.phrases);
+                for (const candidateRaw of allRaw) {
+                  const pronVar = personalizeSingleSentence(candidateRaw, firstName, pron, false);
+                  if (pronVar && nextText.startsWith(pronVar)) {
+                    const nameVar = personalizeSingleSentence(candidateRaw, firstName, pron, true);
+                    nextText = nameVar + nextText.slice(pronVar.length);
+                    break;
+                  }
                 }
               }
+              area.value = nextText;
+            } else {
+              const alreadyHasFirstName = textNow.length > 0 && textNow.toLowerCase().includes(firstName.toLowerCase());
+              const useNameNow = (mode === 'prenom' || mode === 'prenom_elle') && !alreadyHasFirstName && textNow.length === 0;
+              const sentenceToInsert = useNameNow ? previewWithName : previewWithPronoun;
+              area.value = textNow ? `${textNow} ${sentenceToInsert}` : sentenceToInsert;
             }
-            area.value = nextText;
-          } else {
-            const alreadyHasFirstName = textNow.length > 0 && textNow.toLowerCase().includes(firstName.toLowerCase());
-            const useNameNow = (mode === 'prenom' || mode === 'prenom_elle') && !alreadyHasFirstName && textNow.length === 0;
-            const sentenceToInsert = useNameNow ? previewWithName : previewWithPronoun;
-            area.value = textNow ? `${textNow} ${sentenceToInsert}` : sentenceToInsert;
-          }
-          updateCommentBankCharCount();
-          renderCommentBankPhrases();
-          area.focus();
+            updateCommentBankCharCount();
+            renderCommentBankPhrases();
+            listEl.scrollTop = scrollTop;
+            document.getElementById(checkboxId).focus({ preventScroll: true });
+          });
+          column.appendChild(choice);
         });
-        listEl.appendChild(btn);
+        listEl.appendChild(column);
       });
     }
 
@@ -1434,6 +1420,7 @@
 
       modal.classList.remove('hidden');
       modal.classList.add('flex');
+      document.getElementById('cbPhraseList').scrollTop = 0;
       setTimeout(() => area.focus(), 40);
     }
 

@@ -59,23 +59,45 @@
       const password = document.getElementById('backupPassword');
       const confirmation = document.getElementById('backupPasswordConfirm');
       const error = document.getElementById('backupPasswordError');
+      const match = document.getElementById('backupPasswordMatch');
+      const confirmButton = document.getElementById('btnConfirmBackupPassword');
       document.getElementById('backupPasswordTitle').textContent = isExcel
         ? (creating ? 'Protéger l’export Excel' : 'Ouvrir l’export Excel chiffré')
         : (creating ? 'Protéger la sauvegarde' : 'Ouvrir la sauvegarde chiffrée');
       document.getElementById('backupPasswordHelp').textContent = creating
         ? (isExcel
-          ? 'Choisissez une phrase secrète de 12 à 255 caractères. Vous la saisirez directement dans Excel. Si vous la perdez, le fichier sera irrécupérable.'
-          : 'Choisissez une phrase secrète de 12 caractères ou plus. Si vous la perdez, le fichier sera irrécupérable. Cette copie ne chiffre pas un fichier déjà lié.')
-        : 'Entrez la phrase secrète utilisée pour protéger ce fichier.';
+          ? 'Choisissez un mot de passe de 12 à 255 caractères et confirmez-le. Vous le saisirez directement dans Excel. Si vous le perdez, le fichier sera irrécupérable.'
+          : 'Choisissez un mot de passe de 12 caractères ou plus et confirmez-le. Si vous le perdez, le fichier sera irrécupérable. Cette copie ne chiffre pas un fichier déjà lié.')
+        : 'Entrez le mot de passe utilisé pour protéger ce fichier.';
       document.getElementById('backupPasswordConfirmRow').hidden = !creating;
+      confirmation.required = creating;
+      confirmation.disabled = !creating;
       password.value = '';
       confirmation.value = '';
       error.textContent = errorMessage;
       return new Promise(resolve => {
+        const updateMatch = () => {
+          const matches = password.value === confirmation.value;
+          const hasConfirmation = confirmation.value.length > 0;
+          match.textContent = creating && hasConfirmation
+            ? (matches ? 'Les deux mots de passe sont identiques.' : 'Les deux mots de passe sont différents.')
+            : '';
+          match.dataset.state = hasConfirmation && matches ? 'match' : 'mismatch';
+          confirmation.setAttribute('aria-invalid', String(creating && hasConfirmation && !matches));
+          confirmButton.disabled = creating
+            ? password.value.length < 12 || (isExcel && password.value.length > 255) || !matches
+            : !password.value.length;
+        };
+        const input = () => {
+          error.textContent = '';
+          updateMatch();
+        };
         const finish = value => {
           form.removeEventListener('submit', submit);
           dialog.removeEventListener('cancel', cancel);
           document.getElementById('btnCancelBackupPassword').removeEventListener('click', cancel);
+          password.removeEventListener('input', input);
+          confirmation.removeEventListener('input', input);
           password.value = '';
           confirmation.value = '';
           dialog.close();
@@ -92,7 +114,7 @@
             return;
           }
           if (creating && password.value !== confirmation.value) {
-            error.textContent = 'Les deux phrases secrètes ne correspondent pas.';
+            error.textContent = 'Les deux mots de passe ne correspondent pas.';
             return;
           }
           finish(password.value);
@@ -101,6 +123,9 @@
         form.addEventListener('submit', submit);
         dialog.addEventListener('cancel', cancel);
         document.getElementById('btnCancelBackupPassword').addEventListener('click', cancel);
+        password.addEventListener('input', input);
+        confirmation.addEventListener('input', input);
+        updateMatch();
         dialog.showModal();
         password.focus();
       });
@@ -128,7 +153,7 @@
           return { text: new TextDecoder('utf-8', { fatal: true }).decode(clear), encryption: { key, salt } };
         } catch (error) {
           if (error.name !== 'OperationError') throw error;
-          message = 'Phrase secrète incorrecte ou fichier endommagé.';
+          message = 'Mot de passe incorrect ou fichier endommagé.';
         }
       }
     }
@@ -154,7 +179,7 @@
       if (download) download.textContent = activeBackupEncryption ? 'Télécharger une copie JSON chiffrée' : 'Télécharger une copie JSON';
       const notice = document.getElementById('backupEncryptionNotice');
       if (notice) notice.textContent = activeBackupEncryption
-        ? `Ce carnet utilise une phrase secrète : ses copies JSON restent chiffrées avec la même phrase${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. Sauvegardez avant de fermer ou d’actualiser la page.`
+        ? `Ce carnet utilise un mot de passe : ses copies JSON restent chiffrées avec le même mot de passe${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. Sauvegardez avant de fermer ou d’actualiser la page.`
         : 'Le carnet reste en mémoire dans cet onglet : sauvegardez votre fichier JSON avant de fermer ou d’actualiser la page.';
       const indicator = document.getElementById('fileSyncStatus');
       if (!indicator) return;

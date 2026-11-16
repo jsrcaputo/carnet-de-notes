@@ -388,7 +388,6 @@
         document.getElementById('btnCbClear').addEventListener('click', () => {
           const area = document.getElementById('cbTextarea');
           area.value = '';
-          activeCommentBankCategoryId = COMMENT_BANK_CATEGORIES[0].id;
           updateCommentBankCharCount();
           renderCommentBankPhrases();
           area.focus();
@@ -564,10 +563,6 @@
 
       document.getElementById('btnBackToGradebookFromBareme').addEventListener('click', () => {
         navigateToView('viewGradebook');
-      });
-
-      document.getElementById('btnBackToGradebookFromStudents').addEventListener('click', () => {
-        if (hasActiveGroup() && appState.students.length) navigateToView('viewGradebook');
       });
 
       // Back to Gradebook button inside Visual Trace panel
@@ -1151,7 +1146,7 @@
         fileOperation = false;
         setFileSyncStatus('unlinked', 'Aucun fichier lié');
         showToast(activeBackupEncryption
-          ? 'Fichier délié. Les prochaines copies restent chiffrées avec la même phrase secrète.'
+          ? 'Fichier délié. Les prochaines copies restent chiffrées avec le même mot de passe.'
           : 'Fichier délié. Les modifications ne seront plus enregistrées automatiquement.');
       });
 
