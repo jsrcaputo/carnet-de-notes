@@ -122,6 +122,51 @@
       }
     ];
 
+    const OBSERVATION_AREAS = [
+      { id: 'autonomie', label: 'Autonomie', items: [
+        ['Comprend la consigne et se met au travail', 'A besoin d’une reformulation pour commencer'],
+        ['Amorce la tâche sans relance', 'A besoin d’une relance pour amorcer la tâche'],
+        ['Demande de l’aide lorsqu’elle est nécessaire', 'A besoin d’aide pour reconnaître quand demander du soutien']
+      ] },
+      { id: 'organisation', label: 'Organisation', items: [
+        ['Planifie les étapes de son travail', 'A besoin de soutien pour planifier les étapes'],
+        ['Suit les étapes prévues', 'A besoin de repères pour suivre les étapes'],
+        ['Gère le temps disponible pour la tâche', 'A besoin de repères pour gérer le temps disponible']
+      ] },
+      { id: 'attention', label: 'Attention et persévérance', items: [
+        ['Maintient son attention pendant l’activité', 'A besoin de soutien pour maintenir son attention'],
+        ['Se recentre après une distraction', 'A besoin d’un rappel pour se recentrer'],
+        ['Persévère lorsqu’un obstacle se présente', 'A besoin d’encouragement pour poursuivre devant un obstacle']
+      ] },
+      { id: 'strategies', label: 'Stratégies et réflexion', items: [
+        ['Repère les informations utiles à la tâche', 'A besoin d’aide pour repérer les informations utiles'],
+        ['Explique sa démarche', 'A besoin de soutien pour expliquer sa démarche'],
+        ['Vérifie son travail et apporte des corrections', 'A besoin de repères pour vérifier et corriger son travail'],
+        ['Réutilise une stratégie enseignée', 'A besoin d’un rappel pour réutiliser une stratégie enseignée']
+      ] },
+      { id: 'ressources', label: 'Ressources et outils', items: [
+        ['Consulte les ressources utiles à la tâche', 'A besoin d’un rappel pour consulter les ressources utiles'],
+        ['Utilise les outils convenus pour la tâche', 'A besoin de soutien pour utiliser les outils convenus']
+      ] },
+      { id: 'interaction', label: 'Participation et collaboration', items: [
+        ['Participe activement à la tâche', 'A besoin d’une invitation pour participer à la tâche'],
+        ['Collabore avec ses pairs', 'A besoin de soutien pour collaborer avec ses pairs'],
+        ['Écoute les autres et respecte les tours de parole', 'A besoin de rappels pour écouter et respecter les tours de parole']
+      ] }
+    ];
+
+    function groupObservationTags(tags) {
+      const strengths = new Set(OBSERVATION_AREAS.flatMap(area => area.items.map(item => item[0])));
+      const challenges = new Set(OBSERVATION_AREAS.flatMap(area => area.items.map(item => item[1])));
+      const result = { strengths: [], challenges: [], previous: [] };
+      (Array.isArray(tags) ? tags : []).forEach(tag => {
+        if (strengths.has(tag)) result.strengths.push(tag);
+        else if (challenges.has(tag)) result.challenges.push(tag);
+        else result.previous.push(tag);
+      });
+      return result;
+    }
+
     const ADAPTATION_PRESETS = [
       'Correcteur',
       'Prédicteur de mots',

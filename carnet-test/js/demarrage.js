@@ -558,7 +558,7 @@
         if (!hasActiveGroup()) {
           startNewGroup();
         } else if (navigateToView('viewStudents')) {
-          document.getElementById('newStudentName').focus();
+          document.getElementById('btnOpenAddStudent').click();
         }
       });
 
@@ -878,18 +878,6 @@
           }
         });
       });
-      document.querySelectorAll('[data-obs-suggestion]').forEach(button => {
-        button.addEventListener('click', () => {
-          const input = document.getElementById(button.dataset.obsSuggestion);
-          if (input.disabled) return;
-          const suggestion = button.textContent.trim();
-          if (!input.value.split('\n').some(line => line.trim() === suggestion)) {
-            input.value = input.value.trim() ? `${input.value.trimEnd()}\n${suggestion}` : suggestion;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-          }
-          input.focus();
-        });
-      });
 
       // Commit Visual Trace Session to Gradebook (Top & Bottom buttons)
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
@@ -1025,7 +1013,11 @@
       });
 
       // Add Student
-      document.getElementById('btnAddStudent').addEventListener('click', () => {
+      document.getElementById('btnCancelAddStudent').addEventListener('click', () => {
+        document.getElementById('addStudentDialog').close();
+      });
+      document.getElementById('addStudentForm').addEventListener('submit', event => {
+        event.preventDefault();
         if (!hasActiveGroup()) {
           showToast('Créez d’abord un groupe pour ajouter des élèves.');
           return;
@@ -1077,23 +1069,10 @@
         });
         appState.selectedStudentId = null;
         appState.activeView = 'viewStudents';
-        nameIn.value = '';
-        lastNameIn.value = '';
+        document.getElementById('addStudentDialog').close();
         notifyUpdate(`Élève ${name} ajouté(e)`);
         renderAll();
-        nameIn.focus();
-      });
-
-      ['newStudentName', 'newStudentLastName'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              document.getElementById('btnAddStudent').click();
-            }
-          });
-        }
+        document.getElementById('btnOpenAddStudent').focus();
       });
 
       // Excel Export
@@ -1132,6 +1111,28 @@
       });
       document.getElementById('btnDownloadJSON').addEventListener('click', () => downloadBackup());
       document.getElementById('btnDownloadEncryptedJSON').addEventListener('click', downloadEncryptedBackup);
+      document.getElementById('btnDownloadLegacyBrowser').addEventListener('click', () => {
+        try {
+          const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
+          if (!raw) { updateLegacyBrowserBackup(); showToast('Aucune ancienne copie trouvée dans ce navigateur.'); return; }
+          downloadBlob(new Blob([raw], { type: 'application/json;charset=utf-8' }), 'ancienne-copie-carnet.json');
+          showToast('Ancienne copie téléchargée. Vérifiez-la avant de l’effacer du navigateur.');
+        } catch (error) {
+          console.error('Impossible de télécharger l’ancienne copie.', error);
+          showToast('Impossible de télécharger l’ancienne copie du navigateur.');
+        }
+      });
+      document.getElementById('btnDeleteLegacyBrowser').addEventListener('click', () => {
+        if (!window.confirm('Effacer définitivement l’ancienne copie de ce navigateur ? Assurez-vous d’avoir vérifié votre fichier JSON.')) return;
+        try {
+          window.localStorage.removeItem(LOCAL_STORAGE_KEY);
+          updateLegacyBrowserBackup();
+          showToast('Ancienne copie effacée de ce navigateur.');
+        } catch (error) {
+          console.error('Impossible d’effacer l’ancienne copie.', error);
+          showToast('Impossible d’effacer l’ancienne copie du navigateur.');
+        }
+      });
       document.getElementById('btnExportEncryptedExcel').addEventListener('click', exportEncryptedExcel);
       document.getElementById('btnOpenEncryptedExcel').addEventListener('click', () => document.getElementById('inputEncryptedExcel').click());
       document.getElementById('inputEncryptedExcel').addEventListener('change', async event => {
@@ -1173,7 +1174,7 @@
       });
 
       applyPrefs();
-      loadStateFromLocalStorage();
+      updateLegacyBrowserBackup();
       ['input', 'change', 'click', 'drop', 'dragend'].forEach(eventName => {
         document.addEventListener(eventName, scheduleAppStateSave);
       });
@@ -1306,7 +1307,7 @@
         applyPrefs();
       }));
       window.addEventListener('beforeunload', event => {
-        const needsBackupPrompt = (prefs.backupReminder || !!activeFileHandle) && getBackupSnapshot() !== lastSavedFileSnapshot;
+        const needsBackupPrompt = getBackupSnapshot() !== lastSavedFileSnapshot;
         if (needsBackupPrompt) {
           event.preventDefault();
           event.returnValue = '';

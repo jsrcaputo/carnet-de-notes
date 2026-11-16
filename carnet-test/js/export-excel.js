@@ -162,12 +162,13 @@
         [`JOURNAL DES TRACES OBSERVABLES — ÉTAPE ${termId}`],
         ['Traces observables enregistrées au carnet'],
         [],
-        ['Date', 'Élève', 'Matière / Compétence', 'Trace observable', 'Cote', 'Pourcentage', 'Indicateurs rapides', 'Forces', 'Défis', 'Commentaire / Verbatim']
+        ['Date', 'Élève', 'Matière / Compétence', 'Trace observable', 'Cote', 'Pourcentage', 'Observations précédentes', 'Forces', 'Défis', 'Commentaire / Verbatim']
       ];
       termData.observations.forEach(o => {
         const stu = appState.students.find(s => s.id === o.studentId);
         const sub = SUBJECTS_CONFIG.find(s => s.id === o.subjectId);
         const gObj = GRADE_MAP[o.gradeCode];
+        const observations = groupObservationTags(o.tags);
         obsRows.push([
           o.date,
           stu ? stu.name : '',
@@ -175,9 +176,9 @@
           o.activity || '',
           o.gradeCode,
           gObj ? gObj.pct : '',
-          (o.tags || []).join(', '),
-          o.strengths || '',
-          o.challenges || '',
+          observations.previous.join(', '),
+          [...observations.strengths, o.strengths || ''].filter(Boolean).join('\n'),
+          [...observations.challenges, o.challenges || ''].filter(Boolean).join('\n'),
           o.comment || ''
         ]);
       });

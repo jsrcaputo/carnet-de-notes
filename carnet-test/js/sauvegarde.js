@@ -6,8 +6,6 @@
     let fileOperation = false;
     let pendingImportSnapshot = null;
     let activeBackupEncryption = null;
-    let localBackupRestoreFailed = false;
-    let localBackupFailureReported = false;
     const LOCAL_STORAGE_KEY = 'carnet_notes_autosave_2026_v1';
     const ENCRYPTED_BACKUP_FORMAT = 'carnet-notes-chiffre';
     const ENCRYPTED_EXCEL_FORMAT = 'carnet-excel-chiffre';
@@ -67,7 +65,7 @@
       document.getElementById('backupPasswordHelp').textContent = creating
         ? (isExcel
           ? 'Choisissez une phrase secrète de 12 à 255 caractères. Vous la saisirez directement dans Excel. Si vous la perdez, le fichier sera irrécupérable.'
-          : 'Choisissez une phrase secrète de 12 caractères ou plus. Si vous la perdez, le fichier sera irrécupérable. Cette copie ne chiffre ni le fichier déjà lié ni la copie du navigateur.')
+          : 'Choisissez une phrase secrète de 12 caractères ou plus. Si vous la perdez, le fichier sera irrécupérable. Cette copie ne chiffre pas un fichier déjà lié.')
         : 'Entrez la phrase secrète utilisée pour protéger ce fichier.';
       document.getElementById('backupPasswordConfirmRow').hidden = !creating;
       password.value = '';
@@ -156,8 +154,8 @@
       if (download) download.textContent = activeBackupEncryption ? 'Télécharger une copie JSON chiffrée' : 'Télécharger une copie JSON';
       const notice = document.getElementById('backupEncryptionNotice');
       if (notice) notice.textContent = activeBackupEncryption
-        ? `Ce carnet utilise une phrase secrète : ses copies JSON restent chiffrées avec la même phrase${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. La copie automatique du navigateur n’est pas chiffrée.`
-        : 'La copie automatique du navigateur n’est pas chiffrée. Utilisez « Télécharger une copie chiffrée » pour protéger un fichier JSON.';
+        ? `Ce carnet utilise une phrase secrète : ses copies JSON restent chiffrées avec la même phrase${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. Sauvegardez avant de fermer ou d’actualiser la page.`
+        : 'Le carnet reste en mémoire dans cet onglet : sauvegardez votre fichier JSON avant de fermer ou d’actualiser la page.';
       const indicator = document.getElementById('fileSyncStatus');
       if (!indicator) return;
       indicator.dataset.status = status;
@@ -169,57 +167,27 @@
       return JSON.stringify({ ...appState, displayPreferences: { ...prefs }, customWeightedPresets: loadAllCustomWeightedPresets() }, null, 2);
     }
 
-    function saveStateToLocalStorage() {
-      if (localBackupRestoreFailed) return;
-      try {
-        if (typeof isPristineInitialGroup === 'function' && isPristineInitialGroup()) {
-          window.localStorage.removeItem(LOCAL_STORAGE_KEY);
-          return;
-        }
-        const payload = serializeBackup();
-        window.localStorage.setItem(LOCAL_STORAGE_KEY, payload);
-        localBackupFailureReported = false;
-        if (!activeFileHandle) {
-          setFileSyncStatus('saved', 'Sauvegarde auto (navigateur)');
-        }
-      } catch (e) {
-        console.warn('Persistance locale indisponible :', e);
-        if (!localBackupFailureReported) {
-          localBackupFailureReported = true;
-          setFileSyncStatus('error', 'Copie navigateur indisponible');
-          showToast('La sauvegarde dans le navigateur a échoué. Vérifiez le fichier lié ou téléchargez une copie JSON.');
-        }
+    function updateUnlinkedSaveStatus() {
+      if (!activeFileHandle && getBackupSnapshot() !== lastSavedFileSnapshot) {
+        setFileSyncStatus('pending', 'Modifications à sauvegarder');
       }
     }
 
-    function loadStateFromLocalStorage() {
+    function updateLegacyBrowserBackup() {
       try {
-        const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-        if (!raw) return false;
-        const { importedState, importedPrefs, importedPresets } = parseBackup(raw);
-        restoreCustomWeightedPresets(importedPresets);
-        appState = importedState;
-        applyActiveSubjects(appState);
-        Object.assign(prefs, importedPrefs);
-        applyPrefs();
-        lastSavedFileSnapshot = getBackupSnapshot();
-        setFileSyncStatus('saved', 'Sauvegarde auto (navigateur)');
-        return true;
-      } catch (e) {
-        console.warn('Impossible de restaurer la sauvegarde locale :', e);
-        localBackupRestoreFailed = true;
-        setFileSyncStatus('error', 'Restauration locale impossible : chargez une sauvegarde');
-        showToast('Restauration locale impossible. Chargez une sauvegarde JSON; la copie du navigateur a été conservée.');
-        return false;
+        const hasLegacy = !!window.localStorage.getItem(LOCAL_STORAGE_KEY);
+        document.getElementById('legacyBrowserBackup').classList.toggle('hidden', !hasLegacy);
+        document.getElementById('welcomeLegacyBrowserNotice').classList.toggle('hidden', !hasLegacy);
+      } catch (error) {
+        console.error('Impossible de vérifier l’ancienne copie du navigateur.', error);
+        showToast('Impossible de vérifier si une ancienne copie existe dans ce navigateur.');
       }
     }
 
     function resetCarnetToBlank() {
-      try { window.localStorage.removeItem(LOCAL_STORAGE_KEY); } catch (_) {}
       activeFileHandle = null;
       activeFileWritable = false;
       activeBackupEncryption = null;
-      localBackupRestoreFailed = false;
       linkedFileText = null;
       fileWriteBlocked = false;
       appState = createInitialState();
@@ -245,7 +213,10 @@
         const payload = encryption ? await encryptBackup(cleartext, encryption) : cleartext;
         const data = new Blob([payload], { type: 'application/json;charset=utf-8' });
         downloadBlob(data, `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}.json`);
-        if (!activeFileHandle) lastSavedFileSnapshot = snapshot;
+        if (!activeFileHandle) {
+          lastSavedFileSnapshot = snapshot;
+          setFileSyncStatus('unlinked', 'Copie téléchargée : non liée');
+        }
         showToast(`Copie JSON${encryption ? ' chiffrée' : ''} téléchargée. Elle ne se met pas à jour automatiquement.`);
       } catch (error) {
         console.error('Échec de la création de la sauvegarde JSON.', error);
@@ -441,7 +412,6 @@
         activeFileHandle = handle;
         activeFileWritable = !!handle && writable;
         activeBackupEncryption = decrypted.encryption;
-        localBackupRestoreFailed = false;
         linkedFileText = handle ? text : null;
         fileWriteBlocked = false;
         lastSavedFileSnapshot = getBackupSnapshot();

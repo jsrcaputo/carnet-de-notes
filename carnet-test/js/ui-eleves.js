@@ -172,6 +172,7 @@
         b.className = active
           ? 'px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white cursor-pointer'
           : 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer';
+        b.setAttribute('aria-pressed', String(active));
         b.textContent = g.name;
         b.title = active ? 'Cliquer pour modifier ce groupe' : 'Passer à ce groupe';
         b.addEventListener('click', () => active ? openGroupModal('edit', g.id) : switchGroup(g.id));
@@ -183,6 +184,18 @@
       add.textContent = '＋ Nouveau groupe';
       add.addEventListener('click', () => openGroupModal('new'));
       bar.appendChild(add);
+      const addStudent = document.createElement('button');
+      addStudent.id = 'btnOpenAddStudent';
+      addStudent.type = 'button';
+      addStudent.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer';
+      addStudent.textContent = '＋ Ajout d’élève';
+      addStudent.disabled = !hasActiveGroup();
+      addStudent.title = addStudent.disabled ? 'Créez d’abord un groupe' : 'Ajouter un élève';
+      addStudent.addEventListener('click', () => {
+        document.getElementById('addStudentForm').reset();
+        document.getElementById('addStudentDialog').showModal();
+      });
+      bar.appendChild(addStudent);
     }
 
     function renderStudentsView() {
@@ -195,7 +208,6 @@
       notice.textContent = appState.students.length
         ? `Créez un groupe avant d’ajouter des élèves. Les élèves déjà présents seront conservés dans « ${activeGroup ? activeGroup.name : 'Mon groupe'} ».`
         : 'Pour ajouter des élèves, créez d’abord un groupe avec « Nouveau groupe ».';
-      document.getElementById('studentAddRow').hidden = !hasGroup;
       document.getElementById('studentListTools').hidden = !hasGroup && !appState.students.length;
       const listEl = document.getElementById('studentManagerList');
       if (!listEl) return;

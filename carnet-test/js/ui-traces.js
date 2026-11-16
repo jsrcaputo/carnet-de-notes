@@ -644,7 +644,6 @@
 
       const liveBadgeEmpty = document.getElementById('qoSideLiveBadge');
       const resetOverrideBtnEmpty = document.getElementById('btnQoResetOverride');
-      document.querySelectorAll('[data-obs-suggestion]').forEach(button => { button.disabled = !st; });
       if (liveBadgeEmpty) {
         liveBadgeEmpty.classList.add('hidden');
         liveBadgeEmpty.textContent = '';
@@ -661,12 +660,8 @@
         if (catTabsEmpty) catTabsEmpty.innerHTML = '';
         document.getElementById('qoQuickTags').innerHTML =
           '<div class="text-xs text-slate-500">Sélectionner un nom pour cocher des observations.</div>';
-        const activeStripEmpty = document.getElementById('qoActiveStudentTagsStrip');
-        if (activeStripEmpty) {
-          activeStripEmpty.innerHTML = '';
-          activeStripEmpty.classList.add('hidden');
-          activeStripEmpty.classList.remove('flex');
-        }
+        document.getElementById('qoActiveStudentTagsStrip').innerHTML = '';
+        document.getElementById('qoPreviousWritten').classList.add('hidden');
         ['qoCommentInput', 'qoStrengthsInput', 'qoChallengesInput'].forEach(id => {
           const input = document.getElementById(id);
           input.value = '';
@@ -840,8 +835,7 @@
         tbody.appendChild(tr);
       });
 
-      // Categorized quick tags for current student
-      const categories = appState.tagCategories || PIA_TAG_CATEGORIES;
+      const categories = OBSERVATION_AREAS;
       if (!appState.activeTagCategoryId) appState.activeTagCategoryId = categories[0].id;
       const activeCat = categories.find(c => c.id === appState.activeTagCategoryId) || categories[0];
 
@@ -849,17 +843,16 @@
       if (catTabsEl) {
         catTabsEl.innerHTML = '';
         categories.forEach(cat => {
-          const countInCat = cat.tags.filter(t => draft.tags.includes(t)).length;
+          const countInCat = cat.items.flat().filter(t => draft.tags.includes(t)).length;
           const isAct = cat.id === activeCat.id;
           const cBtn = document.createElement('button');
           cBtn.type = 'button';
           cBtn.title = cat.label;
-          cBtn.className = isAct
-            ? 'px-2 py-1.5 rounded-lg text-[10.5px] leading-tight text-left font-bold bg-slate-900 text-white shadow-2xs flex items-center justify-between gap-1 cursor-pointer'
-            : 'px-2 py-1.5 rounded-lg text-[10.5px] leading-tight text-left font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-between gap-1 cursor-pointer';
+          cBtn.className = 'qo-category';
+          cBtn.setAttribute('aria-pressed', String(isAct));
           cBtn.innerHTML = `
-            <span class="line-clamp-2">${escapeHtml(cat.label.replace(/ & /g, ' et '))}</span>
-            ${countInCat > 0 ? `<span class="shrink-0 px-1.5 py-0.2 rounded-full text-[9.5px] bg-indigo-500 text-white font-extrabold">${countInCat}</span>` : ''}
+            <span>${escapeHtml(cat.label)}</span>
+            ${countInCat > 0 ? `<span class="qo-category-count">${countInCat}</span>` : ''}
           `;
           cBtn.addEventListener('click', () => {
             appState.activeTagCategoryId = cat.id;
@@ -870,49 +863,71 @@
       }
 
       const selCountEl = document.getElementById('qoSelectedTagsCount');
-      if (selCountEl) {
-        selCountEl.textContent = `${draft.tags.length} sélectionné(s)`;
-      }
+      const groups = groupObservationTags(draft.tags);
+      if (selCountEl) selCountEl.textContent = `${groups.strengths.length} force(s) · ${groups.challenges.length} défi(s)`;
 
       const tagsContainer = document.getElementById('qoQuickTags');
       tagsContainer.innerHTML = '';
-      activeCat.tags.forEach(tag => {
-        const isSel = draft.tags.includes(tag);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.className = isSel
-          ? 'px-2 py-1 rounded-lg text-[11px] leading-snug text-left font-bold bg-indigo-600 text-white shadow-2xs cursor-pointer transition'
-          : 'px-2 py-1 rounded-lg text-[11px] leading-snug text-left font-medium bg-white hover:bg-indigo-50 text-slate-700 border border-slate-200 cursor-pointer transition';
-        btn.textContent = `${isSel ? '✓ ' : ''}${tag}`;
-        btn.addEventListener('click', () => {
-          const idx = draft.tags.indexOf(tag);
-          if (idx >= 0) draft.tags.splice(idx, 1);
-          else draft.tags.push(tag);
-          draft.notEvaluated = false;
-          renderQuickObsView();
+      ['Forces', 'Défis'].forEach((heading, side) => {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'qo-choice-column';
+        const legend = document.createElement('legend');
+        legend.textContent = heading;
+        fieldset.appendChild(legend);
+        activeCat.items.forEach(pair => {
+          const tag = pair[side];
+          const label = document.createElement('label');
+          label.className = 'qo-choice';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = draft.tags.includes(tag);
+          checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+              draft.tags = draft.tags.filter(value => value !== pair[1 - side]);
+              draft.tags.push(tag);
+            }
+            else draft.tags = draft.tags.filter(value => value !== tag);
+            draft.notEvaluated = false;
+            renderQuickObsView();
+            const replacement = [...document.querySelectorAll('#qoQuickTags input')].find(input => input.dataset.tag === tag);
+            if (replacement) replacement.focus({ preventScroll: true });
+          });
+          checkbox.dataset.tag = tag;
+          label.append(checkbox, document.createTextNode(tag));
+          fieldset.appendChild(label);
         });
-        tagsContainer.appendChild(btn);
+        tagsContainer.appendChild(fieldset);
       });
 
       const activeStrip = document.getElementById('qoActiveStudentTagsStrip');
-      if (activeStrip) {
-        activeStrip.innerHTML = '';
-        activeStrip.classList.toggle('hidden', draft.tags.length === 0);
-        activeStrip.classList.toggle('flex', draft.tags.length > 0);
-        if (draft.tags.length > 0) {
-          draft.tags.forEach(t => {
-            const chip = document.createElement('span');
-            chip.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-50 border border-indigo-200 text-[10px] font-semibold text-indigo-800';
-            chip.innerHTML = `<span>${escapeHtml(t)}</span><button type="button" class="hover:text-red-600 font-bold cursor-pointer" aria-label="Retirer ${escapeHtml(t)}">✕</button>`;
-            chip.querySelector('button').addEventListener('click', () => {
-              draft.tags = draft.tags.filter(x => x !== t);
-              renderQuickObsView();
-            });
-            activeStrip.appendChild(chip);
+      activeStrip.innerHTML = '';
+      [['Forces', groups.strengths], ['Défis', groups.challenges], ['Observations précédentes', groups.previous]].forEach(([heading, tags]) => {
+        if (!tags.length) return;
+        const section = document.createElement('div');
+        const title = document.createElement('strong');
+        title.textContent = `${heading} : `;
+        section.appendChild(title);
+        tags.forEach(tag => {
+          const chip = document.createElement('span');
+          chip.className = 'qo-selected-chip';
+          chip.textContent = tag;
+          const remove = document.createElement('button');
+          remove.type = 'button';
+          remove.textContent = '×';
+          remove.setAttribute('aria-label', `Retirer : ${tag}`);
+          remove.addEventListener('click', () => {
+            draft.tags = draft.tags.filter(value => value !== tag);
+            renderQuickObsView();
           });
-        }
-      }
+          chip.appendChild(remove);
+          section.appendChild(chip);
+        });
+        activeStrip.appendChild(section);
+      });
 
+      const previousWritten = document.getElementById('qoPreviousWritten');
+      previousWritten.classList.toggle('hidden', !(draft.strengths || draft.challenges) &&
+        !previousWritten.contains(document.activeElement));
       [['qoCommentInput', 'comment'], ['qoStrengthsInput', 'strengths'], ['qoChallengesInput', 'challenges']].forEach(([id, field]) => {
         const input = document.getElementById(id);
         input.disabled = false;

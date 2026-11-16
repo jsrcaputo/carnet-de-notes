@@ -1104,8 +1104,8 @@
       autosaveTimer = setTimeout(() => {
         autosaveTimer = null;
         recordHistory();
-        if (typeof saveStateToLocalStorage === 'function') {
-          saveStateToLocalStorage();
+        if (typeof updateUnlinkedSaveStatus === 'function') {
+          updateUnlinkedSaveStatus();
         }
         if (!fileOperation && activeFileHandle && activeFileWritable && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) {
           queueLinkedFileSave();

@@ -1,3 +1,14 @@
+    function scrollToCompetencyElement(element) {
+      requestAnimationFrame(() => {
+        if (!element || !element.isConnected || (element.matches('details') && !element.open)) return;
+        const header = document.querySelector('header.test-topbar');
+        const fixedHeader = header && ['sticky', 'fixed'].includes(getComputedStyle(header).position);
+        const offset = fixedHeader ? header.getBoundingClientRect().height + 12 : 12;
+        const top = Math.max(0, element.getBoundingClientRect().top + window.scrollY - offset);
+        window.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      });
+    }
+
     function renderGlobalReportView() {
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
@@ -90,19 +101,23 @@
               meta.tags.forEach(tg => {
                 tagFrequency[tg] = (tagFrequency[tg] || 0) + 1;
               });
+              const observations = groupObservationTags(meta.tags);
+              [['Forces', observations.strengths], ['Défis', observations.challenges], ['Observations précédentes', observations.previous]].forEach(([label, values]) => {
+                if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}` });
+              });
             }
             if (meta && Array.isArray(meta.flags)) {
               meta.flags.forEach(fl => {
                 if (VALID_CELL_FLAG_CODES.has(fl)) {
                   flagFrequency[fl] = (flagFrequency[fl] || 0) + 1;
                 }
-                if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
-                  recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
-                }
-                if (meta && typeof meta.challenges === 'string' && meta.challenges.trim()) {
-                  recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
-                }
               });
+            }
+            if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
+            }
+            if (meta && typeof meta.challenges === 'string' && meta.challenges.trim()) {
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
             }
             if (meta && meta.comment && meta.comment.trim()) {
               recordedComments.push({
@@ -505,14 +520,18 @@
               <div id="grTeacherCommentPrint" class="gr-teacher-comment-print">${escapeHtml(st.reportComment || '')}</div>
 
               <div class="p-2.5 rounded-lg bg-indigo-50/60 border border-indigo-200">
-                <span class="font-bold text-indigo-950">Indicateurs observables (PIA) et marqueurs rapides consignés :</span>
+                <span class="font-bold text-indigo-950">Observations et marqueurs consignés :</span>
                 <div class="mt-1 flex flex-wrap gap-1">
                   ${sortedFlags.map(([fl, count]) => {
                     const def = CELL_FLAGS.find(f => f.code === fl);
                     return `<span class="px-2 py-0.5 rounded bg-slate-200/80 border border-slate-300 text-[11px] font-bold text-slate-800" title="${escapeHtml(def ? def.label : fl)}">${escapeHtml(fl)} (${count}×)</span>`;
                   }).join('')}
                   ${sortedTags.length > 0
-                    ? sortedTags.map(([tg, count]) => `<span class="px-2 py-0.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900">${tg} (${count}×)</span>`).join('')
+                    ? sortedTags.map(([tg, count]) => {
+                        const group = groupObservationTags([tg]);
+                        const label = group.strengths.length ? 'Force' : group.challenges.length ? 'Défi' : 'Observation précédente';
+                        return `<span class="px-2 py-0.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900">${label} : ${escapeHtml(tg)} (${count}×)</span>`;
+                      }).join('')
                     : (!sortedFlags.length ? '<span class="text-slate-500">Aucun indicateur ou marqueur rapide consigné pour cet élève pour le moment.</span>' : '')}
                 </div>
               </div>
@@ -592,6 +611,10 @@
 
       const competencyDetails = document.getElementById('competencyPositioning');
       if (competencyDetails) {
+        competencyDetails.querySelector(':scope > summary').addEventListener('click', event => {
+          if (competencyDetails.open || event.target.closest('button')) return;
+          scrollToCompetencyElement(competencyDetails);
+        });
         competencyDetails.addEventListener('toggle', () => {
           if (!competencyDetails.isConnected) return;
           competencyPanelOpen = competencyDetails.open;
@@ -650,6 +673,10 @@
           if (subjectButton && !subjectButton.disabled) {
             competencySubjectSelected = subjectButton.getAttribute('data-competency-subject');
             renderGlobalReportView();
+            const tabs = document.querySelector('#competencyPositioning .comp-tabs');
+            const selected = tabs && tabs.querySelector('.competency-subject-button.is-active');
+            if (selected) selected.focus({ preventScroll: true });
+            scrollToCompetencyElement(tabs);
             return;
           }
           const scaleTab = event.target.closest('[data-comp-scale-tab]');

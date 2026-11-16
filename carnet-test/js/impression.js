@@ -134,6 +134,10 @@
             });
             if (meta && Array.isArray(meta.tags)) {
               meta.tags.forEach(tg => { tagFrequency[tg] = (tagFrequency[tg] || 0) + 1; });
+              const observations = groupObservationTags(meta.tags);
+              [['Forces', observations.strengths], ['Défis', observations.challenges], ['Observations précédentes', observations.previous]].forEach(([label, values]) => {
+                if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}` });
+              });
             }
             if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
               recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });

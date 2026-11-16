@@ -203,7 +203,7 @@
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
 
-      const subjectTitle = `${sub.fullName} (Étape ${appState.activeTerm})`;
+      const subjectTitle = sub.fullName;
       document.getElementById('gbSubjectTitle').textContent = subjectTitle;
       document.getElementById('gbSubjectTitle').title = subjectTitle;
       document.getElementById('gbSubjectIcon').innerHTML = subjectIcons[sub.group || (sub.id === 'ccq_global' ? 'ccq' : 'maths')] || '';
@@ -241,7 +241,7 @@
         ? subData.assignments.filter(a => isAssignmentForLevel(a, activeLvlFilter))
         : subData.assignments;
       const gradebookTable = scrollContainerEl.querySelector('table');
-      gradebookTable.style.width = `${760 + visibleAssignments.length * 162}px`;
+      gradebookTable.style.width = `${1165 + visibleAssignments.length * 162}px`;
 
       const hasWorks = subData.assignments.length > 0;
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
@@ -264,8 +264,8 @@
       headerRow.innerHTML = '';
 
       const thStudent = document.createElement('th');
-      thStudent.className = 'p-2.5 font-bold min-w-[185px] sticky left-0 bg-slate-900 z-10';
-      thStudent.style.width = '185px';
+      thStudent.className = 'p-2.5 font-bold sticky left-0 bg-slate-900 z-10';
+      thStudent.style.width = '380px';
       const studentHeading = document.createElement('div');
       studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
       const sortBtn = document.createElement('button');
@@ -369,7 +369,7 @@
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
         { label: 'Note finale', sub: 'Jugement', hint: 'Cliquer sur la note pour l’ajuster', minW: 'min-w-[135px]', width: 135 },
-        { label: 'Commentaires', sub: 'Notes', minW: 'min-w-[210px]', width: 210 }
+        { label: 'Commentaires', sub: 'Notes', minW: '', width: 420 }
       ];
 
       extraHeaders.forEach(eh => {
@@ -638,7 +638,7 @@
 
         // 1. Student cell (sticky left)
         const tdStu = document.createElement('td');
-        tdStu.className = 'p-2.5 sticky left-0 bg-inherit z-10 border-r border-slate-100 min-w-[185px]';
+        tdStu.className = 'p-2.5 sticky left-0 bg-inherit z-10 border-r border-slate-100';
         const studentName = document.createElement('div');
         studentName.className = 'font-bold text-slate-900';
         studentName.textContent = st.name;
