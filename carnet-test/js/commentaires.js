@@ -14,24 +14,17 @@
       return /^[aeiouyàâäéèêëîïôöùûüÿhAEIOUYÀÂÄÉÈÊËÎÏÔÖÙÛÜŸH]/.test(String(word || '').trim());
     }
 
+    const FEMININE_AGREEMENTS = [
+      ['compris', 'comprise'], ['conscient', 'consciente'], ['guidé', 'guidée'], ['soutenu', 'soutenue'],
+      ['encouragé', 'encouragée'], ['accompagné', 'accompagnée'], ['amené', 'amenée'], ['appelé', 'appelée'],
+      ['seul', 'seule'], ['certain', 'certaine'], ['habitué', 'habituée'], ['engagé', 'engagée'],
+      ['attentif', 'attentive'], ['actif', 'active'], ['fier', 'fière'], ['de lui-même', 'd’elle-même'], ['lui-même', 'elle-même']
+    ];
+
     function applyFeminineAgreements(sentence) {
-      return String(sentence || '')
-        .replace(/\bcompris\b/g, 'comprise')
-        .replace(/\bconscient\b/g, 'consciente')
-        .replace(/\bguidé\b/g, 'guidée')
-        .replace(/\bsoutenu\b/g, 'soutenue')
-        .replace(/\bencouragé\b/g, 'encouragée')
-        .replace(/\baccompagné\b/g, 'accompagnée')
-        .replace(/\bamené\b/g, 'amenée')
-        .replace(/\bappelé\b/g, 'appelée')
-        .replace(/\bseul\b/g, 'seule')
-        .replace(/\bcertain\b/g, 'certaine')
-        .replace(/\bhabitué\b/g, 'habituée')
-        .replace(/\bengagé\b/g, 'engagée')
-        .replace(/\battentif\b/g, 'attentive')
-        .replace(/\bactif\b/g, 'active')
-        .replace(/\bfier\b/g, 'fière')
-        .replace(/\blui-même\b/g, 'elle-même');
+      // \b ignore les lettres accentuées : on délimite les mots avec \p{L} pour accorder « encouragé », etc.
+      return FEMININE_AGREEMENTS.reduce((text, [masc, fem]) =>
+        text.replace(new RegExp(`(?<![\\p{L}-])${masc}(?![\\p{L}-])`, 'gu'), fem), String(sentence || ''));
     }
 
     function personalizeSingleSentence(rawText, firstName, pron, useNameOnFirstSubject) {
@@ -40,6 +33,12 @@
       let s = String(rawText || '').trim();
       if (!s) return '';
 
+      // Les « il » impersonnels (« il faut », « s’il y a lieu »…) ne désignent pas l’élève.
+      const impersonal = [];
+      s = s.replace(/\b([Ss][’']il|[Ii]l)(?= (?:y a|faut|s[’']agit|est (?:important|nécessaire|souhaitable|recommandé) de))/g, match => {
+        impersonal.push(match);
+        return `\u0000${impersonal.length - 1}\u0000`;
+      });
       let nameUsed = !useNameOnFirstSubject;
       const getSubj = (capitalize) => {
         if (!nameUsed) {
@@ -94,7 +93,7 @@
       if (isFem) {
         s = applyFeminineAgreements(s);
       }
-      return s;
+      return s.replace(/\u0000(\d+)\u0000/g, (match, i) => impersonal[Number(i)]);
     }
 
     function personalizeScaleSentences(sentencesArray, studentOrName, mode = 'prenom') {
