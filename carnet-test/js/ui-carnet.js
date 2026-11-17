@@ -834,18 +834,22 @@
             input.setAttribute('data-score-stu', st.id);
             const pctPill = document.createElement('span');
             pctPill.className = 'asg-pct';
+            // Sur /100, aucun % n'est affiché; sinon on réserve l'espace pour garder les boîtes alignées.
+            const setPct = text => {
+              pctPill.textContent = text;
+              pctPill.classList.toggle('hidden', outOf === 100);
+              pctPill.style.visibility = text ? '' : 'hidden';
+            };
             const refreshPct = () => {
               const val = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
               const isSpecial = val === 'NR' || val === 'JUST' || val === 'REP' || val === '-' || val === 'N/A';
               if (isSpecial) {
-                pctPill.textContent = '';
-                pctPill.classList.add('hidden');
+                setPct('');
                 return;
               }
               const n = Number(String(rec.scores[asg.id] ?? '').replace(',', '.'));
               const ok = outOf !== 100 && rec.scores[asg.id] !== undefined && rec.scores[asg.id] !== '' && Number.isFinite(n);
-              pctPill.textContent = ok ? `${Math.round(n / outOf * 100)} %` : '';
-              pctPill.classList.toggle('hidden', !ok);
+              setPct(ok ? `${Math.round(n / outOf * 100)} %` : '');
             };
             const updateInputStyle = () => {
               const val = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
