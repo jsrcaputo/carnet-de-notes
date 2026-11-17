@@ -77,8 +77,43 @@
       if (!top || !bottom) return;
       const table = bottom.querySelector('table');
       top.firstElementChild.style.width = `${table.scrollWidth}px`;
-      top.classList.toggle('is-visible', bottom.scrollWidth > bottom.clientWidth + 1);
-      top.scrollLeft = bottom.scrollLeft;
+      const scrollable = bottom.scrollWidth > bottom.clientWidth + 1;
+      top.classList.toggle('is-visible', scrollable);
+      if (Math.abs(top.scrollLeft - bottom.scrollLeft) > 1) top.scrollLeft = bottom.scrollLeft;
+      const frame = document.getElementById('gradebookFrame');
+      if (!frame) return;
+      const stickyCell = bottom.querySelector('thead th');
+      const max = bottom.scrollWidth - bottom.clientWidth;
+      frame.style.setProperty('--gb-sticky-w', `${stickyCell ? stickyCell.offsetWidth : 0}px`);
+      frame.classList.toggle('gb-can-left', scrollable && bottom.scrollLeft > 2);
+      frame.classList.toggle('gb-can-right', scrollable && bottom.scrollLeft < max - 2);
+      positionGradebookArrows();
+    }
+
+    // Garde les flèches au centre de la portion visible du carnet.
+    function positionGradebookArrows() {
+      const frame = document.getElementById('gradebookFrame');
+      if (!frame || !frame.offsetParent) return;
+      const rect = frame.getBoundingClientRect();
+      const middle = (Math.max(rect.top, 0) + Math.min(rect.bottom, window.innerHeight)) / 2 - rect.top;
+      frame.style.setProperty('--gb-arrow-y', `${Math.max(28, Math.min(rect.height - 28, middle))}px`);
+    }
+
+    function scrollGradebookByColumn(direction) {
+      const container = document.getElementById('gradebookScrollContainer');
+      const cells = [...container.querySelectorAll('thead tr:first-child > th')];
+      if (cells.length < 2) return;
+      const stickyWidth = cells[0].offsetWidth;
+      const stops = cells.slice(1).map(cell => cell.offsetLeft - stickyWidth);
+      const current = container.scrollLeft;
+      const max = container.scrollWidth - container.clientWidth;
+      let target = direction > 0 ? stops.find(stop => stop > current + 4) : stops.slice().reverse().find(stop => stop < current - 4);
+      if (target === undefined) target = direction > 0 ? max : 0;
+      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      // La barre du bas pilote le carnet : la faire défiler évite que la synchronisation interrompe l'animation.
+      const bar = document.getElementById('gradebookTopScroll');
+      const scroller = bar && bar.classList.contains('is-visible') ? bar : container;
+      scroller.scrollTo({ left: Math.max(0, Math.min(max, target)), behavior: smooth ? 'smooth' : 'auto' });
     }
 
     function positionWeightGuide() {
@@ -202,8 +237,17 @@
       const topScroll = document.getElementById('gradebookTopScroll');
       const gradebookScroll = document.getElementById('gradebookScrollContainer');
       if (topScroll && gradebookScroll) {
-        topScroll.addEventListener('scroll', () => { gradebookScroll.scrollLeft = topScroll.scrollLeft; });
-        gradebookScroll.addEventListener('scroll', () => { topScroll.scrollLeft = gradebookScroll.scrollLeft; });
+        topScroll.addEventListener('scroll', () => {
+          if (Math.abs(gradebookScroll.scrollLeft - topScroll.scrollLeft) > 0.5) gradebookScroll.scrollLeft = topScroll.scrollLeft;
+        });
+        gradebookScroll.addEventListener('scroll', updateGradebookTopScroll, { passive: true });
+        document.getElementById('gbScrollPrev').addEventListener('click', () => scrollGradebookByColumn(-1));
+        document.getElementById('gbScrollNext').addEventListener('click', () => scrollGradebookByColumn(1));
+        let arrowFrame = 0;
+        window.addEventListener('scroll', () => {
+          if (arrowFrame) return;
+          arrowFrame = requestAnimationFrame(() => { arrowFrame = 0; positionGradebookArrows(); });
+        }, { capture: true, passive: true });
         if (window.ResizeObserver) {
           const observer = new ResizeObserver(updateGradebookTopScroll);
           observer.observe(gradebookScroll);
@@ -582,13 +626,15 @@
 
       const newEvaluationButton = document.getElementById('btnNewEvaluation');
       const newEvaluationChoices = document.getElementById('newEvaluationChoices');
-      const closeEvaluationChoices = () => {
-        newEvaluationChoices.classList.add('hidden');
-        newEvaluationButton.setAttribute('aria-expanded', 'false');
-      };
+      const closeEvaluationChoices = () => hideNewEvalChoicesPopover();
       newEvaluationButton.addEventListener('click', () => {
-        const open = newEvaluationChoices.classList.toggle('hidden') === false;
-        newEvaluationButton.setAttribute('aria-expanded', String(open));
+        const isOpen = !newEvaluationChoices.classList.contains('hidden') && !newEvaluationChoices.classList.contains('is-closing');
+        if (isOpen) {
+          closeEvaluationChoices();
+          return;
+        }
+        newEvaluationChoices.classList.remove('is-closing', 'hidden');
+        newEvaluationButton.setAttribute('aria-expanded', 'true');
       });
       newEvaluationChoices.addEventListener('click', event => {
         if (event.target.closest('button')) closeEvaluationChoices();

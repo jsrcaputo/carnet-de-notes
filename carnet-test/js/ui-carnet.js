@@ -1053,10 +1053,22 @@
     function hideNewEvalChoicesPopover() {
       const choices = document.getElementById('newEvaluationChoices');
       const btn = document.getElementById('btnNewEvaluation');
-      if (choices && !choices.classList.contains('hidden')) {
+      if (!choices || choices.classList.contains('hidden') || choices.classList.contains('is-closing')) return;
+      if (btn) btn.setAttribute('aria-expanded', 'false');
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !choices.offsetWidth) {
         choices.classList.add('hidden');
-        if (btn) btn.setAttribute('aria-expanded', 'false');
+        return;
       }
+      // Animation inverse : les choix se replient vers le bouton avant d’être masqués.
+      choices.classList.add('is-closing');
+      const finish = () => {
+        choices.removeEventListener('animationend', finish);
+        if (!choices.classList.contains('is-closing')) return;
+        choices.classList.remove('is-closing');
+        choices.classList.add('hidden');
+      };
+      choices.addEventListener('animationend', finish);
+      setTimeout(finish, 400);
     }
 
     let mouseBarEl = null;
