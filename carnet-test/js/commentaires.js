@@ -18,18 +18,34 @@
       ['compris', 'comprise'], ['conscient', 'consciente'], ['guidé', 'guidée'], ['soutenu', 'soutenue'],
       ['encouragé', 'encouragée'], ['accompagné', 'accompagnée'], ['amené', 'amenée'], ['appelé', 'appelée'],
       ['seul', 'seule'], ['certain', 'certaine'], ['habitué', 'habituée'], ['engagé', 'engagée'],
-      ['sollicité', 'sollicitée'], ['centré', 'centrée'],
+      ['sollicité', 'sollicitée'], ['centré', 'centrée'], ['initié', 'initiée'],
       ['attentif', 'attentive'], ['actif', 'active'], ['fier', 'fière'], ['de lui-même', 'd’elle-même'], ['lui-même', 'elle-même'],
       // « lui » après une préposition désigne l’élève (« pour lui » → « pour elle »); « il lui permet » reste inchangé.
       ['autour de lui', 'autour d’elle'], ['pour lui', 'pour elle'], ['avec lui', 'avec elle'], ['chez lui', 'chez elle'], ['sur lui', 'sur elle']
     ];
+    const FEMININE_ATTRIBUTES = new RegExp(`(?<![\\p{L}-])(?:${FEMININE_AGREEMENTS.filter(([m]) => !m.includes('lui')).map(([, f]) => f).join('|')})(?:\\s*,|\\s+et|\\s+ou)\\s+$`, 'iu');
 
     function applyFeminineAgreements(sentence) {
-      // \b ignore les lettres accentuées : on délimite les mots avec \p{L} pour accorder « encouragé », etc.
+      // Deux passes : une coordination peut précéder l’attribut qui la déclenche.
+      return applyFeminineAgreementsOnce(applyFeminineAgreementsOnce(sentence));
+    }
+
+    function applyFeminineAgreementsOnce(sentence) {
       return FEMININE_AGREEMENTS.reduce((text, [masc, fem]) => {
         const pattern = `[${masc[0]}${masc[0].toUpperCase()}]${masc.slice(1)}`;
         return text.replace(new RegExp(`(?<![\\p{L}-])${pattern}(?![\\p{L}-])`, 'gu'),
-          match => (match[0] === masc[0] ? fem : fem[0].toUpperCase() + fem.slice(1)));
+          (match, offset) => {
+            // Les adjectifs ne doivent pas accorder un autre nom (« un soutien soutenu »).
+            if (!masc.includes('lui')) {
+              const before = text.slice(0, offset);
+              const attribut = /(?:^|[^\p{L}-])(?:est|était|sera|serait|soit|être|été|semble|reste|demeure|devient|montre|sent|paraît)(?:\s+(?:pas|plus|moins|très|bien|souvent|encore|déjà|un peu|surtout|parfois|aussi|davantage))*\s+$/iu.test(before);
+              const apposition = /^(?:(?:déjà|de plus en plus|souvent|parfois|très|un peu)\s+)*$/iu.test(before);
+              // Coordination avec un attribut déjà accordé (« attentive et fier » → « attentive et fière »).
+              const coordination = FEMININE_ATTRIBUTES.test(before);
+              if (!attribut && !apposition && !coordination) return match;
+            }
+            return match[0] === masc[0] ? fem : fem[0].toUpperCase() + fem.slice(1);
+          });
       }, String(sentence || ''));
     }
 
@@ -39,77 +55,57 @@
       let s = String(rawText || '').trim();
       if (!s) return '';
 
-      // Les « il » impersonnels (« il faut », « s’il y a lieu »…) ne désignent pas l’élève.
-      const impersonal = [];
-      s = s.replace(/\b([Ss][’']il|[Ii]l)(?= (?:y a|faut|s[’']agit|est (?:important|nécessaire|souhaitable|recommandé) de))/g, match => {
-        impersonal.push(match);
-        return `\u0000${impersonal.length - 1}\u0000`;
-      });
-      let nameUsed = !useNameOnFirstSubject;
-      const getSubj = (capitalize) => {
+      // Corrections des coquilles des textes officiels, sans modifier ceux-ci.
+      s = s.replace(/(?<![\p{L}-])situation-problèmes(?![\p{L}-])/gu, 'situations-problèmes')
+        .replace(/(?<=[\p{L})])[ \t\u00a0]*:(?!\/)/gu, '\u00a0:')
+        .replace(/pour ce faire un vocabulaire/g, 'pour ce faire, un vocabulaire')
+        .replace(/afin qu[’']on puisse le lire facilement/g, 'afin que son écriture soit facile à lire')
+        .replace(/et s[’']il y a lieu, son registre/g, 'et, s’il y a lieu, son registre');
+
+      let nameUsed = !useNameOnFirstSubject || !allowName;
+      const subject = capitalize => {
         if (!nameUsed) {
           nameUsed = true;
           return firstName;
         }
         return capitalize ? cap(pron) : pron;
       };
-
-      // 0. « l’élève » complément (« de l’élève », « par l’élève ») : jamais remplacé par « il »/« elle ».
-      if (allowName && firstName !== 'L’élève') {
-        s = s.replace(/\b([Dd])e l[’']élève\b/g, (match, d) =>
-          startsWithFrenchVowelOrH(firstName) ? `${d}’${firstName}` : `${d}e ${firstName}`);
-        s = s.replace(/(?<!\p{L})(par|pour|avec|chez|selon|envers|à) l[’']élève\b/gu, (match, prep) => `${prep} ${firstName}`);
-      } else {
-        s = s.replace(/(?<!\p{L})(de|par|pour|avec|chez|selon|envers|à) l([’'])élève\b/gu, (match, prep, apos) => `${prep} l${apos}\u0001`);
-      }
-
-      // 1. Sujets explicites "L'élève" / "l'élève"
-      s = s.replace(/\bL[’']élève\b/g, () => getSubj(true));
-      s = s.replace(/\bl[’']élève\b/g, () => getSubj(false));
-      s = s.replace(/\u0001/g, 'élève');
-
-      // 2. Élisions en début de proposition ("Lorsqu'il", "Qu'il", "S'il")
-      s = s.replace(/\b(Lorsqu|lorsqu)[’']il\b/g, (match, prefix) => {
-        const isCap = prefix.charAt(0) === 'L';
-        if (!nameUsed) {
+      // Une seule passe conserve l’ordre des sujets et évite de placer le prénom
+      // dans une subordonnée avant un pronom qui désigne déjà l’élève.
+      const tokens = /(?<![\p{L}-])([Ss][’']il|[Ii]l)(?=\s+(?:y a|faut|lui arrive|s[’']agit|est\s+(?:important|nécessaire|souhaitable|recommandé)\s+de))|(?<![\p{L}-])(?:[Dd]e|[Pp]ar|[Pp]our|[Aa]vec|[Cc]hez|[Ss]elon|[Ee]nvers|[Àà])\s+l[’']élève(?![\p{L}-])|(?<![\p{L}-])(?:[Ll]orsque|[Qq]ue|[Ss]i)\s+l[’']élève(?![\p{L}-])|(?<![\p{L}-])(?:[Ll]orsqu|[Qq]u|[Ss])[’']il(?![\p{L}-])|(?<![\p{L}-])[Ll][’']élève(?![\p{L}-])|(?<![\p{L}-])[Ii]l(?![\p{L}-])/gu;
+      s = s.replace(tokens, (match, impersonal) => {
+        if (impersonal) return match;
+        const complement = /^(de|par|pour|avec|chez|selon|envers|à)\s+l[’']élève$/iu.exec(match);
+        if (complement) {
+          if (nameUsed || firstName === 'L’élève') return match;
           nameUsed = true;
-          return startsWithFrenchVowelOrH(firstName)
-            ? `${isCap ? 'Lorsqu’' : 'lorsqu’'}${firstName}`
-            : `${isCap ? 'Lorsque ' : 'lorsque '}${firstName}`;
+          const prep = complement[1];
+          return prep.toLowerCase() === 'de' && startsWithFrenchVowelOrH(firstName)
+            ? `${prep[0]}’${firstName}` : `${prep} ${firstName}`;
         }
-        return `${isCap ? 'Lorsqu’' : 'lorsqu’'}${pron}`;
+        const conjunction = /^([\p{L}]+)\s+l[’']élève$/u.exec(match);
+        if (conjunction) {
+          const prefix = conjunction[1];
+          const value = subject(false);
+          return prefix.toLowerCase() !== 'si' && startsWithFrenchVowelOrH(value)
+            ? `${prefix.slice(0, -1)}’${value}` : `${prefix} ${value}`;
+        }
+        const elision = /^([\p{L}]+)[’']il$/u.exec(match);
+        if (elision) {
+          const prefix = elision[1];
+          const isCap = prefix[0] === prefix[0].toUpperCase();
+          const value = subject(false);
+          if (prefix.toLowerCase() === 's') {
+            return value === 'il' ? `${isCap ? 'S’' : 's’'}il` : `${isCap ? 'Si ' : 'si '}${value}`;
+          }
+          const full = prefix.toLowerCase() === 'qu' ? 'que' : 'lorsque';
+          const base = isCap ? cap(full) : full;
+          return startsWithFrenchVowelOrH(value) ? `${base.slice(0, -1)}’${value}` : `${base} ${value}`;
+        }
+        return subject(match[0] === match[0].toUpperCase());
       });
 
-      s = s.replace(/\b(Qu|qu)[’']il\b/g, (match, prefix) => {
-        const isCap = prefix.charAt(0) === 'Q';
-        if (!nameUsed) {
-          nameUsed = true;
-          return startsWithFrenchVowelOrH(firstName)
-            ? `${isCap ? 'Qu’' : 'qu’'}${firstName}`
-            : `${isCap ? 'Que ' : 'que '}${firstName}`;
-        }
-        return `${isCap ? 'Qu’' : 'qu’'}${pron}`;
-      });
-
-      s = s.replace(/\b(S|s)[’']il\b/g, (match, prefix) => {
-        const isCap = prefix.charAt(0) === 'S';
-        if (!nameUsed) {
-          nameUsed = true;
-          return `${isCap ? 'Si ' : 'si '}${firstName}`;
-        }
-        return isFem ? `${isCap ? 'Si ' : 'si '}elle` : `${isCap ? 'S’' : 's’'}il`;
-      });
-
-      // 3. Pronoms "Il" en début de phrase et "il" en cours de phrase
-      // Attention : si le prénom vient déjà d'être utilisé dans la même phrase (ex. "Lorsque Maxime..., il..."),
-      // tous les "il" suivants restent "il" ou "elle" !
-      s = s.replace(/\bIl\b/g, () => getSubj(true));
-      s = s.replace(/\bil\b/g, () => getSubj(false));
-
-      if (isFem) {
-        s = applyFeminineAgreements(s);
-      }
-      return s.replace(/\u0000(\d+)\u0000/g, (match, i) => impersonal[Number(i)]);
+      return isFem ? applyFeminineAgreements(s) : s;
     }
 
     function personalizeScaleSentences(sentencesArray, studentOrName, mode = 'prenom') {

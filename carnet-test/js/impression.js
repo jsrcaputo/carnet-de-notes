@@ -91,7 +91,6 @@
       const subjectDetails = [];
       const tagFrequency = {};
       const flagFrequency = {};
-      const recordedComments = [];
       const pendingStatuses = [];
 
       SUBJECTS_CONFIG.forEach(sub => {
@@ -134,24 +133,6 @@
             });
             if (meta && Array.isArray(meta.tags)) {
               meta.tags.forEach(tg => { tagFrequency[tg] = (tagFrequency[tg] || 0) + 1; });
-              const observations = groupObservationTags(meta.tags);
-              [['Forces', observations.strengths], ['Défis', observations.challenges], ['Observations précédentes', observations.previous]].forEach(([label, values]) => {
-                if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}` });
-              });
-            }
-            if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
-              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
-            }
-            if (meta && typeof meta.challenges === 'string' && meta.challenges.trim()) {
-              recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
-            }
-            if (meta && meta.comment && meta.comment.trim()) {
-              recordedComments.push({
-                term: tKey,
-                subject: sub.shortName,
-                context: asg.title,
-                text: meta.comment.trim()
-              });
             }
 
             const hasTraceFeedback = Boolean(asg.isObservation && meta &&
@@ -207,14 +188,6 @@
             });
           });
 
-          if (rec.comment && rec.comment.trim()) {
-            recordedComments.push({
-              term: tKey,
-              subject: sub.shortName,
-              context: 'Note générale',
-              text: rec.comment.trim()
-            });
-          }
         });
 
         if (evalItems.length > 0) {
@@ -351,18 +324,6 @@
         </div>
       ` : '';
 
-      const commentsHtml = recordedComments.length > 0 ? `
-        <div class="sis-section-title">Commentaires et rétroactions consignés</div>
-        <div class="sis-comments-list">
-          ${recordedComments.map(c => `
-            <div class="sis-comment-item">
-              <span class="sis-comment-meta">Ét. ${escapeHtml(c.term)} · ${escapeHtml(c.subject)} (${escapeHtml(c.context)}) :</span>
-              <span>${escapeHtml(c.text)}</span>
-            </div>
-          `).join('')}
-        </div>
-      ` : '';
-
       let sheet = document.getElementById('studentIndividualPrintSheet');
       if (!sheet) {
         sheet = document.createElement('div');
@@ -390,10 +351,9 @@
         ${supportsHtml}
         ${pendingHtml}
         ${st.gradeLevel === 'P'
-          ? `<div class="sis-section-title">Portrait qualitatif</div><p>Observations consignées à interpréter selon le jugement professionnel; ce portrait ne constitue pas un bulletin officiel.</p>${st.reportComment ? `<p>${escapeHtml(st.reportComment)}</p>` : ''}${commentsHtml}`
+          ? `<div class="sis-section-title">Portrait qualitatif</div><p>Observations consignées à interpréter selon le jugement professionnel; ce portrait ne constitue pas un bulletin officiel.</p>${st.reportComment ? `<p>${escapeHtml(st.reportComment)}</p>` : ''}`
           : `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}`}
         ${detailsHtml}
-        ${st.gradeLevel === 'P' ? '' : commentsHtml}
       `;
 
       document.body.classList.add('print-student-sheet');

@@ -359,7 +359,7 @@
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
-        { label: 'Note finale', sub: 'Jugement', hint: 'Cliquer sur la note pour l’ajuster', minW: 'min-w-[135px]', width: 135 },
+        { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
         { label: 'Commentaires au bulletin', sub: 'Rédaction', minW: '', width: 420 }
       ];
 
@@ -367,7 +367,7 @@
         const th = document.createElement('th');
         th.className = `p-2 font-semibold text-center border-l border-slate-800 ${eh.minW}`;
         th.style.width = `${eh.width}px`;
-        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>${eh.hint ? `<div class="gb-adjust-hint">${eh.hint}</div>` : ''}`;
+        th.innerHTML = `<div>${eh.label}</div><div class="text-[10px] text-slate-400 font-normal">${eh.sub}</div>`;
         headerRow.appendChild(th);
       });
 
