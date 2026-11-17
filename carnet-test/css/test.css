@@ -2439,3 +2439,36 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #gradebookScrollContainer 
   html.design-studio .gb-scroll-arrow:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 }
 @media print { .gb-fade, .gb-scroll-arrow, .gradebook-top-scroll { display: none !important; } }
+/* Marqueurs d'adaptation : statut de remise en rangée compacte */
+html.design-studio .flag-picker { background: var(--studio-surface, #fff); }
+html.design-studio .flag-picker-status-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px;
+  margin-top: 6px; padding: 6px 4px 2px; border-top: 1px solid var(--line);
+}
+html.design-studio .flag-picker-status-label { font-size: 10px; font-weight: 700; color: var(--muted); margin-right: 4px; }
+html.design-studio .flag-picker-status {
+  font-size: 10.5px; font-weight: 700; line-height: 1; padding: 4px 8px; border-radius: 999px; cursor: pointer;
+  border: 1px solid var(--studio-border-strong, var(--line)); background: transparent; color: var(--muted);
+}
+html.design-studio .flag-picker-status:hover { background: var(--studio-surface-soft, #f8fafc); color: var(--ink); }
+html.design-studio .flag-picker-status.is-active {
+  background: color-mix(in srgb, var(--brand) 12%, var(--studio-surface, #fff));
+  border-color: color-mix(in srgb, var(--brand) 45%, transparent); color: var(--brand-deep);
+}
+html.design-studio .flag-picker-code { min-width: 44px; white-space: nowrap; }html.design-studio .flag-picker-status-label { flex-basis: 100%; margin: 0 0 2px; }
+html.design-studio .flag-picker-item.is-active {
+  background: color-mix(in srgb, var(--brand) 7%, var(--studio-surface, #fff));
+  border-color: color-mix(in srgb, var(--brand) 22%, transparent);
+}
+html.design-studio .flag-picker-item.is-active .flag-picker-code {
+  background: color-mix(in srgb, var(--brand) 12%, var(--studio-surface, #fff));
+  border-color: color-mix(in srgb, var(--brand) 40%, transparent);
+  color: var(--brand-deep);
+}
+html.design-studio:not(.theme-dark) .cell-flag-chip {
+  background: color-mix(in srgb, var(--brand) 7%, #fff);
+  border-color: color-mix(in srgb, var(--brand) 22%, transparent);
+  color: var(--brand-deep);
+}
+html.design-studio .cell-flag-chip { text-transform: none; }
+html.design-studio.theme-dark .flag-picker-item.is-active .flag-picker-code { color: var(--ink); }

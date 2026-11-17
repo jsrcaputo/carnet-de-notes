@@ -586,7 +586,7 @@
                 <div class="mt-1 flex flex-wrap gap-1">
                   ${sortedFlags.map(([fl, count]) => {
                     const def = CELL_FLAGS.find(f => f.code === fl);
-                    return `<span class="px-2 py-0.5 rounded bg-slate-200/80 border border-slate-300 text-[11px] font-bold text-slate-800" title="${escapeHtml(def ? def.label : fl)}">${escapeHtml(fl)} (${count}×)</span>`;
+                    return `<span class="px-2 py-0.5 rounded bg-slate-200/80 border border-slate-300 text-[11px] font-bold text-slate-800" title="${escapeHtml(def ? def.label : fl)}">${escapeHtml(getCellFlagBadge(fl))} (${count}×)</span>`;
                   }).join('')}
                   ${sortedTags.length > 0
                     ? sortedTags.map(([tg, count]) => {

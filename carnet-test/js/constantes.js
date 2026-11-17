@@ -219,15 +219,22 @@
 
     // Marqueurs rapides sur cellule : sobres, typographiques, monochromes (ton sur ton)
     const CELL_FLAGS = [
-      { code: 'AIDE',  group: 'adaptation', label: 'Avec aide / étayage', hint: 'Soutien compatible avec la compétence évaluée' },
-      { code: 'T+',    group: 'adaptation', label: 'Temps supplémentaire', hint: 'Réalisé avec période prolongée' },
-      { code: 'ADAPT', group: 'adaptation', label: 'Conditions adaptées', hint: 'Conditions adaptées sans modifier les attentes' },
-      { code: 'OUTIL', group: 'adaptation', label: 'Outils d’aide utilisés', hint: 'Outil compatible avec la compétence évaluée' },
-      { code: 'MOD',   group: 'modification', label: 'Attentes modifiées', hint: 'Attentes modifiées selon le plan d’intervention' },
-      { code: 'REP',   group: 'autre', label: 'Reprise / corrigé', hint: 'Travail repris ou bonifié' },
-      { code: 'ABS',   group: 'autre', label: 'Absent / à reprendre', hint: 'Absence lors de l’évaluation' }
+      { code: 'AIDE',  badge: 'AIDE',     group: 'adaptation', label: 'Avec aide', hint: 'Soutien ponctuel compatible avec la compétence évaluée' },
+      { code: 'AIDE+', badge: 'AIDE +',   group: 'adaptation', label: 'Aide soutenue', hint: 'Soutien fréquent ou rapproché pendant la tâche' },
+      { code: 'AIDE1', badge: '1 pour 1', group: 'adaptation', label: 'Aide 1 - 1', hint: 'Soutien individuel (un adulte pour l’élève)' },
+      { code: 'T+',    badge: 'Temps+',   group: 'adaptation', label: 'Temps supplémentaire', hint: 'Réalisé avec période prolongée' },
+      { code: 'OUTIL', badge: 'OUTIL',    group: 'adaptation', label: 'Outils d’aide utilisés', hint: 'Outil compatible avec la compétence évaluée' },
+      { code: 'MOD',   badge: 'MOD',      group: 'modification', label: 'Attentes modifiées', hint: 'Attentes modifiées selon le plan d’intervention' },
+      { code: 'REP',   badge: 'REP',      group: 'autre', label: 'Reprise', hint: 'Travail repris ou bonifié' },
+      { code: 'ABS',   badge: 'ABS',      group: 'autre', label: 'Absent / à reprendre', hint: 'Absence lors de l’évaluation' },
+      // Anciens marqueurs : plus proposés, mais conservés pour les données existantes.
+      { code: 'ADAPT', badge: 'ADAPT',    group: 'adaptation', label: 'Conditions adaptées', hint: 'Conditions adaptées sans modifier les attentes', retired: true }
     ];
     const VALID_CELL_FLAG_CODES = new Set(CELL_FLAGS.map(f => f.code));
+    const getCellFlagBadge = code => {
+      const def = CELL_FLAGS.find(f => f.code === code);
+      return def ? def.badge : code;
+    };
 
     // Pondération officielle du bulletin unique québécois (Régime pédagogique MEQ)
     const OFFICIAL_TERM_WEIGHTS = { '1': 20, '2': 20, '3': 60 };

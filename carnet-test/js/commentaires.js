@@ -264,7 +264,8 @@
             if (m && Array.isArray(m.flags)) m.flags.forEach(f => flagsUsed.add(f));
           });
         }
-        if (flagsUsed.has('AIDE') && !hasAutonomieDE) {
+        const hasSupportFlag = flagsUsed.has('AIDE') || flagsUsed.has('AIDE+') || flagsUsed.has('AIDE1');
+        if (hasSupportFlag && !hasAutonomieDE) {
           sentences.push('Un soutien ciblé en cours de tâche l’aide à sécuriser ses étapes de réalisation.');
         } else if (flagsUsed.has('T+')) {
           sentences.push('L’octroi de temps supplémentaire lui permet de démontrer pleinement ses compétences.');

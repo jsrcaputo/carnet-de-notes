@@ -99,21 +99,40 @@
       frame.style.setProperty('--gb-arrow-y', `${Math.max(28, Math.min(rect.height - 28, middle))}px`);
     }
 
+    let gradebookScrollAnim = null;
+
     function scrollGradebookByColumn(direction) {
       const container = document.getElementById('gradebookScrollContainer');
       const cells = [...container.querySelectorAll('thead tr:first-child > th')];
       if (cells.length < 2) return;
       const stickyWidth = cells[0].offsetWidth;
       const stops = cells.slice(1).map(cell => cell.offsetLeft - stickyWidth);
-      const current = container.scrollLeft;
+      // Clics rapides : on part de la cible en cours pour avancer d'une évaluation à chaque clic.
+      const current = gradebookScrollAnim ? gradebookScrollAnim.target : container.scrollLeft;
       const max = container.scrollWidth - container.clientWidth;
       let target = direction > 0 ? stops.find(stop => stop > current + 4) : stops.slice().reverse().find(stop => stop < current - 4);
       if (target === undefined) target = direction > 0 ? max : 0;
-      const smooth = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      // La barre du bas pilote le carnet : la faire défiler évite que la synchronisation interrompe l'animation.
-      const bar = document.getElementById('gradebookTopScroll');
-      const scroller = bar && bar.classList.contains('is-visible') ? bar : container;
-      scroller.scrollTo({ left: Math.max(0, Math.min(max, target)), behavior: smooth ? 'smooth' : 'auto' });
+      target = Math.max(0, Math.min(max, target));
+      if (gradebookScrollAnim) cancelAnimationFrame(gradebookScrollAnim.frame);
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gradebookScrollAnim = null;
+        container.scrollLeft = target;
+        return;
+      }
+      // Animation pilotée image par image : le défilement « smooth » natif était interrompu par la synchronisation avec la barre du bas.
+      const from = container.scrollLeft;
+      const duration = 320;
+      const start = performance.now();
+      const anim = { target, frame: 0 };
+      gradebookScrollAnim = anim;
+      const step = now => {
+        const t = Math.min(1, (now - start) / duration);
+        const eased = 1 - Math.pow(1 - t, 3);
+        container.scrollLeft = from + (target - from) * eased;
+        if (t < 1 && gradebookScrollAnim === anim) anim.frame = requestAnimationFrame(step);
+        else if (gradebookScrollAnim === anim) gradebookScrollAnim = null;
+      };
+      anim.frame = requestAnimationFrame(step);
     }
 
     function positionWeightGuide() {
@@ -238,6 +257,7 @@
       const gradebookScroll = document.getElementById('gradebookScrollContainer');
       if (topScroll && gradebookScroll) {
         topScroll.addEventListener('scroll', () => {
+          if (gradebookScrollAnim) return;
           if (Math.abs(gradebookScroll.scrollLeft - topScroll.scrollLeft) > 0.5) gradebookScroll.scrollLeft = topScroll.scrollLeft;
         });
         gradebookScroll.addEventListener('scroll', updateGradebookTopScroll, { passive: true });
