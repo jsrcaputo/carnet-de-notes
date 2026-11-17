@@ -905,8 +905,43 @@
         return [group && !group.placeholder ? group.name : '', `Étape ${appState.activeTerm}`, appState.activeView === 'viewBareme' && st ? st.name : '', sub && sub.shortName]
           .filter(Boolean).join(' · ');
       };
+      // Réduit la grille pour qu'elle tienne sur une seule page lettre/A4 paysage (marges de 10 mm).
+      const fitObservationGridToOnePage = () => {
+        const grid = document.getElementById('observationPrintGrid');
+        if (!grid) return;
+        const pageWidth = 960, pageHeight = 700;
+        const hidden = [...grid.children].filter((el, i) => i > 0 && !el.matches('.observation-matrix, #qoChecklistContainer, p'));
+        const saved = { width: grid.style.width, maxWidth: grid.style.maxWidth };
+        hidden.forEach(el => { el.dataset.printDisplay = el.style.display; el.style.display = 'none'; });
+        document.body.style.setProperty('--print-fit', '1');
+        grid.style.width = `${pageWidth}px`;
+        grid.style.maxWidth = 'none';
+        const height = grid.scrollHeight, width = grid.scrollWidth;
+        grid.style.width = saved.width;
+        grid.style.maxWidth = saved.maxWidth;
+        hidden.forEach(el => { el.style.display = el.dataset.printDisplay; delete el.dataset.printDisplay; });
+        const scale = Math.min(1, pageHeight / height, pageWidth / width) * 0.97;
+        document.body.style.setProperty('--print-fit', scale.toFixed(3));
+      };
       const printObservationGrid = blank => {
-        printWithClass(blank ? ['print-observation-grid', 'print-observation-blank'] : ['print-observation-grid']);
+        const classes = blank ? ['print-observation-grid', 'print-observation-blank'] : ['print-observation-grid'];
+        const previousStudentId = appState.selectedStudentId;
+        const firstStudentButton = document.querySelector('#qoStudentGrid button');
+        // Une grille vierge a besoin des critères : on emprunte le premier élève visé, sans afficher son nom.
+        const borrowStudent = blank && !document.querySelector('#sgMatrixBody .rubric-stmt-btn') && firstStudentButton;
+        if (borrowStudent) firstStudentButton.click();
+        document.body.classList.add(...classes);
+        fitObservationGridToOnePage();
+        const cleanup = () => {
+          window.removeEventListener('afterprint', cleanup);
+          document.body.style.removeProperty('--print-fit');
+          if (borrowStudent) {
+            appState.selectedStudentId = previousStudentId;
+            renderQuickObsView();
+          }
+        };
+        window.addEventListener('afterprint', cleanup);
+        printWithClass(classes);
       };
       const printCurrentView = event => {
         const view = appState.activeView;

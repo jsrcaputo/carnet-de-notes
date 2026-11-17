@@ -580,7 +580,7 @@
         <!-- Résultats annuels -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- Résultats par matière -->
-          <div class="${st.gradeLevel === 'P' ? 'lg:col-span-12 ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div class="${st.gradeLevel === 'P' ? 'gr-span-full ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
               <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Portrait du développement par domaine' : 'Résultats annuels par matière'}</h4>
               ${st.gradeLevel === 'P' ? '' : '<span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>'}
@@ -591,7 +591,7 @@
           </div>
 
           <!-- Synthèse -->
-          <div class="${st.gradeLevel === 'P' ? 'lg:col-span-12' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div class="${st.gradeLevel === 'P' ? 'gr-span-full' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 class="text-sm font-bold text-slate-900">Commentaires de l’enseignant(e)</h4>
             </div>

@@ -2245,3 +2245,82 @@
       .ps-path { grid-template-columns: 1fr; }
       .ps-card-head { flex-wrap: wrap; }
     }
+/* Synthèse : bloc pleine largeur (la classe Tailwind lg:col-span-12 n’est pas compilée). */
+.gr-span-full { grid-column: 1 / -1; min-width: 0; }
+
+/* Style « pastille » unifié : fond pâle, contour et texte foncés de la palette, soulignement intérieur. */
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #gradebookScrollContainer thead .gb-level-seg button.is-active,
+  main table thead .gb-level-seg button.is-active,
+  #grStudentBand button[aria-pressed="true"],
+  #qoStudentGrid button.bg-indigo-600,
+  #qoModeSegment button[aria-pressed="true"],
+  #qoWeightPresetBar button[aria-pressed="true"],
+  #qoTargetLevelsBox .qo-target-btn.is-active,
+  #qoQuickTags button.bg-indigo-600,
+  #competencyPositioning .comp-tab.is-active,
+  .test-sidebar-nav > button[aria-pressed="true"],
+  .test-sidebar-nav > button.bg-indigo-500,
+  .test-sidebar-nav > button.bg-indigo-600,
+  .test-sidebar-nav > button.bg-amber-400,
+  .test-sidebar #subjectTabsContainer > button[aria-pressed="true"],
+  .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"],
+  #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb,
+  #btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents
+) {
+  background: color-mix(in srgb, var(--brand-soft) 55%, var(--studio-surface, #fff)) !important;
+  color: var(--brand-deep) !important;
+  border: 1px solid color-mix(in srgb, var(--brand) 38%, transparent) !important;
+  border-radius: 999px !important;
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 45%, transparent) !important;
+  font-weight: 600 !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#grStudentBand button[aria-pressed="true"], #qoStudentGrid button.bg-indigo-600) :is(span, b) { color: inherit; }
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb,
+  #btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents
+):hover:not(:disabled) {
+  background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface)) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  .test-sidebar-nav > :is(button, a),
+  .test-sidebar #subjectTabsContainer > button,
+  .test-sidebar #subjectSubTabsContainer > button,
+  #competencyPositioning .comp-tab,
+  #grStudentBand button,
+  #qoStudentGrid button,
+  #qoModeSegment button,
+  #qoWeightPresetBar button[aria-pressed],
+  .gb-level-seg button
+) { border-radius: 999px !important; }
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoModeSegment, .gb-level-seg) { border-radius: 999px !important; }
+    /* Impressions : aucun décor d'écran, fond blanc, une seule fiche à la fois */
+    @media print {
+      html, html.design-studio, html body, html.design-studio body, html.design-studio body main.site-layout { background: #fff !important; background-image: none !important; }
+      html body :is(.gradebook-atmosphere, .studio-only-atmosphere, .student-manager-atmosphere,
+      .global-report-atmosphere, .empty-roster-visual, #gbSubjectIcon) { display: none !important; }
+      body:not(.print-student-sheet) #studentIndividualPrintSheet,
+      body:not(.print-students) #studentPrintSheet,
+      body:not(.print-comp) #compPrintSheet { display: none !important; }
+      body.print-observation-grid #observationPrintGrid { zoom: var(--print-fit, 1); border: 0 !important; box-shadow: none !important; padding: 0 !important; }
+      body.print-observation-grid main.site-layout { padding: 0 !important; margin: 0 !important; max-width: none !important; min-height: 0 !important; }
+      body.print-observation-grid #observationPrintGrid tr,
+      body.print-observation-grid #observationPrintGrid .qo-checklist-card { break-inside: avoid; }
+    }
+
+/* Choix « Déjà réalisée / Observable » : pastilles flottantes, sans boîte, à la largeur du texte */
+html.design-studio .new-evaluation-choices:not(.hidden) {
+  align-items: flex-start;
+  min-width: 0;
+  padding: 0;
+  gap: .35rem;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+html.design-studio #newEvaluationChoices > button {
+  width: auto;
+  white-space: nowrap;
+  padding: .35rem .9rem;
+  filter: drop-shadow(0 3px 8px rgba(15, 23, 42, .12));
+}

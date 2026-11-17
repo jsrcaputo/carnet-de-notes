@@ -155,9 +155,48 @@
       ] }
     ];
 
+    // Préscolaire : observations propres aux 5 domaines du Programme-cycle de l’éducation préscolaire (MEQ, 2021).
+    const PRESCHOOL_OBSERVATION_AREAS = [
+      { id: 'presco_c1', label: 'Physique et moteur', items: [
+        ['Coordonne ses mouvements lors des jeux actifs', 'A besoin de soutien pour coordonner ses mouvements'],
+        ['Manipule les petits objets avec précision', 'A besoin de soutien pour manipuler les petits objets'],
+        ['Tient son crayon et ses ciseaux de façon adéquate', 'A besoin de rappels pour bien tenir son crayon et ses ciseaux'],
+        ['Adopte des comportements sécuritaires', 'A besoin de rappels pour adopter des comportements sécuritaires']
+      ] },
+      { id: 'presco_c2', label: 'Affectif', items: [
+        ['Nomme ses émotions', 'A besoin d’aide pour nommer ses émotions'],
+        ['Exprime ses besoins et ses goûts', 'A besoin de soutien pour exprimer ses besoins et ses goûts'],
+        ['Garde son calme devant une difficulté', 'A besoin d’accompagnement pour garder son calme devant une difficulté'],
+        ['Accomplit les routines de façon autonome', 'A besoin de rappels pour accomplir les routines']
+      ] },
+      { id: 'presco_c3', label: 'Social', items: [
+        ['Joue et coopère avec ses pairs', 'A besoin de soutien pour jouer et coopérer avec ses pairs'],
+        ['Partage le matériel et attend son tour', 'A besoin de rappels pour partager le matériel et attendre son tour'],
+        ['Propose des solutions lors d’un conflit', 'A besoin de l’aide d’un adulte pour régler un conflit'],
+        ['Respecte les règles de vie de la classe', 'A besoin de rappels pour respecter les règles de vie de la classe']
+      ] },
+      { id: 'presco_c4', label: 'Langagier', items: [
+        ['S’exprime clairement pour se faire comprendre', 'A besoin de soutien pour s’exprimer clairement'],
+        ['Écoute une histoire et en parle', 'A besoin de soutien pour écouter une histoire et en parler'],
+        ['Joue avec les sons et les rimes', 'A besoin de soutien pour jouer avec les sons et les rimes'],
+        ['Reconnaît des lettres et s’essaie à écrire', 'A besoin de soutien pour reconnaître des lettres et s’essayer à écrire']
+      ] },
+      { id: 'presco_c5', label: 'Cognitif', items: [
+        ['Explore et pose des questions avec curiosité', 'A besoin d’encouragement pour explorer et poser des questions'],
+        ['Persévère pour résoudre un petit problème', 'A besoin d’encouragement pour persévérer devant un petit problème'],
+        ['Classe, compare et dénombre des objets', 'A besoin de soutien pour classer, comparer et dénombrer des objets'],
+        ['Décrit ses découvertes', 'A besoin de soutien pour décrire ses découvertes']
+      ] }
+    ];
+
+    function getObservationAreasForSubject(sub) {
+      return sub && sub.group === 'presco' ? PRESCHOOL_OBSERVATION_AREAS : OBSERVATION_AREAS;
+    }
+
     function groupObservationTags(tags) {
-      const strengths = new Set(OBSERVATION_AREAS.flatMap(area => area.items.map(item => item[0])));
-      const challenges = new Set(OBSERVATION_AREAS.flatMap(area => area.items.map(item => item[1])));
+      const allAreas = [...OBSERVATION_AREAS, ...PRESCHOOL_OBSERVATION_AREAS];
+      const strengths = new Set(allAreas.flatMap(area => area.items.map(item => item[0])));
+      const challenges = new Set(allAreas.flatMap(area => area.items.map(item => item[1])));
       const result = { strengths: [], challenges: [], previous: [] };
       (Array.isArray(tags) ? tags : []).forEach(tag => {
         if (strengths.has(tag)) result.strengths.push(tag);
@@ -300,8 +339,8 @@
           {
             id: 'meq_epreuve',
             label: 'Grille pondérée (MEQ)',
-            hint: 'Pondération officielle épreuve MEQ : 30 % / 20 % / 5 % / 25 % / 20 %',
-            weights: { [c1]: 30, [c2]: 20, [c3]: 5, [c4]: 25, [c5]: 20 }
+            hint: 'Pondération des épreuves ministérielles d’écriture (MEQ, 4e et 6e année) : 20 % par critère',
+            weights: { [c1]: 20, [c2]: 20, [c3]: 20, [c4]: 20, [c5]: 20 }
           }
         ];
       }

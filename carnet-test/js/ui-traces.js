@@ -835,8 +835,12 @@
         tbody.appendChild(tr);
       });
 
-      const categories = OBSERVATION_AREAS;
-      if (!appState.activeTagCategoryId) appState.activeTagCategoryId = categories[0].id;
+      const categories = getObservationAreasForSubject(sub);
+      const domainCategory = categories.find(c => c.id === sub.id);
+      if ((domainCategory && appState.tagCategorySubjectId !== sub.id) || !categories.some(c => c.id === appState.activeTagCategoryId)) {
+        appState.activeTagCategoryId = (domainCategory || categories[0]).id;
+      }
+      appState.tagCategorySubjectId = sub.id;
       const activeCat = categories.find(c => c.id === appState.activeTagCategoryId) || categories[0];
 
       const catTabsEl = document.getElementById('qoCategoryTabs');
