@@ -360,7 +360,7 @@
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
         { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
-        { label: 'Commentaires au bulletin', sub: 'Rédaction', minW: '', width: 420 }
+        { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
       ];
 
       extraHeaders.forEach(eh => {

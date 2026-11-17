@@ -148,12 +148,12 @@
             <div id="studentSearchMessage" aria-live="polite"></div>
           </form>
           <div class="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
-            <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white">Étape 1</button>
-            <button type="button" data-term="2" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 2</button>
-            <button type="button" data-term="3" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 3</button>
+            <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4a8 8 0 0 1 6.93 12z" fill="currentColor" fill-opacity=".35"/></svg><span>Étape 1</span></button>
+            <button type="button" data-term="2" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4a8 8 0 1 1-6.93 12z" fill="currentColor" fill-opacity=".35"/></svg><span>Étape 2</span></button>
+            <button type="button" data-term="3" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity=".35"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Étape 3</span></button>
             <div class="h-4 w-px bg-slate-700 mx-1"></div>
             <button id="btnNavGlobalReport" type="button" class="px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer text-amber-300 hover:bg-amber-500/20 flex items-center gap-1">
-              <span>Synthèse</span>
+              <svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8.5 17v-3M12 17V9.5M15.5 17v-5"/></svg><span>Synthèse</span>
             </button>
           </div>
         </div>
@@ -443,9 +443,6 @@
           </div>
           <div id="qoTargetLevelsBox" class="hidden items-center gap-1 flex-wrap"></div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <span id="qoEvaluatedCounter" class="inline-flex items-center text-[11px] font-semibold text-amber-900 px-2 py-1 rounded-lg bg-white border border-amber-200 whitespace-nowrap leading-none">
-              0 évalué(s)
-            </span>
             <button id="btnCommitObsSessionToGradebook" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-2xs transition cursor-pointer whitespace-nowrap">
               <span id="btnCommitTopLabel">Enregistrer au carnet</span>
             </button>
@@ -543,7 +540,7 @@
           <div class="qo-side-header flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
             <div class="min-w-0">
               <div class="qo-side-kicker text-[10px] font-bold uppercase tracking-wider text-slate-500 leading-none">Observations</div>
-              <h3 id="qoBottomStudentName" class="text-sm font-extrabold text-indigo-600 truncate mt-1">Élève</h3>
+              <h3 id="qoBottomStudentName" class="hidden">Élève</h3>
             </div>
             <span id="qoSideLiveBadge" class="hidden shrink-0 px-2 py-0.5 rounded-md border text-[11px] font-extrabold whitespace-nowrap"></span>
           </div>
