@@ -631,10 +631,10 @@
         const tdStu = document.createElement('td');
         tdStu.className = 'p-2.5 sticky left-0 bg-inherit z-10 border-r border-slate-100';
         const studentName = document.createElement('div');
-        studentName.className = 'font-bold text-slate-900';
+        studentName.className = 'gb-student-name font-bold text-slate-900';
         studentName.textContent = st.name;
         const studentLevel = document.createElement('div');
-        studentLevel.className = 'text-[10px] text-indigo-700 leading-tight mt-0.5 flex flex-wrap items-center gap-1';
+        studentLevel.className = 'gb-student-meta text-[10px] text-indigo-700 leading-tight mt-0.5 flex flex-wrap items-center gap-1';
         const effLevel = getEffectiveGradeLevel(st, sub);
         const isMod = isSubjectModifiedForStudent(st, sub);
         const studentCycle = getStudentCycle(effLevel);
@@ -1317,6 +1317,7 @@
       const isFem = mode === 'elle' || mode === 'prenom_elle';
       const pron = isFem ? 'elle' : 'il';
       const currentTextNow = area.value.trim();
+      const categories = getCommentBankCategories(st, activeCommentBankContext.subjectId);
 
       const getPhraseVariants = (raw) => [
         personalizeSingleSentence(raw, firstName, 'il', true),
@@ -1331,7 +1332,7 @@
         return variants.find(v => v && text.includes(v)) || null;
       };
 
-      COMMENT_BANK_CATEGORIES.forEach(category => {
+      categories.forEach(category => {
         const column = document.createElement('fieldset');
         column.className = 'qo-choice-column';
         const legend = document.createElement('legend');
@@ -1363,7 +1364,7 @@
               let nextText = textNow.replace(existingMatch, '').replace(/\s{2,}/g, ' ').trim();
               // Rétablir le prénom si l'énoncé retiré était le seul à le porter.
               if (nextText && (mode === 'prenom' || mode === 'prenom_elle') && !nextText.toLowerCase().includes(firstName.toLowerCase())) {
-                const allRaw = COMMENT_BANK_CATEGORIES.flatMap(c => c.phrases);
+                const allRaw = categories.flatMap(c => c.phrases);
                 for (const candidateRaw of allRaw) {
                   const pronVar = personalizeSingleSentence(candidateRaw, firstName, pron, false);
                   if (pronVar && nextText.startsWith(pronVar)) {
@@ -1408,8 +1409,20 @@
       if (!modal || !area) return;
 
       if (subtitle) {
-        const gradeInfo = sum.finalPct !== null ? `${sum.finalLetter} (${sum.finalPct} %)` : 'Aucune note finale';
+        const preschool = getStudentCycle(st.gradeLevel) === 'P';
+        const feedbackOnly = getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub));
+        const gradeInfo = preschool ? 'Constat de développement à porter par l’enseignante ou l’enseignant'
+          : feedbackOnly ? 'Aucun résultat disciplinaire au 1er cycle'
+          : sum.finalPct !== null ? `${sum.finalLetter} (${sum.finalPct} %)` : 'Aucune note finale';
         subtitle.textContent = `${st.name} · ${sub.shortName} · Étape ${tId} · Résultat : ${gradeInfo}`;
+      }
+      const guidance = document.getElementById('cbBankGuidance');
+      if (guidance) {
+        guidance.textContent = getStudentCycle(st.gradeLevel) === 'P'
+          ? 'Choisissez les constats selon vos observations, sans conversion de pourcentage. La synthèse reprend les éléments observés, sans porter de constat global; elle reste vide en l’absence de traces qualitatives. Pour les enfants de 4 ans, vérifiez les défis dans la source CSSDD (surlignage non repris).'
+          : getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))
+            ? 'Aucun résultat disciplinaire en science et technologie ni en univers social au 1er cycle. Seules les observations transversales sont proposées ici; aucune synthèse disciplinaire n’est produite.'
+            : 'Formulations locales à adapter aux apprentissages travaillés. Les observations transversales et les éléments de rétroaction (stratégies, validation, retour réflexif) ne constituent pas des résultats distincts et ne modifient pas les notes.';
       }
       if (modeSelect) {
         modeSelect.value = st.pronoun || 'prenom';

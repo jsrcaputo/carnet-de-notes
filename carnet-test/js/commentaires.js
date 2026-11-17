@@ -116,12 +116,7 @@
 
       return (sentencesArray || []).map((raw, idx) => {
         const useNameHere = useFirstNameInOpening && idx === 0;
-        let transformed = personalizeSingleSentence(raw, firstName, pron, useNameHere, useFirstNameInOpening);
-        // Ajouter un connecteur léger à la 3e phrase si plusieurs phrases commencent par Il/Elle de façon répétitive
-        if (idx === 2 && (sentencesArray.length >= 3) && /^(Il|Elle)\s+[a-zàâäéèêëîïôöùûüÿç]/.test(transformed)) {
-          transformed = 'De plus, ' + transformed.charAt(0).toLowerCase() + transformed.slice(1);
-        }
-        return transformed;
+        return personalizeSingleSentence(raw, firstName, pron, useNameHere, useFirstNameInOpening);
       }).filter(Boolean).join(' ');
     }
 
@@ -191,11 +186,39 @@
       }
     ];
 
+    function synthesizePreschoolSubjectComment(termId, subject, student, mode) {
+      const term = appState.terms[termId];
+      const data = term && term.subjectData[subject.id];
+      const record = data && data.studentRecords[student.id];
+      const observationIndices = PRESCHOOL_SYNTHESIS_OBSERVATIONS[subject.id];
+      if (!record || !observationIndices) return '';
+      const latestByCriterion = new Map();
+      const assignments = (data.assignments || []).slice().sort((a, b) => String(b.date || '').localeCompare(String(a.date || '')));
+      assignments.forEach(assignment => {
+        if (!isAssignmentForStudent(assignment, student)) return;
+        const meta = record.scoreMeta && record.scoreMeta[assignment.id];
+        if (!meta || meta.notEvaluated || meta.linkedCopy || !Array.isArray(meta.checked)) return;
+        meta.checked.forEach(key => {
+          const match = /^(presco_c[1-5])_([1-3])_([A-E])_\d+$/.exec(key);
+          if (!match || match[1] !== subject.id || latestByCriterion.has(match[2])) return;
+          latestByCriterion.set(match[2], match[3]);
+        });
+      });
+      // Les traces soutiennent le commentaire, sans constituer un constat global ni un bilan officiel.
+      const sentences = Array.from(latestByCriterion).sort((a, b) => Number(a[0]) - Number(b[0])).map(([criterion, family]) => {
+        const pair = PRESCHOOL_COMMENT_OBSERVATIONS[subject.id][observationIndices[Number(criterion) - 1]];
+        return pair[['D', 'E'].includes(family) ? 1 : 0];
+      });
+      return personalizeScaleSentences(sentences, student, mode);
+    }
+
     function synthesizeStudentSubjectComment(termId, subjectId, studentId, modeOverride) {
       const st = appState.students.find(s => s.id === studentId);
       const sub = SUBJECTS_CONFIG.find(s => s.id === subjectId) || getCurrentSubjectConfig();
       if (!st || !sub) return '';
       const mode = modeOverride || st.pronoun || 'prenom';
+      if (getStudentCycle(st.gradeLevel) === 'P') return synthesizePreschoolSubjectComment(termId, sub, st, mode);
+      if (getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))) return '';
       const termData = appState.terms[termId];
       const subData = termData && termData.subjectData[sub.id];
       const rec = subData && subData.studentRecords[st.id];

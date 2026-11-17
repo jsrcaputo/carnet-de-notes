@@ -381,6 +381,10 @@
             activeCommentBankContext.studentId,
             mode
           );
+          if (!synth) {
+            showToast('Aucune trace qualitative exploitable pour la synthèse. Choisissez des formulations selon vos observations.');
+            return;
+          }
           const area = document.getElementById('cbTextarea');
           area.value = synth;
           updateCommentBankCharCount();

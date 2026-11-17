@@ -61,8 +61,11 @@
       const tagFrequency = {};
       const flagFrequency = {};
       const recordedComments = [];
+      const preschoolDomains = {};
 
       SUBJECTS_CONFIG.forEach(sub => {
+        const domain = preschoolDomains[sub.id] = { strengths: new Map(), challenges: new Map(), latestComment: null };
+        const countTag = (map, tag) => map.set(tag, (map.get(tag) || 0) + 1);
         const t1 = computeStudentSubjectSummary('1', sub.id, st.id).finalPct;
         const t2 = computeStudentSubjectSummary('2', sub.id, st.id).finalPct;
         const t3 = computeStudentSubjectSummary('3', sub.id, st.id).finalPct;
@@ -102,8 +105,10 @@
                 tagFrequency[tg] = (tagFrequency[tg] || 0) + 1;
               });
               const observations = groupObservationTags(meta.tags);
+              observations.strengths.forEach(tag => countTag(domain.strengths, tag));
+              observations.challenges.forEach(tag => countTag(domain.challenges, tag));
               [['Forces', observations.strengths], ['Défis', observations.challenges], ['Observations précédentes', observations.previous]].forEach(([label, values]) => {
-                if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}` });
+                if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}`, fromTags: true });
               });
             }
             if (meta && Array.isArray(meta.flags)) {
@@ -120,6 +125,7 @@
               recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Défis : ${meta.challenges.trim()}` });
             }
             if (meta && meta.comment && meta.comment.trim()) {
+              domain.latestComment = { term: tKey, text: meta.comment.trim() };
               recordedComments.push({
                 term: tKey,
                 subject: sub.shortName,
@@ -129,6 +135,7 @@
             }
           });
           if (rec.comment && rec.comment.trim()) {
+            domain.latestComment = { term: tKey, text: rec.comment.trim() };
             recordedComments.push({
               term: tKey,
               subject: sub.shortName,
@@ -444,13 +451,74 @@
       const weightModeLabel = weightMode === 'official'
         ? 'Pondéré MEQ (20 % / 20 % / 60 %)'
         : 'Moyenne simple des étapes';
-      const preschoolNotesHtml = SUBJECTS_CONFIG.map(sub => {
-        const comments = recordedComments.filter(item => item.subject === sub.shortName);
-        return `<div class="space-y-1">
-          <h5 class="text-xs font-bold text-slate-800">${escapeHtml(sub.shortName)}</h5>
-          ${comments.length ? comments.map(item => `<p class="text-xs text-slate-700"><strong>Étape ${escapeHtml(item.term)} · ${escapeHtml(item.context)} :</strong> ${escapeHtml(item.text)}</p>`).join('') : '<p class="text-xs text-slate-500">Aucune observation écrite consignée.</p>'}
-        </div>`;
-      }).join('');
+      const PRESCHOOL_CONSTATS = {
+        4: { label: 'Se développe très bien', short: 'Très bien' },
+        3: { label: 'Se développe adéquatement', short: 'Adéquatement' },
+        2: { label: 'Se développe avec certaines difficultés', short: 'Certaines difficultés' },
+        1: { label: 'Se développe avec des difficultés importantes', short: 'Difficultés importantes' }
+      };
+      const PRESCHOOL_DOMAIN_ICONS = {
+        presco_c1: '<circle cx="13" cy="4" r="2"/><path d="m7 21 3-6 3 2v5"/><path d="m6 12 3-4 5 1 3 3"/><path d="m10 15 1-6"/>',
+        presco_c2: '<path d="M19 14c1.5-1.5 3-3.2 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.8 0-3 .5-4.5 2-1.5-1.5-2.7-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4 3 5.5l7 7Z"/>',
+        presco_c3: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/><path d="M16 3.1a4 4 0 0 1 0 7.8"/>',
+        presco_c4: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/><path d="M8 9h8"/><path d="M8 13h5"/>',
+        presco_c5: '<path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2Z"/>'
+      };
+      const constatRank = pct => pct === null ? 0 : ({ A: 4, B: 4, C: 3, D: 2, E: 1 }[String(pctToClosestGradeCode(pct)).charAt(0)] || 0);
+      const meterHtml = rank => `<span class="ps-meter" aria-hidden="true">${[1, 2, 3, 4].map(i => `<i${i <= rank ? ' class="on"' : ''}></i>`).join('')}</span>`;
+      const shortContext = (context, sub) => String(context || '').replace(new RegExp(`\\s+—\\s+${(sub.partLabel || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`), '');
+      const tagChips = (map, max) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, max)
+        .map(([tag, count]) => `<span class="ps-chip" title="Observé ${count} fois">${escapeHtml(tag)}</span>`).join('');
+      const preschoolCards = subjectRows.filter(r => r.sub.group === 'presco').map(r => {
+        const sub = r.sub;
+        const domain = preschoolDomains[sub.id] || { strengths: new Map(), challenges: new Map(), latestComment: null };
+        const steps = [['1', r.t1], ['2', r.t2], ['3', r.t3]].map(([term, pct]) => ({ term, rank: constatRank(pct) }));
+        const filled = steps.filter(step => step.rank);
+        const latest = filled[filled.length - 1] || null;
+        let trend = null;
+        if (filled.length >= 2) {
+          const diff = latest.rank - filled[0].rank;
+          trend = diff > 0 ? ['up', 'En progression'] : diff < 0 ? ['down', 'À soutenir'] : ['flat', 'Stable'];
+        }
+        const notes = recordedComments.filter(item => item.subject === sub.shortName && !item.fromTags);
+        const notesByTerm = ['1', '2', '3'].map(term => ({ term, items: notes.filter(item => item.term === term) })).filter(group => group.items.length);
+        const strengths = tagChips(domain.strengths, 3);
+        const challenges = tagChips(domain.challenges, 3);
+        return {
+          sub, latest, html: `
+          <article class="ps-card" data-domain="${escapeHtml(sub.id)}">
+            <div class="ps-card-head">
+              <span class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PRESCHOOL_DOMAIN_ICONS[sub.id] || ''}</svg></span>
+              <span class="ps-title"><strong>${escapeHtml(sub.partLabel || sub.shortName)}</strong><small>${escapeHtml(sub.shortName.split(' — ').slice(1).join(' — '))}</small></span>
+              ${trend ? `<span class="ps-trend ps-trend--${trend[0]}">${trend[1]}</span>` : ''}
+            </div>
+            <div class="ps-now ps-k${latest ? latest.rank : 0}">
+              <span class="ps-now-label">${latest ? `Constat le plus récent · Étape ${latest.term}` : 'Aucune trace cotée'}</span>
+              <strong>${latest ? PRESCHOOL_CONSTATS[latest.rank].label : 'À observer'}</strong>
+              ${latest ? meterHtml(latest.rank) : ''}
+            </div>
+            <ol class="ps-path" aria-label="Parcours de l’année">
+              ${steps.map(step => `<li class="ps-step ps-k${step.rank}"><span>Étape ${step.term}</span><b>${step.rank ? PRESCHOOL_CONSTATS[step.rank].short : '—'}</b></li>`).join('')}
+            </ol>
+            ${strengths ? `<div class="ps-tags"><span class="ps-tags-label">Forces observées</span><span class="ps-chips">${strengths}</span></div>` : ''}
+            ${challenges ? `<div class="ps-tags ps-tags--support"><span class="ps-tags-label">À soutenir</span><span class="ps-chips">${challenges}</span></div>` : ''}
+            ${domain.latestComment ? `<blockquote class="ps-quote"><p>${escapeHtml(domain.latestComment.text)}</p><cite>Étape ${escapeHtml(domain.latestComment.term)}</cite></blockquote>` : '<p class="ps-empty">Aucune observation écrite consignée.</p>'}
+            ${notes.length ? `<details class="ps-more">
+              <summary>Toutes les observations écrites (${notes.length})</summary>
+              ${notesByTerm.map(group => `<div class="ps-more-term"><span class="ps-more-badge">Étape ${group.term}</span><ul>${group.items.map(item => `<li><b>${escapeHtml(shortContext(item.context, sub))}</b>${escapeHtml(item.text)}</li>`).join('')}</ul></div>`).join('')}
+            </details>` : ''}
+          </article>`
+        };
+      });
+      const preschoolDomainsHtml = `
+        <div class="ps-overview" aria-label="Vue d’ensemble des domaines">
+          ${preschoolCards.map(card => `<span class="ps-overview-item ps-k${card.latest ? card.latest.rank : 0}" data-domain="${escapeHtml(card.sub.id)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PRESCHOOL_DOMAIN_ICONS[card.sub.id] || ''}</svg>${escapeHtml(card.sub.partLabel || card.sub.shortName)}<b>${card.latest ? PRESCHOOL_CONSTATS[card.latest.rank].short : '—'}</b></span>`).join('')}
+        </div>
+        <div class="ps-grid">${preschoolCards.map(card => card.html).join('')}</div>
+        <div class="ps-legend" aria-label="Légende des constats">
+          ${[4, 3, 2, 1].map(rank => `<span class="ps-k${rank}">${meterHtml(rank)}${PRESCHOOL_CONSTATS[rank].label}</span>`).join('')}
+        </div>
+        <p class="ps-note">Constat local déduit du résultat de chaque étape (A et B = très bien; C = adéquatement; D = certaines difficultés; E = difficultés importantes). Ce portrait ne constitue pas un bulletin officiel : complétez-le selon votre jugement professionnel.</p>`;
 
       const adaptSummary = getStudentAdaptationSummary(st);
       const adaptationsHtml = (() => {
@@ -481,8 +549,21 @@
           </div>
 
           <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+            ${st.gradeLevel === 'P' ? `
             <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
-              <div class="text-[10px] uppercase text-slate-500 font-semibold">${st.gradeLevel === 'P' ? 'Compétences évaluées' : 'Matières évaluées'}</div>
+              <div class="text-[10px] uppercase text-slate-500 font-semibold">Domaines observés</div>
+              <div class="text-lg font-extrabold text-slate-900" data-num="1">${preschoolCards.filter(card => card.latest).length} / ${preschoolCards.length}</div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
+              <div class="text-[10px] uppercase text-slate-500 font-semibold">Traces observables</div>
+              <div class="text-lg font-extrabold text-slate-900" data-num="1">${totalVisualTracesCount}</div>
+            </div>
+            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
+              <div class="text-[10px] uppercase text-slate-500 font-semibold">Observations écrites</div>
+              <div class="text-lg font-extrabold text-slate-900" data-num="1">${recordedComments.filter(item => !item.fromTags).length}</div>
+            </div>` : `
+            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
+              <div class="text-[10px] uppercase text-slate-500 font-semibold">Matières évaluées</div>
               <div class="text-lg font-extrabold text-slate-900" data-num="1">${populatedDisciplines.length} / ${totalDisciplines}</div>
             </div>
             <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
@@ -492,25 +573,25 @@
             <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
               <div class="text-[10px] uppercase text-slate-500 font-semibold">Traces observables</div>
               <div class="text-lg font-extrabold text-slate-900" data-num="1">${totalVisualTracesCount}</div>
-            </div>
+            </div>`}
           </div>
         </div>
 
         <!-- Résultats annuels -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- Résultats par matière -->
-          <div class="lg:col-span-6 bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div class="${st.gradeLevel === 'P' ? 'lg:col-span-12 ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
-              <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Observations par compétence' : 'Résultats annuels par matière'}</h4>
+              <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Portrait du développement par domaine' : 'Résultats annuels par matière'}</h4>
               ${st.gradeLevel === 'P' ? '' : '<span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>'}
             </div>
             <div class="space-y-2.5">
-              ${st.gradeLevel === 'P' ? `<p class="text-xs text-slate-600">Portrait à partir des observations écrites; il ne constitue pas un bulletin officiel. Complétez-le selon votre jugement professionnel.</p>${preschoolNotesHtml}` : `${chartBarsHtml}<p class="text-xs text-slate-500">Un résultat provisoire utilise uniquement les étapes disponibles; leurs poids sont réajustés proportionnellement.</p>`}
+              ${st.gradeLevel === 'P' ? preschoolDomainsHtml : `${chartBarsHtml}<p class="text-xs text-slate-500">Un résultat provisoire utilise uniquement les étapes disponibles; leurs poids sont réajustés proportionnellement.</p>`}
             </div>
           </div>
 
           <!-- Synthèse -->
-          <div class="lg:col-span-6 bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div class="${st.gradeLevel === 'P' ? 'lg:col-span-12' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 class="text-sm font-bold text-slate-900">Commentaires de l’enseignant(e)</h4>
             </div>
