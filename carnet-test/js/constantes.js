@@ -225,9 +225,9 @@
       { code: 'T+',    badge: 'Temps+',   group: 'adaptation', label: 'Temps supplémentaire', hint: 'Réalisé avec période prolongée' },
       { code: 'OUTIL', badge: 'OUTIL',    group: 'adaptation', label: 'Outils d’aide utilisés', hint: 'Outil compatible avec la compétence évaluée' },
       { code: 'MOD',   badge: 'MOD',      group: 'modification', label: 'Attentes modifiées', hint: 'Attentes modifiées selon le plan d’intervention' },
-      { code: 'REP',   badge: 'REP',      group: 'autre', label: 'Reprise', hint: 'Travail repris ou bonifié' },
-      { code: 'ABS',   badge: 'ABS',      group: 'autre', label: 'Absent / à reprendre', hint: 'Absence lors de l’évaluation' },
+      { code: 'ABS',   badge: 'À REPR.',  group: 'autre', label: 'À reprendre', hint: 'Évaluation à reprendre (absence ou reprise prévue)' },
       // Anciens marqueurs : plus proposés, mais conservés pour les données existantes.
+      { code: 'REP',   badge: 'REP',      group: 'autre', label: 'Reprise', hint: 'Travail repris ou bonifié', retired: true },
       { code: 'ADAPT', badge: 'ADAPT',    group: 'adaptation', label: 'Conditions adaptées', hint: 'Conditions adaptées sans modifier les attentes', retired: true }
     ];
     const VALID_CELL_FLAG_CODES = new Set(CELL_FLAGS.map(f => f.code));

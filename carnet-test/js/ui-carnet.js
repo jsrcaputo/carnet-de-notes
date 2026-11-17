@@ -1192,34 +1192,24 @@
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-label', 'Marqueurs d’adaptation / soutien');
 
-      const renderStatusRow = () => {
-        const activeStatus = typeof getStatus === 'function' ? getStatus() : '';
-        const row = document.createElement('div');
-        row.className = 'flag-picker-status-row';
-        const label = document.createElement('span');
-        label.className = 'flag-picker-status-label';
-        label.textContent = 'Statut (exclu de la moyenne)';
-        row.appendChild(label);
-        [
-          { code: 'NR', label: 'Non remis', hint: 'Travail non remis temporairement (exclu de la moyenne)' },
-          { code: 'JUST', label: 'Justifié', hint: 'Absence motivée / justifiée (exclu de la moyenne)' },
-          { code: 'REP', label: 'Reprise', hint: 'En attente de reprise (exclu de la moyenne)' },
-          { code: '-', label: 'Exempté', hint: 'Non évalué / exempté (-)' }
-        ].forEach(stDef => {
-          const isSel = activeStatus === stDef.code;
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.className = `flag-picker-status${isSel ? ' is-active' : ''}`;
-          btn.title = stDef.hint + (isSel ? ' — Cliquer pour retirer ce statut' : '');
-          btn.setAttribute('aria-pressed', String(isSel));
-          btn.textContent = stDef.code === '-' ? stDef.label : `${stDef.code} · ${stDef.label}`;
-          btn.addEventListener('click', () => {
-            onStatusChange(stDef.code);
-            closeCellFlagPicker();
-          });
-          row.appendChild(btn);
-        });
-        return row;
+      const makeItem = (label, badge, hint, isOn, onClick) => {
+        const item = document.createElement('button');
+        item.type = 'button';
+        item.className = `flag-picker-item${isOn ? ' is-active' : ''}`;
+        item.title = hint;
+        item.setAttribute('aria-pressed', String(isOn));
+        item.innerHTML = `
+            <span class="truncate">${escapeHtml(label)}</span>
+            <span class="flag-picker-code">${escapeHtml(badge)}</span>
+          `;
+        item.addEventListener('click', onClick);
+        return item;
+      };
+      const makeHeading = text => {
+        const heading = document.createElement('div');
+        heading.className = 'flag-picker-group-title';
+        heading.textContent = text;
+        return heading;
       };
 
       const renderContent = () => {
@@ -1250,44 +1240,42 @@
           const def = CELL_FLAGS.find(f => f.code === code);
           return def && def.group === 'adaptation';
         }).length;
-        const columns = ['adaptation', 'modification'].map(group => {
-          const column = document.createElement('div');
-          const heading = document.createElement('div');
-          heading.className = 'flag-picker-group-title';
-          heading.textContent = group === 'adaptation'
-            ? (activeAdaptations > 1 ? 'Adaptations' : 'Adaptation')
-            : 'Modification';
-          column.appendChild(heading);
-          list.appendChild(column);
-          return column;
+        const leftColumn = document.createElement('div');
+        const rightColumn = document.createElement('div');
+        list.append(leftColumn, rightColumn);
+        const isVisibleFlag = flag => !flag.retired || activeFlags.includes(flag.code);
+        const flagItem = flag => makeItem(flag.label, flag.badge, flag.hint, activeFlags.includes(flag.code), () => {
+          onToggle(flag.code);
+          renderContent();
         });
-        CELL_FLAGS.forEach(flag => {
-          if (flag.retired && !activeFlags.includes(flag.code)) return;
-          const column = flag.group === 'adaptation' ? columns[0] : columns[1];
-          if (flag.group === 'autre' && flag.code === 'REP') {
-            const heading = document.createElement('div');
-            heading.className = 'flag-picker-group-title';
-            heading.textContent = 'Autres suivis';
-            column.appendChild(heading);
-          }
-          const isOn = activeFlags.includes(flag.code);
-          const item = document.createElement('button');
-          item.type = 'button';
-          item.className = `flag-picker-item${isOn ? ' is-active' : ''}`;
-          item.title = flag.hint;
-          item.setAttribute('aria-pressed', String(isOn));
-          item.innerHTML = `
-            <span class="truncate">${escapeHtml(flag.label)}</span>
-            <span class="flag-picker-code">${escapeHtml(flag.badge)}</span>
-          `;
-          item.addEventListener('click', () => {
-            onToggle(flag.code);
-            renderContent();
+
+        leftColumn.appendChild(makeHeading(activeAdaptations > 1 ? 'Adaptations' : 'Adaptation'));
+        CELL_FLAGS.filter(f => f.group === 'adaptation' && isVisibleFlag(f)).forEach(f => leftColumn.appendChild(flagItem(f)));
+
+        rightColumn.appendChild(makeHeading('Modification'));
+        CELL_FLAGS.filter(f => f.group === 'modification' && isVisibleFlag(f)).forEach(f => rightColumn.appendChild(flagItem(f)));
+
+        // Statut : NR, JUST et Exempté excluent le travail de la moyenne; « À reprendre » est un marqueur de suivi.
+        rightColumn.appendChild(makeHeading('Statut'));
+        const activeStatus = typeof getStatus === 'function' ? getStatus() : '';
+        const statusItem = (code, label, badge, hint) => {
+          const isSel = activeStatus === code;
+          return makeItem(label, badge, hint + (isSel ? ' — cliquer pour retirer ce statut' : ''), isSel, () => {
+            onStatusChange(code);
+            closeCellFlagPicker();
           });
-          column.appendChild(item);
-        });
+        };
+        const hasStatus = typeof onStatusChange === 'function';
+        if (hasStatus) {
+          rightColumn.appendChild(statusItem('NR', 'Non remis', 'NR', 'Travail non remis temporairement (exclu de la moyenne)'));
+          rightColumn.appendChild(statusItem('JUST', 'Justifié', 'JUST', 'Absence motivée ou justifiée (exclue de la moyenne)'));
+        }
+        CELL_FLAGS.filter(f => f.group === 'autre' && isVisibleFlag(f)).forEach(f => rightColumn.appendChild(flagItem(f)));
+        if (hasStatus) {
+          if (activeStatus === 'REP') rightColumn.appendChild(statusItem('REP', 'Reprise', 'REP', 'En attente de reprise (exclu de la moyenne)'));
+          rightColumn.appendChild(statusItem('-', 'Exempté', '—', 'Non évalué ou exempté (exclu de la moyenne)'));
+        }
         el.appendChild(list);
-        if (typeof onStatusChange === 'function') el.appendChild(renderStatusRow());
       };
 
       renderContent();
