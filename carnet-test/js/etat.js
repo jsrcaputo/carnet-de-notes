@@ -896,8 +896,7 @@
     try {
       const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
       if (savedPrefs && typeof savedPrefs === 'object') {
-        if (['light', 'dark'].includes(savedPrefs.theme)) prefs.theme = savedPrefs.theme;
-        if (VALID_PALETTES.includes(savedPrefs.palette)) prefs.palette = savedPrefs.palette;
+        // Thème et palette viennent du carnet ouvert : un carnet vierge démarre en clair, palette bleue.
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
       }

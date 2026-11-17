@@ -18,16 +18,22 @@
       ['compris', 'comprise'], ['conscient', 'consciente'], ['guidé', 'guidée'], ['soutenu', 'soutenue'],
       ['encouragé', 'encouragée'], ['accompagné', 'accompagnée'], ['amené', 'amenée'], ['appelé', 'appelée'],
       ['seul', 'seule'], ['certain', 'certaine'], ['habitué', 'habituée'], ['engagé', 'engagée'],
-      ['attentif', 'attentive'], ['actif', 'active'], ['fier', 'fière'], ['de lui-même', 'd’elle-même'], ['lui-même', 'elle-même']
+      ['sollicité', 'sollicitée'], ['centré', 'centrée'],
+      ['attentif', 'attentive'], ['actif', 'active'], ['fier', 'fière'], ['de lui-même', 'd’elle-même'], ['lui-même', 'elle-même'],
+      // « lui » après une préposition désigne l’élève (« pour lui » → « pour elle »); « il lui permet » reste inchangé.
+      ['autour de lui', 'autour d’elle'], ['pour lui', 'pour elle'], ['avec lui', 'avec elle'], ['chez lui', 'chez elle'], ['sur lui', 'sur elle']
     ];
 
     function applyFeminineAgreements(sentence) {
       // \b ignore les lettres accentuées : on délimite les mots avec \p{L} pour accorder « encouragé », etc.
-      return FEMININE_AGREEMENTS.reduce((text, [masc, fem]) =>
-        text.replace(new RegExp(`(?<![\\p{L}-])${masc}(?![\\p{L}-])`, 'gu'), fem), String(sentence || ''));
+      return FEMININE_AGREEMENTS.reduce((text, [masc, fem]) => {
+        const pattern = `[${masc[0]}${masc[0].toUpperCase()}]${masc.slice(1)}`;
+        return text.replace(new RegExp(`(?<![\\p{L}-])${pattern}(?![\\p{L}-])`, 'gu'),
+          match => (match[0] === masc[0] ? fem : fem[0].toUpperCase() + fem.slice(1)));
+      }, String(sentence || ''));
     }
 
-    function personalizeSingleSentence(rawText, firstName, pron, useNameOnFirstSubject) {
+    function personalizeSingleSentence(rawText, firstName, pron, useNameOnFirstSubject, allowName = true) {
       const cap = word => word.charAt(0).toUpperCase() + word.slice(1);
       const isFem = pron === 'elle';
       let s = String(rawText || '').trim();
@@ -48,9 +54,19 @@
         return capitalize ? cap(pron) : pron;
       };
 
+      // 0. « l’élève » complément (« de l’élève », « par l’élève ») : jamais remplacé par « il »/« elle ».
+      if (allowName && firstName !== 'L’élève') {
+        s = s.replace(/\b([Dd])e l[’']élève\b/g, (match, d) =>
+          startsWithFrenchVowelOrH(firstName) ? `${d}’${firstName}` : `${d}e ${firstName}`);
+        s = s.replace(/(?<!\p{L})(par|pour|avec|chez|selon|envers|à) l[’']élève\b/gu, (match, prep) => `${prep} ${firstName}`);
+      } else {
+        s = s.replace(/(?<!\p{L})(de|par|pour|avec|chez|selon|envers|à) l([’'])élève\b/gu, (match, prep, apos) => `${prep} l${apos}\u0001`);
+      }
+
       // 1. Sujets explicites "L'élève" / "l'élève"
       s = s.replace(/\bL[’']élève\b/g, () => getSubj(true));
       s = s.replace(/\bl[’']élève\b/g, () => getSubj(false));
+      s = s.replace(/\u0001/g, 'élève');
 
       // 2. Élisions en début de proposition ("Lorsqu'il", "Qu'il", "S'il")
       s = s.replace(/\b(Lorsqu|lorsqu)[’']il\b/g, (match, prefix) => {
@@ -104,7 +120,7 @@
 
       return (sentencesArray || []).map((raw, idx) => {
         const useNameHere = useFirstNameInOpening && idx === 0;
-        let transformed = personalizeSingleSentence(raw, firstName, pron, useNameHere);
+        let transformed = personalizeSingleSentence(raw, firstName, pron, useNameHere, useFirstNameInOpening);
         // Ajouter un connecteur léger à la 3e phrase si plusieurs phrases commencent par Il/Elle de façon répétitive
         if (idx === 2 && (sentencesArray.length >= 3) && /^(Il|Elle)\s+[a-zàâäéèêëîïôöùûüÿç]/.test(transformed)) {
           transformed = 'De plus, ' + transformed.charAt(0).toLowerCase() + transformed.slice(1);
