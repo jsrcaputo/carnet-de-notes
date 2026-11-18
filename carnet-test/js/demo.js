@@ -565,10 +565,11 @@
 
     function buildDemoRegulierStudents(previousSeed = false) {
       const names = [
-        'Amina Diallo', 'Félix Gagnon', 'Sofia Rossi', 'Liam Nguyen', 'Mia Tremblay',
-        'Mohamed El Amrani', 'Emma Chen', 'Noah Kouassi', 'Charlie Bouchard', 'Léo Hernandez',
-        'Inès Benali', 'Édouard Roy', 'Aanya Patel', 'Arthur Petrov', 'Rosalie Gauthier',
-        'Yusuf Ahmed', 'Camila Torres', 'Victor Tran', 'Naomi Joseph', 'Samuel Côté'
+        'Colette Pamplemousse', 'Gaston Ravioli-Tornade', 'Mireille Cornichon', 'Hector Chaussette',
+        'Odette Spaghetti', 'Fernand Balai-à-Confettis', 'Berthe Flan-au-Caramel', 'Maurice Rutabaga',
+        'Léontine Pot-au-Feu', 'Boris Pigeon-en-Rollers', 'Suzette Trombone', 'Anatole Poisson-Bulle',
+        'Paulette Moustache-Singe', 'Octave Chaise-Pliante', 'Germaine Nouille', 'Firmin Glaçon-Majestueux',
+        'Rosalie Biscuit-Volant', 'Léopold Citrouille', 'Adèle Frigo-à-Ressort', 'Honoré Banane-Cosmique'
       ];
       return names.map((name, idx) => {
         const parts = name.split(' ');
@@ -583,8 +584,8 @@
           modifiedExpectations: {},
           competencyTerms: {},
           competencyMeq: {},
-          ...(!previousSeed && name === 'Amina Diallo' ? {
-            reportComment: 'Amina participe avec curiosité et apporte de belles idées aux échanges. En lecture, elle gagne à prendre le temps de revenir au texte pour appuyer ses réponses. Nous poursuivrons la pratique de ces stratégies ensemble.'
+          ...(!previousSeed && idx === 0 ? {
+            reportComment: `${name.split(' ')[0]} participe avec curiosité et apporte de belles idées aux échanges. En lecture, elle gagne à prendre le temps de revenir au texte pour appuyer ses réponses. Nous poursuivrons la pratique de ces stratégies ensemble.`
           } : {})
         };
       });
@@ -592,26 +593,26 @@
 
     function buildDemoMultiStudents(previousSeed = false) {
       const multiDefs = [
-        { name: 'Raphaël Tremblay', grade: '5' },
-        { name: 'Layla Haddad', grade: '5' },
-        { name: 'William Zhang', grade: '5' },
-        { name: 'Charlotte Lavoie', grade: '5' },
-        { name: 'Lucas Martins', grade: '5' },
-        { name: 'Priya Singh', grade: '5' },
-        { name: 'Gabriel Ndiaye', grade: '5' },
-        { name: 'Éva Kowalski', grade: '5' },
-        { name: 'Alexis Fortin', grade: '5', modified: { fra_ecriture: '4', math_resoudre: '4' } },
-        { name: 'Fatima Idrissi', grade: '5' },
-        { name: 'Antoine Lévesque', grade: '6' },
-        { name: 'Maya Okafor', grade: '6' },
-        { name: 'Émile Bergeron', grade: '6' },
-        { name: 'Rose Mukamana', grade: '6' },
-        { name: 'Mateo Garcia', grade: '6' },
-        { name: 'Victoria Ionescu', grade: '6' },
-        { name: 'Ibrahim Sow', grade: '6' },
-        { name: 'Jade Wong', grade: '6' },
-        { name: 'Théo Bernard', grade: '6' },
-        { name: 'Léonie Cloutier', grade: '6' }
+        { name: 'Amédée Brocoli-Rocket', grade: '5' },
+        { name: 'Yvette Cacahuète-Disco', grade: '5' },
+        { name: 'Théodore Patate-en-Savate', grade: '5' },
+        { name: 'Clothilde Tarte-à-la-Moustache', grade: '5' },
+        { name: 'Marcel Bûche-d’Arc-en-Ciel', grade: '5' },
+        { name: 'Huguette Machine-à-Coucou', grade: '5' },
+        { name: 'Barnabé Chou-Fleur-Volant', grade: '5' },
+        { name: 'Cunégonde Pétunia-à-Roulettes', grade: '5' },
+        { name: 'Casimir Fromage-en-Suspension', grade: '5', modified: { fra_ecriture: '4', math_resoudre: '4' } },
+        { name: 'Solange Casserole-Mélodieuse', grade: '5' },
+        { name: 'Godefroy Boudin-Interstellaire', grade: '6' },
+        { name: 'Bibiane Clémentine-à-Ressort', grade: '6' },
+        { name: 'Norbert Navet-du-Futur', grade: '6' },
+        { name: 'Églantine Poireau-Télégraphe', grade: '6' },
+        { name: 'Rodolphe Beigne-au-Pinceau', grade: '6' },
+        { name: 'Victoire Omelette-Nébuleuse', grade: '6' },
+        { name: 'Edmond Haricot-Magique', grade: '6' },
+        { name: 'Sidonie Salade-de-Météores', grade: '6' },
+        { name: 'Zéphirin Crayon-Volontaire', grade: '6' },
+        { name: 'Philomène Croquette-de-la-Lune', grade: '6' }
       ];
       return multiDefs.map((def, idx) => {
         const parts = def.name.split(' ');
@@ -626,20 +627,37 @@
           modifiedExpectations: def.modified || {},
           competencyTerms: {},
           competencyMeq: {},
-          ...(!previousSeed && def.name === 'Alexis Fortin' ? {
-            reportComment: 'Alexis fait preuve de persévérance et utilise de mieux en mieux les outils proposés en classe. Les attentes sont modifiées en résolution de problèmes et en écriture. Nous continuerons à souligner ses progrès et à développer son autonomie, une étape à la fois.'
+          ...(!previousSeed && idx === 8 ? {
+            reportComment: `${def.name.split(' ')[0]} fait preuve de persévérance et utilise de mieux en mieux les outils proposés en classe. Les attentes sont modifiées en résolution de problèmes et en écriture. Nous continuerons à souligner ses progrès et à développer son autonomie, une étape à la fois.`
           } : {})
         };
       });
     }
 
     function buildDemoPreschoolData(previousSeed = false) {
-      const students = buildDemoRegulierStudents(previousSeed).map((student, index) => ({
-        ...student, id: `st_presco_${index + 1}`, gradeLevel: 'P', adaptations: [], modifiedExpectations: {},
-        ...(!previousSeed && student.name === 'Amina Diallo' ? {
-          reportComment: 'Amina arrive en classe avec enthousiasme et aime partager ses découvertes. Les jeux en petit groupe l’aident à exprimer ses idées et à prendre confiance. Nous continuerons à l’accompagner dans ses nouvelles expériences.'
-        } : {})
-      }));
+      const preschoolNames = [
+        'Joséphine Poussin-Grenouille', 'Hubert Crêpe-Soufflée', 'Félicie Nuage-en-Pantoufles', 'Urbain Biscuit-du-Matin',
+        'Albertine Cerise-Clochette', 'Boniface Carotte-à-Bicyclette', 'Mariette Bouton-Rigolo', 'Achille Soupe-de-Fusées',
+        'Gisèle Tortue-Tambour', 'Firminette Dino-d’Herbe', 'Constance Kiwi-Galaxie', 'Octavie Tracteur-Papillon',
+        'Édouardette Chausson-Musical', 'Valentine Pépin-de-Marshmallow', 'Marguerite Flocon-Parapluie', 'Basile Cornet-de-Nénuphar',
+        'Angélique Moutarde-à-Paillettes', 'Gustave Boule-de-Neige-Biscornu', 'Solène Trompette-Framboise', 'Pacôme Patapouf-Lunaire'
+      ];
+      const students = buildDemoRegulierStudents(previousSeed).map((student, index) => {
+        const nameParts = preschoolNames[index].split(' ');
+        return {
+          ...student,
+          id: `st_presco_${index + 1}`,
+          name: preschoolNames[index],
+          firstName: nameParts[0],
+          lastName: nameParts.slice(1).join(' '),
+          gradeLevel: 'P',
+          adaptations: [],
+          modifiedExpectations: {},
+          ...(!previousSeed && index === 0 ? {
+            reportComment: `${nameParts[0]} arrive en classe avec enthousiasme et aime partager ses découvertes. Les jeux en petit groupe l’aident à exprimer ses idées et à prendre confiance. Nous continuerons à l’accompagner dans ses nouvelles expériences.`
+          } : {})
+        };
+      });
       const terms = {
         '1': buildTermDataForStudents(students),
         '2': buildTermDataForStudents(students),

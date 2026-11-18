@@ -10,11 +10,9 @@
         var raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
         var p = raw ? JSON.parse(raw) : null;
         var root = document.documentElement;
-        var valid = ['ocean', 'foret', 'boreal', 'azur', 'terracotta', 'prune', 'ambre', 'graphite'];
-        root.setAttribute('data-palette', p && valid.indexOf(p.palette) !== -1 ? p.palette : 'ocean');
-        if (p && p.theme === 'dark') root.classList.add('theme-dark');
-        if (p && p.textSize === 'sm') root.classList.add('ts-sm');
-        if (p && p.textSize === 'lg') root.classList.add('ts-lg');
+        // L'accueil d'un carnet non enregistré s'ouvre toujours en clair, palette bleue.
+        root.setAttribute('data-palette', 'ocean');
+        if (p && ['xs', 'sm', 'lg', 'xl'].indexOf(p.textSize) !== -1) root.classList.add('ts-' + p.textSize);
       } catch (_) {}
     })();
   </script>
@@ -34,6 +32,7 @@
       <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
       <p>La solution tout-en-un pour gérer vos évaluations!</p>
+      <p id="welcomeLegacyBrowserNotice" class="hidden">Une ancienne copie du carnet est encore conservée dans ce navigateur. Fermez cet accueil, puis ouvrez les options pour la télécharger ou l’effacer après vérification.</p>
       <div class="welcome-actions">
         <button id="welcomeLoad" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
         <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
@@ -51,6 +50,16 @@
         <button id="tourSkip" type="button">Passer le tutoriel</button>
         <button id="tourNext" type="button">Suivant →</button>
       </div>
+      <div id="weightGuide" class="weight-guide hidden no-print" role="dialog" aria-modal="true" aria-labelledby="weightGuideTitle" aria-describedby="weightGuideDescription">
+        <div class="weight-guide-shade" data-side="top"></div><div class="weight-guide-shade" data-side="bottom"></div>
+        <div class="weight-guide-shade" data-side="left"></div><div class="weight-guide-shade" data-side="right"></div>
+        <div id="weightGuideHighlight" class="weight-guide-highlight" aria-hidden="true"></div>
+        <div id="weightGuideCard" class="tour-card">
+          <h2 id="weightGuideTitle">Pondération en groupe multiniveau</h2>
+          <p id="weightGuideDescription">Les évaluations peuvent différer d’un niveau à l’autre. Sélectionnez chaque niveau dans la section Élèves pour vérifier et ajuster sa pondération séparément. La répartition égale peut aussi être appliquée automatiquement.</p>
+          <div class="tour-actions"><button id="weightGuideDone" type="button">J’ai compris</button></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -61,7 +70,7 @@
     </div>
     <div class="test-sidebar-sections">
       <section class="test-sidebar-section">
-        <div class="test-sidebar-heading">
+        <div class="test-sidebar-heading sidebar-legacy-group">
           <h2 id="sidebarGroupLabel" class="test-sidebar-label">Groupe</h2>
           <button id="sidebarSingleGroup" type="button" class="test-single-group">Créer un groupe</button>
           <select id="headerGroupSelect" class="hidden" aria-label="Groupe actif" title="Changer de groupe"></select>
@@ -73,7 +82,12 @@
             </div>
           </div>
         </div>
-        <nav id="testClassNavigation" class="test-sidebar-nav" aria-label="Groupe et élèves"></nav>
+        <nav id="testClassNavigation" class="test-sidebar-nav" aria-label="Groupe et élèves">
+          <button id="btnSidebarGroupChoice" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="sidebarChoiceMenu">
+            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+            <span>Groupe</span><span id="sidebarActiveGroup" class="sidebar-active-group"></span><span aria-hidden="true">▾</span>
+          </button>
+        </nav>
       </section>
       <section class="test-sidebar-section">
         <h2 class="test-sidebar-label">Étape et bulletin</h2>
@@ -93,12 +107,17 @@
         <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5M9 21v-7h6v7"/></svg>
         <span>Accueil</span>
       </button>
+      <a class="feedback-link" href="mailto:odp.carnet@gmail.com?subject=Suggestion%20pour%20Carnet%20de%20notes" title="Écrire à Carnet de notes">
+        <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        <span>Contact</span>
+      </a>
       <button id="btnReferences" type="button" title="Informations et sources pédagogiques">
         <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
         <span>Informations et sources</span>
       </button>
     </nav>
   </aside>
+  <div id="sidebarChoiceMenu" class="sidebar-choice-menu hidden no-print" role="menu" aria-label="Choisir ou gérer les groupes"></div>
 
   <!-- TOP HEADER (ERGONOMIC, ZERO HORIZONTAL OVERFLOW AT ANY WIDTH) -->
   <header class="test-topbar bg-slate-900 text-white sticky top-0 z-30 shadow-md no-print w-full">
@@ -129,12 +148,12 @@
             <div id="studentSearchMessage" aria-live="polite"></div>
           </form>
           <div class="flex items-center bg-slate-800 p-0.5 rounded-xl border border-slate-700">
-            <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white">Étape 1</button>
-            <button type="button" data-term="2" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 2</button>
-            <button type="button" data-term="3" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white">Étape 3</button>
+            <button type="button" data-term="1" class="term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4a8 8 0 0 1 6.93 12z" fill="currentColor" fill-opacity=".35"/></svg><span>Étape 1</span></button>
+            <button type="button" data-term="2" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 12V4a8 8 0 1 1-6.93 12z" fill="currentColor" fill-opacity=".35"/></svg><span>Étape 2</span></button>
+            <button type="button" data-term="3" class="term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white"><svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity=".35"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg><span>Étape 3</span></button>
             <div class="h-4 w-px bg-slate-700 mx-1"></div>
             <button id="btnNavGlobalReport" type="button" class="px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer text-amber-300 hover:bg-amber-500/20 flex items-center gap-1">
-              <span>Synthèse</span>
+              <svg class="subject-icon term-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8.5 17v-3M12 17V9.5M15.5 17v-5"/></svg><span>Synthèse</span>
             </button>
           </div>
         </div>
@@ -160,6 +179,7 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
           <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
           <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
 
@@ -193,7 +213,6 @@
                 <div class="sp-palette-swatches" role="group" aria-label="Palette de couleurs">
                   <button type="button" class="sp-swatch is-active" data-palette-val="ocean" title="Bleu Océan (Défaut)" aria-label="Bleu Océan" aria-pressed="true" style="--sw-brand:#1d4ed8; --sw-soft:#dbeafe;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="boreal" title="Indigo Boréal" aria-label="Indigo Boréal" aria-pressed="false" style="--sw-brand:#4338ca; --sw-soft:#e0e7ff;"></button>
-                  <button type="button" class="sp-swatch" data-palette-val="azur" title="Azur Nordique" aria-label="Azur Nordique" aria-pressed="false" style="--sw-brand:#0369a1; --sw-soft:#e0f2fe;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="terracotta" title="Argile &amp; Terracotta" aria-label="Argile et Terracotta" aria-pressed="false" style="--sw-brand:#b84a39; --sw-soft:#fce8e4;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="prune" title="Prune Éditoriale" aria-label="Prune Éditoriale" aria-pressed="false" style="--sw-brand:#6b2f7a; --sw-soft:#f3e5f6;"></button>
                   <button type="button" class="sp-swatch" data-palette-val="ambre" title="Ocre &amp; Ambre" aria-label="Ocre et Ambre" aria-pressed="false" style="--sw-brand:#b45309; --sw-soft:#fef3c7;"></button>
@@ -201,23 +220,33 @@
                   <button type="button" class="sp-swatch" data-palette-val="foret" title="Vert Forêt" aria-label="Vert Forêt" aria-pressed="false" style="--sw-brand:#2f6b4f; --sw-soft:#dcfce7;"></button>
                 </div>
               </div>
-              <div class="sp-row">
-                <span>Taille du texte</span>
-                <div class="sp-seg" data-pref="textSize">
-                  <button type="button" data-val="sm" style="font-size:11px">A</button>
-                  <button type="button" data-val="md" style="font-size:13px">A</button>
-                  <button type="button" data-val="lg" style="font-size:16px">A</button>
-                </div>
+              <div class="sp-row sp-text-size">
+                <label for="spTextSize">Taille du texte</label>
+                <input id="spTextSize" type="range" min="0" max="4" step="1" value="2" aria-label="Taille du texte">
+                <output id="spTextSizeValue" for="spTextSize">3 / 5</output>
               </div>
               <div class="sp-title" style="margin-top:.6rem">Sauvegarde</div>
-              <label class="sp-check"><input type="checkbox" data-pref-check="backupReminder"> <span>Rappel de sauvegarde à la fermeture</span></label>
               <div class="sp-backup-actions">
                 <button id="btnDownloadJSON" type="button" class="sort-btn">Télécharger une copie JSON</button>
-                <button id="btnUnlinkJSON" type="button" class="sort-btn">Délier le fichier</button>
+                <button id="btnDownloadEncryptedJSON" type="button" class="sort-btn">Télécharger une copie chiffrée</button>
+                <button id="btnUnlinkJSON" type="button" class="sort-btn" disabled>Aucun fichier lié</button>
+              </div>
+              <p id="backupEncryptionNotice" class="sp-backup-notice" aria-live="polite">Le carnet reste en mémoire dans cet onglet : sauvegardez votre fichier JSON avant de fermer ou d’actualiser la page.</p>
+              <div id="legacyBrowserBackup" class="hidden">
+                <p class="sp-backup-notice">Une ancienne copie non chiffrée existe encore dans ce navigateur. Téléchargez-la si vous en avez besoin, puis effacez-la lorsque vous avez vérifié votre fichier.</p>
+                <div class="sp-backup-actions">
+                  <button id="btnDownloadLegacyBrowser" type="button" class="sort-btn">Télécharger l’ancienne copie du navigateur</button>
+                  <button id="btnDeleteLegacyBrowser" type="button" class="sort-btn">Effacer l’ancienne copie du navigateur</button>
+                </div>
+              </div>
+              <div class="sp-title" style="margin-top:.6rem">Excel chiffré</div>
+              <div class="sp-backup-actions">
+                <button id="btnExportEncryptedExcel" type="button" class="sort-btn">Exporter un Excel chiffré</button>
+                <button id="btnOpenEncryptedExcel" type="button" class="sort-btn" title="Récupérer un export créé avec l’ancienne version">Récupérer un ancien export (.json)</button>
+                <input id="inputEncryptedExcel" type="file" accept=".json,application/json" class="hidden">
               </div>
             </div>
           </div>
-          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
           <span class="hdr-sep" aria-hidden="true"></span>
           <button id="btnFullscreen" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 transition cursor-pointer" aria-label="Plein écran" title="Basculer en plein écran">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
@@ -267,6 +296,7 @@
       <div class="gradebook-toolbar bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
         <img id="gbSubjectAtmosphere" class="gradebook-atmosphere" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex items-center gap-2 flex-wrap">
+          <svg id="gbSubjectIcon" class="gb-subject-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
           <h2 id="gbSubjectTitle" class="text-base sm:text-lg font-bold text-slate-900">Mathématique — C1 : Résoudre une situation-problème</h2>
         </div>
 
@@ -295,9 +325,9 @@
       </div>
 
       <!-- Gradebook Table: THE ONLY CONTAINER WITH HORIZONTAL SCROLL AS COLUMNS GROW -->
-      <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+      <div id="gradebookFrame" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
         <div id="gradebookScrollContainer" class="overflow-x-auto custom-scrollbar w-full">
-          <table class="w-full min-w-max text-left border-collapse">
+          <table class="w-full text-left border-collapse">
             <thead>
               <tr id="gradebookHeaderRow" class="bg-slate-900 text-white text-[11px] uppercase tracking-wider">
                 <!-- Populated dynamically -->
@@ -308,6 +338,11 @@
             </tbody>
           </table>
         </div>
+        <span class="gb-fade is-left no-print" aria-hidden="true"></span>
+        <span class="gb-fade is-right no-print" aria-hidden="true"></span>
+        <button id="gbScrollPrev" type="button" class="gb-scroll-arrow is-prev no-print" aria-controls="gradebookScrollContainer" aria-label="Évaluation précédente" title="Évaluation précédente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+        <button id="gbScrollNext" type="button" class="gb-scroll-arrow is-next no-print" aria-controls="gradebookScrollContainer" aria-label="Évaluation suivante" title="Évaluation suivante"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+        <div id="gradebookTopScroll" class="gradebook-top-scroll no-print" tabindex="0" role="region" aria-label="Défilement horizontal du carnet"><div></div></div>
       </div>
     </section>
 
@@ -412,9 +447,6 @@
           </div>
           <div id="qoTargetLevelsBox" class="hidden items-center gap-1 flex-wrap"></div>
           <div class="flex items-center gap-1.5 shrink-0">
-            <span id="qoEvaluatedCounter" class="inline-flex items-center text-[11px] font-semibold text-amber-900 px-2 py-1 rounded-lg bg-white border border-amber-200 whitespace-nowrap leading-none">
-              0 évalué(s)
-            </span>
             <button id="btnCommitObsSessionToGradebook" type="button" class="px-2.5 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-2xs transition cursor-pointer whitespace-nowrap">
               <span id="btnCommitTopLabel">Enregistrer au carnet</span>
             </button>
@@ -507,50 +539,36 @@
         </div>
       </div>
 
-      <!-- Cote de la trace observable et indicateurs rapides (Panneau latéral ergonomique compact) -->
-        <aside id="qoSidePanel" class="qo-side-panel bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs space-y-3 no-print" aria-label="Cote de la trace observable">
+      <!-- Observations -->
+        <aside id="qoSidePanel" class="qo-side-panel bg-white rounded-xl border border-slate-200 p-3.5 shadow-xs space-y-3 no-print" aria-label="Observations">
           <div class="qo-side-header flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
             <div class="min-w-0">
-              <div class="qo-side-kicker text-[10px] font-bold uppercase tracking-wider text-slate-500 leading-none">Cote de la trace observable</div>
-              <h3 id="qoBottomStudentName" class="text-sm font-extrabold text-indigo-600 truncate mt-1">Élève</h3>
+              <div class="qo-side-kicker text-[10px] font-bold uppercase tracking-wider text-slate-500 leading-none">Observations</div>
+              <h3 id="qoBottomStudentName" class="hidden">Élève</h3>
             </div>
             <span id="qoSideLiveBadge" class="hidden shrink-0 px-2 py-0.5 rounded-md border text-[11px] font-extrabold whitespace-nowrap"></span>
           </div>
 
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between gap-1">
-              <label class="text-[10.5px] font-bold uppercase tracking-wider text-slate-600">
-                Ajuster la note
-              </label>
-              <button id="btnQoResetOverride" type="button" class="hidden text-[10.5px] font-bold text-indigo-600 hover:underline cursor-pointer">Rétablir auto</button>
+          <button id="btnQoResetOverride" type="button" class="hidden text-[10.5px] font-bold text-indigo-600 hover:underline cursor-pointer" title="Cette trace contient une ancienne cote ajustée">Rétablir la cote calculée</button>
+
+          <div class="qo-observations">
+            <div class="qo-observations-intro">
+              <p>Cochez ce que vous avez observé dans cette situation. Pour un même aspect, un nouveau choix remplace son opposé. Ces observations ne modifient pas la cote.</p>
+              <span id="qoSelectedTagsCount" aria-live="polite"></span>
             </div>
-            <div id="qoGradePills" class="qo-grade-matrix">
-              <!-- 3-col A+..D- & full-width E matrix populated dynamically -->
-            </div>
+            <div id="qoCategoryTabs" class="qo-category-tabs" role="group" aria-label="Domaines d’observation"></div>
+            <div id="qoQuickTags" class="qo-observation-choices"></div>
+            <div id="qoActiveStudentTagsStrip" class="qo-selected-observations"></div>
+            <p class="qo-observation-source">Repères locaux inspirés des <a href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire" target="_blank" rel="noopener noreferrer">compétences transversales du PFEQ ↗</a>, et non une grille officielle. Précisez le contexte dans les notes; les adaptations ne sont pas des déficits.</p>
           </div>
 
-          <!-- Categorized PIA / Plan d'intervention Observable Indicators -->
-          <div class="space-y-1.5 pt-2 border-t border-slate-100">
-            <div class="flex items-center justify-between gap-1.5">
-              <label class="text-[10.5px] font-bold uppercase tracking-wider text-slate-700">Observations (PIA)</label>
-              <span id="qoSelectedTagsCount" class="text-[10px] font-bold text-indigo-600 whitespace-nowrap">0 sélectionné(s)</span>
-            </div>
-
-            <!-- Category Tabs (2-col compact tabs for readable full titles) -->
-            <div id="qoCategoryTabs" class="grid grid-cols-2 gap-1">
-              <!-- Populated dynamically -->
-            </div>
-
-            <!-- Indicators for the active category -->
-            <div id="qoQuickTags" class="flex flex-wrap gap-1 p-2 rounded-lg bg-slate-50 border border-slate-200/80 min-h-[60px] max-h-[156px] overflow-y-auto custom-scrollbar items-start content-start">
-              <!-- Tags populated dynamically -->
-            </div>
-
-            <!-- Selected indicators summary strip -->
-            <div id="qoActiveStudentTagsStrip" class="hidden flex-wrap gap-1 pt-0.5">
-              <!-- Shows currently selected tags across all categories for this student -->
-            </div>
-          </div>
+          <details id="qoPreviousWritten" class="qo-previous-written hidden">
+            <summary>Textes de forces et défis précédemment consignés</summary>
+            <label for="qoStrengthsInput">Forces précédentes</label>
+            <textarea id="qoStrengthsInput" rows="2"></textarea>
+            <label for="qoChallengesInput">Défis précédents</label>
+            <textarea id="qoChallengesInput" rows="2"></textarea>
+          </details>
 
           <div class="space-y-1 pt-1 border-t border-slate-100">
             <label for="qoCommentInput" class="text-[10.5px] font-bold uppercase tracking-wider text-slate-600">Notes</label>
@@ -567,10 +585,7 @@
         <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
           <img class="student-manager-atmosphere" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
           <div class="student-page-heading">
-              <button id="btnBackToGradebookFromStudents" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1">
-                <span>← Retour au Carnet</span>
-              </button>
-              <h2>Liste d'élèves et adaptations à la pièce</h2>
+              <h2>Listes et groupes</h2>
           </div>
 
           <div id="groupBar" class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5"></div>
@@ -586,14 +601,6 @@
           </div>
 
           <p id="noGroupNotice" class="no-group-notice hidden">Pour ajouter des élèves, créez d’abord un groupe avec « Nouveau groupe ».</p>
-          <div id="studentAddRow" class="student-add-row">
-            <input id="newStudentName" type="text" placeholder="Prénom" aria-label="Prénom de l’élève" class="student-name-field px-2.5 py-2 rounded-lg border border-slate-300 text-sm" />
-            <input id="newStudentLastName" type="text" placeholder="Nom de famille" aria-label="Nom de famille de l’élève" class="student-name-field px-2.5 py-2 rounded-lg border border-slate-300 text-sm" />
-            <button id="btnAddStudent" type="button" class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold cursor-pointer">
-              ＋ Ajouter
-            </button>
-          </div>
-
           <div id="studentManagerList" class="divide-y divide-slate-100">
             <!-- Populated dynamically -->
           </div>
@@ -646,6 +653,8 @@
               <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation actuel ↗</a></li>
               <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-Programme-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme actualisé (obligatoire en 2027-2028) ↗</a></li>
               <li><a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/francais-langue-enseignement" target="_blank" rel="noopener noreferrer">Page officielle et ressources ↗</a></li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/evaluation-epreuves-ministerielles/documents-information/DI_FLE_4e_prim.pdf" target="_blank" rel="noopener noreferrer">Document d’information, épreuve d’écriture de 4e année (annexe II) ↗</a> : 5 critères à 20 % chacun, utilisés pour la grille pondérée.</li>
+              <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/evaluation-epreuves-ministerielles/documents-information/DI_FLE_6e_prim.pdf" target="_blank" rel="noopener noreferrer">Document d’information, épreuve d’écriture de 6e année (annexe II, version de novembre 2026) ↗</a> : 5 critères à 20 % chacun.</li>
             </ul>
           </details>
           <details class="rounded bg-slate-50 p-2">
@@ -704,6 +713,46 @@
             <p class="mt-2">Le programme-cycle propose des éléments d’observation plutôt qu’une progression des apprentissages par année.</p>
           </details>
           <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Banques de commentaires au bulletin</summary>
+            <div class="mt-2 space-y-2">
+              <p>Les phrases proposées sont des adaptations rédactionnelles locales à choisir selon les observations recueillies. Elles ne constituent ni une banque officielle du Ministère ni une validation par un centre de services scolaire. Les formulations du primaire sont différenciées par cycle et s’inspirent du PFEQ, des cadres d’évaluation et des progressions des apprentissages ci-dessous. Les observations transversales demeurent distinctes du résultat disciplinaire.</p>
+              <p>Au préscolaire, les résultats sont des constats sur l’état de développement des compétences; le dernier bulletin présente un bilan par compétence. Aucun pourcentage ne détermine automatiquement un constat. Les quatre constats de la colonne Bilan sont proposés au choix de l’enseignante ou de l’enseignant, selon son jugement professionnel.</p>
+              <p>Les éléments marqués d’un astérisque dans les cadres, notamment certaines stratégies, la validation et le retour réflexif, servent à la rétroaction et aux commentaires, sans être pris en compte dans les résultats du bulletin. En mathématique, seuls Résoudre et Raisonner ont un résultat; Communiquer ne constitue pas un résultat distinct. Au 1er cycle, la banque ne propose aucun résultat disciplinaire en science et technologie ni en univers social, et les formulations d’anglais portent uniquement sur les textes entendus et la communication orale. Les banques d’anglais et d’éducation physique sont prévues dans les données sans ajouter de matières à l’application.</p>
+              <ul class="list-disc pl-5 space-y-1">
+                <li>CSSDD, comité évaluation, <em>Banque de commentaires au préscolaire</em>, document de travail, mise à jour d’octobre 2023, inspiré du comité provincial des conseillères et conseillers pédagogiques à l’éducation préscolaire (CSS de Kamouraska–Rivière-du-Loup, de Montréal, de l’Énergie, du Pays-des-Bleuets, de Laval, de Charlevoix, des Portages-de-l’Outaouais, René-Lévesque et des Chênes) :
+                  <a class="text-indigo-600 underline" href="https://drive.google.com/file/d/1dFZVlIs4MGQsyf500kObYa8rHTBzJ-so/view" target="_blank" rel="noopener noreferrer">Banque commentaires bulletin — observations ↗</a> ·
+                  <a class="text-indigo-600 underline" href="https://drive.google.com/file/d/1Wt2PlewEz2hFcknUCA0AaBiSL03l70Dy/view" target="_blank" rel="noopener noreferrer">Banque commentaires bulletin — formulaire ↗</a>.
+                  Les 67 observations du texte fourni sont adaptées en formulations de progrès et de défis, complétées par des moyens de soutien et des bilans locaux.
+                </li>
+                <li>CSSDD, <a class="text-indigo-600 underline" href="https://presco.cssdd.gouv.qc.ca/communications-bulletins" target="_blank" rel="noopener noreferrer">Communications et bulletins ↗</a>, sans date. Pour les enfants de 4 ans, certaines observations surlignées dans la source ne devraient pas figurer parmi les défis; ce surlignage n’est pas reproduit ici. Consulter le document d’origine avant de choisir un défi. Le CSSDD recommande un commentaire à la compétence au dernier bulletin lorsque c’est pertinent.</li>
+                <li>Ministère de l’Éducation du Québec, <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/prescolaire/Programme-cycle-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Programme-cycle de l’éducation préscolaire ↗</a>, 2021, et <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/prescolaire/Cadre-evaluation-prescolaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation des apprentissages — Éducation préscolaire ↗</a>, sans date indiquée ici : développement global, domaines et observations en contexte.</li>
+                <li>Ministère de l’Éducation du Québec, <a class="text-indigo-600 underline" href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire" target="_blank" rel="noopener noreferrer">Programme de formation de l’école québécoise — Enseignement primaire ↗</a>, sans date indiquée ici : compétences disciplinaires et transversales, repères par cycle.</li>
+                <li>Ministère de l’Éducation du Québec, français, langue d’enseignement, primaire :
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a>,
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a> et
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation des apprentissages ↗</a>, 21 avril 2011 (cadre); dates des programmes et des progressions non précisées ici. Les formulations suivent le programme actuel, et non le programme actualisé obligatoire en 2027-2028.
+                </li>
+                <li>Ministère de l’Éducation du Québec, mathématique, primaire :
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme d’études ↗</a>,
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Progression des apprentissages ↗</a> et
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation des apprentissages ↗</a>, 21 avril 2011 (cadre); dates des programmes et des progressions non précisées ici.
+                </li>
+                <li>Ministère de l’Éducation du Québec, <em>Cadre d’évaluation des apprentissages</em>, enseignement primaire, documents du 21 avril 2011 :
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-anglais-langue-seconde-primaire.pdf" target="_blank" rel="noopener noreferrer">Anglais, langue seconde ↗</a> ·
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-science-technologie-primaire.pdf" target="_blank" rel="noopener noreferrer">Science et technologie ↗</a> ·
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-univers-social-primaire.pdf" target="_blank" rel="noopener noreferrer">Géographie, histoire et éducation à la citoyenneté ↗</a> ·
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-education-physique-primaire.pdf" target="_blank" rel="noopener noreferrer">Éducation physique et à la santé ↗</a> ·
+                  <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluatioon-arts-plastiques-primaire.pdf" target="_blank" rel="noopener noreferrer">Arts plastiques ↗</a>.
+                  Les critères et leurs éléments d’explication servent de repères aux formulations locales par cycle.
+                </li>
+                <li>Ministère de l’Éducation du Québec, <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf" target="_blank" rel="noopener noreferrer">Cadre d’évaluation des apprentissages — Culture et citoyenneté québécoise, primaire ↗</a>, consulté le 17 novembre 2026 : explorer au 1er cycle, examiner au 2e cycle et réfléchir de façon critique au 3e cycle. Les commentaires portent sur les réalités étudiées; aucune confidence personnelle ni divulgation de la vie privée n’est exigée.</li>
+                <li>Ministère de l’Éducation du Québec, <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/PFEQ-competences-transversales-primaire.pdf" target="_blank" rel="noopener noreferrer">Programme de formation de l’école québécoise — Compétences transversales, enseignement primaire ↗</a>, consulté le 17 novembre 2026 : méthodes de travail efficaces, communication appropriée, jugement critique et coopération.</li>
+                <li>Ministère de l’Éducation du Québec, <a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/evaluation-epreuves-ministerielles/Choix-ecole-bulletin-unique.pdf" target="_blank" rel="noopener noreferrer">Les choix de notre école à l’heure du bulletin unique ↗</a>, sans date indiquée ici : commentaires issus d’observations pour les compétences transversales.</li>
+                <li>CSS des Affluents, école de L’Assomption, <a class="text-indigo-600 underline" href="https://papp.csaffluents.qc.ca/STI/MesUA/api/documents/public/05570bb4-2dfc-4a7e-a19d-c2b0c147f159?numeroAd=006&amp;documentName=Renseignement_parents_4e_2024-2025_20240925_092404.pdf" target="_blank" rel="noopener noreferrer">Renseignements aux parents — 4e année, 2024-2025 ↗</a>, 2024 : repères d’observation pour organiser son travail, savoir communiquer, exercer son jugement critique et travailler en équipe. Les formulations par cycle proposées ici sont des adaptations locales, et non une reproduction de ce document.</li>
+              </ul>
+            </div>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
             <summary class="font-bold cursor-pointer">Ressources générales et échelles</summary>
             <ul class="mt-2 space-y-1">
               <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differenciation-pedagogique.pdf" target="_blank" rel="noopener noreferrer">MEQ — Différenciation pédagogique ↗</a></li>
@@ -759,16 +808,40 @@
       <button id="btnCloseBackupHelp" type="button" class="backup-dialog-close" aria-label="Fermer">×</button>
     </div>
     <div class="backup-help-content">
-      <p>Votre carnet contient vos groupes, vos élèves, leurs résultats et vos commentaires. Pour les retrouver plus tard, gardez un fichier de sauvegarde sur votre ordinateur.</p>
+      <p>Votre fichier <strong>.json</strong> contient votre carnet : groupes, élèves, résultats et commentaires. Gardez-le dans un endroit sûr.</p>
       <ol>
-        <li><strong>Sauvegarder :</strong> cliquez sur « Sauvegarder ». Selon votre navigateur, choisissez un endroit facile à retrouver ou récupérez le fichier dans vos téléchargements. Son nom se termine par <strong>.json</strong>.</li>
-        <li><strong>Vérifier :</strong> si un fichier est lié et que l’écriture est autorisée, les changements y sont enregistrés automatiquement. Sinon, sauvegardez de nouveau après vos modifications. En cas d’erreur ou de refus d’autorisation, ouvrez les options et choisissez « Télécharger une copie JSON ».</li>
-        <li><strong>Reprendre votre travail :</strong> cliquez sur « Charger » et choisissez votre fichier <strong>.json</strong>. Le carnet ouvert sera remplacé par celui du fichier.</li>
+        <li><strong>Pour commencer :</strong> cliquez sur « Sauvegarder » et choisissez où conserver votre fichier. Si le navigateur télécharge plutôt le fichier, retrouvez-le dans Téléchargements.</li>
+        <li><strong>Pendant votre travail :</strong> vérifiez le message en haut. « Fichier lié » signifie que vos changements sont enregistrés dans ce fichier. Si aucun fichier n’est lié, cliquez à nouveau sur « Sauvegarder » après vos modifications.</li>
+        <li><strong>Pour reprendre :</strong> à votre retour, cliquez sur « Charger » et choisissez votre fichier .json. Si demandé, cliquez sur « Sauvegarder » pour autoriser les changements dans ce fichier.</li>
       </ol>
-      <p>Le fichier Excel sert à consulter les résultats; il ne permet pas de recharger le carnet. Conservez aussi une copie de votre fichier de sauvegarde dans un endroit sûr.</p>
-      <p>Si des changements ne sont pas sauvegardés, votre navigateur peut afficher son propre avertissement quand vous fermez la page.</p>
+      <p>La liaison dépend du navigateur et des permissions de votre école. Si elle n’est pas offerte, téléchargez une nouvelle copie après vos changements. Conservez une copie de secours dans un endroit autorisé et sûr.</p>
+      <p>Le carnet reste en mémoire dans l’onglet ouvert, mais il n’est plus enregistré automatiquement dans le navigateur. Avant de fermer ou d’actualiser la page, vérifiez que le fichier est sauvegardé. Pour reprendre, chargez votre fichier.</p>
+      <p>Le fichier Excel sert à consulter les résultats : il ne remplace pas le fichier .json et ne permet pas de rouvrir le carnet.</p>
+      <details><summary><strong>Protéger mes fichiers avec un mot de passe</strong></summary>
+        <p>Dans les options, choisissez « Télécharger une copie chiffrée » pour protéger une copie JSON. Saisissez deux fois un mot de passe de 12 caractères ou plus, puis cliquez sur « Continuer ». Pour l’ouvrir, utilisez « Charger » et le même mot de passe. Un mot de passe perdu rend ce fichier irrécupérable. Cette opération ne protège pas les copies déjà créées.</p>
+        <p>Pour un fichier Excel protégé, choisissez « Exporter un Excel chiffré ». Le mot de passe est demandé directement dans Excel. Les exports ordinaires ne sont pas chiffrés.</p>
+      </details>
     </div>
     <div class="backup-dialog-actions"><button id="btnDoneBackupHelp" type="button" class="backup-dialog-primary">J’ai compris</button></div>
+  </dialog>
+
+  <dialog id="backupPasswordDialog" class="backup-dialog no-print" aria-labelledby="backupPasswordTitle">
+    <form id="backupPasswordForm">
+      <div class="backup-dialog-heading"><h2 id="backupPasswordTitle">Protéger la sauvegarde</h2></div>
+      <p id="backupPasswordHelp"></p>
+      <label for="backupPassword">Mot de passe</label>
+      <input id="backupPassword" type="password" autocomplete="off" required aria-describedby="backupPasswordHelp backupPasswordError" class="w-full border rounded px-2 py-1">
+      <div id="backupPasswordConfirmRow">
+        <label for="backupPasswordConfirm">Confirmer le mot de passe</label>
+        <input id="backupPasswordConfirm" type="password" autocomplete="off" aria-describedby="backupPasswordMatch backupPasswordError" class="w-full border rounded px-2 py-1">
+        <p id="backupPasswordMatch" role="status" aria-live="polite"></p>
+      </div>
+      <p id="backupPasswordError" role="alert"></p>
+      <div class="backup-dialog-actions">
+        <button id="btnCancelBackupPassword" type="button" class="backup-dialog-secondary">Annuler</button>
+        <button id="btnConfirmBackupPassword" type="submit" class="backup-dialog-primary">Continuer</button>
+      </div>
+    </form>
   </dialog>
 
   <dialog id="backupLoadDialog" class="backup-dialog no-print" role="alertdialog" aria-labelledby="backupLoadTitle" aria-describedby="backupLoadMessage">
@@ -855,6 +928,20 @@
     </div>
   </div>
 
+  <dialog id="addStudentDialog" class="backup-dialog no-print" aria-labelledby="addStudentTitle">
+    <form id="addStudentForm">
+      <div class="backup-dialog-heading"><h2 id="addStudentTitle">Ajout d’élève</h2></div>
+      <label for="newStudentName">Prénom</label>
+      <input id="newStudentName" type="text" autocomplete="given-name" required autofocus>
+      <label for="newStudentLastName">Nom de famille</label>
+      <input id="newStudentLastName" type="text" autocomplete="family-name">
+      <div class="backup-dialog-actions">
+        <button id="btnCancelAddStudent" type="button" class="backup-dialog-secondary">Annuler</button>
+        <button id="btnAddStudent" type="submit" class="backup-dialog-primary">Ajouter</button>
+      </div>
+    </form>
+  </dialog>
+
   <!-- MODAL: GROUP -->
   <div id="modalGroup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-3">
@@ -913,16 +1000,17 @@
 
   <!-- MODAL: BANQUE & ASSISTANT DE COMMENTAIRES -->
   <div id="modalCommentBank" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="cbModalTitle">
-    <div class="bg-white rounded-2xl max-w-2xl w-full p-5 shadow-xl border border-slate-200 space-y-3.5 max-h-[90vh] flex flex-col">
-      <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-3">
+    <div class="cb-dialog">
+      <div class="cb-heading">
         <div>
-          <h3 id="cbModalTitle" class="text-base font-bold text-slate-900">Banque et rédaction de commentaire</h3>
+          <h3 id="cbModalTitle" class="text-base font-bold text-slate-900">Commentaires au bulletin</h3>
           <p id="cbModalSubtitle" class="text-xs text-slate-600 mt-0.5"></p>
+          <p id="cbBankGuidance" class="text-xs text-slate-600 mt-1"></p>
         </div>
         <button id="btnCbClose" type="button" class="text-slate-400 hover:text-slate-600 text-lg font-bold cursor-pointer" aria-label="Fermer">✕</button>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200/80">
+      <div class="cb-toolbar">
         <div class="flex items-center gap-2 flex-wrap">
           <label for="cbPronounSelect" class="text-xs font-semibold text-slate-700">Formulation :</label>
           <select id="cbPronounSelect" class="px-2.5 py-1 rounded-lg border border-slate-300 bg-white text-xs font-semibold text-slate-800">
@@ -932,32 +1020,38 @@
             <option value="elle">« Elle » uniquement (accords féminins)</option>
           </select>
         </div>
-        <button id="btnCbAutoSynthesize" type="button" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer flex items-center gap-1.5" title="Rédige un paragraphe cohérent selon la note, le barème et les observations de l’élève">
+        <button id="btnCbAutoSynthesize" type="button" class="cb-action cb-action-primary" title="Rédige un paragraphe cohérent selon la note, le barème et les observations de l’élève">
           <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           <span>Synthèse selon le dossier</span>
         </button>
       </div>
 
-      <div id="cbCategoryTabs" class="flex flex-wrap gap-1.5" role="tablist" aria-label="Catégories de commentaires"></div>
-
-      <div id="cbPhraseList" class="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-[150px] max-h-[240px] custom-scrollbar"></div>
-
-      <div class="space-y-1.5 pt-2 border-t border-slate-100">
-        <div class="flex items-center justify-between text-xs">
-          <label for="cbTextarea" class="font-bold text-slate-800">Texte du commentaire (éditable)</label>
-          <div class="flex items-center gap-2">
-            <span id="cbCharCount" class="text-[11px] font-semibold text-slate-500 tabular-nums">0 caract.</span>
-            <button id="btnCbClear" type="button" class="text-[11px] font-semibold text-slate-500 hover:text-slate-800 underline cursor-pointer">Effacer</button>
+      <div class="cb-body">
+        <section class="cb-bank" aria-labelledby="cbBankTitle">
+          <div class="cb-section-heading">
+            <h4 id="cbBankTitle">Banque de formulations</h4>
+            <p>Cochez pour ajouter; décochez pour retirer.</p>
           </div>
-        </div>
-        <textarea id="cbTextarea" rows="3" placeholder="Cliquez sur des énoncés ci-dessus ou sur « Synthèse selon le dossier » pour composer un commentaire fluide sans répétition du prénom…" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs leading-relaxed focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+          <div id="cbPhraseList" class="cb-choices custom-scrollbar"></div>
+        </section>
+        <section class="cb-editor" aria-labelledby="cbEditorTitle">
+          <div class="cb-section-heading">
+            <h4 id="cbEditorTitle"><label for="cbTextarea">Commentaire au bulletin</label></h4>
+            <p>Modifiez librement le texte avant de l’appliquer.</p>
+          </div>
+          <textarea id="cbTextarea" placeholder="Rédigez votre commentaire, choisissez des formulations ou utilisez la synthèse selon le dossier."></textarea>
+          <div class="cb-editor-meta">
+            <span id="cbCharCount" role="status">0 caract.</span>
+            <button id="btnCbClear" type="button" class="cb-action" title="Effacer le texte et les énoncés sélectionnés">Réinitialiser</button>
+          </div>
+        </section>
       </div>
 
-      <div class="flex flex-wrap items-center justify-between gap-2 pt-1">
-        <button id="btnCbCopy" type="button" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 cursor-pointer">Copier le texte</button>
+      <div class="cb-footer">
+        <button id="btnCbCopy" type="button" class="cb-action">Copier le texte</button>
         <div class="flex items-center gap-2">
-          <button id="btnCbCancel" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
-          <button id="btnCbSave" type="button" class="px-4 py-2 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">Appliquer au carnet</button>
+          <button id="btnCbCancel" type="button" class="cb-action">Annuler</button>
+          <button id="btnCbSave" type="button" class="cb-action cb-action-primary">Appliquer au carnet</button>
         </div>
       </div>
     </div>
@@ -993,6 +1087,7 @@
   <script src="carnet-test/js/sauvegarde.js"></script>
   <script src="carnet-test/js/calculs.js"></script>
   <script src="carnet-test/js/competences.js"></script>
+  <script src="carnet-test/js/pedagogie/banque-commentaires.js"></script>
   <script src="carnet-test/js/commentaires.js"></script>
   <script src="carnet-test/js/criteres.js"></script>
   <script src="carnet-test/js/ui-carnet.js"></script>

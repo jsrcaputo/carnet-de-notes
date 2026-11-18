@@ -385,19 +385,6 @@
         });
       });
 
-      document.getElementById('btnPrintGlobalReport').addEventListener('click', () => {
-        printStudentIndividualSheet();
-      });
-      if (false) document.getElementById('btnPrintGlobalReport').addEventListener('click', () => {
-        document.body.classList.add('print-global-report');
-        const cleanup = () => {
-          document.body.classList.remove('print-global-report');
-          window.removeEventListener('afterprint', cleanup);
-        };
-        window.addEventListener('afterprint', cleanup);
-        window.print();
-      });
-
       const btnOffWeight = document.getElementById('btnAnnualWeightOfficial');
       if (btnOffWeight) {
         btnOffWeight.addEventListener('click', () => {
@@ -953,79 +940,7 @@
       // Commit Visual Trace Session to Gradebook (Top & Bottom buttons)
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
 
-      // Print buttons
-      const printWithClass = (classes, meta) => {
-        document.getElementById('printMeta').textContent = meta || '';
-        document.body.classList.add(...classes);
-        const cleanup = () => {
-          document.body.classList.remove(...classes);
-          window.removeEventListener('afterprint', cleanup);
-        };
-        window.addEventListener('afterprint', cleanup);
-        window.print();
-      };
-      const printMetaText = () => {
-        const group = appState.groups.find(g => g.id === appState.activeGroupId);
-        const st = appState.students.find(s => s.id === appState.selectedStudentId);
-        const sub = getCurrentSubjectConfig();
-        return [group && !group.placeholder ? group.name : '', `Étape ${appState.activeTerm}`, appState.activeView === 'viewBareme' && st ? st.name : '', sub && sub.shortName]
-          .filter(Boolean).join(' · ');
-      };
-      // Réduit la grille pour qu'elle tienne sur une seule page lettre/A4 paysage (marges de 10 mm).
-      const fitObservationGridToOnePage = () => {
-        const grid = document.getElementById('observationPrintGrid');
-        if (!grid) return;
-        const pageWidth = 960, pageHeight = 700;
-        const hidden = [...grid.children].filter((el, i) => i > 0 && !el.matches('.observation-matrix, #qoChecklistContainer, p'));
-        const saved = { width: grid.style.width, maxWidth: grid.style.maxWidth };
-        hidden.forEach(el => { el.dataset.printDisplay = el.style.display; el.style.display = 'none'; });
-        document.body.style.setProperty('--print-fit', '1');
-        grid.style.width = `${pageWidth}px`;
-        grid.style.maxWidth = 'none';
-        const height = grid.scrollHeight, width = grid.scrollWidth;
-        grid.style.width = saved.width;
-        grid.style.maxWidth = saved.maxWidth;
-        hidden.forEach(el => { el.style.display = el.dataset.printDisplay; delete el.dataset.printDisplay; });
-        const scale = Math.min(1, pageHeight / height, pageWidth / width) * 0.97;
-        document.body.style.setProperty('--print-fit', scale.toFixed(3));
-      };
-      const printObservationGrid = blank => {
-        const classes = blank ? ['print-observation-grid', 'print-observation-blank'] : ['print-observation-grid'];
-        const previousStudentId = appState.selectedStudentId;
-        const firstStudentButton = document.querySelector('#qoStudentGrid button');
-        // Une grille vierge a besoin des critères : on emprunte le premier élève visé, sans afficher son nom.
-        const borrowStudent = blank && !document.querySelector('#sgMatrixBody .rubric-stmt-btn') && firstStudentButton;
-        if (borrowStudent) firstStudentButton.click();
-        document.body.classList.add(...classes);
-        fitObservationGridToOnePage();
-        const cleanup = () => {
-          window.removeEventListener('afterprint', cleanup);
-          document.body.style.removeProperty('--print-fit');
-          if (borrowStudent) {
-            appState.selectedStudentId = previousStudentId;
-            renderQuickObsView();
-          }
-        };
-        window.addEventListener('afterprint', cleanup);
-        printWithClass(classes);
-      };
-      const printCurrentView = event => {
-        const view = appState.activeView;
-        if (view === 'viewStudents') printStudentList();
-        else if (view === 'viewGradebook') printWithClass(['print-gradebook'], printMetaText());
-        else if (view === 'viewBareme') printWithClass(['print-bareme'], printMetaText());
-        else if (view === 'viewGlobalReport') document.getElementById('btnPrintGlobalReport').click();
-        else if (view === 'viewQuickObs') {
-          const rect = event.currentTarget.getBoundingClientRect();
-          openMouseBar(event.clientX || rect.left, event.clientY || rect.bottom, [
-            { label: 'Page de l’élève', onPick: () => printObservationGrid(false) },
-            { label: 'Grille vierge', onPick: () => printObservationGrid(true) }
-          ]);
-        } else window.print();
-      };
-      document.getElementById('btnPrintView').addEventListener('click', printCurrentView);
-      document.getElementById('btnPrintBareme').addEventListener('click', printCurrentView);
-      document.getElementById('btnPrintSubjectGrid').addEventListener('click', printCurrentView);
+      setupPrintCenter();
       // Le pavé numérique saisit des chiffres dans les champs numériques, même sans Verr. Num.
       document.addEventListener('keydown', e => {
         const input = e.target;

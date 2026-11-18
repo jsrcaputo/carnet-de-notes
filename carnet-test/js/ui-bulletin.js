@@ -19,7 +19,7 @@
       const weightMode = 'official';
 
       const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
-      ['btnGrPrevStudent', 'btnGrNextStudent', 'btnPrintGlobalReport'].forEach(id => {
+      ['btnGrPrevStudent', 'btnGrNextStudent'].forEach(id => {
         document.getElementById(id).disabled = !st;
       });
 

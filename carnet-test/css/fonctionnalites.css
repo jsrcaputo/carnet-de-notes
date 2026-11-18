@@ -193,6 +193,65 @@
     main .student-remove:hover { background: #f5dcd9 !important; }
     .trace-print { color: var(--muted); padding: .35rem; border-radius: 8px; border: 1px solid var(--studio-border-strong, var(--line)); background: var(--studio-surface-soft, #f8fafc); }
     .trace-print:hover { background: var(--brand-soft); color: var(--brand-deep); }
+    .print-menu-anchor { position: relative; }
+    .print-menu-chevron { opacity: .65; font-size: 9px; }
+    .print-menu { position: absolute; top: calc(100% + 7px); left: 0; z-index: 100; width: min(330px, calc(100vw - 24px)); padding: 6px; border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 14px; background: var(--surface, #fff); color: var(--ink); box-shadow: 0 18px 45px rgba(15, 23, 42, .24); animation: pickerIn .12s ease-out; }
+    .print-menu-heading { padding: 7px 9px 5px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .print-menu-warning { display: grid; grid-template-columns: 28px minmax(0, 1fr); align-items: center; gap: 8px; margin: 4px 3px 6px; padding: 9px; border: 1px solid #f59e0b; border-radius: 10px; background: #fffbeb; color: #78350f; box-shadow: 0 6px 18px rgba(245, 158, 11, .12); opacity: 1; transform: translateY(0); transition: opacity .4s ease, transform .4s ease; }
+    .print-menu-warning.is-leaving { opacity: 0; transform: translateY(-3px); }
+    .print-menu-warning-icon { display: inline-flex; align-items: center; justify-content: center; width: 27px; height: 27px; border-radius: 8px; background: #fef3c7; color: #b45309; }
+    .print-menu-warning-icon svg { width: 17px; height: 17px; }
+    .print-menu-warning strong, .print-menu-warning small { display: block; }
+    .print-menu-warning strong { font-size: 11.5px; }
+    .print-menu-warning small { margin-top: 2px; font-size: 10px; line-height: 1.35; color: #92400e; }
+    .print-menu button { display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 9px; width: 100%; padding: 8px 9px; border-radius: 10px; text-align: left; cursor: pointer; }
+    .print-menu button:hover, .print-menu button:focus-visible { background: var(--brand-soft); outline: none; }
+    .print-menu button.is-contextual { background: color-mix(in srgb, var(--brand-soft) 58%, transparent); }
+    .print-menu button:disabled { opacity: .45; cursor: not-allowed; background: transparent; }
+    .print-menu-icon { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border: 1px solid var(--line); border-radius: 9px; background: var(--studio-surface-soft, #f8fafc); color: var(--brand-deep); }
+    .print-menu-icon svg { width: 17px; height: 17px; }
+    .print-menu-copy { min-width: 0; }
+    .print-menu-copy strong { display: block; color: var(--ink); font-size: 12px; line-height: 1.25; }
+    .print-menu-copy small { display: block; margin-top: 2px; color: var(--muted); font-size: 10.5px; font-weight: 500; line-height: 1.35; }
+    .observable-print-dialog { width: min(680px, calc(100vw - 28px)); max-height: calc(100vh - 28px); padding: 0; overflow: auto; border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 18px; background: var(--surface, #fff); color: var(--ink); box-shadow: 0 24px 80px rgba(15, 23, 42, .28); }
+    .observable-print-dialog::backdrop { background: rgba(15, 23, 42, .55); backdrop-filter: blur(3px); }
+    .print-dialog-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); }
+    .print-dialog-heading-copy { min-width: 0; }
+    .print-dialog-kicker { color: var(--brand-deep); font-size: 10px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
+    .print-dialog-heading h2 { margin-top: 2px; font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    .print-dialog-heading p { margin-top: 4px; max-width: 520px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .print-dialog-close { width: 30px; height: 30px; flex: 0 0 auto; border-radius: 9px; background: var(--studio-surface-soft, #f1f5f9); color: var(--muted); font-weight: 800; cursor: pointer; }
+    .print-dialog-close:hover { color: var(--ink); background: var(--brand-soft); }
+    .observable-print-form { display: grid; gap: 18px; padding: 18px 22px; }
+    .observable-print-form section > label, .print-field-label, .print-section-label { display: block; margin-bottom: 7px; color: var(--ink); font-size: 12px; font-weight: 800; }
+    .print-section-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .print-section-label button { color: var(--brand-deep); font-size: 10.5px; font-weight: 750; cursor: pointer; }
+    #observablePrintAssignment, #baremePrintSubject { width: 100%; padding: 9px 11px; border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 10px; background: var(--surface, #fff); color: var(--ink); font-size: 12px; font-weight: 650; }
+    .print-dialog-hint { margin-top: 5px; color: var(--muted); font-size: 10.5px; }
+    .print-student-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 190px; overflow: auto; padding: 1px; }
+    .print-student-choice { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 7px 9px; border: 1px solid var(--line); border-radius: 9px; background: var(--studio-surface-soft, #f8fafc); color: var(--ink); font-size: 11px; cursor: pointer; }
+    .print-student-choice:has(input:checked) { border-color: color-mix(in srgb, var(--brand) 50%, var(--line)); background: var(--brand-soft); }
+    .print-student-choice input { flex: 0 0 auto; accent-color: var(--brand); }
+    .print-student-choice span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .print-format-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .print-format-options label { display: flex; align-items: flex-start; gap: 9px; padding: 10px; border: 1px solid var(--line); border-radius: 11px; background: var(--studio-surface-soft, #f8fafc); cursor: pointer; }
+    .print-format-options label:has(input:checked) { border-color: var(--brand); background: var(--brand-soft); box-shadow: inset 0 0 0 1px var(--brand); }
+    .print-format-options input { margin-top: 2px; accent-color: var(--brand); }
+    .print-format-options strong, .print-format-options small { display: block; }
+    .print-format-options strong { color: var(--ink); font-size: 11.5px; }
+    .print-format-options small { margin-top: 2px; color: var(--muted); font-size: 10px; line-height: 1.35; }
+    .summary-print-options { grid-template-columns: 1fr 1fr; }
+    .bareme-format-reveal { max-height: 0; margin-top: -18px; overflow: hidden; opacity: 0; transform: translateY(-7px); pointer-events: none; transition: max-height .28s ease, margin .28s ease, opacity .2s ease, transform .28s ease; }
+    .bareme-format-reveal.is-visible { max-height: 145px; margin-top: 0; opacity: 1; transform: translateY(0); pointer-events: auto; }
+    .print-dialog-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--studio-surface-soft, #f8fafc); }
+    #observablePrintSummary, #summaryPrintSummary, #baremePrintSummary { color: var(--muted); font-size: 10.5px; }
+    .print-dialog-footer > div { display: flex; align-items: center; gap: 7px; margin-left: auto; }
+    .print-dialog-secondary, .print-dialog-primary { padding: 8px 12px; border-radius: 9px; font-size: 11.5px; font-weight: 750; cursor: pointer; }
+    .print-dialog-secondary { border: 1px solid var(--line); background: var(--surface, #fff); color: var(--ink); }
+    .print-dialog-primary { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--brand); background: var(--brand); color: #fff; }
+    .print-dialog-primary svg { width: 15px; height: 15px; }
+    #observablePrintSheet, #baremeBatchPrintSheet { display: none; }
+    @page observable-grids { size: landscape; margin: 8mm; }
     @media print {
       body.print-observation-grid main > section:not(#viewQuickObs),
       body.print-observation-grid #viewQuickObs > :not(#observationPrintGrid),
@@ -213,6 +272,39 @@
       body.print-observation-grid.print-observation-blank #qoChecklistContainer button[aria-pressed="true"] { border: 1px solid #cbd5e1 !important; background: #fff !important; color: #334155 !important; font-weight: 700 !important; box-shadow: none !important; }
       body.print-observation-grid.print-observation-blank #sgCurrentStudentName { font-size: 0; }
       body.print-observation-grid.print-observation-blank #sgCurrentStudentName::after { content: "\00a0"; display: inline-block; min-width: 18rem; border-bottom: 1px solid #222; font-size: 12px; }
+      body.print-observable-batch > *:not(#observablePrintSheet) { display: none !important; }
+      body.print-bareme-batch > *:not(#baremeBatchPrintSheet) { display: none !important; }
+      body.print-observable-batch #observablePrintSheet { display: block !important; page: observable-grids; color: #111827; font-family: inherit; }
+      body.print-bareme-batch #baremeBatchPrintSheet { display: block !important; page: observable-grids; color: #111827; font-family: inherit; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-page { min-height: 194mm; break-after: page; display: flex; flex-direction: column; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-page:last-child { break-after: auto; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8mm; padding-bottom: 3mm; border-bottom: 2px solid #334155; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-head h1 { margin: 0; font-size: 17px; line-height: 1.15; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-head p { margin: 1.5mm 0 0; color: #475569; font-size: 10px; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-result { min-width: 50mm; text-align: right; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-result strong { font-size: 15px; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table { width: 100%; margin-top: 3mm; border-collapse: collapse; table-layout: fixed; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table th, :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table td { border: 1px solid #94a3b8; padding: 1.7mm; vertical-align: top; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table thead th { background: #f1f5f9 !important; color: #111827; font-size: 9px; text-align: center; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table tbody th { width: 17%; background: #f8fafc !important; font-size: 9px; line-height: 1.25; text-align: left; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table td { font-size: 8.5px; line-height: 1.28; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-statement { display: flex; align-items: flex-start; gap: 1.5mm; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-check { width: 3mm; height: 3mm; flex: 0 0 auto; margin-top: .2mm; border: 1px solid #64748b; border-radius: 50%; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .is-selected { background: #e2e8f0 !important; outline: 1.4px solid #0f172a; outline-offset: -1.4px; font-weight: 700; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .is-selected .observable-print-check { background: #0f172a !important; border-color: #0f172a; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-weight { display: block; margin-top: 1mm; color: #334155; font-size: 8px; font-weight: 750; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-notes { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm; margin-top: 3mm; font-size: 9px; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-note { min-height: 12mm; padding: 2mm; border: 1px solid #94a3b8; border-radius: 4px; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-note strong { display: block; margin-bottom: 1mm; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-foot { margin-top: auto; padding-top: 2mm; color: #64748b; font-size: 8px; text-align: right; }
+      body.print-student-sheet #studentIndividualPrintSheet .sis-print-page { break-after: page; }
+      body.print-student-sheet #studentIndividualPrintSheet .sis-print-page:last-child { break-after: auto; }
+    }
+    @media (max-width: 560px) {
+      .print-format-options, .summary-print-options { grid-template-columns: 1fr; }
+      .print-student-choices { grid-template-columns: 1fr; }
+      .print-dialog-footer { align-items: flex-start; flex-direction: column; }
+      .print-dialog-footer > div { width: 100%; justify-content: flex-end; }
     }
     #toastNotification { z-index: 125; }
     .tour-overlay { position: fixed; inset: 0; z-index: 110; pointer-events: auto; }
