@@ -3,7 +3,6 @@
         id: 'ccq_global',
         shortName: 'Culture et citoyenneté québécoise', tabLabel: 'Culture et citoyenneté québ.',
         fullName: 'Culture et citoyenneté québécoise (CCQ) — Explorer · Examiner · Réfléchir',
-        imageUrl: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=960&q=70',
         icon: 'CCQ',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-culture-citoyennete-quebecoise-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/ccq/%C3%A9valuation',

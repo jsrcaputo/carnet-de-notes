@@ -331,8 +331,8 @@
           return [
             {
               id: 'meq_c1',
-              label: 'Grille pondérée (MEQ)',
-              hint: 'Pondération officielle MEQ 1er cycle : 40 % / 30 % / 30 %',
+              label: 'Grille pondérée locale',
+              hint: 'Pondération locale du 1er cycle : 40 % / 30 % / 30 %. Aucun partage officiel MEQ par critère n’est appliqué ici.',
               weights: { [id1]: 40, [id2]: 30, [id3]: 30 }
             }
           ];
@@ -346,7 +346,7 @@
           {
             id: 'meq_epreuve',
             label: 'Grille pondérée (MEQ)',
-            hint: 'Pondération des épreuves ministérielles d’écriture (MEQ, 4e et 6e année) : 20 % par critère',
+            hint: 'Barème ministériel d’écriture : cinq critères à 20 %, avec 20 / 16 / 12 / 8 / 4 points selon A à E',
             weights: { [c1]: 20, [c2]: 20, [c3]: 20, [c4]: 20, [c5]: 20 }
           }
         ];
@@ -356,7 +356,7 @@
           {
             id: 'meq_c1_math',
             label: 'Grille pondérée (MEQ)',
-            hint: 'Pondération officielle MEQ (C1) : 40 % / 40 % / 20 %',
+            hint: 'Barème ministériel C1 : 40 / 32 / 24 / 16 / 8 points; 40 / 32 / 24 / 16 / 8 points; 20 / 16 / 12 / 8 / 4 points selon A à E.',
             weights: { c1_comp: 40, c1_mob: 40, c1_traces: 20 }
           }
         ];
@@ -366,7 +366,7 @@
           {
             id: 'meq_c2_action',
             label: 'Grille pondérée (MEQ)',
-            hint: 'Pondération officielle MEQ (C2) : Analyse 30 % · Application 50 % · Justification 20 %',
+            hint: 'Barème ministériel C2 : 30 / 24 / 18 / 12 / 6 points; 50 / 40 / 30 / 20 / 10 points; 20 / 16 / 12 / 8 / 4 points selon A à E.',
             weights: { c2_analyse: 30, c2_application: 50, c2_justif: 20 }
           }
         ];

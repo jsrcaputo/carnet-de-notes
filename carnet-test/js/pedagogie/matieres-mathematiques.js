@@ -5,7 +5,6 @@
         shortName: 'Mathématiques • Résoudre (C1)',
         fullName: 'Mathématiques — C1 : Résoudre une situation-problème',
         icon: 'M1',
-        imageUrl: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=960&q=70',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/mathprimairecssmb',
         criteria: [
@@ -45,7 +44,6 @@
         shortName: 'Mathématiques • Raisonner (C2)',
         fullName: 'Mathématiques — C2 : Raisonner à l’aide de concepts et de processus',
         icon: 'M2',
-        imageUrl: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=960&q=70',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/mathprimairecssmb',
         criteria: [

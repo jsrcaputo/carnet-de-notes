@@ -12,10 +12,6 @@
 
       document.getElementById('baremeSubjectLabel').textContent = `${sub.shortName} (Étape ${appState.activeTerm})`;
       document.getElementById('baremeCurrentStudentName').textContent = st ? st.name : 'Sélectionner un nom';
-      const baremeAtm = document.getElementById('baremeSubjectAtmosphere');
-      const baremeImg = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
-      if (baremeAtm && baremeImg) baremeAtm.src = baremeImg;
-
       const pillsContainer = document.getElementById('baremeStudentPills');
       pillsContainer.innerHTML = '';
       appState.students.forEach(student => {
@@ -28,6 +24,7 @@
         const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(isSel));
         btn.className = isSel
           ? 'px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-900 text-white shadow-xs flex items-center gap-1 cursor-pointer'
           : 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 cursor-pointer';
@@ -136,6 +133,7 @@
               const hadFocus = document.activeElement === itemBtn;
               rec.baremeChecked = toggleSingleChoiceInRow(rec.baremeChecked, row.id, key);
               rec.baremeOverrideCode = null;
+              scheduleAppStateSave();
               renderBaremeView();
               renderGradebookView();
               if (hadFocus) restoreRubricFocus(tbody, key);
@@ -215,6 +213,7 @@
                 appState.selectedStudentId = null;
               }
             }
+            scheduleAppStateSave();
             renderQuickObsView();
           };
 
@@ -307,8 +306,10 @@
           },
           ...(canUseWeighted ? [{
             id: 'weighted',
-            label: 'Grille pondérée (MEQ)',
-            hint: 'Pondération analytique officielle par critère (/100) selon les cadres et épreuves MEQ'
+            label: 'Grille pondérée',
+            hint: sub.id === 'fra_ecriture' && repCycle === 1
+              ? 'Pondération analytique locale par critère (/100) pour le 1er cycle'
+              : 'Pondération analytique par critère (/100) selon les barèmes ministériels'
           }] : [])
         ];
         modeOptions.forEach(opt => {
@@ -328,6 +329,7 @@
               session.criteriaWeights = getEffectiveCriteriaWeights(sub.id, repCycle, repScoredCriteria, null);
               session.usingPersoPreset = false;
             }
+            scheduleAppStateSave();
             renderQuickObsView();
           });
           modeSegment.appendChild(mBtn);
@@ -335,12 +337,14 @@
       }
       if (modeSubtitle) {
         modeSubtitle.textContent = effectiveObsMode === 'weighted'
-          ? 'Calcul analytique pondéré (/100) inspiré des grilles ministérielles MEQ.'
+          ? ''
           : 'Portrait descriptif par critère (1 choix par rangée).';
       }
       if (inspirationCaption) {
         inspirationCaption.textContent = effectiveObsMode === 'weighted'
-          ? 'Grille analytique pondérée inspirée des barèmes officiels du MEQ pour cette compétence.'
+          ? (sub.id === 'fra_ecriture' && repCycle === 1
+            ? 'Grille analytique locale pondérée pour les critères d’écriture du 1er cycle.'
+            : 'Grille analytique pondérée selon les barèmes ministériels pour cette compétence.')
           : 'Grille locale inspirée des cadres MEQ conçue pour évaluer les apprentissages selon les attentes et le contexte.';
       }
 
@@ -383,6 +387,7 @@
             pBtn.addEventListener('click', () => {
               session.usingPersoPreset = false;
               session.criteriaWeights = { ...preset.weights };
+              scheduleAppStateSave();
               renderQuickObsView();
             });
             presetLeft.appendChild(pBtn);
@@ -409,6 +414,7 @@
             } else {
               session.criteriaWeights = { ...activeWeightsMap };
             }
+            scheduleAppStateSave();
             renderQuickObsView();
             if (!savedPerso) {
               const firstInp = weightPresetBar.querySelector('input[data-qo-crit-weight]');
@@ -440,6 +446,7 @@
             resetBtn.addEventListener('click', () => {
               session.usingPersoPreset = false;
               session.criteriaWeights = { ...presets[0].weights };
+              scheduleAppStateSave();
               renderQuickObsView();
             });
             totalWrap.appendChild(resetBtn);
@@ -540,9 +547,6 @@
         ? `${st.name} — ${GRADE_LEVEL_LABELS[draft.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}${isModSub ? ` [Bulletin modifié · inscrit en ${GRADE_LEVEL_LABELS[st.gradeLevel] || '—'}]` : ''}`
         : 'Sélectionner un nom';
       document.getElementById('qoBottomStudentName').textContent = st ? st.name : 'Sélectionner un nom';
-      const qoAtm = document.getElementById('qoSubjectAtmosphere');
-      const qoImg = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
-      if (qoAtm && qoImg) qoAtm.src = qoImg;
       const modeBadge = document.getElementById('qoEditModeBadge');
       const topCommitLbl = document.getElementById('btnCommitTopLabel');
 
@@ -618,6 +622,7 @@
         const isSel = Boolean(st && student.id === st.id);
         const btn = document.createElement('button');
         btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(isSel));
         btn.className = isSel
           ? 'w-full px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
           : 'w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
@@ -699,6 +704,7 @@
         resetOverrideBtnEmpty.classList.toggle('hidden', !res.isOverride);
         resetOverrideBtnEmpty.onclick = () => {
           draft.overrideCode = null;
+          scheduleAppStateSave();
           renderQuickObsView();
         };
       }
@@ -787,7 +793,7 @@
           td.className = 'p-1.5 border border-slate-200 space-y-1';
           const statements = crit.cells[fam] || [];
           const cellPts = (critWeight !== null && critWeight > 0)
-            ? Math.round(critWeight * OBSERVATION_FAMILY_PERCENTAGES[fam]) / 100
+            ? Math.round(critWeight * WEIGHTED_RUBRIC_FAMILY_PERCENTAGES[fam] / 100)
             : null;
           statements.forEach((stmtText, idx) => {
             const key = `${crit.id}_${fam}_${idx}`;
@@ -824,6 +830,7 @@
               draft.notEvaluated = false;
               draft.checked = toggleSingleChoiceInRow(draft.checked, crit.id, key);
               draft.overrideCode = null;
+              scheduleAppStateSave();
               renderQuickObsView();
               if (hadFocus) restoreRubricFocus(tbody, key);
             });
@@ -921,6 +928,7 @@
           remove.setAttribute('aria-label', `Retirer : ${tag}`);
           remove.addEventListener('click', () => {
             draft.tags = draft.tags.filter(value => value !== tag);
+            scheduleAppStateSave();
             renderQuickObsView();
           });
           chip.appendChild(remove);

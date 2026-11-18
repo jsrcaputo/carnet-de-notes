@@ -6,11 +6,22 @@
       renderTermSwitcher();
       renderSubjectTabs();
       renderNavTabs();
-      renderGradebookView();
-      renderBaremeView();
-      renderQuickObsView();
-      renderStudentsView();
-      renderGlobalReportView();
+      switch (appState.activeView) {
+        case 'viewBareme':
+          renderBaremeView();
+          break;
+        case 'viewQuickObs':
+          renderQuickObsView();
+          break;
+        case 'viewStudents':
+          renderStudentsView();
+          break;
+        case 'viewGlobalReport':
+          renderGlobalReportView();
+          break;
+        default:
+          renderGradebookView();
+      }
     }
 
     function renderTermSwitcher() {
@@ -198,10 +209,6 @@
       document.getElementById('gbSubjectTitle').textContent = subjectTitle;
       document.getElementById('gbSubjectTitle').title = subjectTitle;
       document.getElementById('gbSubjectIcon').innerHTML = subjectIcons[sub.group || (sub.id === 'ccq_global' ? 'ccq' : 'maths')] || '';
-      const subjectAtmosphere = document.getElementById('gbSubjectAtmosphere');
-      const heroImageUrl = STUDIO_ATMOSPHERE_IMAGES[sub.id] || sub.imageUrl;
-      if (subjectAtmosphere && heroImageUrl) subjectAtmosphere.src = heroImageUrl;
-
       const presentLevels = getPresentStudentLevels();
       const isMulti = presentLevels.length > 1;
       const activeLvlFilter = isMulti ? ensureValidGbLevelFilter() : 'ALL';
@@ -335,7 +342,7 @@
           <div class="flex items-center justify-center gap-1 px-1">
             <button type="button" data-title-view="${asg.id}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
             <textarea rows="1" data-title-asg="${asg.id}" placeholder="Nom du travail..." class="${asg.title && asg.title.trim() ? 'hidden ' : ''}w-36 resize-none overflow-hidden leading-tight bg-white text-slate-800 text-center text-[11px] font-bold px-1.5 py-0.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400" title="Cliquez pour renommer ce travail ou cette trace">${escapeHtml(asg.title)}</textarea>
-            <button type="button" data-del-asg="${asg.id}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" title="Supprimer cette colonne">✕</button>
+            <button type="button" data-del-asg="${asg.id}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" aria-label="Supprimer l’évaluation ${escapeHtml(asg.title)}" title="Supprimer cette colonne">✕</button>
           </div>
           <div class="mt-1 flex items-center justify-center gap-1 flex-wrap">
             ${targetBadgeHtml}
@@ -436,7 +443,22 @@
             notifyUpdate('Colonne supprimée');
             renderAll();
           };
-          if (!linked.length) { doDelete(false); return; }
+          if (!linked.length) {
+            if (btn.getAttribute('data-confirm') !== 'yes') {
+              btn.setAttribute('data-confirm', 'yes');
+              btn.textContent = 'Confirmer ?';
+              btn.setAttribute('aria-label', `Confirmer la suppression de ${delTarget.title}`);
+              window.setTimeout(() => {
+                if (!btn.isConnected) return;
+                btn.removeAttribute('data-confirm');
+                btn.textContent = '✕';
+                btn.setAttribute('aria-label', `Supprimer l’évaluation ${delTarget.title}`);
+              }, 3000);
+              return;
+            }
+            doDelete(false);
+            return;
+          }
           const modal = document.getElementById('modalDeleteLinked');
           document.getElementById('delLinkedTitle').textContent = delTarget.title;
           document.getElementById('delLinkedNames').textContent = linked.map(l => l.sub.partLabel || l.sub.shortName).join(', ');

@@ -60,7 +60,6 @@
       html.theme-dark [id^="modal"] :is(.border-slate-100, .border-slate-200, .border-slate-300) { border-color: var(--line) !important; }
       html.theme-dark .cb-phrase-item:not(.is-selected) { background: var(--studio-surface-soft, #1e293b); color: var(--ink); border-color: var(--line); }
       html.theme-dark :is(.gradebook-toolbar, .global-report-toolbar, .student-manager-card, .studio-hero-card, #emptyRosterNotice:not(.hidden)) { background: var(--surface) !important; color: var(--ink); border-color: var(--line) !important; }
-      html.theme-dark .empty-roster-visual::after { background: linear-gradient(90deg, var(--surface), transparent); }
       html.theme-dark main :is(.bg-white, .bg-slate-50, .bg-slate-100, .bg-slate-900) { background-color: var(--surface) !important; color: var(--ink) !important; }
       html.theme-dark main :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600, .text-slate-500, .text-indigo-950, .text-indigo-700, .text-indigo-600) { color: var(--ink) !important; }
       html.theme-dark main :is(.bg-indigo-50, .bg-indigo-950) { background-color: var(--brand-soft) !important; color: var(--ink) !important; }
@@ -77,7 +76,6 @@
       html.theme-dark #gradebookBody input.asg-raw { color: var(--ink) !important; }
       html.theme-dark #kpiClassAverage { color: var(--brand-deep) !important; }
       html.theme-dark main table tbody tr:hover, html.theme-dark.design-studio #gradebookBody tr:hover td { background-color: var(--brand-soft) !important; }
-      html.theme-dark :is(.gradebook-atmosphere, .global-report-atmosphere, .student-manager-atmosphere, .studio-only-atmosphere, .empty-roster-visual img) { filter: none !important; }
     }
     body.compact #gradebookBody td { padding-top: .25rem !important; padding-bottom: .25rem !important; }
     #gradebookBody input.asg-raw { color: #8a9188 !important; font-weight: 600; width: 3.6rem; }
@@ -137,7 +135,6 @@
     @media print {
       body.print-gradebook main > section:not(#viewGradebook),
       body.print-gradebook #emptyRosterNotice,
-      body.print-gradebook .gradebook-atmosphere,
       body.print-gradebook #gradebookHeaderRow th:nth-last-child(3),
       body.print-gradebook #gradebookBody td:nth-last-child(3),
       body.print-gradebook #gradebookHeaderRow th:nth-last-child(1),

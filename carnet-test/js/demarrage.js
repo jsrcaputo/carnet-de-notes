@@ -668,7 +668,6 @@
         document.getElementById('btnWeightMode').setAttribute('aria-expanded', 'false');
         document.getElementById('weightControls').classList.add('hidden');
         renderGradebookView();
-        if (false) document.querySelectorAll('#gradebookHeaderRow .weight-tools').forEach(tools => tools.remove());
         document.querySelectorAll('#gradebookHeaderRow [data-weight-input]').forEach(input => {
           const asg = getActiveTermData().subjectData[appState.activeSubjectId].assignments.find(item => item.id === input.getAttribute('data-weight-input'));
           if (!asg) return;
@@ -941,6 +940,7 @@
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
 
       setupPrintCenter();
+      setupLegacyModalAccessibility();
       // Le pavé numérique saisit des chiffres dans les champs numériques, même sans Verr. Num.
       document.addEventListener('keydown', e => {
         const input = e.target;
@@ -1196,7 +1196,7 @@
 
       applyPrefs();
       updateLegacyBrowserBackup();
-      ['input', 'change', 'click', 'drop', 'dragend'].forEach(eventName => {
+      ['input', 'change', 'drop', 'dragend'].forEach(eventName => {
         document.addEventListener(eventName, scheduleAppStateSave);
       });
       renderAll();
@@ -1265,7 +1265,11 @@
           return;
         }
         if (e.key === '/' && !mod && !typing) {
-          const target = appState.activeView === 'viewStudents' ? 'studentSearch' : null;
+          const target = appState.activeView === 'viewStudents'
+            ? 'studentSearch'
+            : appState.activeView === 'viewGradebook'
+              ? 'headerStudentSearch'
+              : null;
           if (target) { e.preventDefault(); document.getElementById(target).focus(); }
         }
         if (e.key === 'Escape') closeSettingsPanel();

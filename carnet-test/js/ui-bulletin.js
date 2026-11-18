@@ -608,7 +608,7 @@
             <h4 class="text-sm font-bold text-slate-900">Résultats des trois étapes par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
             <span class="gr-weight-label">${st.gradeLevel === 'P' ? 'Calcul local indicatif (20 % / 20 % / 60 %)' : weightModeLabel}</span>
           </div>
-          <p class="px-4 py-2 text-xs text-slate-600">Provisoire : une ou plusieurs étapes manquent. La moyenne est calculée sur les poids disponibles, réajustés proportionnellement; elle n’est pas un résultat annuel complet.</p>
+          ${overallProvisional ? '<p class="px-4 py-2 text-xs text-slate-600">Provisoire : une ou plusieurs étapes manquent. La moyenne est calculée sur les poids disponibles, réajustés proportionnellement; elle n’est pas un résultat annuel complet.</p>' : ''}
           <div class="gr-results-scroll">
           <table class="w-full table-fixed text-left border-collapse text-xs">
             <thead>
@@ -692,9 +692,24 @@
 
         const commitCompetencyChange = () => {
           const scrollY = window.scrollY;
+          const activeSentence = document.activeElement && document.activeElement.classList.contains('comp-sentence')
+            ? {
+                scale: document.activeElement.getAttribute('data-comp-scale'),
+                row: document.activeElement.getAttribute('data-comp-row'),
+                level: document.activeElement.getAttribute('data-comp-level')
+              }
+            : null;
           competencyPanelOpen = competencyDetails.open;
           scheduleAppStateSave();
           renderGlobalReportView();
+          if (activeSentence) {
+            const replacement = [...document.querySelectorAll('#competencyPositioning .comp-sentence')].find(sentence =>
+              sentence.getAttribute('data-comp-scale') === activeSentence.scale &&
+              sentence.getAttribute('data-comp-row') === activeSentence.row &&
+              sentence.getAttribute('data-comp-level') === activeSentence.level
+            );
+            if (replacement) replacement.focus({ preventScroll: true });
+          }
           window.scrollTo(0, scrollY);
         };
 

@@ -16,7 +16,7 @@
       } catch (_) {}
     })();
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
   <script src="echelles-niveaux.js"></script>
   <link rel="stylesheet" href="carnet-test/css/tailwind.css">
   <link rel="stylesheet" href="carnet-test/css/base.css">
@@ -283,21 +283,9 @@
             Ajouter des élèves
           </button>
         </div>
-        <div class="empty-roster-visual flex items-center justify-end pr-6" aria-hidden="true">
-          <img id="emptyRosterAtmosphere" src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
-          <svg class="w-28 h-28 text-slate-700 opacity-15" viewBox="0 0 120 120" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="22" y="16" width="66" height="88" rx="6"/>
-            <line x1="34" y1="16" x2="34" y2="104"/>
-            <line x1="44" y1="36" x2="74" y2="36"/>
-            <line x1="44" y1="50" x2="74" y2="50"/>
-            <line x1="44" y1="64" x2="64" y2="64"/>
-            <path d="M78 78l18-18 8 8-18 18-10 2z"/>
-          </svg>
-        </div>
       </div>
       <!-- Compact Toolbar -->
       <div class="gradebook-toolbar bg-white rounded-xl border border-slate-200 px-4 py-3 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        <img id="gbSubjectAtmosphere" class="gradebook-atmosphere" src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex items-center gap-2 flex-wrap">
           <svg id="gbSubjectIcon" class="gb-subject-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
           <h2 id="gbSubjectTitle" class="text-base sm:text-lg font-bold text-slate-900">Mathématique — C1 : Résoudre une situation-problème</h2>
@@ -352,7 +340,6 @@
     <!-- VIEW 2: BARÈME (1 SEULE CASE PAR RANGÉE — ZERO HORIZONTAL SCROLL) -->
     <section id="viewBareme" class="hidden space-y-3">
       <div class="studio-hero-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
-        <img id="baremeSubjectAtmosphere" class="studio-only-atmosphere" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2 flex-wrap">
             <button id="btnBackToGradebookFromBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1 no-print">
@@ -428,7 +415,6 @@
     <!-- Éditeur de trace observable -->
     <section id="viewQuickObs" class="hidden space-y-4">
       <div class="studio-hero-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
-        <img id="qoSubjectAtmosphere" class="studio-only-atmosphere" src="https://images.unsplash.com/photo-1517842645767-c639042777db?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3">
           <div class="flex items-center gap-2 flex-wrap">
             <button id="btnBackToGradebookFromTrace" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1">
@@ -582,7 +568,6 @@
       <div class="grid grid-cols-1 gap-4">
         <!-- Manage Students & Per-Student Adaptations -->
         <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
-          <img class="student-manager-atmosphere" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
           <div class="student-page-heading">
               <h2>Listes et groupes</h2>
           </div>
@@ -772,7 +757,6 @@
     <section id="viewGlobalReport" class="hidden space-y-4">
       <!-- Student Selector Band (Equitable 2 lines of 5 students) -->
       <div class="global-report-toolbar bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
-        <img class="global-report-atmosphere" src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=1200&q=80" alt="" loading="lazy">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
           <div class="flex items-center gap-2 flex-wrap">
             <h2 class="text-base sm:text-lg font-bold text-slate-900">Synthèse des résultats (2026-2027)</h2>
@@ -1068,7 +1052,7 @@
   </dialog>
 
   <!-- MODAL: GROUP -->
-  <div id="modalGroup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+  <div id="modalGroup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-labelledby="groupModalTitle">
     <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-xl border border-slate-200 space-y-3">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 id="groupModalTitle" class="text-base font-bold text-slate-900">Nouveau groupe</h3>
@@ -1108,7 +1092,7 @@
   </div>
 
   <!-- MODAL: DELETE LINKED ASSIGNMENT -->
-  <div id="modalDeleteLinked" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print">
+  <div id="modalDeleteLinked" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden items-center justify-center p-4 no-print" role="dialog" aria-modal="true" aria-label="Supprimer une évaluation liée">
     <div class="bg-white rounded-2xl max-w-sm w-full p-5 shadow-xl border border-slate-200 space-y-3">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <h3 class="text-base font-bold text-slate-900">Supprimer l’évaluation</h3>

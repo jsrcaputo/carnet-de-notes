@@ -263,6 +263,39 @@
           listEl.querySelectorAll('[data-student-id]').forEach(item => item.classList.remove('ring-2', 'ring-indigo-400'));
         });
         profileRow.appendChild(dragHandle);
+        const moveControls = document.createElement('div');
+        moveControls.className = 'inline-flex items-center rounded-md border border-slate-200 bg-white overflow-hidden no-print';
+        const studentIndex = appState.students.findIndex(student => student.id === st.id);
+        [-1, 1].forEach(direction => {
+          const moveButton = document.createElement('button');
+          moveButton.type = 'button';
+          moveButton.className = 'px-1.5 py-0.5 text-xs font-bold text-slate-600 hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed';
+          moveButton.dataset.studentMoveId = st.id;
+          moveButton.dataset.moveDirection = direction < 0 ? 'up' : 'down';
+          moveButton.textContent = direction < 0 ? '↑' : '↓';
+          moveButton.disabled = direction < 0 ? studentIndex === 0 : studentIndex === appState.students.length - 1;
+          moveButton.setAttribute('aria-label', `${direction < 0 ? 'Monter' : 'Descendre'} ${st.name}`);
+          moveButton.addEventListener('click', () => {
+            const fromIndex = appState.students.findIndex(student => student.id === st.id);
+            const toIndex = fromIndex + direction;
+            if (fromIndex < 0 || toIndex < 0 || toIndex >= appState.students.length) return;
+            [appState.students[fromIndex], appState.students[toIndex]] =
+              [appState.students[toIndex], appState.students[fromIndex]];
+            notifyUpdate('Ordre des élèves mis à jour');
+            renderAll();
+            const sameMove = [...document.querySelectorAll('[data-student-move-id]')].find(button =>
+              button.dataset.studentMoveId === st.id &&
+              button.dataset.moveDirection === (direction < 0 ? 'up' : 'down') &&
+              !button.disabled
+            );
+            const alternateMove = [...document.querySelectorAll('[data-student-move-id]')].find(button =>
+              button.dataset.studentMoveId === st.id && !button.disabled
+            );
+            (sameMove || alternateMove)?.focus({ preventScroll: true });
+          });
+          moveControls.appendChild(moveButton);
+        });
+        profileRow.appendChild(moveControls);
         const firstNameInput = document.createElement('input');
         const lastNameInput = document.createElement('input');
         firstNameInput.value = typeof st.firstName === 'string' ? st.firstName : st.name;

@@ -1,3 +1,7 @@
+    function triggerPrintAfterPaint() {
+      window.requestAnimationFrame(() => window.setTimeout(() => window.print(), 0));
+    }
+
     function printCompetencySheet(student, term) {
       const picks = getCompetencyPicks(student, term);
       const blocks = getCompetencyTabs().flatMap(tab => tab.scales.map(scale => ({ scale, tabId: tab.id }))).map(({ scale, tabId }) => {
@@ -39,7 +43,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.print();
+      triggerPrintAfterPaint();
     }
 
     function printStudentList() {
@@ -70,7 +74,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.setTimeout(() => window.print(), 0);
+      triggerPrintAfterPaint();
     }
 
     function printStudentIndividualSheet(student, selectedOptions = null, printNow = true) {
@@ -371,7 +375,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.print();
+      triggerPrintAfterPaint();
     }
 
     // =========================================================================
@@ -455,7 +459,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.print();
+      triggerPrintAfterPaint();
     }
 
     function printCurrentGradebook() {
@@ -732,7 +736,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.setTimeout(() => window.print(), 0);
+      triggerPrintAfterPaint();
     }
 
     function openSummaryPrintDialog() {
@@ -787,7 +791,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.print();
+      triggerPrintAfterPaint();
     }
 
     function renderObservablePrintStudents() {
@@ -959,7 +963,7 @@
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
-      window.print();
+      triggerPrintAfterPaint();
     }
 
     function setupPrintCenter() {

@@ -1,4 +1,5 @@
     const OBSERVATION_FAMILY_PERCENTAGES = { A: 95, B: 80, C: 65, D: 50, E: 40 };
+    const WEIGHTED_RUBRIC_FAMILY_PERCENTAGES = { A: 100, B: 80, C: 60, D: 40, E: 20 };
 
     function computeMajorityFromChecked(checkedKeys, overrideCode, requiredCriteriaCount) {
       const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
@@ -122,7 +123,7 @@
       });
 
       const requiredCriteriaCount = scoredCriteria ? scoredCriteria.length : 0;
-      const familyWeights = OBSERVATION_FAMILY_PERCENTAGES;
+      const familyWeights = WEIGHTED_RUBRIC_FAMILY_PERCENTAGES;
       const earnedPointsMap = {};
       let weightedPctSum = 0;
       let evaluatedWeightSum = 0;
@@ -135,15 +136,15 @@
         totalWeightSum += safeW;
         const fam = pickedByCriterion[crit.id];
         if (fam && familyWeights[fam] !== undefined) {
-          weightedPctSum += familyWeights[fam] * safeW;
+          const points = Math.round(safeW * familyWeights[fam] / 100);
+          weightedPctSum += points;
           evaluatedWeightSum += safeW;
-          const pts = safeW * familyWeights[fam] / 100;
-          earnedPointsMap[crit.id] = Math.round(pts * 100) / 100;
-          earnedPointsTotal += pts;
+          earnedPointsMap[crit.id] = points;
+          earnedPointsTotal += points;
         }
       });
-      earnedPointsTotal = Math.round(earnedPointsTotal * 100) / 100;
-      totalWeightSum = Math.round(totalWeightSum * 10) / 10;
+      earnedPointsTotal = Math.round(earnedPointsTotal);
+      totalWeightSum = Math.round(totalWeightSum);
 
       if (overrideCode && GRADE_MAP[overrideCode]) {
         const g = GRADE_MAP[overrideCode];
@@ -162,7 +163,7 @@
           earnedPointsTotal,
           totalWeightSum,
           evaluatedWeightSum,
-          rawWeightedPct: evaluatedWeightSum > 0 ? Math.round(weightedPctSum / evaluatedWeightSum) : null
+          rawWeightedPct: evaluatedWeightSum > 0 ? Math.round(weightedPctSum / evaluatedWeightSum * 100) : null
         };
       }
 
@@ -186,7 +187,7 @@
         };
       }
 
-      const avgPct = weightedPctSum / evaluatedWeightSum;
+      const avgPct = weightedPctSum / evaluatedWeightSum * 100;
       const closestCode = pctToClosestGradeCode(avgPct);
       const g = GRADE_MAP[closestCode] || GRADE_SCALE[0];
 

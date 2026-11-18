@@ -901,22 +901,6 @@
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
       }
     } catch (_) {}
-    const STUDIO_ATMOSPHERE_IMAGES = {
-      math_resoudre: 'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?auto=format&fit=crop&w=1400&q=80',
-      math_raisonner: 'https://images.unsplash.com/photo-1509228468518-180dd4864904?auto=format&fit=crop&w=1400&q=80',
-      fra_lecture: 'https://images.unsplash.com/photo-1457369804613-52c61a468e7d?auto=format&fit=crop&w=1400&q=80',
-      fra_ecriture: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1400&q=80',
-      fra_oral: 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?auto=format&fit=crop&w=1400&q=80',
-      ccq_global: 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=1400&q=80',
-      sciences_global: 'https://images.unsplash.com/photo-1532094349884-543bc11b234d?auto=format&fit=crop&w=1400&q=80',
-      sciences_outils: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=1400&q=80',
-      sciences_comm: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1400&q=80',
-      univers_social: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1400&q=80',
-      us_changement: 'https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=1400&q=80',
-      us_diversite: 'https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=1400&q=80',
-      art_dram_c1c2: 'https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=1400&q=80',
-      art_dram_c3: 'https://images.unsplash.com/photo-1514306191717-452ec28c7814?auto=format&fit=crop&w=1400&q=80'
-    };
     const SUBJECT_STUDIO_ACCENTS = {
       maths: '#1d4ed8',
       francais: '#8f3f2b',
@@ -1094,6 +1078,64 @@
     }
 
     let autosaveTimer = null;
+
+    function setupLegacyModalAccessibility() {
+      const modalSelector = '#modalAddAssignment, #modalTargetLevels, #modalGroup, #modalDeleteLinked, #modalCommentBank';
+      const openers = new WeakMap();
+      const getVisibleModal = () => [...document.querySelectorAll(modalSelector)]
+        .find(modal => !modal.classList.contains('hidden'));
+      const getFocusable = modal => [...modal.querySelectorAll(
+        'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
+      )].filter(element => element.getClientRects().length);
+      document.querySelectorAll(modalSelector).forEach(modal => {
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
+      });
+      const observer = new MutationObserver(records => {
+        records.forEach(record => {
+          const modal = record.target;
+          if (!(modal instanceof HTMLElement)) return;
+          if (!modal.classList.contains('hidden')) {
+            if (!openers.has(modal)) openers.set(modal, document.activeElement);
+            window.setTimeout(() => {
+              const controls = getFocusable(modal);
+              if (controls.length && !modal.contains(document.activeElement)) controls[0].focus();
+            }, 0);
+          } else {
+            const opener = openers.get(modal);
+            openers.delete(modal);
+            if (opener && opener.isConnected) opener.focus({ preventScroll: true });
+          }
+        });
+      });
+      document.querySelectorAll(modalSelector).forEach(modal => {
+        observer.observe(modal, { attributes: true, attributeFilter: ['class'] });
+      });
+      document.addEventListener('keydown', event => {
+        const modal = getVisibleModal();
+        if (!modal) return;
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          const closeButton = modal.querySelector(
+            '#btnCloseModalAssignment, #btnCancelModalAssignment, #btnCloseModalTargetLevels, #btnGroupClose, #btnGroupCancel, #btnDelLinkedClose, #btnDelLinkedCancel, #btnCbClose, #btnCbCancel'
+          );
+          if (closeButton) closeButton.click();
+          return;
+        }
+        if (event.key !== 'Tab') return;
+        const controls = getFocusable(modal);
+        if (!controls.length) return;
+        const first = controls[0];
+        const last = controls[controls.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
+    }
 
     function scheduleAppStateSave() {
       if (autosaveTimer) clearTimeout(autosaveTimer);

@@ -5,7 +5,6 @@
         shortName: 'Français • Lecture (C1)',
         fullName: 'Français — Lire des textes variés et Apprécier des œuvres littéraires',
         icon: 'LEC',
-        imageUrl: 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=960&q=70',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/cpfrancaiscssmb/lecture',
         criteria: [
@@ -44,7 +43,6 @@
         group: 'francais', groupLabel: 'Français', partLabel: 'Écriture (C2)',
         shortName: 'Français • Écriture (C2)',
         fullName: 'Français — Écrire des textes variés',
-        imageUrl: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=960&q=70',
         icon: 'ÉCR',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/cpfrancaiscssmb/%C3%A9criture',
@@ -84,7 +82,6 @@
         group: 'francais', groupLabel: 'Français', partLabel: 'Oral (C3)',
         shortName: 'Français • Oral (C3)',
         fullName: 'Français — Communiquer oralement',
-        imageUrl: 'https://images.unsplash.com/photo-1529390079861-591de354faf5?auto=format&fit=crop&w=960&q=70',
         icon: 'ORA',
         refUrl: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-francais-langue-enseignement-primaire.pdf',
         cssmbUrl: 'https://sites.google.com/ggl.csmb.qc.ca/cpfrancaiscssmb/communication-orale',
