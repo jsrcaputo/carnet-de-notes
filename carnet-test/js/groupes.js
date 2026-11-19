@@ -151,6 +151,8 @@
     // ---- Groupes : chaque groupe a ses élèves, ses notes et ses matières ----
     const DEFAULT_GROUP_SUBJECT_IDS = ALL_SUBJECTS_CONFIG
       .filter(s => !s.prescoOnly && s.group !== 'art_plast').map(s => s.id);
+    const LEGACY_DEFAULT_GROUP_SUBJECT_IDS = DEFAULT_GROUP_SUBJECT_IDS
+      .filter(id => !/^(eps_|eng_)/.test(id));
 
     function createBlankGroupData() {
       return {
@@ -184,12 +186,12 @@
         return {
           id: item.importedId,
           name: String(g.name || '').trim() || 'Groupe',
-          subjectIds: (Array.isArray(g.subjectIds) ? g.subjectIds : DEFAULT_GROUP_SUBJECT_IDS).filter(id => valid.has(id)),
+          subjectIds: (Array.isArray(g.subjectIds) ? g.subjectIds : LEGACY_DEFAULT_GROUP_SUBJECT_IDS).filter(id => valid.has(id)),
           level: GRADE_LEVEL_LABELS[String(g.level)] ? String(g.level) : '',
           ...(g.placeholder ? { placeholder: true } : {})
         };
       });
-      if (!groups.length) groups = [{ id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice(), level: '' }];
+      if (!groups.length) groups = [{ id: 'g1', name: 'Mon groupe', subjectIds: LEGACY_DEFAULT_GROUP_SUBJECT_IDS.slice(), level: '' }];
       state.groups = groups;
       state.activeGroupId = groupIdMap.get(String(state.activeGroupId))
         || (groups.some(g => g.id === state.activeGroupId) ? state.activeGroupId : groups[0].id);

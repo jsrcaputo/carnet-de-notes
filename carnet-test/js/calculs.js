@@ -273,6 +273,17 @@
       const subject = ALL_SUBJECTS_CONFIG.find(s => s.id === subjectId);
       const rec = subData.studentRecords[studentId];
       const stObj = (appState.students || []).find(s => s.id === studentId) || null;
+      if (!subject || !isSubjectApplicableForStudent(subject, stObj || '')) {
+        return {
+          assignmentsAvg: null,
+          totalWeightUsed: 0,
+          weightDetails: [],
+          baremeRes: computeMajorityFromChecked([], null, 0),
+          autoCombinedPct: null,
+          finalPct: null,
+          finalLetter: '—'
+        };
+      }
       const stuLvl = stObj && stObj.gradeLevel ? String(stObj.gradeLevel) : '';
 
       // 1. Weighted average of /100 assignments & visual traces (filtered by student grade level in multi-level groups)
@@ -337,7 +348,7 @@
       };
     }
 
-    // Résultat unique (Sciences, GHEC) : les évaluations partagées (même linkId) ne comptent qu'une fois.
+    // Résultats uniques (Sciences, GHEC, EPS) : une évaluation partagée ne compte qu’une fois.
     function computePooledGroupPct(termId, parts, studentId, fallback) {
       let sum = 0, wTot = 0;
       const seen = new Set();
@@ -476,6 +487,21 @@
       const missing = [1, 2, 3].filter(term => !available.includes(term));
       const weight = available.reduce((sum, term) => sum + OFFICIAL_TERM_WEIGHTS[String(term)], 0);
       return { available, missing, weight, provisional: available.length > 0 && missing.length > 0 };
+    }
+
+    function computeDisciplineAverageForSummary(rows, valueKey = 'annualAvg') {
+      const english = rows.filter(row => row.sub.group === 'anglais');
+      const other = rows.filter(row => row.sub.group !== 'anglais');
+      const values = other.map(row => row[valueKey]).filter(value => value !== null && Number.isFinite(Number(value)));
+      if (english.length) {
+        if (english.every(row => row[valueKey] !== null && row.sub.officialWeight !== null)) {
+          const weight = english.reduce((sum, row) => sum + Number(row.sub.officialWeight), 0);
+          if (weight > 0) {
+            values.push(english.reduce((sum, row) => sum + Number(row[valueKey]) * Number(row.sub.officialWeight), 0) / weight);
+          }
+        }
+      }
+      return values.length ? Math.round(values.reduce((sum, value) => sum + Number(value), 0) / values.length) : null;
     }
 
     function formatScoreNumber(n) {
@@ -619,6 +645,8 @@
           makeScale('us_changement', 'Changement', 'GHEC · Changement'),
           makeScale('us_diversite', 'Diversité', 'GHEC · Diversité')
         ] },
+        { id: 'education_physique', label: 'Éducation physique et santé', scales: [], disabled: true },
+        { id: 'anglais', label: 'Anglais, langue seconde', scales: [], disabled: true },
         { id: 'art_dram', label: 'Art dramatique', scales: [
           makeScale('art_dram_inventer', 'Inventer', 'Art dram. · Inventer'),
           makeScale('art_dram_interpreter', 'Interpréter', 'Art dram. · Interpréter'),

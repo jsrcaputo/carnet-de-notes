@@ -219,6 +219,7 @@
       const mode = modeOverride || st.pronoun || 'prenom';
       if (getStudentCycle(st.gradeLevel) === 'P') return synthesizePreschoolSubjectComment(termId, sub, st, mode);
       if (getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))) return '';
+      const displaySub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
       const termData = appState.terms[termId];
       const subData = termData && termData.subjectData[sub.id];
       const rec = subData && subData.studentRecords[st.id];
@@ -227,7 +228,7 @@
 
       // 1. Phrase d'ouverture selon le portrait global / niveau de maîtrise
       const pct = summary.finalPct;
-      const partName = (sub.partLabel || sub.shortName || 'cette compétence').toLowerCase();
+      const partName = (displaySub.partLabel || displaySub.shortName || 'cette compétence').toLowerCase();
       if (pct !== null) {
         if (pct >= 85) {
           sentences.push(`En ${partName}, l’élève démontre une maîtrise assurée et constante des attentes de l’étape (${pct} %).`);

@@ -89,7 +89,7 @@
           const clean = {};
           Object.entries(raw).forEach(([k, v]) => {
             const lvl = String(v || '');
-            if (ALL_SUBJECTS_CONFIG.some(subject => subject.id === k) && GRADE_LEVEL_LABELS[lvl]) clean[k] = lvl;
+            if (ALL_SUBJECTS_CONFIG.some(subject => subject.id === k || subject.group === k) && GRADE_LEVEL_LABELS[lvl]) clean[k] = lvl;
           });
           return clean;
         })(),
@@ -1072,6 +1072,8 @@
       ccq: '#6d3b8e',
       sciences: '#16697a',
       social: '#9a5b13',
+      education_physique: '#15803d',
+      anglais: '#2563eb',
       arts: '#9e2a5b'
     };
     let lastSavedFileSnapshot = null;

@@ -579,7 +579,7 @@
           // Liste des matières / compétences configurables pour ce groupe
           const modTargets = [];
           const seenGroups = new Set();
-          SUBJECTS_CONFIG.forEach(s => {
+          getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(s => {
             if (s.prescoOnly) return;
             if (s.group && s.singleResult) {
               if (seenGroups.has(s.group)) return;

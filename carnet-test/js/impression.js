@@ -114,6 +114,8 @@
       const pendingStatuses = [];
 
       SUBJECTS_CONFIG.forEach(sub => {
+        if (!isSubjectApplicableForStudent(sub, st)) return;
+        sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
         const t1 = computeStudentSubjectSummary('1', sub.id, st.id).finalPct;
         const t2 = computeStudentSubjectSummary('2', sub.id, st.id).finalPct;
         const t3 = computeStudentSubjectSummary('3', sub.id, st.id).finalPct;
@@ -222,7 +224,7 @@
       });
 
       // Merge social & sciences for bulletin summary rows
-      ['social', 'sciences'].forEach(groupKey => {
+      [...new Set(SUBJECTS_CONFIG.filter(item => item.singleResult && item.group).map(item => item.group))].forEach(groupKey => {
         const parts = subjectRows.filter(r => r.sub.group === groupKey);
         if (!parts.length) return;
         const mean = vals => {
@@ -252,9 +254,7 @@
       const activeSummaryRows = subjectRows.filter(r => r.t1 !== null || r.t2 !== null || r.t3 !== null || r.annualAvg !== null);
       const rowsToRender = activeSummaryRows.length > 0 ? activeSummaryRows : subjectRows;
       const populatedSubjects = subjectRows.filter(r => r.annualAvg !== null);
-      const overallAnnualAvg = populatedSubjects.length > 0
-        ? Math.round(populatedSubjects.reduce((total, row) => total + row.annualAvg, 0) / populatedSubjects.length)
-        : null;
+      const overallAnnualAvg = computeDisciplineAverageForSummary(subjectRows);
       const overallProvisional = populatedSubjects.length < subjectRows.length ||
         populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
@@ -297,7 +297,7 @@
                 : (r.delta > 0 ? `+${r.delta} %` : `${r.delta} %`);
               return `
                 <tr>
-                  <td>${escapeHtml(r.sub.shortName)}${modBadge}</td>
+                  <td>${escapeHtml(r.sub.shortName)}${r.sub.officialWeight !== null ? ` <small>— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}${modBadge}</td>
                   <td class="sis-num">${fmtCell(r.t1)}</td>
                   <td class="sis-num">${fmtCell(r.t2)}</td>
                   <td class="sis-num">${fmtCell(r.t3)}</td>
@@ -713,12 +713,13 @@
         return;
       }
       select.innerHTML = '';
-      SUBJECTS_CONFIG.forEach(subject => {
+      getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(subject => {
+        const display = getSubjectContextDisplay(subject);
         const option = document.createElement('option');
         option.value = subject.id;
-        option.textContent = subject.partLabel
-          ? `${subject.groupLabel || subject.shortName} — ${subject.partLabel}`
-          : (subject.fullName || subject.shortName);
+        option.textContent = display.partLabel
+          ? `${display.groupLabel || display.shortName} — ${display.partLabel}${display.officialWeightLabel ? ` — ${display.officialWeightLabel}` : ''}`
+          : (display.fullName || display.shortName);
         select.appendChild(option);
       });
       select.value = SUBJECTS_CONFIG.some(subject => subject.id === appState.activeSubjectId)
@@ -743,7 +744,8 @@
       if (!container || !hint) return;
       const subject = SUBJECTS_CONFIG.find(item => item.id === document.getElementById('baremePrintSubject').value);
       if (!subject) return;
-      hint.textContent = `${subject.fullName || subject.shortName} · Étape ${appState.activeTerm} · ${appState.students.length} élève${appState.students.length > 1 ? 's' : ''}`;
+      const display = getSubjectContextDisplay(subject);
+      hint.textContent = `${display.fullName || display.shortName}${display.officialWeightLabel ? ` — ${display.officialWeightLabel}` : ''} · Étape ${appState.activeTerm} · ${appState.students.length} élève${appState.students.length > 1 ? 's' : ''}`;
       container.innerHTML = '';
       appState.students.forEach(student => {
         const label = document.createElement('label');
@@ -757,6 +759,7 @@
     }
 
     function renderBaremePrintPage(subject, student, blank = false) {
+      subject = getSubjectDisplayConfig(subject, getEffectiveGradeLevel(student, subject) || student.gradeLevel);
       const subjectData = appState.terms[appState.activeTerm].subjectData[subject.id];
       const rec = subjectData && subjectData.studentRecords[student.id];
       if (!rec) return '';
@@ -783,7 +786,7 @@
           <header class="observable-print-head">
             <div>
               <h1>${escapeHtml(student.name)}</h1>
-              <p><strong>Barème d’évaluation</strong> · ${escapeHtml(subject.fullName || subject.shortName)}</p>
+              <p><strong>Barème d’évaluation</strong> · ${escapeHtml(subject.fullName || subject.shortName)}${subject.officialWeightLabel ? ` — ${escapeHtml(subject.officialWeightLabel)}` : ''}</p>
               <p>${escapeHtml(group && !group.placeholder ? group.name : '')} · Étape ${escapeHtml(appState.activeTerm)} · ${escapeHtml(new Date().toLocaleDateString('fr-CA'))}</p>
             </div>
             <div class="observable-print-result"><strong>${escapeHtml(resultText)}</strong>${!blank && rec.baremeOverrideCode ? '<p>Note ajustée manuellement</p>' : ''}</div>
@@ -972,6 +975,7 @@
       const gradeLevel = meta.gradeLevel && GRADE_LEVEL_LABELS[meta.gradeLevel]
         ? meta.gradeLevel
         : getEffectiveGradeLevel(student, subject);
+      const displaySubject = getSubjectDisplayConfig(subject, gradeLevel);
       const criteria = getObservationCriteria(subject, gradeLevel, assignment);
       const scoredCriteria = getScoredObservableCriteria(criteria);
       const customRubric = assignment.obsMode === 'custom'
@@ -1027,7 +1031,7 @@
           <header class="observable-print-head">
             <div>
               <h1>${escapeHtml(student.name)}</h1>
-              <p><strong>${escapeHtml(assignment.title || 'Évaluation observable')}</strong> · ${escapeHtml(subject.fullName || subject.shortName)}</p>
+              <p><strong>${escapeHtml(assignment.title || 'Évaluation observable')}</strong> · ${escapeHtml(displaySubject.fullName || displaySubject.shortName)}${displaySubject.officialWeightLabel ? ` — ${escapeHtml(displaySubject.officialWeightLabel)}` : ''}${displaySubject.bulletinName ? ` · Bulletin : ${escapeHtml(displaySubject.bulletinName)}` : ''}</p>
               <p>${escapeHtml(group && !group.placeholder ? group.name : '')} · ${escapeHtml(GRADE_LEVEL_LABELS[gradeLevel] || '')} · Étape ${escapeHtml(appState.activeTerm)} · ${escapeHtml(date)}</p>
             </div>
             <div class="observable-print-result"><strong>${escapeHtml(resultText)}</strong></div>

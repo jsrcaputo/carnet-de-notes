@@ -796,7 +796,7 @@
         const linkList = document.getElementById('asgLinkedParts');
         linkList.innerHTML = '';
         const current = getCurrentSubjectConfig();
-        const siblings = current.group ? SUBJECTS_CONFIG.filter(s => s.group === current.group && s.id !== current.id) : [];
+        const siblings = current.group ? getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(s => s.group === current.group && s.id !== current.id) : [];
         linkBox.classList.toggle('hidden', !siblings.length);
         siblings.forEach(s => {
           const label = document.createElement('label');
@@ -804,7 +804,7 @@
           const cb = document.createElement('input');
           cb.type = 'checkbox';
           cb.value = s.id;
-          label.append(cb, document.createTextNode(s.partLabel));
+          label.append(cb, document.createTextNode(getSubjectContextDisplay(s).partLabel));
           linkList.appendChild(label);
         });
         document.getElementById('inputAssignmentDate').value = new Date().toISOString().slice(0, 10);

@@ -35,6 +35,14 @@ Le résultat annuel est provisoire tant qu'une étape manque. Il est alors recal
 
 Dans une trace observable, les forces et défis à cocher sont des repères locaux inspirés des [compétences transversales du PFEQ](https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire), non une grille officielle. Ils servent à décrire une situation et ne modifient pas la cote. Les anciens indicateurs et les textes déjà saisis restent accessibles et conservés.
 
+## Éducation physique et anglais, langue seconde
+
+L’**éducation physique et à la santé** expose les trois compétences officielles à tous les cycles. Elles alimentent un seul résultat de bulletin : les évaluations sont pondérées dans leur propre compétence et les évaluations liées ne sont comptées qu’une fois dans le résultat regroupé. Aucun partage fixe entre C1, C2 et C3 n’est imposé.
+
+En **anglais, langue seconde**, le libellé, le nombre de compétences et le poids de bulletin dépendent du cycle de chaque élève. Au 1er cycle, seules C1 (textes entendus, 60 %) et C2 (communication orale, 40 %) sont actives. Aux 2e et 3e cycles, C1, C2 et C3 sont actives et les poids officiels sont respectivement 50/35/15 % et 45/35/20 %. Ces poids sont affichés et exportés comme pondérations de bulletin; les travaux conservent leurs propres pondérations internes. Les groupes multiniveaux filtrent les compétences non applicables par élève.
+
+Les rubriques locales comportent des critères notés et des éléments de retour réflexif non notés. Elles s’inspirent du programme, de la progression des apprentissages et du cadre d’évaluation du MEQ; elles ne sont pas des grilles officielles. Les liens exacts sont dans **Informations et sources**.
+
 ## Carte de l'application
 
 La structure des vues et des dialogues est dans [index.html](index.html). Les références pédagogiques affichées dans la fenêtre d'information y sont également définies.

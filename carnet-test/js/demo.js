@@ -10,6 +10,8 @@
         'sciences_global', 'sciences_outils', 'sciences_comm',
         'univers_social', 'us_changement', 'us_diversite',
         'ccq_global',
+        'eps_c1', 'eps_c2', 'eps_c3',
+        'eng_c1', 'eng_c2', 'eng_c3',
         'art_plast_c1c2', 'art_plast_c3',
         'art_dram_c1c2', 'art_dram_c3'
       ];
@@ -33,6 +35,8 @@
         sciences_global: 2, sciences_outils: 2, sciences_comm: 2,
         univers_social: 3, us_changement: 3, us_diversite: 3,
         ccq_global: 4,
+        eps_c1: 5, eps_c2: 5, eps_c3: 5,
+        eng_c1: 1, eng_c2: 1, eng_c3: 1,
         art_plast_c1c2: 5, art_plast_c3: 5, art_dram_c1c2: 5, art_dram_c3: 5
       };
       const domainProfiles = [
@@ -418,7 +422,16 @@
         subjectIds.forEach(subId => {
           const subData = termData.subjectData[subId];
           if (!subData) return;
-          const planList = (plans[subId] && plans[subId][termKey]) || [];
+          const isAddedSubject = /^(eps_|eng_)/.test(subId);
+          const subject = ALL_SUBJECTS_CONFIG.find(item => item.id === subId);
+          const planList = (plans[subId] && plans[subId][termKey]) || (isAddedSubject ? [{
+            title: `Trace observable : ${subject ? subject.partLabel : 'compétence disciplinaire'}`,
+            outOf: 100,
+            weight: 100,
+            date: termKey === '1' ? '2026-11-06' : termKey === '2' ? '2027-02-19' : '2027-05-21',
+            isObs: true,
+            targetLevels: []
+          }] : []);
           subData.assignments = [];
 
           planList.forEach((planItem, planIdx) => {
@@ -436,7 +449,7 @@
             subData.assignments.push(asgObj);
 
             students.forEach((st, stIdx) => {
-              if (!isAssignmentForStudent(asgObj, st)) return;
+              if (!isAssignmentForStudent(asgObj, st) || !isSubjectApplicableForStudent(subject, st)) return;
 
               const base = type === 'multi' && !legacySeed
                 ? multiBaseScores[stIdx % multiBaseScores.length]

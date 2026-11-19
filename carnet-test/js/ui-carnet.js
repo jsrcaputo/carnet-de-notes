@@ -71,6 +71,8 @@
       ccq: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5M16 14c2.8 0 5 1.8 5 4"/>',
       sciences: '<path d="M9 3h6m-5 0v6L5 18a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3M8 15h8"/>',
       social: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 2.5 4 5.5 4 9s-1 6.5-4 9c-3-2.5-4-5.5-4-9s1-6.5 4-9z"/>',
+      education_physique: '<circle cx="14.5" cy="4.5" r="2"/><path d="m5 21 4-8 3 2 3 6M9 13 5 11l-2 2m10 1 4-4 3 1"/>',
+      anglais: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M7 16h4M14 13h3"/>',
       art_dram: '<path d="M3 5c3 1 6 1 9 0v5c0 3-2 5-4.5 6C5 15 3 13 3 10V5zm9 4c3 1 6 1 9 0v4c0 3-2 5-4.5 6-1.4-.5-2.5-1.3-3.3-2.4M6 9h.01M9 9h.01M15 13h.01M18 13h.01M6 12c1 1 2 1 3 0"/>',
       art_plast: '<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.4-3.4 1.8 1.8 0 0 1 1.3-3.1H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3z"/><path d="M7.5 11h.01M10 7.5h.01M14 7.5h.01M17 10h.01"/>',
       presco: '<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'
@@ -97,10 +99,14 @@
         return;
       }
       const neutralBar = appState.activeView === 'viewStudents' || appState.activeView === 'viewGlobalReport';
+      const visibleSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG);
+      if (!neutralBar && visibleSubjects.length && !visibleSubjects.some(subject => subject.id === appState.activeSubjectId)) {
+        appState.activeSubjectId = visibleSubjects[0].id;
+      }
       const activeSub = SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId);
       const activeGroup = !neutralBar && activeSub ? activeSub.group : null;
       const seenGroups = new Set();
-      SUBJECTS_CONFIG.forEach(sub => {
+      visibleSubjects.forEach(sub => {
         if (sub.group && sub.group !== 'presco') {
           if (seenGroups.has(sub.group)) return;
           seenGroups.add(sub.group);
@@ -156,7 +162,7 @@
 
       if (!subContainer) return;
       subContainer.innerHTML = '';
-      const parts = expandedSubjectGroup ? SUBJECTS_CONFIG.filter(s => s.group === expandedSubjectGroup) : [];
+      const parts = expandedSubjectGroup ? visibleSubjects.filter(s => s.group === expandedSubjectGroup) : [];
       subContainer.classList.toggle('hidden', !parts.length);
       if (!parts.length) {
         container.appendChild(subContainer);
@@ -171,7 +177,9 @@
           ? 'px-2.5 py-1 rounded-lg text-[11px] font-bold bg-indigo-600 text-white cursor-pointer'
           : 'px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-700/80 hover:bg-slate-700 text-slate-200 cursor-pointer';
         btn.setAttribute('aria-pressed', String(isActive));
-        btn.textContent = part.partLabel;
+        const displayPart = getSubjectContextDisplay(part);
+        btn.textContent = displayPart.partLabel;
+        if (displayPart.officialWeightLabel) btn.title = displayPart.officialWeightLabel;
         btn.addEventListener('click', () => {
           if (isActive && appState.activeView === 'viewGradebook') return;
           const navigated = navigateToView('viewGradebook', () => {
@@ -212,7 +220,10 @@
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
 
-      const subjectTitle = sub.fullName;
+      const displaySub = getSubjectContextDisplay(sub);
+      const subjectTitle = displaySub.officialWeightLabel
+        ? `${displaySub.fullName} — ${displaySub.officialWeightLabel}${displaySub.bulletinName && displaySub.bulletinName !== displaySub.partLabel ? ` · Bulletin : ${displaySub.bulletinName}` : ''}`
+        : displaySub.fullName;
       document.getElementById('gbSubjectTitle').textContent = subjectTitle;
       document.getElementById('gbSubjectTitle').title = subjectTitle;
       document.getElementById('gbSubjectIcon').innerHTML = subjectIcons[sub.group || (sub.id === 'ccq_global' ? 'ccq' : 'maths')] || '';
@@ -354,7 +365,7 @@
           <div class="mt-1 flex items-center justify-center gap-1 flex-wrap">
             ${targetBadgeHtml}
             ${!asg.isObservation && getAssignmentOutOf(asg) !== 100 ? `<span class="text-[10px] font-bold text-slate-500" title="Note maximale de cette évaluation">/${formatScoreNumber(getAssignmentOutOf(asg))}</span>` : ''}
-            ${asg.linkId ? `<span class="text-[10px] font-bold text-indigo-500" title="${escapeHtml('Évaluation partagée avec : ' + (getLinkedAssignments(asg).map(l => l.sub.partLabel || l.sub.shortName).join(', ') || '—'))}">🔗 aussi en ${escapeHtml(getLinkedAssignments(asg).map(l => (l.sub.partLabel || l.sub.shortName).match(/C\d/) ? (l.sub.partLabel || l.sub.shortName).match(/C\d/)[0] : (l.sub.partLabel || l.sub.shortName)).join(', '))}</span>` : ''}
+            ${asg.linkId ? `<span class="text-[10px] font-bold text-indigo-500" title="${escapeHtml('Évaluation partagée avec : ' + (getLinkedAssignments(asg).map(l => getSubjectContextDisplay(l.sub).partLabel || l.sub.shortName).join(', ') || '—'))}">🔗 aussi en ${escapeHtml(getLinkedAssignments(asg).map(l => (getSubjectContextDisplay(l.sub).partLabel || l.sub.shortName).match(/C\d/) ? (getSubjectContextDisplay(l.sub).partLabel || l.sub.shortName).match(/C\d/)[0] : (getSubjectContextDisplay(l.sub).partLabel || l.sub.shortName)).join(', '))}</span>` : ''}
             <div data-weight-box="${escapeHtml(asg.id)}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${canEditWeight && !weightMode ? 'cursor-pointer ' : ''}${weightBoxClasses}" title="${canEditWeight && !weightMode ? 'Cliquer pour modifier la pondération (%)' : ''}">
               ${weightMode && canEditWeight ? `<input type="text" inputmode="numeric" pattern="[0-9]*" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${Math.round(Number(displayedWeight) || 0)}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir un entier entre 0 et 100 %">` : `<span data-weight-asg="${escapeHtml(asg.id)}" class="text-[11px] font-bold" title="Pondération (%) — cliquer pour modifier">${Math.round(Number(displayedWeight) || 0)}</span>`}
               <span class="text-[10px] font-bold ml-0.5">%</span>
@@ -506,7 +517,7 @@
           }
           const modal = document.getElementById('modalDeleteLinked');
           document.getElementById('delLinkedTitle').textContent = delTarget.title;
-          document.getElementById('delLinkedNames').textContent = linked.map(l => l.sub.partLabel || l.sub.shortName).join(', ');
+          document.getElementById('delLinkedNames').textContent = linked.map(l => getSubjectContextDisplay(l.sub).partLabel || l.sub.shortName).join(', ');
           const close = () => { modal.classList.add('hidden'); modal.classList.remove('flex'); };
           const bind = (id, fn) => { document.getElementById(id).onclick = fn; };
           bind('btnDelLinkedAll', () => { close(); doDelete(true); });

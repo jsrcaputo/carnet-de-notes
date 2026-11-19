@@ -7,6 +7,7 @@
       const wb = XLSX.utils.book_new();
       const termId = appState.activeTerm;
       const termData = getActiveTermData();
+      const exportSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG);
 
       const computedStyle = getComputedStyle(document.documentElement);
       const toExcelHex = (cssVar, fallback) => {
@@ -52,15 +53,23 @@
       synthRows.push([]);
 
       const synthHeader = ['Élève', 'Adaptations'];
-      SUBJECTS_CONFIG.forEach(sub => {
-        synthHeader.push(`${sub.shortName} (%)`);
-        synthHeader.push(`${sub.shortName} (Cote)`);
+      exportSubjects.forEach(sub => {
+        const display = getSubjectContextDisplay(sub);
+        const weight = display.officialWeightLabel
+          ? ` — ${display.officialWeightLabel}${display.bulletinName ? ` — Bulletin : ${display.bulletinName}` : ''}`
+          : '';
+        synthHeader.push(`${display.shortName}${weight} (%)`);
+        synthHeader.push(`${display.shortName}${weight} (Cote)`);
       });
       synthRows.push(synthHeader);
 
       appState.students.forEach(st => {
         const row = [st.name, formatStudentAdaptations(st)];
-        SUBJECTS_CONFIG.forEach(sub => {
+        exportSubjects.forEach(sub => {
+          if (!isSubjectApplicableForStudent(sub, st)) {
+            row.push('', '');
+            return;
+          }
           const sum = computeStudentSubjectSummary(termId, sub.id, st.id);
           row.push(sum.finalPct !== null ? sum.finalPct : '');
           row.push(sum.finalLetter !== '—' ? sum.finalLetter : '');
@@ -70,17 +79,18 @@
 
       const wsSynth = XLSX.utils.aoa_to_sheet(synthRows);
       wsSynth['!cols'] = [{ wch: 16 }, { wch: 34 }];
-      for (let i = 0; i < SUBJECTS_CONFIG.length * 2; i++) {
+      for (let i = 0; i < exportSubjects.length * 2; i++) {
         wsSynth['!cols'].push({ wch: 15 });
       }
       styleSheetHelper(wsSynth, synthRows.length, synthHeader.length, titleStyle, headerStyle, cellBorder, 3);
       XLSX.utils.book_append_sheet(wb, wsSynth, `Synthese_Etape_${termId}`);
 
-      // 2. ONE SHEET PER SUBJECT (10 SHEETS)
-      SUBJECTS_CONFIG.forEach((sub, idx) => {
+      // 2. Une feuille par matière ou compétence applicable au groupe
+      exportSubjects.forEach((sub, idx) => {
         const subData = termData.subjectData[sub.id];
         const rows = [];
-        rows.push([`${sub.fullName} — ÉTAPE ${termId}`]);
+        const contextSub = getSubjectContextDisplay(sub);
+        rows.push([`${contextSub.fullName} — ÉTAPE ${termId}${contextSub.officialWeightLabel ? ` — ${contextSub.officialWeightLabel}` : ''}${contextSub.bulletinName ? ` — Bulletin : ${contextSub.bulletinName}` : ''}`]);
         rows.push([`Cadre de référence : ${sub.refUrl}`]);
         rows.push([]);
 
@@ -112,6 +122,7 @@
 
         appState.students.forEach(st => {
           const rec = subData.studentRecords[st.id];
+          if (!isSubjectApplicableForStudent(sub, st)) return;
           const sum = computeStudentSubjectSummary(termId, sub.id, st.id);
           const r = [st.name, formatStudentAdaptations(st)];
           subData.assignments.forEach(a => {
@@ -166,7 +177,7 @@
         const ws = XLSX.utils.aoa_to_sheet(rows);
         ws['!cols'] = headers.map((h, i) => ({ wch: i === 0 ? 15 : i === 1 ? 30 : i === headers.length - 1 ? 36 : 15 }));
         styleSheetHelper(ws, 4 + appState.students.length, headers.length, titleStyle, headerStyle, cellBorder, 3);
-        const safeSheetName = `${idx + 1}_${sub.shortName.replace(/[^a-zA-Z0-9À-ÿ]/g, '_').slice(0, 24)}`;
+        const safeSheetName = `${idx + 1}_${contextSub.shortName.replace(/[^a-zA-Z0-9À-ÿ]/g, '_').slice(0, 24)}`;
         XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
       });
 
@@ -259,15 +270,17 @@
       [1, 2, 3].forEach(t => {
         const td = appState.terms[t];
         if (!td) return;
-        SUBJECTS_CONFIG.forEach(sub => {
+        exportSubjects.forEach(sub => {
           const sd = td.subjectData[sub.id];
           if (!sd) return;
           appState.students.forEach(st => {
+            if (!isSubjectApplicableForStudent(sub, st)) return;
             const rec = sd.studentRecords[st.id];
             if (!rec) return;
             const sum = computeStudentSubjectSummary(t, sub.id, st.id);
-            const subjectLabel = sub.groupLabel || sub.shortName;
-            const compLabel = sub.partLabel || '';
+            const displaySub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
+            const subjectLabel = displaySub.groupLabel || displaySub.shortName;
+            const compLabel = `${displaySub.partLabel || ''}${displaySub.officialWeight !== null ? ` — ${displaySub.officialWeight} % bulletin : ${displaySub.bulletinName || ''}` : ''}`;
             const base = [groupName, st.name, GRADE_LEVEL_LABELS[st.gradeLevel] || '', formatStudentAdaptations(st), t, subjectLabel, compLabel];
             const tail = [sum.finalPct !== null ? sum.finalPct : '', sum.finalLetter !== '—' ? sum.finalLetter : '', rec.comment || ''];
             if (!sd.assignments.length) {
@@ -324,7 +337,10 @@
         ['Contenu', 'Description'],
         ['Document', `Carnet de notes 2026-2027 — groupe « ${groupName || 'unique'} » — exporté le ${new Date().toLocaleDateString('fr-CA')} (étape active : ${termId}).`],
         ['Contexte', 'École primaire du Québec (Programme de formation de l’école québécoise, PFEQ). Une année = 3 étapes. Niveaux scolaires : préscolaire et 1re à 6e année (cycles 1 à 3).'],
-        ['Matières du groupe', SUBJECTS_CONFIG.map(s => s.shortName).join(' ; ')],
+        ['Matières du groupe', exportSubjects.map(s => {
+          const display = getSubjectContextDisplay(s);
+          return `${display.shortName}${display.officialWeightLabel ? ` (${display.officialWeightLabel})` : ''}`;
+        }).join(' ; ')],
         ['Feuille Synthese_Etape_X', 'Une ligne par élève : pourcentage et cote finale de chaque matière pour l’étape active.'],
         ['Feuilles numérotées', 'Détail par matière : chaque évaluation (note et pondération), moyenne, barème, jugement final, commentaire.'],
         ['Traces_Visuelles', 'Journal des traces observables (observations qualitatives cotées A+ à E).'],
@@ -338,8 +354,8 @@
         ['Barème', 'Cote obtenue en surlignant des descripteurs dans la grille du barème école; repère de jugement, exclu du calcul automatique de la note finale.'],
         ['Note ajustée (*)', '« Oui » : l’enseignant a modifié manuellement la cote proposée par la grille.'],
         ['Évaluation partagée', '« Oui » : une même évaluation est liée à plusieurs compétences ou matières; elle ne compte qu’une fois dans le résultat unique des matières à résultat unique.'],
-        ['Matières à résultat unique', 'Sciences, Géographie-Histoire-Éducation à la citoyenneté et Culture et citoyenneté québécoise : plusieurs compétences, mais un seul résultat au bulletin.'],
-        ['Matières à compétences distinctes', 'Français, Mathématiques, Art dramatique : un résultat par compétence au bulletin.'],
+        ['Matières à résultat unique', 'Sciences, Géographie-Histoire-Éducation à la citoyenneté et Éducation physique et à la santé : plusieurs compétences, mais un seul résultat au bulletin. Aucun partage inter-compétences fixe n’est inventé.'],
+        ['Matières à compétences distinctes', 'Français, Mathématiques, Arts, Anglais : un résultat par compétence au bulletin. Les poids anglais du cycle sont informatifs ici et ne sont pas multipliés une seconde fois dans les résultats.'],
         ['Niveaux de compétence', 'Échelons sur 10 à titre d’outil d’analyse; ils ne remplacent pas la cote officielle.'],
         ['Valeurs vides', 'Aucune donnée saisie. « - » : élève non évalué pour cet item.'],
         ['Pistes d’analyse', 'Comparer les étapes, repérer les élèves en difficulté (cote C- ou moins), les écarts entre compétences d’une même matière, les évaluations à faible moyenne de groupe, et croiser avec les adaptations.']

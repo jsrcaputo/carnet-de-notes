@@ -64,6 +64,8 @@
       const preschoolDomains = {};
 
       SUBJECTS_CONFIG.forEach(sub => {
+        if (!isSubjectApplicableForStudent(sub, st)) return;
+        sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
         const domain = preschoolDomains[sub.id] = { strengths: new Map(), challenges: new Map(), latestComment: null };
         const countTag = (map, tag) => map.set(tag, (map.get(tag) || 0) + 1);
         const t1 = computeStudentSubjectSummary('1', sub.id, st.id).finalPct;
@@ -160,7 +162,7 @@
       });
 
       // Sciences et GHEC : un seul résultat au bulletin (les 3 compétences sont évaluées ensemble)
-      ['social', 'sciences'].forEach(groupKey => {
+      [...new Set(SUBJECTS_CONFIG.filter(item => item.singleResult && item.group).map(item => item.group))].forEach(groupKey => {
         const parts = subjectRows.filter(r => r.sub.group === groupKey);
         if (!parts.length) return;
         const mean = vals => {
@@ -190,17 +192,15 @@
         termGlobals[k] = subjectRows.map(r => r['t' + k]).filter(v => v !== null);
       });
 
-      const avgT1 = termGlobals['1'].length > 0 ? Math.round(termGlobals['1'].reduce((a, b) => a + b, 0) / termGlobals['1'].length) : null;
-      const avgT2 = termGlobals['2'].length > 0 ? Math.round(termGlobals['2'].reduce((a, b) => a + b, 0) / termGlobals['2'].length) : null;
-      const avgT3 = termGlobals['3'].length > 0 ? Math.round(termGlobals['3'].reduce((a, b) => a + b, 0) / termGlobals['3'].length) : null;
+      const avgT1 = computeDisciplineAverageForSummary(subjectRows, 't1');
+      const avgT2 = computeDisciplineAverageForSummary(subjectRows, 't2');
+      const avgT3 = computeDisciplineAverageForSummary(subjectRows, 't3');
 
       const populatedSubjects = subjectRows.filter(r => r.annualAvg !== null);
       const disciplineKey = row => row.sub.group || row.sub.id;
       const populatedDisciplines = [...new Set(populatedSubjects.map(disciplineKey))];
-      const totalDisciplines = new Set(SUBJECTS_CONFIG.map(sub => sub.group || sub.id)).size;
-      const overallAnnualAvg = populatedSubjects.length > 0
-        ? Math.round(populatedSubjects.reduce((total, row) => total + row.annualAvg, 0) / populatedSubjects.length)
-        : null;
+      const totalDisciplines = new Set(getVisibleSubjectsForContext(SUBJECTS_CONFIG).map(sub => sub.group || sub.id)).size;
+      const overallAnnualAvg = computeDisciplineAverageForSummary(subjectRows);
       const overallProvisional = populatedSubjects.length < subjectRows.length ||
         populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
@@ -441,7 +441,7 @@
         return `
           <div class="space-y-1">
             <div class="flex items-center justify-between text-xs gap-2">
-              <span class="font-semibold text-slate-700 truncate flex items-center">${r.sub.shortName}${modTag}</span>
+              <span class="font-semibold text-slate-700 truncate flex items-center">${r.sub.shortName}${r.sub.officialWeight !== null ? ` <small class="ml-1 text-slate-500">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
               <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})${info.provisional ? ' · provisoire' : ''}` : '—'}</span>
             </div>
             <div class="bar-track-wrap">
@@ -630,7 +630,7 @@
               ${subjectRows.map((r, i) => `
                 <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
                   <td class="p-2.5 font-bold text-slate-900">
-                    <span>${r.sub.shortName}</span>
+                    <span>${r.sub.shortName}${r.sub.officialWeight !== null ? ` <small class="font-semibold text-slate-500">— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}</span>
                     ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>` : ''}
                   </td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>

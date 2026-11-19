@@ -446,6 +446,6 @@ function getPrimaryCommentSubjectKey(subject) {
   if (group === 'social' || ['univers_social', 'us_changement', 'us_diversite'].includes(id)) return 'social';
   if (group === 'art_plast' || /^art_plast_/.test(id)) return id === 'art_plast_c3' ? 'art_plast_apprecier' : 'art_plast_creer';
   if (group === 'anglais' || /^ang(?:lais)?_/.test(id)) return 'anglais';
-  if (group === 'eps' || /^(?:eps|educ_phys)_/.test(id)) return 'eps';
+  if (group === 'eps' || group === 'education_physique' || /^(?:eps|educ_phys)_/.test(id)) return 'eps';
   return id;
 }

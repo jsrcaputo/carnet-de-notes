@@ -10,7 +10,9 @@
       const subData = termData.subjectData[sub.id];
       const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
 
-      document.getElementById('baremeSubjectLabel').textContent = `${sub.shortName} (Étape ${appState.activeTerm})`;
+      const displaySub = getSubjectContextDisplay(sub);
+      document.getElementById('baremeSubjectLabel').textContent =
+        `${displaySub.shortName}${displaySub.officialWeightLabel ? ` — ${displaySub.officialWeightLabel}` : ''} (Étape ${appState.activeTerm})`;
       document.getElementById('baremeCurrentStudentName').textContent = st ? st.name : 'Sélectionner un nom';
       const pillsContainer = document.getElementById('baremeStudentPills');
       pillsContainer.innerHTML = '';
@@ -999,7 +1001,7 @@
       const linkList = document.getElementById('qoLinkedParts');
       const editingAsg = session.editingAssignmentId ? subData.assignments.find(a => a.id === session.editingAssignmentId) : null;
       const siblings = sub.group && !(editingAsg && editingAsg.linkId)
-        ? SUBJECTS_CONFIG.filter(s => s.group === sub.group && s.id !== sub.id) : [];
+        ? getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(s => s.group === sub.group && s.id !== sub.id) : [];
       linkBox.classList.toggle('hidden', !siblings.length);
       linkList.innerHTML = '';
       session.linkTargets = (session.linkTargets || []).filter(id => siblings.some(s => s.id === id));
@@ -1012,7 +1014,7 @@
         cb.addEventListener('change', () => {
           session.linkTargets = cb.checked ? [...session.linkTargets, s.id] : session.linkTargets.filter(id => id !== s.id);
         });
-        label.append(cb, document.createTextNode(s.partLabel));
+        label.append(cb, document.createTextNode(getSubjectContextDisplay(s).partLabel));
         linkList.appendChild(label);
       });
       document.getElementById('qoLinkedHint').textContent = sub.singleResult
