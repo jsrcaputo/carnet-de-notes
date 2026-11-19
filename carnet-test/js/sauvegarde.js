@@ -12,6 +12,7 @@
     const ENCRYPTED_BACKUP_FORMAT = 'carnet-notes-chiffre';
     const ENCRYPTED_EXCEL_FORMAT = 'carnet-excel-chiffre';
     const BACKUP_KEY_ITERATIONS = 600000;
+    const MAX_JSON_IMPORT_BYTES = 25 * 1024 * 1024;
 
     function backupBytesToBase64(bytes) {
       let text = '';
@@ -177,8 +178,6 @@
         unlink.disabled = !activeFileHandle;
         unlink.textContent = activeFileHandle ? 'Délier le fichier' : 'Aucun fichier lié';
       }
-      const download = document.getElementById('btnDownloadJSON');
-      if (download) download.textContent = activeBackupEncryption ? 'Télécharger une copie JSON chiffrée' : 'Télécharger une copie JSON';
       const notice = document.getElementById('backupEncryptionNotice');
       if (notice) notice.textContent = activeBackupEncryption
         ? `Ce carnet utilise un mot de passe : ses copies JSON restent chiffrées avec le même mot de passe${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. Sauvegardez avant de fermer ou d’actualiser la page.`
@@ -212,6 +211,19 @@
     }
 
     function resetCarnetToBlank() {
+      if (autosaveTimer) {
+        clearTimeout(autosaveTimer);
+        autosaveTimer = null;
+      }
+      document.querySelectorAll(
+        '#compPrintSheet, #studentPrintSheet, #studentIndividualPrintSheet, #baremeBatchPrintSheet, #observablePrintSheet'
+      ).forEach(element => element.remove());
+      [...document.body.classList].filter(className => className.startsWith('print-'))
+        .forEach(className => document.body.classList.remove(className));
+      const observationPrintGrid = document.getElementById('observationPrintGrid');
+      if (observationPrintGrid) observationPrintGrid.replaceChildren();
+      const printMeta = document.getElementById('printMeta');
+      if (printMeta) printMeta.textContent = '';
       carnetIsSaved = false;
       activeFileHandle = null;
       activeFileWritable = false;
@@ -224,12 +236,24 @@
       weightMode = false;
       weightLevel = '';
       weightScope = '';
+      gbFilter = '';
+      gbLevelFilter = 'ALL';
+      stFilter = '';
+      observationDraftBaseline = null;
+      pendingObservationExit = null;
       history.undo = [];
       history.redo = [];
       history.last = getEditableStateSnapshot();
+      initialEditableSnapshot = getEditableStateSnapshot();
       lastSavedFileSnapshot = getBackupSnapshot();
       updateHistoryButtons();
       setFileSyncStatus('unlinked', 'Aucun fichier lié');
+      const headerSearch = document.getElementById('headerStudentSearch');
+      const listSearch = document.getElementById('studentSearch');
+      const searchMessage = document.getElementById('studentSearchMessage');
+      if (headerSearch) headerSearch.value = '';
+      if (listSearch) listSearch.value = '';
+      if (searchMessage) searchMessage.textContent = '';
       renderAll();
       showToast('Carnet réinitialisé à neuf.');
     }
@@ -264,6 +288,70 @@
       } catch (error) {
         console.error('Impossible de chiffrer la sauvegarde.', error);
         showToast(error instanceof Error ? error.message : 'Impossible de chiffrer la sauvegarde.');
+      }
+    }
+
+    async function saveEncryptedJsonFileSmart() {
+      if (fileOperation) return;
+      if (activeFileHandle && activeBackupEncryption) {
+        if (fileWriteBlocked) {
+          showToast('Sauvegarde interrompue. Téléchargez une copie, puis rechargez le fichier.');
+          return;
+        }
+        if (!activeFileWritable) {
+          try {
+            activeFileWritable = await activeFileHandle.requestPermission({ mode: 'readwrite' }) === 'granted';
+          } catch (error) {
+            console.error('Impossible de demander l’autorisation d’écriture.', error);
+          }
+          if (!activeFileWritable) {
+            setFileSyncStatus('error', 'Autorisation d’écriture requise');
+            showToast('Autorisation d’écriture refusée. Téléchargez une copie chiffrée.');
+            return;
+          }
+        }
+        const saved = await queueLinkedFileSave(true);
+        if (saved) showToast('Carnet chiffré enregistré dans le fichier lié.');
+        return;
+      }
+      if (typeof window.showSaveFilePicker !== 'function') {
+        await downloadEncryptedBackup();
+        return;
+      }
+      let encryption = null;
+      try {
+        const password = await requestBackupPassword(true);
+        if (password === null) return;
+        const salt = crypto.getRandomValues(new Uint8Array(16));
+        const key = await deriveBackupKey(password, salt);
+        encryption = { key, salt };
+        fileOperation = true;
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}_chiffre.json`,
+          types: [{ description: 'Sauvegarde du carnet chiffrée (.json)', accept: { 'application/json': ['.json'] } }]
+        });
+        const existingText = await (await handle.getFile()).text();
+        if (existingText && !window.confirm(`Le fichier « ${handle.name} » contient déjà des données. Le remplacer par ce carnet chiffré ?`)) return;
+        activeFileHandle = handle;
+        carnetIsSaved = true;
+        activeFileWritable = true;
+        linkedFileText = existingText;
+        activeBackupEncryption = encryption;
+        fileWriteBlocked = false;
+        fileOperation = false;
+        const saved = await queueLinkedFileSave(true);
+        if (saved) showToast('Fichier chiffré lié : les modifications seront enregistrées automatiquement.');
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        if (['NotAllowedError', 'SecurityError', 'NotSupportedError', 'TypeError'].includes(error.name)) {
+          if (encryption) await downloadBackup(encryption);
+          else await downloadEncryptedBackup();
+          return;
+        }
+        console.error('Impossible de lier la sauvegarde chiffrée.', error);
+        showToast('Impossible de lier le fichier chiffré. Une copie téléchargée peut être utilisée.');
+      } finally {
+        fileOperation = false;
       }
     }
 
@@ -356,11 +444,14 @@
         const saved = await queueLinkedFileSave(true);
         if (saved) showToast('Fichier lié : les modifications seront enregistrées automatiquement.');
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Impossible de lier le fichier JSON.', error);
-          setFileSyncStatus('error', 'Fichier non lié');
-          showToast('Impossible de lier le fichier. Téléchargez une copie JSON.');
+        if (error.name === 'AbortError') return;
+        if (['NotAllowedError', 'SecurityError', 'NotSupportedError', 'TypeError'].includes(error.name)) {
+          await downloadBackup(null);
+          return;
         }
+        console.error('Impossible de lier le fichier JSON.', error);
+        setFileSyncStatus('error', 'Fichier non lié');
+        showToast('Impossible de lier le fichier. Téléchargez une copie JSON.');
       } finally {
         fileOperation = false;
         if (activeFileHandle && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) scheduleAppStateSave();
@@ -403,6 +494,9 @@
 
     async function loadBackupFile(file, handle, expectedSnapshot, writable = false) {
       try {
+        if (!file || !Number.isFinite(file.size) || file.size > MAX_JSON_IMPORT_BYTES) {
+          throw new Error('Le fichier dépasse la taille maximale autorisée de 25 Mo.');
+        }
         const text = await file.text();
         const decrypted = await decryptBackup(text);
         if (!decrypted) return false;
@@ -433,13 +527,19 @@
         document.getElementById('headerStudentSearch').value = '';
         document.getElementById('studentSearchMessage').textContent = '';
         unlockedWeights.clear();
+        weightMode = false;
         weightLevel = '';
         weightScope = '';
         Object.assign(prefs, importedPrefs);
         carnetIsSaved = true;
         applyPrefs();
+        observationDraftBaseline = null;
+        history.undo = [];
+        history.redo = [];
+        history.last = getEditableStateSnapshot();
+        initialEditableSnapshot = getEditableStateSnapshot();
+        updateHistoryButtons();
         renderAll();
-        recordHistory();
         activeFileHandle = handle;
         activeFileWritable = !!handle && writable;
         activeBackupEncryption = decrypted.encryption;
@@ -474,10 +574,14 @@
         const writable = typeof handle.queryPermission !== 'function' || await handle.queryPermission({ mode: 'readwrite' }) === 'granted';
         loaded = await loadBackupFile(await handle.getFile(), handle, expectedSnapshot, writable);
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          console.error('Impossible d’ouvrir le fichier JSON.', error);
-          showToast('Impossible d’ouvrir le fichier JSON.');
+        if (error.name === 'AbortError') return;
+        if (['NotAllowedError', 'SecurityError', 'NotSupportedError', 'TypeError'].includes(error.name)) {
+          pendingImportSnapshot = expectedSnapshot;
+          document.getElementById('inputImportJSON').click();
+          return;
         }
+        console.error('Impossible d’ouvrir le fichier JSON.', error);
+        showToast('Impossible d’ouvrir le fichier JSON.');
       } finally {
         fileOperation = false;
         if (!loaded && importFromWelcome) showWelcome();

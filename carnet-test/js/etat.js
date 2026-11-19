@@ -31,14 +31,52 @@
     let competencyTermSelected = null;
     let observationDraftBaseline = null;
 
+    const OWN = Object.prototype.hasOwnProperty;
+    const SAFE_IMPORTED_ID = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+    const RESERVED_IMPORTED_IDS = new Set(['__proto__', 'prototype', 'constructor']);
+
+    function isRecord(value) {
+      return value !== null && typeof value === 'object' && !Array.isArray(value);
+    }
+
+    function isSafeImportedId(value) {
+      const id = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+      return SAFE_IMPORTED_ID.test(id) && !RESERVED_IMPORTED_IDS.has(id);
+    }
+
+    function makeImportedId(value, prefix, used) {
+      const candidate = typeof value === 'string' || typeof value === 'number' ? String(value) : '';
+      if (SAFE_IMPORTED_ID.test(candidate) && !RESERVED_IMPORTED_IDS.has(candidate) && !used.has(candidate)) {
+        used.add(candidate);
+        return candidate;
+      }
+      let id;
+      let index = used.size + 1;
+      do {
+        id = `${prefix}_import_${index++}`;
+      } while (used.has(id));
+      used.add(id);
+      return id;
+    }
+
     function normalizeImportedState(imported, isStore = false) {
       if (!imported || !Array.isArray(imported.students) || !imported.terms || typeof imported.terms !== 'object') {
         throw new Error('Le fichier ne contient pas une sauvegarde de carnet valide.');
       }
 
-      imported.students = imported.students.filter(st => st && st.id).map(st => ({
+      const studentIds = new Set();
+      const studentSources = imported.students.filter(isRecord).filter(st => OWN.call(st, 'id')).map(st => ({
+        originalId: String(st.id),
+        importedId: makeImportedId(st.id, 'stu', studentIds),
+        source: st
+      }));
+      const studentIdMap = new Map();
+      studentSources.forEach(item => {
+        if (!studentIdMap.has(item.originalId)) studentIdMap.set(item.originalId, item.importedId);
+      });
+      imported.students = studentSources.map(({ source: st, importedId }) => ({
         ...st,
-        id: String(st.id),
+        id: importedId,
         name: String(st.name || '').trim() || 'Élève',
         firstName: typeof st.firstName === 'string' ? st.firstName.trim() : String(st.name || '').trim() || 'Élève',
         lastName: typeof st.lastName === 'string' ? st.lastName.trim() : '',
@@ -51,7 +89,7 @@
           const clean = {};
           Object.entries(raw).forEach(([k, v]) => {
             const lvl = String(v || '');
-            if (GRADE_LEVEL_LABELS[lvl]) clean[k] = lvl;
+            if (ALL_SUBJECTS_CONFIG.some(subject => subject.id === k) && GRADE_LEVEL_LABELS[lvl]) clean[k] = lvl;
           });
           return clean;
         })(),
@@ -131,13 +169,38 @@
         term.observations = Array.isArray(term.observations) ? term.observations : [];
 
         ALL_SUBJECTS_CONFIG.forEach(sub => {
-          if (!term.subjectData[sub.id]) {
+          if (!OWN.call(term.subjectData, sub.id) || !isRecord(term.subjectData[sub.id])) {
             term.subjectData[sub.id] = buildTermDataForStudents(imported.students).subjectData[sub.id];
           }
           const subData = term.subjectData[sub.id];
-          subData.assignments = Array.isArray(subData.assignments) ? subData.assignments : [];
-          subData.assignments.forEach(asg => {
-            if (!asg || typeof asg !== 'object') return;
+          const rawCustomRubrics = Array.isArray(subData.customRubrics) ? subData.customRubrics : [];
+          const customRubricIds = new Set();
+          const customRubricIdMap = new Map();
+          subData.customRubrics = rawCustomRubrics.flatMap(source => {
+            if (!isRecord(source)) return [];
+            const customRubric = normalizeCustomRubric(source.customRubric, true);
+            if (!customRubric) return [];
+            const originalId = OWN.call(source, 'id') ? String(source.id) : '';
+            const importedId = makeImportedId(source.id, 'rubric', customRubricIds);
+            if (originalId && !customRubricIdMap.has(originalId)) customRubricIdMap.set(originalId, importedId);
+            const createdAt = typeof source.createdAt === 'string' ? source.createdAt : new Date().toISOString();
+            const updatedAt = typeof source.updatedAt === 'string' ? source.updatedAt : createdAt;
+            return [{
+              id: importedId,
+              title: customRubric.title,
+              createdAt,
+              updatedAt,
+              customRubric
+            }];
+          }).slice(0, 5);
+          const rawAssignments = Array.isArray(subData.assignments) ? subData.assignments.filter(isRecord) : [];
+          const assignmentIds = new Set();
+          const assignmentIdMap = new Map();
+          subData.assignments = rawAssignments.map(source => {
+            const originalId = OWN.call(source, 'id') ? String(source.id) : '';
+            const importedId = makeImportedId(source.id, 'asg', assignmentIds);
+            if (originalId && !assignmentIdMap.has(originalId)) assignmentIdMap.set(originalId, importedId);
+            const asg = { ...source, id: importedId, title: typeof source.title === 'string' ? source.title : '' };
             if (Array.isArray(asg.targetLevels)) {
               asg.targetLevels = [...new Set(
                 asg.targetLevels.map(l => String(l || '')).filter(l => GRADE_LEVEL_LABELS[l] !== undefined)
@@ -159,31 +222,76 @@
             } else {
               delete asg.weightByLevel;
             }
-            if (!['portrait', 'weighted'].includes(asg.obsMode)) {
+            if (!['portrait', 'weighted', 'custom'].includes(asg.obsMode)) {
               if (asg.obsMode === 'checklist') asg.obsMode = 'portrait';
               else delete asg.obsMode;
+            }
+            asg.customRubric = normalizeCustomRubric(asg.customRubric, asg.obsMode === 'custom');
+            if (!asg.customRubric) {
+              delete asg.customRubric;
+              if (asg.obsMode === 'custom') asg.obsMode = 'portrait';
             }
             if (asg.criteriaWeights && typeof asg.criteriaWeights === 'object' && !Array.isArray(asg.criteriaWeights)) {
               const cleanCritW = {};
               Object.entries(asg.criteriaWeights).forEach(([cId, w]) => {
                 const num = Number(w);
-                if (Number.isFinite(num) && num >= 0 && num <= 100) cleanCritW[String(cId)] = num;
+                if (isSafeImportedId(cId) && Number.isFinite(num) && num >= 0 && num <= 100) {
+                  cleanCritW[String(cId)] = num;
+                }
               });
               if (Object.keys(cleanCritW).length) asg.criteriaWeights = cleanCritW;
               else delete asg.criteriaWeights;
             } else {
               delete asg.criteriaWeights;
             }
+            if (!isSafeImportedId(asg.linkId)) delete asg.linkId;
+            return asg;
           });
-          subData.studentRecords = subData.studentRecords || {};
-          subData.currentObsSession = subData.currentObsSession || createBlankObsSession(imported.students);
-          subData.currentObsSession.obsMode = ['portrait', 'weighted'].includes(subData.currentObsSession.obsMode)
+          const rawRecords = isRecord(subData.studentRecords) ? subData.studentRecords : {};
+          const cleanRecords = {};
+          subData.studentRecords = cleanRecords;
+          subData.currentObsSession = isRecord(subData.currentObsSession)
+            ? subData.currentObsSession
+            : createBlankObsSession(imported.students);
+          subData.currentObsSession.obsMode = ['portrait', 'weighted', 'custom'].includes(subData.currentObsSession.obsMode)
             ? subData.currentObsSession.obsMode
             : 'portrait';
-          if (!subData.currentObsSession.criteriaWeights || typeof subData.currentObsSession.criteriaWeights !== 'object' || Array.isArray(subData.currentObsSession.criteriaWeights)) {
-            subData.currentObsSession.criteriaWeights = null;
+          subData.currentObsSession.customRubric = normalizeCustomRubric(
+            subData.currentObsSession.customRubric,
+            subData.currentObsSession.obsMode === 'custom'
+          );
+          const selectedCustomRubricId = customRubricIdMap.get(String(subData.currentObsSession.selectedCustomRubricId || ''))
+            || String(subData.currentObsSession.selectedCustomRubricId || '');
+          const selectedCustomRubric = subData.customRubrics.find(item => item.id === selectedCustomRubricId);
+          subData.currentObsSession.selectedCustomRubricId =
+            subData.currentObsSession.obsMode === 'custom' && selectedCustomRubric
+              ? selectedCustomRubric.id
+              : null;
+          if (selectedCustomRubric && subData.currentObsSession.selectedCustomRubricId) {
+            subData.currentObsSession.customRubric = cloneCustomRubric(selectedCustomRubric.customRubric);
           }
-          subData.currentObsSession.studentDrafts = subData.currentObsSession.studentDrafts || {};
+          if (!subData.currentObsSession.customRubric && subData.currentObsSession.obsMode === 'custom') {
+            subData.currentObsSession.obsMode = 'portrait';
+            subData.currentObsSession.selectedCustomRubricId = null;
+          }
+          if (!isRecord(subData.currentObsSession.criteriaWeights)) {
+            subData.currentObsSession.criteriaWeights = null;
+          } else {
+            const cleanCriteriaWeights = {};
+            Object.entries(subData.currentObsSession.criteriaWeights).forEach(([criterionId, weight]) => {
+              const num = Number(weight);
+              if (isSafeImportedId(criterionId) && Number.isFinite(num) && num >= 0 && num <= 100) {
+                cleanCriteriaWeights[criterionId] = num;
+              }
+            });
+            subData.currentObsSession.criteriaWeights = Object.keys(cleanCriteriaWeights).length
+              ? cleanCriteriaWeights
+              : null;
+          }
+          const rawDrafts = isRecord(subData.currentObsSession.studentDrafts)
+            ? subData.currentObsSession.studentDrafts
+            : {};
+          subData.currentObsSession.studentDrafts = {};
           if (Array.isArray(subData.currentObsSession.targetLevels)) {
             subData.currentObsSession.targetLevels = [...new Set(
               subData.currentObsSession.targetLevels.map(l => String(l || '')).filter(l => GRADE_LEVEL_LABELS[l] !== undefined)
@@ -191,25 +299,50 @@
           } else {
             subData.currentObsSession.targetLevels = [];
           }
+          if (assignmentIdMap.has(String(subData.currentObsSession.editingAssignmentId))) {
+            subData.currentObsSession.editingAssignmentId = assignmentIdMap.get(String(subData.currentObsSession.editingAssignmentId));
+          } else {
+            delete subData.currentObsSession.editingAssignmentId;
+          }
 
-          imported.students.forEach(st => {
-            const rec = subData.studentRecords[st.id] || {};
-            rec.scores = rec.scores || {};
-            rec.scoreMeta = (rec.scoreMeta && typeof rec.scoreMeta === 'object' && !Array.isArray(rec.scoreMeta)) ? rec.scoreMeta : {};
-            Object.keys(rec.scoreMeta).forEach(asgKey => {
-              const m = rec.scoreMeta[asgKey];
-              if (m && typeof m === 'object' && Array.isArray(m.flags)) {
+          studentSources.forEach(({ originalId, importedId }) => {
+            const sourceRec = OWN.call(rawRecords, originalId) && isRecord(rawRecords[originalId])
+              ? rawRecords[originalId]
+              : {};
+            const rec = { ...sourceRec };
+            const rawScores = isRecord(sourceRec.scores) ? sourceRec.scores : {};
+            const rawScoreMeta = isRecord(sourceRec.scoreMeta) ? sourceRec.scoreMeta : {};
+            rec.scores = {};
+            rec.scoreMeta = {};
+            subData.assignments.forEach((asg, index) => {
+              const oldAsgId = rawAssignments[index] && OWN.call(rawAssignments[index], 'id')
+                ? String(rawAssignments[index].id)
+                : '';
+              if (OWN.call(rawScores, oldAsgId)) rec.scores[asg.id] = rawScores[oldAsgId];
+              const m = OWN.call(rawScoreMeta, oldAsgId) && isRecord(rawScoreMeta[oldAsgId])
+                ? { ...rawScoreMeta[oldAsgId] }
+                : null;
+              if (!m) return;
+              if (!['portrait', 'weighted', 'custom'].includes(m.obsMode)) delete m.obsMode;
+              m.customRubric = normalizeCustomRubric(m.customRubric, m.obsMode === 'custom');
+              if (!m.customRubric) delete m.customRubric;
+              if (m.obsMode === 'custom' && !m.customRubric) m.obsMode = 'portrait';
+              if (Array.isArray(m.flags)) {
                 m.flags = [...new Set(m.flags.filter(code => VALID_CELL_FLAG_CODES.has(code)))];
                 if (!m.flags.length) delete m.flags;
               }
+              rec.scoreMeta[asg.id] = m;
             });
             rec.baremeChecked = Array.isArray(rec.baremeChecked) ? rec.baremeChecked : [];
             rec.baremeOverrideCode = rec.baremeOverrideCode || null;
             rec.finalJudgmentOverride = rec.finalJudgmentOverride ?? '';
             rec.comment = typeof rec.comment === 'string' ? rec.comment : '';
-            subData.studentRecords[st.id] = rec;
+            cleanRecords[importedId] = rec;
 
-            const draft = subData.currentObsSession.studentDrafts[st.id] || {};
+            const draftSource = OWN.call(rawDrafts, originalId) && isRecord(rawDrafts[originalId])
+              ? rawDrafts[originalId]
+              : {};
+            const draft = { ...draftSource };
             draft.checked = Array.isArray(draft.checked) ? draft.checked : [];
             draft.overrideCode = draft.overrideCode || null;
             draft.tags = Array.isArray(draft.tags) ? draft.tags : [];
@@ -219,9 +352,35 @@
             draft.notEvaluated = draft.notEvaluated === true;
             draft.gradeLevel = GRADE_LEVEL_LABELS[String(draft.gradeLevel)]
               ? String(draft.gradeLevel)
-              : st.gradeLevel;
-            subData.currentObsSession.studentDrafts[st.id] = draft;
+              : imported.students.find(st => st.id === importedId).gradeLevel;
+            subData.currentObsSession.studentDrafts[importedId] = draft;
           });
+          subData.assignmentIdMap = assignmentIdMap;
+        });
+      });
+
+      ['1', '2', '3'].forEach(termId => {
+        const term = imported.terms[termId];
+        const rawObservations = Array.isArray(term.observations) ? term.observations : [];
+        const observationIds = new Set();
+        term.observations = rawObservations.filter(isRecord).map(source => {
+          const observation = { ...source };
+          observation.id = makeImportedId(source.id, 'obs', observationIds);
+          if (studentIdMap.has(String(source.studentId))) observation.studentId = studentIdMap.get(String(source.studentId));
+          const subjectData = OWN.call(term.subjectData, String(source.subjectId))
+            ? term.subjectData[String(source.subjectId)]
+            : null;
+          if (subjectData && subjectData.assignmentIdMap.has(String(source.asgId))) {
+            observation.asgId = subjectData.assignmentIdMap.get(String(source.asgId));
+          }
+          return observation;
+        }).filter(observation => {
+          return imported.students.some(st => st.id === observation.studentId)
+            && typeof observation.subjectId === 'string'
+            && ALL_SUBJECTS_CONFIG.some(subject => subject.id === observation.subjectId);
+        });
+        ALL_SUBJECTS_CONFIG.forEach(sub => {
+          if (term.subjectData && term.subjectData[sub.id]) delete term.subjectData[sub.id].assignmentIdMap;
         });
       });
 
@@ -259,6 +418,9 @@
       }
       const td = appState.terms[appState.activeTerm];
       SUBJECTS_CONFIG.forEach(sub => {
+        if (!Array.isArray(td.subjectData[sub.id].customRubrics)) {
+          td.subjectData[sub.id].customRubrics = [];
+        }
         if (!td.subjectData[sub.id].currentObsSession) {
           td.subjectData[sub.id].currentObsSession = createBlankObsSession(appState.students);
         }
@@ -291,8 +453,12 @@
         const session = createBlankObsSession(appState.students);
         session.editingAssignmentId = asg.id;
         session.rubricVersion = asg.rubricVersion;
-        session.obsMode = ['portrait', 'weighted'].includes(asg.obsMode) ? asg.obsMode : 'portrait';
+        session.obsMode = ['portrait', 'weighted', 'custom'].includes(asg.obsMode) ? asg.obsMode : 'portrait';
         session.criteriaWeights = (asg.criteriaWeights && typeof asg.criteriaWeights === 'object') ? { ...asg.criteriaWeights } : null;
+        const restoredMetaRubric = Object.values(subData.studentRecords)
+          .map(record => record.scoreMeta && record.scoreMeta[asg.id])
+          .find(meta => meta && meta.customRubric)?.customRubric;
+        session.customRubric = cloneCustomRubric(asg.customRubric || restoredMetaRubric);
         session.title = asg.title;
         session.targetLevels = getAssignmentTargetLevels(asg);
 
@@ -819,7 +985,6 @@
       if (data.tagCategories !== undefined) appState.tagCategories = data.tagCategories;
       history.last = snap;
       renderAll();
-      recordHistory();
       updateHistoryButtons();
       scheduleAppStateSave();
     }
@@ -1034,6 +1199,7 @@
 
     function navigateToView(viewId, updateState) {
       const continueNavigation = () => {
+        const changedView = appState.activeView !== viewId;
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
           competencyPanelOpen = false;
         }
@@ -1042,6 +1208,10 @@
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderAll();
+        if (changedView || updateState) {
+          const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+        }
       };
       return requestObservationDraftExit(continueNavigation);
     }
@@ -1080,7 +1250,7 @@
     let autosaveTimer = null;
 
     function setupLegacyModalAccessibility() {
-      const modalSelector = '#modalAddAssignment, #modalTargetLevels, #modalGroup, #modalDeleteLinked, #modalCommentBank';
+      const modalSelector = '#modalAddAssignment, #modalTargetLevels, #modalGroup, #modalDeleteLinked, #modalCommentBank, #modalUnsavedObservation';
       const openers = new WeakMap();
       const getVisibleModal = () => [...document.querySelectorAll(modalSelector)]
         .find(modal => !modal.classList.contains('hidden'));
@@ -1117,7 +1287,7 @@
         if (event.key === 'Escape') {
           event.preventDefault();
           const closeButton = modal.querySelector(
-            '#btnCloseModalAssignment, #btnCancelModalAssignment, #btnCloseModalTargetLevels, #btnGroupClose, #btnGroupCancel, #btnDelLinkedClose, #btnDelLinkedCancel, #btnCbClose, #btnCbCancel'
+            '#btnCloseModalAssignment, #btnCancelModalAssignment, #btnCloseModalTargetLevels, #btnGroupClose, #btnGroupCancel, #btnDelLinkedClose, #btnDelLinkedCancel, #btnCbClose, #btnCbCancel, #btnStayOnObservation'
           );
           if (closeButton) closeButton.click();
           return;

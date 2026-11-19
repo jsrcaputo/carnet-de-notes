@@ -223,6 +223,8 @@
     .observable-print-form section > label, .print-field-label, .print-section-label { display: block; margin-bottom: 7px; color: var(--ink); font-size: 12px; font-weight: 800; }
     .print-section-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .print-section-label button { color: var(--brand-deep); font-size: 10.5px; font-weight: 750; cursor: pointer; }
+    .print-section-shortcuts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 10px; }
+    .print-section-shortcuts button:disabled { opacity: .45; cursor: not-allowed; }
     #observablePrintAssignment, #baremePrintSubject { width: 100%; padding: 9px 11px; border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 10px; background: var(--surface, #fff); color: var(--ink); font-size: 12px; font-weight: 650; }
     .print-dialog-hint { margin-top: 5px; color: var(--muted); font-size: 10.5px; }
     .print-student-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; max-height: 190px; overflow: auto; padding: 1px; }
@@ -249,6 +251,7 @@
     .print-dialog-primary svg { width: 15px; height: 15px; }
     #observablePrintSheet, #baremeBatchPrintSheet { display: none; }
     @page observable-grids { size: landscape; margin: 8mm; }
+    @page individual-sheet { size: portrait; margin: 10mm; }
     @media print {
       body.print-observation-grid main > section:not(#viewQuickObs),
       body.print-observation-grid #viewQuickObs > :not(#observationPrintGrid),
@@ -294,6 +297,7 @@
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-note { min-height: 12mm; padding: 2mm; border: 1px solid #94a3b8; border-radius: 4px; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-note strong { display: block; margin-bottom: 1mm; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-foot { margin-top: auto; padding-top: 2mm; color: #64748b; font-size: 8px; text-align: right; }
+      body.print-student-sheet #studentIndividualPrintSheet { page: individual-sheet; }
       body.print-student-sheet #studentIndividualPrintSheet .sis-print-page { break-after: page; }
       body.print-student-sheet #studentIndividualPrintSheet .sis-print-page:last-child { break-after: auto; }
     }
@@ -304,6 +308,98 @@
       .print-dialog-footer > div { width: 100%; justify-content: flex-end; }
     }
     #toastNotification { z-index: 125; }
+    .qo-mode-segment { gap: .38rem; padding: 0; border: 0; background: transparent; box-shadow: none; }
+    #qoToolModeBar > div:first-child { flex: 1 1 auto; min-width: 0; }
+    #qoModeSegment { flex: 0 1 auto; min-width: 0; }
+    #qoModeSegment .qo-mode-choice, #qoModeSegment > button:not(.qo-custom-rubric-action) {
+      border: 1px solid var(--studio-border, var(--line));
+      border-radius: 999px;
+      background: var(--studio-surface-soft, #f8fafc);
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+    }
+    .qo-personal-rubric-wrap {
+      display: inline-flex; align-items: stretch; max-width: min(18rem, 100%); height: 26px;
+      border: 1px solid var(--studio-border, var(--line)); border-radius: 999px; overflow: hidden;
+      background: var(--studio-surface-soft, #f8fafc);
+    }
+    #qoModeSegment .qo-personal-rubric-button {
+      min-width: 0; max-width: 15.5rem; height: 24px; overflow: hidden; padding: 0 .55rem;
+      border: 0; border-radius: 0; background: transparent; box-shadow: none; text-overflow: ellipsis; white-space: nowrap;
+      color: var(--studio-text-muted, #475569); font-family: inherit; font-size: .75rem; font-weight: 600; line-height: 16px; letter-spacing: normal;
+    }
+    #qoModeSegment .qo-personal-rubric-button.is-active { background: #4f46e5; color: #fff; }
+    .qo-personal-rubric-edit {
+      flex: 0 0 1.65rem; width: 1.65rem; border-left: 1px solid var(--studio-border, var(--line));
+      color: var(--brand-deep); font-size: .78rem; font-weight: 800; cursor: pointer;
+    }
+    .qo-personal-rubric-edit:hover, .qo-personal-rubric-edit:focus-visible { background: var(--brand-soft); outline: none; }
+    #qoModeSegment .qo-custom-rubric-action {
+      box-sizing: border-box !important; min-height: 26px !important; height: 26px !important; padding: 0 .72rem !important; border: 1px dashed color-mix(in srgb, var(--brand) 58%, var(--line));
+      border-radius: 999px; background: transparent; color: var(--brand-deep); font-size: .75rem; font-weight: 600; line-height: 16px; cursor: pointer;
+    }
+    #qoModeSegment .qo-custom-rubric-action:hover, #qoModeSegment .qo-custom-rubric-action:focus-visible {
+      background: var(--brand-soft); border-style: solid; outline: none;
+    }
+    .qo-weight-badge { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border: 1px solid color-mix(in srgb, var(--brand) 28%, transparent); }
+    .custom-rubric-dialog {
+      width: min(1180px, calc(100vw - 28px)); max-height: calc(100dvh - 28px); padding: 0; overflow: hidden;
+      border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 18px;
+      background: var(--surface, #fff); color: var(--ink); box-shadow: 0 24px 80px rgba(15, 23, 42, .28);
+    }
+    .custom-rubric-dialog::backdrop { background: rgba(15, 23, 42, .58); backdrop-filter: blur(3px); }
+    .custom-rubric-dialog[open] { display: flex; flex-direction: column; }
+    .custom-rubric-dialog-head { display: flex; flex: 0 0 auto; align-items: flex-start; justify-content: space-between; gap: 1rem; padding: 1.1rem 1.25rem; border-bottom: 1px solid var(--line); }
+    .custom-rubric-dialog-head h2 { margin-top: .15rem; font-size: 1.15rem; font-weight: 800; }
+    .custom-rubric-dialog-head p { margin-top: .25rem; color: var(--muted); font-size: .76rem; line-height: 1.45; }
+    .custom-rubric-editor { min-height: 0; overflow: auto; padding: 1rem 1.25rem; }
+    .custom-rubric-title-field { display: grid; gap: .3rem; max-width: 42rem; }
+    .custom-rubric-title-field span, .custom-rubric-count > span { color: var(--ink); font-size: .72rem; font-weight: 800; }
+    .custom-rubric-title-field input, .custom-rubric-table input, .custom-rubric-table textarea {
+      width: 100%; border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 8px; background: var(--surface, #fff); color: var(--ink);
+      font: inherit; outline: none;
+    }
+    .custom-rubric-title-field input { padding: .55rem .65rem; font-size: .8rem; font-weight: 700; }
+    .custom-rubric-table input { padding: .38rem .45rem; font-size: .72rem; }
+    .custom-rubric-table textarea { min-height: 5.5rem; padding: .5rem; resize: vertical; font-size: .7rem; line-height: 1.4; }
+    .custom-rubric-title-field input:focus, .custom-rubric-table input:focus, .custom-rubric-table textarea:focus {
+      border-color: var(--brand); box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 18%, transparent);
+    }
+    .custom-rubric-counts { display: flex; flex-wrap: wrap; gap: .65rem; margin: .85rem 0; }
+    .custom-rubric-count { display: flex; align-items: center; gap: .55rem; }
+    .custom-rubric-count-buttons { display: inline-flex; align-items: center; overflow: hidden; border: 1px solid var(--line); border-radius: 9px; background: var(--studio-surface-soft, #f8fafc); }
+    .custom-rubric-count-buttons button { width: 1.8rem; height: 1.8rem; color: var(--brand-deep); font-size: 1rem; font-weight: 800; cursor: pointer; }
+    .custom-rubric-count-buttons button:disabled { opacity: .35; cursor: not-allowed; }
+    .custom-rubric-count-buttons output { min-width: 1.9rem; text-align: center; font-size: .76rem; font-weight: 800; }
+    .custom-rubric-scroll { overflow: auto; border: 1px solid var(--line); border-radius: 12px; }
+    .custom-rubric-table { width: 100%; min-width: 760px; border-collapse: separate; border-spacing: 0; table-layout: fixed; }
+    .custom-rubric-table th, .custom-rubric-table td { padding: .5rem; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); vertical-align: top; }
+    .custom-rubric-table tr > :last-child { border-right: 0; }
+    .custom-rubric-table tbody tr:last-child > * { border-bottom: 0; }
+    .custom-rubric-table thead th { background: var(--brand-soft); color: var(--brand-deep); font-size: .72rem; text-align: left; }
+    .custom-rubric-table thead th:first-child, .custom-rubric-table tbody th { width: 190px; }
+    .custom-rubric-table thead label, .custom-rubric-table tbody label { display: flex; align-items: center; gap: .25rem; margin-top: .35rem; color: var(--muted); font-size: .68rem; font-weight: 700; }
+    .custom-rubric-table thead label input, .custom-rubric-table tbody label input { width: 4rem; text-align: center; }
+    .custom-rubric-footer { display: flex; flex: 0 0 auto; align-items: center; justify-content: space-between; gap: 1rem; padding: .8rem 1.25rem; border-top: 1px solid var(--line); background: var(--studio-surface-soft, #f8fafc); }
+    .custom-rubric-footer > div:first-child { display: grid; gap: .2rem; }
+    .custom-rubric-total { width: fit-content; padding: .2rem .45rem; border: 1px solid var(--line); border-radius: 999px; font-size: .7rem; font-weight: 800; }
+    .custom-rubric-total.is-valid { background: #dcfce7; color: #166534; border-color: #86efac; }
+    .custom-rubric-total.is-invalid { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+    .custom-rubric-validation { color: var(--muted); font-size: .68rem; }
+    .custom-rubric-validation.is-valid { color: #166534; }
+    .custom-rubric-validation.is-invalid { color: #9f1239; }
+    .custom-rubric-actions { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+    .custom-rubric-delete {
+      margin-right: auto; padding: .45rem .7rem; border: 1px solid #fecaca; border-radius: 8px;
+      background: #fff1f2; color: #b91c1c; font-size: .72rem; font-weight: 800; cursor: pointer;
+    }
+    .custom-rubric-delete:hover, .custom-rubric-delete:focus-visible { background: #ffe4e6; outline: 2px solid #fecaca; }
+    .custom-rubric-actions button:disabled { opacity: .45; cursor: not-allowed; }
+    @media (max-width: 700px) {
+      .custom-rubric-dialog { width: calc(100vw - 12px); max-height: calc(100dvh - 12px); }
+      .custom-rubric-dialog-head, .custom-rubric-editor, .custom-rubric-footer { padding-left: .85rem; padding-right: .85rem; }
+      .custom-rubric-footer { align-items: stretch; flex-direction: column; }
+      .custom-rubric-actions { width: 100%; justify-content: flex-end; }
+    }
     .tour-overlay { position: fixed; inset: 0; z-index: 110; pointer-events: auto; }
     .tour-highlight { position: fixed; border: 2px solid var(--brand); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(15, 23, 42, .68); pointer-events: none; }
     .tour-card { position: fixed; width: min(360px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 1rem; border-radius: 14px; background: var(--surface, #ffffff); color: var(--ink, #1e293b); box-shadow: 0 10px 35px rgba(0, 0, 0, .25); }
@@ -601,12 +697,12 @@
       color: #46524b;
       font-variant-numeric: tabular-nums;
     }
-    .trend-badge.is-up {
+    .trend-badge.trend-up {
       background: var(--brand-soft);
       border-color: var(--studio-border-strong, var(--line));
       color: var(--brand-deep);
     }
-    .trend-badge.is-down {
+    .trend-badge.trend-down {
       background: #f6ecea;
       border-color: #dfc6c2;
       color: #78423d;

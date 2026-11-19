@@ -88,6 +88,7 @@
           const sd = appState.terms[tKey].subjectData[sub.id];
           const rec = sd.studentRecords[st.id];
           sd.assignments.forEach(asg => {
+            if (!isAssignmentForStudent(asg, st)) return;
             const sc = rec.scores[asg.id];
             const meta = rec.scoreMeta && rec.scoreMeta[asg.id];
             if (asg.isObservation && meta && meta.linkedCopy) return;
@@ -209,7 +210,10 @@
       const studentCycle = getStudentCycle(st.gradeLevel);
       const compTerm = 'annual';
       const compPicks = getAnnualCompetencyPicks(st);
-      const hasHistoricalCompetencies = ['1', '2', '3'].some(term => st.competencyTerms[term] && Object.keys(st.competencyTerms[term]).length);
+      const hasHistoricalCompetencies = ['1', '2', '3'].some(term =>
+        st.competencyTerms && OWN.call(st.competencyTerms, term)
+          && st.competencyTerms[term] && Object.keys(st.competencyTerms[term]).length
+      );
       const competencyTabs = getCompetencyTabs();
       const selectedTab = competencyTabs.find(tab => tab.id === competencySubjectSelected && !tab.disabled) || null;
       if (!selectedTab) competencySubjectSelected = null;
@@ -355,7 +359,7 @@
           ${refAnchor((refSubject && refSubject.cssmbUrl) || 'https://sre.servicescsmb.com/disciplines/', 'Ressources CSSMB')}
         </div>` : '';
 
-      const competencyModuleHtml = `
+      const competencyModuleHtml = st.gradeLevel === 'P' || competencyTabs.every(tab => tab.disabled) ? '' : `
         <details id="competencyPositioning" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" ${competencyPanelOpen ? 'open' : ''}>
           <summary class="comp-card-summary px-4 py-3 bg-slate-50 cursor-pointer flex flex-col gap-2.5">
             <div class="comp-card-summary-top flex flex-wrap items-center justify-between gap-2 w-full">
@@ -483,12 +487,13 @@
         const notesByTerm = ['1', '2', '3'].map(term => ({ term, items: notes.filter(item => item.term === term) })).filter(group => group.items.length);
         const strengths = tagChips(domain.strengths, 3);
         const challenges = tagChips(domain.challenges, 3);
+        const descriptor = (sub.shortName || '').replace(`${sub.partLabel || ''} — `, '');
         return {
           sub, latest, html: `
           <article class="ps-row" data-domain="${escapeHtml(sub.id)}">
             <div class="ps-row-main">
               <span class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PRESCHOOL_DOMAIN_ICONS[sub.id] || ''}</svg></span>
-              <span class="ps-title"><strong>${escapeHtml(sub.partLabel || sub.shortName)}</strong><small>${escapeHtml(sub.shortName.split(' — ').slice(1).join(' — '))}</small></span>
+              <span class="ps-title"><strong>${escapeHtml(sub.partLabel || sub.shortName)}</strong>${descriptor && descriptor !== sub.partLabel ? `<small>${escapeHtml(descriptor)}</small>` : ''}</span>
               <ol class="ps-path" aria-label="Parcours de l’année">
                 ${steps.map(step => `<li class="ps-k${step.rank}" title="Étape ${step.term} : ${step.rank ? PRESCHOOL_CONSTATS[step.rank].label : 'aucune trace cotée'}"><i></i><span>É${step.term}</span></li>`).join('')}
               </ol>
@@ -717,13 +722,14 @@
           const scaleId = el.getAttribute('data-comp-scale');
           const rowKey = el.getAttribute('data-comp-row');
           const level = Number(el.getAttribute('data-comp-level'));
-          const picked = compPicks[scaleId] || (compPicks[scaleId] = {});
+          const editablePicks = getAnnualCompetencyPicks(st, true);
+          const picked = editablePicks[scaleId] || (editablePicks[scaleId] = {});
           if (picked[rowKey] === level) {
             delete picked[rowKey];
           } else {
             picked[rowKey] = level;
           }
-          if (!Object.keys(picked).length) { delete compPicks[scaleId]; setMeqOverride(st, compTerm, scaleId, null); }
+          if (!Object.keys(picked).length) { delete editablePicks[scaleId]; setMeqOverride(st, compTerm, scaleId, null); }
           commitCompetencyChange();
         };
 
@@ -765,9 +771,10 @@
           const resetButton = event.target.closest('[data-comp-reset]');
           if (resetButton && !resetButton.disabled) {
             const scaleId = resetButton.getAttribute('data-comp-reset');
-            const picked = compPicks[scaleId] || {};
+            const editablePicks = getAnnualCompetencyPicks(st, true);
+            const picked = editablePicks[scaleId] || {};
             if (Object.keys(picked).length > 2 && !window.confirm('Effacer toutes les phrases choisies pour cette échelle ?')) return;
-            delete compPicks[scaleId];
+            delete editablePicks[scaleId];
             setMeqOverride(st, compTerm, scaleId, null);
             setCompetencyComment(st, compTerm, scaleId, '');
             commitCompetencyChange();
@@ -777,7 +784,9 @@
         competencyDetails.addEventListener('input', event => {
           const area = event.target.closest && event.target.closest('[data-comp-comment]');
           if (!area) return;
+          getAnnualCompetencyPicks(st, true);
           setCompetencyComment(st, compTerm, area.getAttribute('data-comp-comment'), area.value);
+          scheduleAppStateSave();
           const regen = competencyDetails.querySelector('[data-comp-regen]');
           if (regen) regen.disabled = !area.value.trim();
         });
@@ -793,6 +802,7 @@
         competencyDetails.addEventListener('click', event => {
           const meqBtn = event.target.closest('[data-comp-meq]');
           if (meqBtn) {
+            getAnnualCompetencyPicks(st, true);
             const scaleId = meqBtn.getAttribute('data-comp-meq');
             const value = Number(meqBtn.getAttribute('data-meq-val'));
             const tabScale = competencyTabs.flatMap(tab => tab.scales.map(s => ({ s, tabId: tab.id }))).find(x => x.s.id === scaleId);
@@ -805,12 +815,14 @@
           }
           const meqAuto = event.target.closest('[data-comp-meq-auto]');
           if (meqAuto) {
+            getAnnualCompetencyPicks(st, true);
             setMeqOverride(st, compTerm, meqAuto.getAttribute('data-comp-meq-auto'), null);
             commitCompetencyChange();
             return;
           }
           const regen = event.target.closest('[data-comp-regen]');
           if (regen && !regen.disabled) {
+            getAnnualCompetencyPicks(st, true);
             setCompetencyComment(st, compTerm, regen.getAttribute('data-comp-regen'), '');
             commitCompetencyChange();
             return;

@@ -15,6 +15,10 @@
       };
       const brandDeepRgb = toExcelHex('--brand-deep', '1E3A8A');
       const brandRgb = toExcelHex('--brand', '1D4ED8');
+      const parseExcelNumber = value => {
+        const normalized = String(value ?? '').trim().replace(',', '.');
+        return normalized === '' ? NaN : Number(normalized);
+      };
 
       const headerStyle = {
         fill: { fgColor: { rgb: brandDeepRgb } },
@@ -84,7 +88,8 @@
         const presentLevels = getPresentStudentLevels();
         const isMultiLvl = presentLevels.length > 1;
         subData.assignments.forEach(a => {
-          let wLabel = `${a.weight || 0}%`;
+          const representativeLevel = presentLevels.length === 1 ? presentLevels[0] : '';
+          let wLabel = `${getAssignmentWeightForLevel(a, representativeLevel, sub, termData)}%`;
           if (isMultiLvl) {
             const targetedLvls = presentLevels.filter(lvl => isAssignmentForLevel(a, lvl));
             const lvlWeights = targetedLvls.map(lvl => ({ lvl, w: getAssignmentWeightForLevel(a, lvl, sub, termData) }));
@@ -117,8 +122,11 @@
             const v = rec.scores[a.id];
             const valUpper = String(v ?? '').trim().toUpperCase();
             if (valUpper === '-' || valUpper === 'N/A') r.push('-');
-            else if (valUpper === 'NR' || valUpper === 'JUST' || valUpper === 'REP') r.push(valUpper);
-            else r.push(v !== undefined && v !== '' && !isNaN(Number(v)) ? Number(v) : '');
+            else if (valUpper === 'NR' || valUpper === 'JUS' || valUpper === 'JUST' || valUpper === 'REP') r.push(valUpper);
+            else {
+              const parsed = parseExcelNumber(v);
+              r.push(Number.isFinite(parsed) ? parsed : '');
+            }
           });
           r.push(
             sum.assignmentsAvg !== null ? sum.assignmentsAvg : '',
@@ -134,11 +142,16 @@
         rows.push([]);
         rows.push([]);
         rows.push(['GRILLES DE CORRECTION PAR CYCLE — REPÈRES PÉDAGOGIQUES NON OFFICIELS']);
-        [1, 2, 3].forEach(cycle => {
+        const rubricLevels = sub.prescoOnly
+          ? [{ key: 'P', label: 'Grille adaptée au préscolaire (non officielle)' }]
+          : [1, 2, 3].map(cycle => ({ key: String(cycle * 2 - 1), label: `Grille adaptée au ${CYCLE_LABELS[cycle]} (non officielle)` }));
+        rubricLevels.forEach(({ key, label }) => {
+          const criteria = getCriteriaForGradeLevel(sub, key);
+          if (!criteria.length) return;
           rows.push([]);
-          rows.push([`Grille adaptée au ${CYCLE_LABELS[cycle]} (non officielle)`]);
+          rows.push([label]);
           rows.push(['Critère observé', 'Niveau A', 'Niveau B', 'Niveau C', 'Niveau D', 'Niveau E']);
-          getCriteriaForGradeLevel(sub, String(cycle * 2 - 1)).forEach(criterion => {
+          criteria.forEach(criterion => {
             rows.push([
               criterion.title,
               (criterion.cells.A || []).join(' • '),
@@ -275,8 +288,9 @@
               const meta = rec.scoreMeta && rec.scoreMeta[a.id];
               const outOf = getAssignmentOutOf(a);
               const notEval = valUpper === '-' || valUpper === 'N/A';
-              const isSpecial = valUpper === 'NR' || valUpper === 'JUST' || valUpper === 'REP';
-              const num = (v !== undefined && v !== '' && !notEval && !isSpecial) ? Number(v) : null;
+              const isSpecial = valUpper === 'NR' || valUpper === 'JUS' || valUpper === 'JUST' || valUpper === 'REP';
+              const parsed = (v !== undefined && v !== '' && !notEval && !isSpecial) ? parseExcelNumber(v) : null;
+              const num = Number.isFinite(parsed) ? parsed : null;
               const hasNum = num !== null && Number.isFinite(num);
               const pct = hasNum ? Math.round(num / outOf * 1000) / 10 : '';
               let scoreCell = '';
@@ -395,8 +409,8 @@
     }
 
     async function exportEncryptedExcel() {
-      const button = document.getElementById('btnExportEncryptedExcel');
-      button.disabled = true;
+      const button = document.getElementById('btnExportExcel');
+      if (button) button.disabled = true;
       try {
         if (typeof XLSX === 'undefined') throw new Error('Bibliothèque Excel non chargée.');
         if (!window.crypto || !window.crypto.subtle) throw new Error('Le chiffrement nécessite un contexte sécurisé (HTTPS ou fichier local).');
@@ -410,7 +424,7 @@
         console.error('Échec de l’export Excel chiffré.', error);
         showToast(error instanceof Error ? error.message : 'Impossible de créer l’export Excel chiffré.');
       } finally {
-        button.disabled = false;
+        if (button) button.disabled = false;
       }
     }
 

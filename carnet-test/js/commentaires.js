@@ -130,7 +130,7 @@
       const entries = Object.keys(picked || {}).map(rowKey => {
         const level = model.levels.find(l => l.n === Number(picked[rowKey]));
         const sentence = level && level.sentences.find(s => s.row === rowKey);
-        const [e, j] = rowKey.split(':').map(Number);
+        const [e, j] = rowKey.replace(/^v2:/, '').split(':').map(Number);
         return sentence ? { e, j, text: sentence.text } : null;
       }).filter(Boolean).sort((a, b) => a.e - b.e || a.j - b.j);
       return personalizeScaleSentences(entries.map(item => item.text), student, mode);

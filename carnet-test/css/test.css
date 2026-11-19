@@ -506,6 +506,17 @@
       .test-sidebar #subjectSubTabsContainer > button:nth-of-type(4) { animation-delay: .075s; }
       .test-sidebar-footer { margin-top: auto; }
       .test-sidebar-footer :is(button, a) { gap: .5rem; }
+      .test-sidebar-footer .sidebar-privacy-link { margin-top: .25rem; padding-top: .45rem; border-top: 1px solid var(--studio-sidebar-line); font-size: .68rem; opacity: .72; }
+      .test-sidebar-footer .sidebar-privacy-link:hover { opacity: 1; }
+      .backup-save-options { display: grid; gap: .65rem; margin: 1rem 0; }
+      .backup-save-option { display: grid; gap: .25rem; padding: .9rem 1rem; border: 1px solid var(--studio-border-strong); border-radius: 12px; background: var(--studio-surface-soft); color: var(--studio-text); text-align: left; cursor: pointer; }
+      .backup-save-option:hover { border-color: var(--brand); background: var(--brand-soft); }
+      .backup-save-option strong { font-size: .95rem; }
+      .backup-save-option span { color: var(--studio-text-muted); font-size: .8rem; line-height: 1.45; }
+      .privacy-policy-dialog { width: min(900px, calc(100vw - 2rem)); height: min(780px, calc(100dvh - 2rem)); padding: 0; overflow: hidden; border: 1px solid var(--studio-border); border-radius: 16px; background: var(--studio-surface); color: var(--studio-text); box-shadow: var(--studio-shadow-md); }
+      .privacy-policy-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; height: 58px; padding: 0 1rem; border-bottom: 1px solid var(--studio-border); }
+      .privacy-policy-heading h2 { font-size: 1rem; font-weight: 800; }
+      .privacy-policy-dialog iframe { width: 100%; height: calc(100% - 58px); border: 0; background: #fff; }
       html.design-studio header.test-topbar {
         width: calc(100% - 246px);
         margin-left: 246px;
@@ -941,6 +952,13 @@
       html.design-studio #qoQuickTags button.bg-indigo-600 { background: var(--brand) !important; border-color: var(--brand) !important; color: #ffffff !important; }
       html.design-studio #qoSidePanel #qoBottomStudentName { color: var(--brand-deep) !important; }
       html.design-studio #qoSidePanel #btnQoResetOverride { color: var(--brand-deep) !important; }
+      html.design-studio .qo-trace-linked-row { display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .9rem; margin-top: .55rem; padding-top: .55rem; border-top: 1px solid var(--studio-border); }
+      html.design-studio .qo-trace-linked-row.hidden { display: none; }
+      html.design-studio .qo-rubric-toolbar { overflow: hidden; border: 1px solid var(--studio-border); border-radius: 11px; background: var(--studio-surface-soft); }
+      html.design-studio .qo-rubric-toolbar .qo-rubric-summary { border-radius: 0; }
+      html.design-studio .qo-rubric-toolbar #qoToolModeBar { border: 0 !important; border-top: 1px solid var(--studio-border) !important; border-radius: 0; }
+      html.design-studio .qo-help-note { margin: 0; color: var(--studio-text-muted) !important; font-size: .68rem; font-style: italic; line-height: 1.45; opacity: .84; }
+      html.design-studio .qo-selected-tag-count { color: var(--brand-deep); font-size: .72rem; font-weight: 700; }
       .qo-observations { display: grid; gap: .75rem; }
       .qo-observations-intro { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .3rem 1rem; color: var(--studio-text-muted); font-size: .75rem; }
       .qo-observations-intro span { color: var(--brand-deep); font-weight: 700; }
@@ -1372,8 +1390,9 @@
         border-color: var(--studio-border) !important;
       }
       html.design-studio #qoModeSegment {
-        background: var(--studio-surface) !important;
-        border-color: var(--studio-border) !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
       }
       html.design-studio .qo-weight-total.is-valid,
       html.design-studio .qo-weight-total.is-ok {
@@ -1862,8 +1881,15 @@
         border: 0 !important;
         border-bottom: 1.5px solid #1e293b !important;
         border-radius: 0 !important;
+        box-shadow: none !important;
       }
-      body.print-gradebook #gbActiveSubjectTitle {
+      body.print-gradebook .gradebook-toolbar > div:nth-of-type(2) {
+        background: #fff !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      body.print-gradebook #gbSubjectTitle {
         font-size: 12px !important;
         line-height: 1.2 !important;
       }
@@ -1894,6 +1920,7 @@
         border-right: 1px solid #cbd5e1 !important;
         vertical-align: bottom !important;
         overflow-wrap: break-word !important;
+        width: auto !important;
       }
       body.print-gradebook #gradebookHeaderRow th:first-child {
         max-width: 130px !important;
@@ -2032,6 +2059,50 @@
         color: #78350f;
         font-size: 8.5px;
       }
+      #studentIndividualPrintSheet .sis-ps-list {
+        display: grid;
+        gap: 5px;
+        margin-bottom: 7px;
+      }
+      #studentIndividualPrintSheet .sis-ps-domain {
+        padding: 5px 7px;
+        border: 1px solid #cbd5e1;
+        border-radius: 5px;
+        break-inside: avoid;
+      }
+      #studentIndividualPrintSheet .sis-ps-domain-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 2px 7px;
+        margin-bottom: 4px;
+        color: #334155;
+      }
+      #studentIndividualPrintSheet .sis-ps-domain-head strong { font-size: 9px; }
+      #studentIndividualPrintSheet .sis-ps-domain-head span { font-size: 8px; }
+      #studentIndividualPrintSheet .sis-ps-steps {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 4px;
+      }
+      #studentIndividualPrintSheet .sis-ps-step {
+        padding: 3px 4px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: #f8fafc;
+        font-size: 7.5px;
+        color: #475569;
+      }
+      #studentIndividualPrintSheet .sis-ps-step strong {
+        display: block;
+        margin-top: 1px;
+        color: #0f172a;
+        font-size: 8px;
+      }
+      #studentIndividualPrintSheet .sis-ps-domain p {
+        margin: 4px 0 0;
+        font-size: 8px;
+      }
       #studentIndividualPrintSheet .sis-section-title {
         font-size: 9px;
         font-weight: 800;
@@ -2162,6 +2233,8 @@
       .grade-badge {
         border-width: 1px;
         border-style: solid;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
       }
       .grade-badge.grade-badge-A { background-color: #dcfce7 !important; color: #14532d !important; border-color: #86efac !important; }
       .grade-badge.grade-badge-B { background-color: #ecfccb !important; color: #365314 !important; border-color: #bef264 !important; }
@@ -2169,6 +2242,11 @@
       .grade-badge.grade-badge-D { background-color: #ffedd5 !important; color: #9a3412 !important; border-color: #fdba74 !important; }
       .grade-badge.grade-badge-E { background-color: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; }
       .grade-badge.grade-badge-neutral { background-color: #f1f5f9 !important; color: #475569 !important; border-color: #cbd5e1 !important; }
+      #studentIndividualPrintSheet :is(.sis-overall-box, .sis-summary-table th, .sis-summary-table .sis-annual, .sis-supports-row, .sis-alert-box, .sis-mod-pill, .sis-ps-domain, .sis-ps-step),
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) :is(.observable-print-check, .is-selected, thead th, tbody th) {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
     }
     /* Carnet : noms d'élèves plus lisibles */
     @media screen {
@@ -2273,6 +2351,12 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   .gb-level-seg button
 ) { border-radius: 999px !important; }
 html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoModeSegment, .gb-level-seg) { border-radius: 999px !important; }
+html.design-studio #qoModeSegment .qo-weight-badge,
+html.design-studio #viewQuickObs .qo-weight-badge {
+  background: var(--brand-soft) !important;
+  color: var(--brand-deep) !important;
+  border-color: color-mix(in srgb, var(--brand) 28%, transparent) !important;
+}
     /* Impressions : aucun décor d'écran, fond blanc, une seule fiche à la fois */
     @media print {
       html, html.design-studio, html body, html.design-studio body, html.design-studio body main.site-layout { background: #fff !important; background-image: none !important; }
@@ -2453,7 +2537,8 @@ html.design-studio .flag-picker-status.is-active {
   background: color-mix(in srgb, var(--brand) 12%, var(--studio-surface, #fff));
   border-color: color-mix(in srgb, var(--brand) 45%, transparent); color: var(--brand-deep);
 }
-html.design-studio .flag-picker-code { min-width: 44px; white-space: nowrap; }html.design-studio .flag-picker-status-label { flex-basis: 100%; margin: 0 0 2px; }
+html.design-studio .flag-picker-code { min-width: 44px; white-space: nowrap; }
+html.design-studio .flag-picker-status-label { flex-basis: 100%; margin: 0 0 2px; }
 html.design-studio .flag-picker-item.is-active {
   background: color-mix(in srgb, var(--brand) 7%, var(--studio-surface, #fff));
   border-color: color-mix(in srgb, var(--brand) 22%, transparent);
@@ -2470,3 +2555,140 @@ html.design-studio:not(.theme-dark) .cell-flag-chip {
 }
 html.design-studio .cell-flag-chip { text-transform: none; }
 html.design-studio.theme-dark .flag-picker-item.is-active .flag-picker-code { color: var(--ink); }
+
+/* Utilitaires absents de la feuille Tailwind générée : styles sémantiques des éléments dynamiques. */
+html.design-studio .modified-expectations > .grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: .5rem;
+  margin-top: .5rem;
+  padding-top: .5rem;
+  border-top: 1px solid var(--studio-border, var(--line));
+}
+html.design-studio .modified-expectations .mod-expectation-item {
+  min-width: 0;
+}
+html.design-studio .modified-expectations .mod-expectation-item > span {
+  min-width: 0;
+}
+html.design-studio .modified-expectations .mod-expectation-item > select {
+  min-width: 0;
+  max-width: 9.5rem;
+}
+@media screen and (min-width: 640px) {
+  html.design-studio .modified-expectations > .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media screen and (min-width: 1024px) {
+  html.design-studio .modified-expectations > .grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+html.design-studio #qoWeightPresetBar .qo-save-perso-btn {
+  display: inline-flex;
+  flex: 0 0 2rem;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+html.design-studio #btnGroupDelete {
+  margin-right: auto;
+  padding: .5rem .75rem;
+  border: 1px solid #f3c7c7;
+  border-radius: 8px;
+  background: #fff1f2;
+  color: #9f1239;
+  font-size: .75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+html.design-studio #btnGroupDelete:hover {
+  background: #ffe4e6;
+  border-color: #fda4af;
+  color: #881337;
+}
+html.design-studio.theme-dark #btnGroupDelete {
+  background: rgba(244, 63, 94, .16);
+  border-color: rgba(251, 113, 133, .4);
+  color: #fecdd3;
+}
+html.design-studio.theme-dark #btnGroupDelete:hover {
+  background: rgba(244, 63, 94, .28);
+  border-color: rgba(251, 113, 133, .58);
+  color: #fff1f2;
+}
+
+html.design-studio #gradebookBody :is(button, input).bg-blue-50.text-blue-800 {
+  background: #eff6ff !important;
+  border-color: #bfdbfe !important;
+  color: #1e40af !important;
+}
+html.design-studio #gradebookBody :is(button, input).bg-blue-50.text-blue-800:hover {
+  background: #dbeafe !important;
+}
+html.design-studio #gradebookBody :is(button, input)[class~="bg-purple-50"] {
+  background: #faf5ff !important;
+  border-color: #e9d5ff !important;
+  color: #6b21a8 !important;
+}
+html.design-studio #gradebookBody :is(button, input)[class~="bg-purple-50"]:hover {
+  background: #f3e8ff !important;
+}
+html.design-studio.theme-dark #gradebookBody :is(button, input).bg-blue-50.text-blue-800 {
+  background: rgba(37, 99, 235, .2) !important;
+  border-color: rgba(96, 165, 250, .45) !important;
+  color: #bfdbfe !important;
+}
+html.design-studio.theme-dark #gradebookBody :is(button, input)[class~="bg-purple-50"] {
+  background: rgba(126, 34, 206, .22) !important;
+  border-color: rgba(192, 132, 252, .45) !important;
+  color: #e9d5ff !important;
+}
+
+[class~="py-0.2"] {
+  padding-top: .05rem;
+  padding-bottom: .05rem;
+}
+
+html.design-studio #viewGlobalReport .trend-badge.trend-up {
+  background: var(--brand-soft);
+  border-color: color-mix(in srgb, var(--brand) 34%, var(--studio-border, var(--line)));
+  color: var(--brand-deep);
+}
+html.design-studio #viewGlobalReport .trend-badge.trend-down {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+html.design-studio.theme-dark #viewGlobalReport .trend-badge.trend-up {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+html.design-studio.theme-dark #viewGlobalReport .trend-badge.trend-down {
+  background: rgba(239, 68, 68, .2);
+  border-color: rgba(248, 113, 113, .42);
+  color: #fecaca;
+}
+
+@media screen and (max-width: 600px) {
+  html.design-studio #gradebookHeaderRow > th:first-child,
+  html.design-studio #gradebookBody tr > td:first-child {
+    width: clamp(104px, 28vw, 120px) !important;
+    min-width: clamp(104px, 28vw, 120px) !important;
+    max-width: clamp(104px, 28vw, 120px) !important;
+  }
+  html.design-studio .gradebook-top-scroll {
+    margin-inline: 4px;
+    bottom: max(4px, env(safe-area-inset-bottom));
+    border-radius: 8px;
+    border: 1px solid var(--studio-border, var(--line));
+    box-shadow: var(--studio-shadow-sm);
+  }
+}
+@media screen and (pointer: coarse), screen and (hover: none) {
+  html.design-studio .cell-flag-trigger {
+    width: 26px;
+    height: 26px;
+    opacity: 1;
+  }
+}

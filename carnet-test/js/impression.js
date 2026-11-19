@@ -2,6 +2,12 @@
       window.requestAnimationFrame(() => window.setTimeout(() => window.print(), 0));
     }
 
+    function removePrintArtifacts(ids = []) {
+      ids.forEach(id => document.getElementById(id)?.remove());
+      const printMeta = document.getElementById('printMeta');
+      if (printMeta) printMeta.textContent = '';
+    }
+
     function printCompetencySheet(student, term) {
       const picks = getCompetencyPicks(student, term);
       const blocks = getCompetencyTabs().flatMap(tab => tab.scales.map(scale => ({ scale, tabId: tab.id }))).map(({ scale, tabId }) => {
@@ -41,6 +47,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-comp');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['compPrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -72,6 +79,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-students');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['studentPrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -152,7 +160,7 @@
             const hasNotEval = Boolean((meta && meta.notEvaluated) || (upper === '-' && !hasTraceFeedback));
             if (!raw && !hasNotEval) return;
 
-            const w = getAssignmentWeightForLevel(asg, effLevel);
+            const studentWeight = getAssignmentWeightForLevel(asg, st.gradeLevel, sub, appState.terms[tKey]);
             let resultDisplay = '';
             let statusClass = '';
 
@@ -163,6 +171,7 @@
             } else if (upper === 'JUST' || upper === 'JUS') {
               resultDisplay = 'JUST (Justifié)';
               statusClass = 'sis-badge-just';
+              pendingStatuses.push({ term: tKey, subject: sub.shortName, title: asg.title, status: 'JUST — Justifié' });
             } else if (upper === 'REP') {
               resultDisplay = 'REP (En reprise)';
               statusClass = 'sis-badge-rep';
@@ -193,7 +202,7 @@
               term: tKey,
               title: asg.title,
               isObs: Boolean(asg.isObservation),
-              weight: w,
+              weight: studentWeight,
               resultDisplay,
               statusClass,
               flags
@@ -249,7 +258,18 @@
       const overallProvisional = populatedSubjects.length < subjectRows.length ||
         populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
-      const adaptationsList = Array.isArray(st.adaptations) ? st.adaptations.filter(Boolean) : [];
+      const adaptationSummary = typeof getStudentAdaptationSummary === 'function'
+        ? getStudentAdaptationSummary(st)
+        : { adaptations: Array.isArray(st.adaptations) ? st.adaptations.filter(Boolean) : [], hasModifiedBulletin: false, modifiedItems: [] };
+      const adaptationsList = adaptationSummary.adaptations.slice();
+      const modifiedItems = typeof getStudentModifiedSummaryList === 'function'
+        ? getStudentModifiedSummaryList(st)
+        : (adaptationSummary.modifiedItems || []);
+      if (adaptationSummary.hasModifiedBulletin || modifiedItems.length) {
+        adaptationsList.push(modifiedItems.length
+          ? `Bulletin modifié — ${modifiedItems.map(item => `${item.label} (${item.levelLabel})`).join(', ')}`
+          : 'Bulletin modifié');
+      }
       const flagsEntries = Object.entries(flagFrequency).sort((a, b) => b[1] - a[1]);
       const tagsEntries = Object.entries(tagFrequency).sort((a, b) => b[1] - a[1]);
 
@@ -325,6 +345,59 @@
         </div>
       ` : '';
 
+      const preschoolPrintHtml = st.gradeLevel === 'P' ? (() => {
+        const labels = {
+          4: 'Se développe très bien',
+          3: 'Se développe adéquatement',
+          2: 'Se développe avec certaines difficultés',
+          1: 'Se développe avec des difficultés importantes',
+          0: 'À observer'
+        };
+        const rankForCode = pct => pct === null ? 0 : ({ A: 4, B: 4, C: 3, D: 2, E: 1 }[String(pctToClosestGradeCode(pct)).charAt(0)] || 0);
+        const cards = subjectRows.filter(row => row.sub.group === 'presco').map(row => {
+          const observations = [];
+          const strengthTags = new Set();
+          const challengeTags = new Set();
+          ['1', '2', '3'].forEach(term => {
+            const sd = appState.terms[term].subjectData[row.sub.id];
+            if (!sd) return;
+            const rec = sd.studentRecords[st.id];
+            if (!rec) return;
+            if (rec.comment && rec.comment.trim()) observations.push(`Ét. ${term} — ${rec.comment.trim()}`);
+            sd.assignments.forEach(asg => {
+              if (!isAssignmentForStudent(asg, st)) return;
+              const meta = rec.scoreMeta && rec.scoreMeta[asg.id];
+              if (!meta) return;
+              if (Array.isArray(meta.tags) && typeof groupObservationTags === 'function') {
+                const groups = groupObservationTags(meta.tags);
+                groups.strengths.forEach(tag => strengthTags.add(tag));
+                groups.challenges.forEach(tag => challengeTags.add(tag));
+              }
+              const text = [meta.comment, meta.strengths && `Forces : ${meta.strengths}`, meta.challenges && `Défis : ${meta.challenges}`]
+                .filter(Boolean).join(' · ');
+              if (text) observations.push(`Ét. ${term} — ${asg.title} : ${text}`);
+            });
+          });
+          const steps = [row.t1, row.t2, row.t3].map((pct, index) => {
+            const rank = rankForCode(pct);
+            return `<span class="sis-ps-step sis-ps-${rank}">Ét. ${index + 1}<strong>${rank ? escapeHtml(labels[rank]) : '—'}</strong></span>`;
+          }).join('');
+          const descriptor = (row.sub.shortName || '').replace(`${row.sub.partLabel || ''} — `, '');
+          return `
+            <article class="sis-ps-domain">
+              <div class="sis-ps-domain-head">
+                <strong>${escapeHtml(row.sub.partLabel || row.sub.shortName)}</strong>
+                ${descriptor && descriptor !== row.sub.partLabel ? `<span>${escapeHtml(descriptor)}</span>` : ''}
+              </div>
+              <div class="sis-ps-steps">${steps}</div>
+              ${strengthTags.size ? `<p><strong>Forces observées :</strong> ${[...strengthTags].map(escapeHtml).join(', ')}</p>` : ''}
+              ${challengeTags.size ? `<p><strong>Défis à soutenir :</strong> ${[...challengeTags].map(escapeHtml).join(', ')}</p>` : ''}
+              ${observations.length ? `<p><strong>Observations consignées :</strong> ${observations.slice(-3).map(escapeHtml).join(' • ')}</p>` : ''}
+            </article>`;
+        });
+        return `<div class="sis-ps-list">${cards.join('')}</div>`;
+      })() : '';
+
       const supportsHtml = (adaptationsList.length > 0 || flagsEntries.length > 0 || tagsEntries.length > 0) ? `
         <div class="sis-supports-row">
           ${adaptationsList.length > 0 ? `<div><strong>Profil & adaptations :</strong> ${adaptationsList.map(escapeHtml).join(', ')}</div>` : ''}
@@ -356,7 +429,7 @@
         ${options.supports ? supportsHtml : ''}
         ${options.pending ? pendingHtml : ''}
         ${st.gradeLevel === 'P'
-          ? (options.summary ? `<div class="sis-section-title">Portrait qualitatif</div><p>Observations consignées à interpréter selon le jugement professionnel; ce portrait ne constitue pas un bulletin officiel.</p>${st.reportComment ? `<p>${escapeHtml(st.reportComment)}</p>` : ''}` : '')
+          ? (options.summary ? `<div class="sis-section-title">Portrait du développement par domaine</div><p>Portrait qualitatif à interpréter selon le jugement professionnel; il ne constitue pas un bulletin officiel.</p>${preschoolPrintHtml}${st.reportComment ? `<p><strong>Commentaire général :</strong> ${escapeHtml(st.reportComment)}</p>` : ''}` : '')
           : (options.summary ? `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}` : '')}
         ${options.details ? detailsHtml : ''}
       `;
@@ -373,6 +446,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-student-sheet');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['studentIndividualPrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -399,7 +473,18 @@
         : [];
       if (appState.activeView !== 'viewQuickObs' || !subjectData || !subjectData.currentObsSession) return saved;
       const current = subjectData.currentObsSession;
-      if (current.editingAssignmentId) return saved;
+      if (current.editingAssignmentId) return saved.map(assignment => assignment.id === current.editingAssignmentId
+        ? {
+            ...assignment,
+            title: current.title || assignment.title,
+            date: current.date || assignment.date,
+            obsMode: current.obsMode || assignment.obsMode,
+            criteriaWeights: current.criteriaWeights || assignment.criteriaWeights,
+            customRubric: current.customRubric || assignment.customRubric,
+            targetLevels: Array.isArray(current.targetLevels) ? current.targetLevels : assignment.targetLevels,
+            isActiveEdit: true
+          }
+        : assignment);
       const hasDraftData = Object.values(current.studentDrafts || {}).some(draft => Boolean(
         (Array.isArray(draft.checked) && draft.checked.length) ||
         (typeof draft.comment === 'string' && draft.comment.trim()) ||
@@ -457,6 +542,7 @@
       const cleanup = () => {
         document.body.classList.remove(...classes);
         window.removeEventListener('afterprint', cleanup);
+        if (printMeta) printMeta.textContent = '';
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -534,9 +620,11 @@
           label: 'Évaluations observables',
           description: observableAssignments.length
             ? 'Une grille par élève, remplie ou vierge.'
-            : 'Aucune évaluation avec grille enregistrée ici.',
+            : hasStudents
+              ? 'Aucune évaluation avec grille enregistrée ici.'
+              : 'Ajoutez d’abord un élève et une évaluation.',
           contextual: activeView === 'viewQuickObs' || observableAssignments.length > 0 && activeView === 'viewGradebook',
-          disabled: false,
+          disabled: !hasStudents || !observableAssignments.length,
           requiresActiveMatter: true,
           action: event => {
             if (!observableAssignments.length) {
@@ -564,7 +652,7 @@
             : 'Ajoutez d’abord un élève.',
           contextual: activeView === 'viewBareme',
           disabled: !hasStudents,
-          requiresActiveMatter: true,
+          requiresActiveMatter: false,
           action: openBaremePrintDialog
         },
         {
@@ -734,6 +822,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-bareme-batch');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['baremeBatchPrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -754,6 +843,11 @@
         label.querySelector('input').addEventListener('change', updateSummaryPrintSummary);
         container.appendChild(label);
       });
+      const currentOnlyButton = document.getElementById('btnSummaryCurrentStudent');
+      if (currentOnlyButton) {
+        currentOnlyButton.disabled = !appState.students.some(student => student.id === appState.selectedStudentId);
+        currentOnlyButton.title = currentOnlyButton.disabled ? 'Aucun élève affiché dans la synthèse' : 'Ne garder que l’élève affiché dans la synthèse';
+      }
       document.getElementById('btnToggleSummaryStudents').textContent = 'Tout désélectionner';
       updateSummaryPrintSummary();
       dialog.showModal();
@@ -789,6 +883,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-student-sheet');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['studentIndividualPrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -871,21 +966,29 @@
       const session = termData.subjectData[subject.id].currentObsSession;
       const meta = assignment.isCurrentDraft
         ? (session && session.studentDrafts[student.id]) || {}
-        : (rec.scoreMeta && rec.scoreMeta[assignment.id] ? rec.scoreMeta[assignment.id] : {});
+        : assignment.isActiveEdit
+          ? (session && session.studentDrafts[student.id]) || (rec.scoreMeta && rec.scoreMeta[assignment.id]) || {}
+          : (rec.scoreMeta && rec.scoreMeta[assignment.id] ? rec.scoreMeta[assignment.id] : {});
       const gradeLevel = meta.gradeLevel && GRADE_LEVEL_LABELS[meta.gradeLevel]
         ? meta.gradeLevel
         : getEffectiveGradeLevel(student, subject);
       const criteria = getObservationCriteria(subject, gradeLevel, assignment);
       const scoredCriteria = getScoredObservableCriteria(criteria);
+      const customRubric = assignment.obsMode === 'custom'
+        ? normalizeCustomRubric(assignment.customRubric || meta.customRubric)
+        : null;
       const obsOptions = {
-        obsMode: assignment.obsMode === 'weighted' ? 'weighted' : 'portrait',
+        obsMode: assignment.obsMode === 'weighted' || assignment.obsMode === 'custom' ? assignment.obsMode : 'portrait',
         criteriaWeights: assignment.criteriaWeights || (meta && meta.criteriaWeights) || null,
+        customRubric,
         subjectId: subject.id,
         cycle: getStudentCycle(gradeLevel) || 2
       };
-      const weights = obsOptions.obsMode === 'weighted'
-        ? getEffectiveCriteriaWeights(subject.id, obsOptions.cycle, scoredCriteria, obsOptions.criteriaWeights)
-        : {};
+      const weights = obsOptions.obsMode === 'custom' && customRubric
+        ? Object.fromEntries(customRubric.criteria.map(criterion => [criterion.id, criterion.weight]))
+        : obsOptions.obsMode === 'weighted'
+          ? getEffectiveCriteriaWeights(subject.id, obsOptions.cycle, scoredCriteria, obsOptions.criteriaWeights)
+          : {};
       const checked = blank ? [] : (Array.isArray(meta.checked) ? meta.checked : []);
       const result = blank
         ? null
@@ -902,7 +1005,11 @@
       const rows = criteria.map(criterion => {
         const title = criterion.title.replace(/^\d+\.\s*/, '');
         const weight = weights[criterion.id] ? ` · Pond. ${weights[criterion.id]} %` : '';
-        const cells = ['A', 'B', 'C', 'D', 'E'].map(family => {
+        const printLevels = customRubric ? customRubric.levels : [
+          { key: 'A', name: 'Niveau A' }, { key: 'B', name: 'Niveau B' }, { key: 'C', name: 'Niveau C' },
+          { key: 'D', name: 'Niveau D' }, { key: 'E', name: 'Niveau E' }
+        ];
+        const cells = printLevels.map(({ key: family }) => {
           const statements = (criterion.cells[family] || []).map((text, index) => {
             const key = `${criterion.id}_${family}_${index}`;
             const selected = !blank && checked.includes(key);
@@ -926,14 +1033,16 @@
             <div class="observable-print-result"><strong>${escapeHtml(resultText)}</strong></div>
           </header>
           <table class="observable-print-table">
-            <thead><tr><th>Critère observé</th><th>Niveau A</th><th>Niveau B</th><th>Niveau C</th><th>Niveau D</th><th>Niveau E</th></tr></thead>
+            <thead><tr><th>Critère observé</th>${(customRubric ? customRubric.levels : [
+              { name: 'Niveau A' }, { name: 'Niveau B' }, { name: 'Niveau C' }, { name: 'Niveau D' }, { name: 'Niveau E' }
+            ]).map(level => `<th>${escapeHtml(level.name)}${customRubric ? ` · ${formatScoreNumber(level.percent)} %` : ''}</th>`).join('')}</tr></thead>
             <tbody>${rows}</tbody>
           </table>
           <div class="observable-print-notes">
             <div class="observable-print-note"><strong>Observations</strong>${escapeHtml(notes.observations || ' ')}</div>
             <div class="observable-print-note"><strong>Commentaires / rétroaction</strong>${escapeHtml(notes.feedback || ' ')}</div>
           </div>
-          <div class="observable-print-foot">Grille adaptée au cycle de l’élève · ${escapeHtml(obsOptions.obsMode === 'weighted' ? 'Pondérations personnalisées conservées' : 'Grille d’appréciation')}</div>
+          <div class="observable-print-foot">${escapeHtml(customRubric ? `${customRubric.title} · Grille personnelle` : obsOptions.obsMode === 'weighted' ? 'Pondérations personnalisées conservées' : 'Grille adaptée au cycle de l’élève · Grille d’appréciation')}</div>
         </article>`;
     }
 
@@ -961,6 +1070,7 @@
       const cleanup = () => {
         document.body.classList.remove('print-observable-batch');
         window.removeEventListener('afterprint', cleanup);
+        removePrintArtifacts(['observablePrintSheet']);
       };
       window.addEventListener('afterprint', cleanup);
       triggerPrintAfterPaint();
@@ -1015,6 +1125,15 @@
         document.getElementById('btnToggleSummaryStudents').textContent = shouldCheck
           ? 'Tout désélectionner'
           : 'Tout sélectionner';
+        updateSummaryPrintSummary();
+      });
+      document.getElementById('btnSummaryCurrentStudent').addEventListener('click', () => {
+        const inputs = [...document.querySelectorAll('#summaryPrintStudents input')];
+        const selectedId = appState.selectedStudentId;
+        inputs.forEach(input => { input.checked = input.value === selectedId; });
+        document.getElementById('btnToggleSummaryStudents').textContent = inputs.some(input => !input.checked)
+          ? 'Tout sélectionner'
+          : 'Tout désélectionner';
         updateSummaryPrintSummary();
       });
       document.getElementById('summaryPrintOptions').addEventListener('change', updateSummaryPrintSummary);

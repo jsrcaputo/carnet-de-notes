@@ -28,11 +28,10 @@
       const list = document.getElementById('groupSubjectList');
       list.innerHTML = getDisciplines().map(d => `
         <label class="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
-          <input type="checkbox" data-discipline="${d.key}" ${d.ids.every(id => chosen.has(id)) ? 'checked' : ''} class="h-3.5 w-3.5">
+          <input type="checkbox" data-discipline="${d.key}" ${d.ids.every(id => chosen.has(id)) ? 'checked' : ''} class="h-3.5 w-3.5" aria-label="${escapeHtml(d.label)}">
           <span>${escapeHtml(d.label)}</span>
         </label>`).join('');
       lvlSel.onchange = () => {
-        if (type === 'new' || returnToWelcomeAfterGroup) return;
         const isP = lvlSel.value === 'P';
         list.querySelectorAll('input[data-discipline]').forEach(cb => {
           const k = cb.getAttribute('data-discipline');
@@ -40,11 +39,23 @@
           cb.checked = isP ? k === 'presco' : k !== 'presco';
         });
       };
+      if (lvlSel.value === 'P') lvlSel.onchange();
       const copyBox = document.getElementById('groupCopyBox');
       const copySel = document.getElementById('groupCopySelect');
       copyBox.classList.toggle('hidden', type !== 'new');
-      copySel.innerHTML = '<option value="">Aucune (liste vide)</option>' + appState.groups.filter(g => !g.placeholder && (returnToWelcomeAfterGroup || !isExampleGroup(g)))
-        .map(g => `<option value="${g.id}">${escapeHtml(g.name)}</option>`).join('');
+      copySel.replaceChildren();
+      const emptyCopyOption = document.createElement('option');
+      emptyCopyOption.value = '';
+      emptyCopyOption.textContent = 'Aucune (liste vide)';
+      copySel.appendChild(emptyCopyOption);
+      appState.groups
+        .filter(g => !g.placeholder && (returnToWelcomeAfterGroup || !isExampleGroup(g)))
+        .forEach(g => {
+          const option = document.createElement('option');
+          option.value = g.id;
+          option.textContent = g.name;
+          copySel.appendChild(option);
+        });
       copySel.value = '';
       const old = document.getElementById('btnGroupDelete');
       if (old) old.remove();
@@ -201,6 +212,7 @@
     function renderStudentsView() {
       renderGroupBar();
       const hasGroup = hasActiveGroup();
+      if (!hasGroup) document.getElementById('viewStudents').classList.remove('hidden');
       const notice = document.getElementById('noGroupNotice');
       notice.classList.toggle('hidden', hasGroup);
       const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId);
@@ -302,6 +314,8 @@
         lastNameInput.value = typeof st.lastName === 'string' ? st.lastName : '';
         [firstNameInput, lastNameInput].forEach((input, index) => {
           input.type = 'text';
+          input.autocomplete = 'off';
+          input.spellcheck = false;
           input.placeholder = index ? 'Nom de famille' : 'Prénom';
           input.setAttribute('aria-label', index ? 'Nom de famille de l’élève' : 'Prénom de l’élève');
           input.className = 'student-name-field px-2.5 py-1.5 rounded-lg border border-slate-300 text-sm font-bold';
@@ -422,8 +436,11 @@
         if (st.gradeLevel !== 'P') {
           const modBtn = document.createElement('button');
           modBtn.type = 'button';
+          modBtn.dataset.studentModId = st.id;
           modBtn.className = `student-option-btn btn-student-mod${hasModifiedBulletin ? ' is-active' : ''}`;
           modBtn.setAttribute('aria-pressed', String(hasModifiedBulletin));
+          modBtn.setAttribute('aria-expanded', String(studentUiState.modStudentId === st.id));
+          if (hasModifiedBulletin) modBtn.setAttribute('aria-controls', `modified-expectations-${st.id}`);
           const modCount = adaptSummary.modifiedItems.length;
           const modText = document.createElement('span');
           modText.textContent = 'Bulletin modifié';
@@ -435,20 +452,20 @@
             modBtn.appendChild(modCnt);
           }
           modBtn.addEventListener('click', () => {
-            const idx = st.adaptations.indexOf('Bulletin modifié');
-            if (idx >= 0) {
-              st.adaptations.splice(idx, 1);
-              st.modifiedExpectations = {};
-              if (studentUiState.modStudentId === st.id) studentUiState.modStudentId = null;
+            if (st.adaptations.includes('Bulletin modifié')) {
+              studentUiState.modStudentId = studentUiState.modStudentId === st.id ? null : st.id;
             } else {
               st.adaptations.push('Bulletin modifié');
               studentUiState.modStudentId = st.id;
+              notifyUpdate(`Bulletin modifié activé pour ${st.name}`);
             }
             if (studentUiState.adaptStudentId === st.id) {
               studentUiState.adaptStudentId = null;
             }
-            notifyUpdate(`Bulletin modifié ${idx >= 0 ? 'retiré' : 'activé'} pour ${st.name}`);
-            renderAll();
+            renderStudentsView();
+            [...document.querySelectorAll('[data-student-mod-id]')]
+              .find(button => button.dataset.studentModId === st.id)
+              ?.focus({ preventScroll: true });
           });
           actionsBar.appendChild(modBtn);
         }
@@ -506,6 +523,7 @@
           st.modifiedExpectations = (st.modifiedExpectations && typeof st.modifiedExpectations === 'object') ? st.modifiedExpectations : {};
           const modSummaryList = getStudentModifiedSummaryList(st);
           const modDetails = document.createElement('details');
+          modDetails.id = `modified-expectations-${st.id}`;
           modDetails.className = 'modified-expectations mt-1 rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs';
           if (studentUiState.modStudentId === st.id) {
             modDetails.open = true;
@@ -525,6 +543,34 @@
             ? `Attentes modifiées : ${modSummaryList.map(item => `${item.label} (${item.levelLabel})`).join(' · ')}`
             : 'Attentes modifiées par matière (aucune sélectionnée)';
           modSummary.appendChild(summaryLeft);
+          const removeMod = document.createElement('button');
+          removeMod.type = 'button';
+          removeMod.className = 'text-rose-700 hover:text-rose-800 underline';
+          removeMod.textContent = 'Retirer le bulletin modifié';
+          removeMod.setAttribute('aria-label', `Retirer le bulletin modifié de ${st.name}`);
+          removeMod.addEventListener('click', event => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (removeMod.dataset.confirm !== 'yes') {
+              removeMod.dataset.confirm = 'yes';
+              removeMod.textContent = 'Confirmer le retrait';
+              setTimeout(() => {
+                if (!removeMod.isConnected) return;
+                delete removeMod.dataset.confirm;
+                removeMod.textContent = 'Retirer le bulletin modifié';
+              }, 4000);
+              return;
+            }
+            st.adaptations = st.adaptations.filter(adaptation => adaptation !== 'Bulletin modifié');
+            st.modifiedExpectations = {};
+            studentUiState.modStudentId = null;
+            notifyUpdate(`Bulletin modifié retiré pour ${st.name}`);
+            renderAll();
+            [...document.querySelectorAll('[data-student-mod-id]')]
+              .find(button => button.dataset.studentModId === st.id)
+              ?.focus({ preventScroll: true });
+          });
+          modSummary.appendChild(removeMod);
           modDetails.appendChild(modSummary);
 
           const modGrid = document.createElement('div');

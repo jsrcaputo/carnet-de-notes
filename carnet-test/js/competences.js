@@ -209,18 +209,17 @@
     }
 
     // Les anciennes sélections par étape restent disponibles dans les sauvegardes.
-    function getCompetencyPicks(student, term) {
-      if (!student.competencyTerms || typeof student.competencyTerms !== 'object') student.competencyTerms = {};
-      const legacy = student.competencySentences;
-      if (legacy && typeof legacy === 'object') {
-        if (Object.keys(legacy).length && !student.competencyTerms[appState.activeTerm]) {
-          student.competencyTerms[appState.activeTerm] = legacy;
-        }
-        delete student.competencySentences;
-      }
+    function getCompetencyPicks(student, term, persistMigration = false) {
       const key = String(term);
-      if (!student.competencyTerms[key]) student.competencyTerms[key] = {};
-      const picks = student.competencyTerms[key];
+      const terms = student.competencyTerms && typeof student.competencyTerms === 'object' && !Array.isArray(student.competencyTerms)
+        ? student.competencyTerms
+        : {};
+      const legacy = student.competencySentences && typeof student.competencySentences === 'object'
+        ? student.competencySentences
+        : null;
+      const stored = OWN.call(terms, key) ? terms[key] : (key === String(appState.activeTerm) ? legacy : null);
+      const sourcePicks = stored && typeof stored === 'object' && !Array.isArray(stored) ? stored : {};
+      const picks = persistMigration ? sourcePicks : JSON.parse(JSON.stringify(sourcePicks));
       let migrated = false;
       let migrationFailed = false;
       getCompetencyTabs().flatMap(tab => tab.scales).forEach(scale => {
@@ -242,14 +241,21 @@
           migrated = true;
         });
       });
-      if (migrated) scheduleAppStateSave();
-      if (migrationFailed) showToast('Certaines phrases choisies n’ont pas pu être mises à jour; vérifiez votre sauvegarde.');
+      if (persistMigration) {
+        if (!student.competencyTerms || typeof student.competencyTerms !== 'object' || Array.isArray(student.competencyTerms)) {
+          student.competencyTerms = {};
+        }
+        student.competencyTerms[key] = picks;
+        if (legacy) delete student.competencySentences;
+        if (migrated) scheduleAppStateSave();
+        if (migrationFailed) showToast('Certaines phrases choisies n’ont pas pu être mises à jour; vérifiez votre sauvegarde.');
+      }
       return picks;
     }
 
-    function getAnnualCompetencyPicks(student) {
-      if (student.competencyTerms && Object.prototype.hasOwnProperty.call(student.competencyTerms, 'annual')) {
-        return getCompetencyPicks(student, 'annual');
+    function getAnnualCompetencyPicks(student, persist = false) {
+      if (student.competencyTerms && OWN.call(student.competencyTerms, 'annual')) {
+        return getCompetencyPicks(student, 'annual', persist);
       }
       const annual = {};
       const comments = {};
@@ -272,17 +278,21 @@
           else delete overrides[scaleId];
         });
       });
-      if (!student.competencyTerms || typeof student.competencyTerms !== 'object') student.competencyTerms = {};
-      student.competencyTerms.annual = annual;
-      if (Object.keys(comments).length) {
-        if (!student.competencyComments) student.competencyComments = {};
-        student.competencyComments.annual = comments;
+      if (persist) {
+        if (!student.competencyTerms || typeof student.competencyTerms !== 'object' || Array.isArray(student.competencyTerms)) {
+          student.competencyTerms = {};
+        }
+        student.competencyTerms.annual = annual;
+        if (Object.keys(comments).length) {
+          if (!student.competencyComments) student.competencyComments = {};
+          student.competencyComments.annual = comments;
+        }
+        if (Object.keys(overrides).length) {
+          if (!student.competencyMeq) student.competencyMeq = {};
+          student.competencyMeq.annual = overrides;
+        }
+        scheduleAppStateSave();
       }
-      if (Object.keys(overrides).length) {
-        if (!student.competencyMeq) student.competencyMeq = {};
-        student.competencyMeq.annual = overrides;
-      }
-      scheduleAppStateSave();
       return annual;
     }
 

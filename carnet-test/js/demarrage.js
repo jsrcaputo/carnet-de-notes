@@ -1,3 +1,18 @@
+    (function initializeThemeHint() {
+      try {
+        const raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
+        const prefs = raw ? JSON.parse(raw) : null;
+        const root = document.documentElement;
+        root.setAttribute('data-palette', 'ocean');
+        root.classList.remove('theme-dark');
+        if (prefs && ['xs', 'sm', 'lg', 'xl'].indexOf(prefs.textSize) !== -1) {
+          root.classList.add(`ts-${prefs.textSize}`);
+        }
+      } catch (error) {
+        console.warn('Impossible de lire les préférences initiales.', error);
+      }
+    }());
+
     function toggleFullscreenOrPopout() {
       const docEl = document.documentElement;
       const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
@@ -22,9 +37,13 @@
         pageCopy.querySelector('head').prepend(base);
         let htmlSource = '<!DOCTYPE html>\n' + pageCopy.outerHTML;
         if (window.ECHELLES_PRIMAIRE) {
-          // Le nouvel onglet (blob) ne peut pas charger echelles-niveaux.js : on en embarque le contenu.
-          const inlineData = JSON.stringify(window.ECHELLES_PRIMAIRE).replace(/<\//g, '<\\/');
-          htmlSource = htmlSource.replace(/<script[^>]*src="echelles-niveaux\.js"[^>]*><\/script>/, () => `<script>window.ECHELLES_PRIMAIRE = ${inlineData};<\/script>`);
+          const data = `window.ECHELLES_PRIMAIRE = ${JSON.stringify(window.ECHELLES_PRIMAIRE)};`;
+          const dataUrl = URL.createObjectURL(new Blob([data], { type: 'application/javascript' }));
+          htmlSource = htmlSource.replace(
+            /<script[^>]*src="echelles-niveaux\.js"[^>]*><\/script>/,
+            () => `<script src="${dataUrl}"></script>`
+          );
+          window.setTimeout(() => URL.revokeObjectURL(dataUrl), 60000);
         }
         const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
         const blobUrl = URL.createObjectURL(blob);
@@ -482,8 +501,13 @@
       document.getElementById('btnFullscreen').addEventListener('click', toggleFullscreenOrPopout);
       document.addEventListener('fullscreenchange', () => {
         const lbl = document.getElementById('fullscreenBtnLabel');
+        const button = document.getElementById('btnFullscreen');
         if (lbl) {
           lbl.textContent = document.fullscreenElement ? 'Quitter plein écran' : 'Plein écran';
+        }
+        if (button) {
+          button.setAttribute('aria-label', document.fullscreenElement ? 'Quitter le plein écran' : 'Passer en plein écran');
+          button.title = document.fullscreenElement ? 'Quitter le plein écran' : 'Basculer en plein écran';
         }
       });
 
@@ -593,7 +617,14 @@
       const studentSearchPopover = document.getElementById('studentSearchPopover');
       const headerStudentSearch = document.getElementById('headerStudentSearch');
       const studentSearchMessage = document.getElementById('studentSearchMessage');
-      headerStudentSearch.addEventListener('input', () => { studentSearchMessage.textContent = ''; });
+      headerStudentSearch.addEventListener('input', () => {
+        studentSearchMessage.textContent = '';
+        if (!headerStudentSearch.value.trim() && gbFilter) {
+          gbFilter = '';
+          gbLevelFilter = 'ALL';
+          renderGradebookView();
+        }
+      });
       studentSearchPopover.addEventListener('submit', event => {
         event.preventDefault();
         const query = headerStudentSearch.value.trim();
@@ -613,6 +644,7 @@
         headerStudentSearch.value = '';
         studentSearchMessage.textContent = '';
         renderGradebookView();
+        headerStudentSearch.focus({ preventScroll: true });
       });
       document.getElementById('btnOpenStudentsFromEmpty').addEventListener('click', () => {
         if (!hasActiveGroup()) {
@@ -668,17 +700,6 @@
         document.getElementById('btnWeightMode').setAttribute('aria-expanded', 'false');
         document.getElementById('weightControls').classList.add('hidden');
         renderGradebookView();
-        document.querySelectorAll('#gradebookHeaderRow [data-weight-input]').forEach(input => {
-          const asg = getActiveTermData().subjectData[appState.activeSubjectId].assignments.find(item => item.id === input.getAttribute('data-weight-input'));
-          if (!asg) return;
-          const level = isMultiLevelGroup() ? ensureValidGbLevelFilter() : 'ALL';
-          const value = document.createElement('span');
-          value.setAttribute('data-weight-asg', asg.id);
-          value.className = 'text-[11px] font-bold';
-          value.title = 'Pondération (%)';
-          value.textContent = String(getAssignmentWeightForLevel(asg, level));
-          input.replaceWith(value);
-        });
       };
       document.getElementById('btnWeightMode').addEventListener('click', () => {
         weightMode = !weightMode;
@@ -690,7 +711,7 @@
         }
       });
       document.addEventListener('pointerdown', event => {
-        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookTopScroll, #gradebookScrollContainer, #weightGuide')) return;
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookTopScroll, #gradebookScrollContainer, .gb-scroll-arrow, #weightGuide')) return;
         setTimeout(() => {
           if (weightMode) closeWeightMode();
         }, 0);
@@ -842,7 +863,7 @@
         const date = document.getElementById('inputAssignmentDate').value;
         const outOfRaw = Number(String(document.getElementById('inputAssignmentOutOf').value).replace(',', '.'));
         if (!Number.isFinite(outOfRaw) || outOfRaw <= 0) {
-          showToast('La pondération (note sur…) doit être un nombre positif, par exemple 40.');
+          showToast('Le dénominateur (note sur…) doit être un nombre positif, par exemple 40.');
           document.getElementById('inputAssignmentOutOf').focus();
           return;
         }
@@ -938,6 +959,14 @@
 
       // Commit Visual Trace Session to Gradebook (Top & Bottom buttons)
       document.getElementById('btnCommitObsSessionToGradebook').addEventListener('click', commitObservationSessionToGradebook);
+      document.getElementById('btnCloseCustomRubric').addEventListener('click', closeCustomRubricEditor);
+      document.getElementById('btnCancelCustomRubric').addEventListener('click', closeCustomRubricEditor);
+      document.getElementById('btnApplyCustomRubric').addEventListener('click', applyCustomRubricEditor);
+      document.getElementById('btnDeleteCustomRubric').addEventListener('click', deleteCustomRubricEditorItem);
+      document.getElementById('customRubricDialog').addEventListener('cancel', event => {
+        event.preventDefault();
+        closeCustomRubricEditor();
+      });
 
       setupPrintCenter();
       setupLegacyModalAccessibility();
@@ -957,6 +986,26 @@
       }, true);
 
       // Navigation clavier façon tableur dans la grille de notes
+      document.getElementById('gradebookBody').addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' || !e.shiftKey || !(e.target instanceof HTMLInputElement)) return;
+        const td = e.target.closest('td');
+        const row = td && td.parentElement;
+        if (!row) return;
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        const column = Array.prototype.indexOf.call(row.children, td);
+        let previous = row.previousElementSibling;
+        while (previous) {
+          const input = previous.children[column] && previous.children[column].querySelector('input');
+          if (input) {
+            input.focus();
+            input.select();
+            return;
+          }
+          previous = previous.previousElementSibling;
+        }
+      }, true);
+
       document.getElementById('gradebookBody').addEventListener('keydown', (e) => {
         const inp = e.target;
         if (e.defaultPrevented || !(inp instanceof HTMLInputElement) || e.altKey || e.ctrlKey || e.metaKey) return;
@@ -1097,7 +1146,12 @@
       });
 
       // Excel Export
-      document.getElementById('btnExportExcel').addEventListener('click', async () => {
+      const exportExcelDialog = document.getElementById('exportExcelDialog');
+      const closeExportExcel = () => exportExcelDialog.close();
+      document.getElementById('btnExportExcel').addEventListener('click', () => exportExcelDialog.showModal());
+      document.getElementById('btnCloseExportExcel').addEventListener('click', closeExportExcel);
+      document.getElementById('btnExportExcelNormal').addEventListener('click', async () => {
+        closeExportExcel();
         try {
           await exportFormattedExcelWorkbook();
         } catch (error) {
@@ -1105,8 +1159,59 @@
           showToast('Impossible de créer le fichier Excel. Réessayez ou utilisez la sauvegarde JSON.');
         }
       });
+      document.getElementById('btnExportExcelProtected').addEventListener('click', () => {
+        closeExportExcel();
+        exportEncryptedExcel();
+      });
+      exportExcelDialog.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeExportExcel();
+        }
+      });
 
-      document.getElementById('btnExportJSON').addEventListener('click', saveJsonFileSmart);
+      const saveBackupDialog = document.getElementById('saveBackupDialog');
+      const closeSaveBackup = () => saveBackupDialog.close();
+      document.getElementById('btnExportJSON').addEventListener('click', () => {
+        const normalTitle = document.querySelector('#btnSaveJSONNormal strong');
+        const normalDescription = document.querySelector('#btnSaveJSONNormal span');
+        const encryptedTitle = document.querySelector('#btnSaveJSONEncrypted strong');
+        const encryptedDescription = document.querySelector('#btnSaveJSONEncrypted span');
+        if (activeBackupEncryption) {
+          normalTitle.textContent = 'Copie normale non chiffrée';
+          normalDescription.textContent = 'Crée une copie JSON lisible sans mot de passe. Le fichier chiffré lié reste inchangé.';
+        } else if (activeFileHandle) {
+          normalTitle.textContent = 'Mettre à jour le fichier lié';
+          normalDescription.textContent = 'Enregistre immédiatement les dernières modifications dans le fichier JSON déjà lié.';
+        } else {
+          normalTitle.textContent = 'Sauvegarde normale';
+          normalDescription.textContent = 'Fichier JSON permettant de rouvrir et de mettre à jour le carnet. Son contenu est lisible si le fichier est ouvert directement.';
+        }
+        if (activeBackupEncryption && activeFileHandle) {
+          encryptedTitle.textContent = 'Mettre à jour le fichier chiffré lié';
+          encryptedDescription.textContent = 'Enregistre immédiatement dans le fichier déjà protégé, avec le même mot de passe.';
+        } else {
+          encryptedTitle.textContent = 'Sauvegarde chiffrée';
+          encryptedDescription.textContent = 'Copie JSON protégée par mot de passe. Le fichier pourra rester lié si le navigateur autorise l’écriture directe.';
+        }
+        saveBackupDialog.showModal();
+      });
+      document.getElementById('btnCloseSaveBackup').addEventListener('click', closeSaveBackup);
+      document.getElementById('btnSaveJSONNormal').addEventListener('click', () => {
+        closeSaveBackup();
+        if (activeBackupEncryption) downloadBackup(null);
+        else saveJsonFileSmart();
+      });
+      document.getElementById('btnSaveJSONEncrypted').addEventListener('click', () => {
+        closeSaveBackup();
+        saveEncryptedJsonFileSmart();
+      });
+      saveBackupDialog.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          closeSaveBackup();
+        }
+      });
       document.getElementById('btnOpenJSONDirect').addEventListener('click', openJsonFileSmart);
       const backupLoadDialog = document.getElementById('backupLoadDialog');
       const cancelBackupLoad = () => {
@@ -1130,8 +1235,6 @@
         backupLoadDialog.close();
         chooseBackupFile();
       });
-      document.getElementById('btnDownloadJSON').addEventListener('click', () => downloadBackup());
-      document.getElementById('btnDownloadEncryptedJSON').addEventListener('click', downloadEncryptedBackup);
       document.getElementById('btnDownloadLegacyBrowser').addEventListener('click', () => {
         try {
           const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
@@ -1154,7 +1257,6 @@
           showToast('Impossible d’effacer l’ancienne copie du navigateur.');
         }
       });
-      document.getElementById('btnExportEncryptedExcel').addEventListener('click', exportEncryptedExcel);
       document.getElementById('btnOpenEncryptedExcel').addEventListener('click', () => document.getElementById('inputEncryptedExcel').click());
       document.getElementById('inputEncryptedExcel').addEventListener('change', async event => {
         const file = event.target.files && event.target.files[0];
@@ -1292,6 +1394,15 @@
           backupHelpDialog.close();
         }
       });
+      const privacyPolicyDialog = document.getElementById('privacyPolicyDialog');
+      document.getElementById('btnPrivacyPolicy').addEventListener('click', () => privacyPolicyDialog.showModal());
+      document.getElementById('btnClosePrivacyPolicy').addEventListener('click', () => privacyPolicyDialog.close());
+      privacyPolicyDialog.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          event.preventDefault();
+          privacyPolicyDialog.close();
+        }
+      });
       const referencesDialog = document.getElementById('referencesDialog');
       document.getElementById('btnReferences').addEventListener('click', () => {
         closeSettingsPanel();
@@ -1337,5 +1448,16 @@
           event.preventDefault();
           event.returnValue = '';
         }
+      });
+      document.getElementById('btnCloseCarnet').addEventListener('click', async () => {
+        closeSettingsPanel();
+        requestObservationDraftExit(async () => {
+          if (activeFileWrite) await activeFileWrite;
+          const hasChanges = getBackupSnapshot() !== lastSavedFileSnapshot;
+          if (hasChanges && !window.confirm('Ce carnet contient des modifications non sauvegardées. Fermer quand même ?')) return;
+          if (!window.confirm('Fermer ce carnet sur ce poste partagé ? Les données affichées dans cet onglet seront effacées.')) return;
+          resetCarnetToBlank();
+          showWelcome();
+        });
       });
     });

@@ -1,8 +1,6 @@
 # Carnet de notes
 
 - [index.html](index.html) : version publiée ; elle utilise le dossier [carnet-test](carnet-test/).
-- [index-test.html](index-test.html) : page de test utilisant les mêmes ressources.
-- [index-Backup.html](index-Backup.html) : copie de la page avant les dernières modifications. Elle utilise les mêmes fichiers CSS et JavaScript que la page principale et ne constitue donc pas une sauvegarde autonome de l'application.
 - [echelles-niveaux.js](echelles-niveaux.js) : échelles du primaire.
 
 Pour utiliser le carnet, ouvrir `index.html` avec son dossier `carnet-test` et `echelles-niveaux.js` à leurs emplacements respectifs. Le site peut aussi être servi en statique, notamment sur GitHub Pages ; aucun serveur backend n'est requis.

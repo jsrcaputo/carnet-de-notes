@@ -255,9 +255,10 @@ const PRIMARY_COMMENT_BANKS = {
 };
 
 function getCommentBankCategories(student, subject) {
-  const cycle = getStudentCycle(student && student.gradeLevel);
   const subjectConfig = typeof subject === 'string'
     ? ALL_SUBJECTS_CONFIG.find(item => item.id === subject) || { id: subject } : subject;
+  const gradeLevel = getEffectiveGradeLevel(student, subjectConfig);
+  const cycle = getStudentCycle(gradeLevel || (student && student.gradeLevel));
   if (cycle === 'P') {
     return PRESCHOOL_COMMENT_BANKS[subjectConfig && subjectConfig.id] || PRESCHOOL_GENERIC_COMMENT_BANK;
   }

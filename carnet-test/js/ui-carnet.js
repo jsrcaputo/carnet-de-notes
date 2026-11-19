@@ -3,6 +3,7 @@
     }
 
     function renderAll() {
+      renderGroupBar();
       renderTermSwitcher();
       renderSubjectTabs();
       renderNavTabs();
@@ -100,13 +101,15 @@
       const activeGroup = !neutralBar && activeSub ? activeSub.group : null;
       const seenGroups = new Set();
       SUBJECTS_CONFIG.forEach(sub => {
-        if (sub.group) {
+        if (sub.group && sub.group !== 'presco') {
           if (seenGroups.has(sub.group)) return;
           seenGroups.add(sub.group);
         }
         const isActive = expandedSubjectGroup
           ? sub.group === expandedSubjectGroup
-          : !neutralBar && (sub.group ? sub.group === activeGroup : sub.id === appState.activeSubjectId);
+          : !neutralBar && (sub.group && sub.group !== 'presco'
+            ? sub.group === activeGroup
+            : sub.id === appState.activeSubjectId);
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.dataset.subjectId = sub.id;
@@ -116,17 +119,21 @@
           ? 'px-2 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold bg-indigo-600 text-white shadow-xs transition flex items-center justify-start gap-1.5 cursor-pointer truncate'
           : 'px-2 py-1.5 rounded-lg text-[11px] sm:text-xs font-medium bg-slate-700/80 hover:bg-slate-700 text-slate-200 transition flex items-center justify-start gap-1.5 cursor-pointer truncate';
         btn.setAttribute('aria-pressed', String(isActive));
-        if (sub.group) {
+        if (sub.group && sub.group !== 'presco') {
           btn.setAttribute('aria-expanded', String(expandedSubjectGroup === sub.group));
           btn.setAttribute('aria-controls', 'subjectSubTabsContainer');
         }
-        btn.title = sub.group ? sub.groupLabel : sub.shortName;
+        btn.title = sub.group && sub.group !== 'presco' ? sub.groupLabel : sub.shortName;
         const icon = subjectIcons[grpKey] || '';
-        const label = sub.id === 'ccq_global' ? 'Culture et citoyenneté' : (sub.tabLabel || (sub.group ? sub.groupLabel : sub.shortName));
+        const label = sub.id === 'ccq_global'
+          ? 'Culture et citoyenneté'
+          : sub.prescoOnly
+            ? sub.partLabel
+            : (sub.tabLabel || (sub.group ? sub.groupLabel : sub.shortName));
         if (sub.id === 'ccq_global') btn.setAttribute('aria-label', sub.shortName);
         btn.innerHTML = `<svg class="subject-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icon}</svg><span class="truncate">${escapeHtml(label)}</span>`;
         btn.addEventListener('click', () => {
-          if (sub.group) {
+          if (sub.group && sub.group !== 'presco') {
             expandedSubjectGroup = expandedSubjectGroup === sub.group ? null : sub.group;
             renderSubjectTabs();
             if (expandedSubjectGroup) {
@@ -326,7 +333,7 @@
             ${canEditWeight ? `<button type="button" data-weight-step="-1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Diminuer la pondération de ${escapeHtml(asg.title)}" title="Diminuer de 1 %">▼</button><button type="button" data-weight-step="1" data-weight-id="${escapeHtml(asg.id)}" aria-label="Augmenter la pondération de ${escapeHtml(asg.title)}" title="Augmenter de 1 %">▲</button>` : ''}
           </span>` : '';
         const targetBadgeHtml = isMulti
-          ? `<button type="button" data-cycle-target-asg="${asg.id}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition shadow-2xs cursor-pointer ${targets.length ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 hover:bg-indigo-500/30' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}" title="Niveau(x) visé(s) — Cliquer pour choisir avec des cases à cocher">${escapeHtml(formatAssignmentTargetBadge(asg))} ▾</button>`
+          ? `<button type="button" data-cycle-target-asg="${escapeHtml(asg.id)}" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border transition shadow-2xs cursor-pointer ${targets.length ? 'bg-indigo-500/20 border-indigo-400/40 text-indigo-200 hover:bg-indigo-500/30' : 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700'}" title="Niveau(x) visé(s) — Cliquer pour choisir avec des cases à cocher">${escapeHtml(formatAssignmentTargetBadge(asg))} ▾</button>`
           : '';
         let multiWeightSubHtml = '';
         if (isMulti && activeLvlFilter === 'ALL') {
@@ -340,21 +347,21 @@
         }
         th.innerHTML = `
           <div class="flex items-center justify-center gap-1 px-1">
-            <button type="button" data-title-view="${asg.id}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-            <textarea rows="1" data-title-asg="${asg.id}" placeholder="Nom du travail..." class="${asg.title && asg.title.trim() ? 'hidden ' : ''}w-36 resize-none overflow-hidden leading-tight bg-white text-slate-800 text-center text-[11px] font-bold px-1.5 py-0.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400" title="Cliquez pour renommer ce travail ou cette trace">${escapeHtml(asg.title)}</textarea>
-            <button type="button" data-del-asg="${asg.id}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" aria-label="Supprimer l’évaluation ${escapeHtml(asg.title)}" title="Supprimer cette colonne">✕</button>
+            <button type="button" data-title-view="${escapeHtml(asg.id)}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
+            <textarea rows="1" data-title-asg="${escapeHtml(asg.id)}" placeholder="Nom du travail..." class="${asg.title && asg.title.trim() ? 'hidden ' : ''}w-36 resize-none overflow-hidden leading-tight bg-white text-slate-800 text-center text-[11px] font-bold px-1.5 py-0.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400" title="Cliquez pour renommer ce travail ou cette trace">${escapeHtml(asg.title)}</textarea>
+            <button type="button" data-del-asg="${escapeHtml(asg.id)}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" aria-label="Supprimer l’évaluation ${escapeHtml(asg.title)}" title="Supprimer cette colonne">✕</button>
           </div>
           <div class="mt-1 flex items-center justify-center gap-1 flex-wrap">
             ${targetBadgeHtml}
             ${!asg.isObservation && getAssignmentOutOf(asg) !== 100 ? `<span class="text-[10px] font-bold text-slate-500" title="Note maximale de cette évaluation">/${formatScoreNumber(getAssignmentOutOf(asg))}</span>` : ''}
             ${asg.linkId ? `<span class="text-[10px] font-bold text-indigo-500" title="${escapeHtml('Évaluation partagée avec : ' + (getLinkedAssignments(asg).map(l => l.sub.partLabel || l.sub.shortName).join(', ') || '—'))}">🔗 aussi en ${escapeHtml(getLinkedAssignments(asg).map(l => (l.sub.partLabel || l.sub.shortName).match(/C\d/) ? (l.sub.partLabel || l.sub.shortName).match(/C\d/)[0] : (l.sub.partLabel || l.sub.shortName)).join(', '))}</span>` : ''}
-            <div data-weight-box="${asg.id}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${canEditWeight && !weightMode ? 'cursor-pointer ' : ''}${weightBoxClasses}" title="${canEditWeight && !weightMode ? 'Cliquer pour modifier la pondération (%)' : ''}">
-              ${weightMode && canEditWeight ? `<input type="text" inputmode="numeric" pattern="[0-9]*" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${Math.round(Number(displayedWeight) || 0)}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir un entier entre 0 et 100 %">` : `<span data-weight-asg="${asg.id}" class="text-[11px] font-bold" title="Pondération (%) — cliquer pour modifier">${Math.round(Number(displayedWeight) || 0)}</span>`}
+            <div data-weight-box="${escapeHtml(asg.id)}" class="inline-flex items-center justify-center rounded-md border px-1.5 py-0.5 transition ${canEditWeight && !weightMode ? 'cursor-pointer ' : ''}${weightBoxClasses}" title="${canEditWeight && !weightMode ? 'Cliquer pour modifier la pondération (%)' : ''}">
+              ${weightMode && canEditWeight ? `<input type="text" inputmode="numeric" pattern="[0-9]*" data-weight-input="${escapeHtml(asg.id)}" class="weight-input" value="${Math.round(Number(displayedWeight) || 0)}" aria-label="Pondération en pourcentage de ${escapeHtml(asg.title)}" title="Saisir un entier entre 0 et 100 %">` : `<span data-weight-asg="${escapeHtml(asg.id)}" class="text-[11px] font-bold" title="Pondération (%) — cliquer pour modifier">${Math.round(Number(displayedWeight) || 0)}</span>`}
               <span class="text-[10px] font-bold ml-0.5">%</span>
             </div>
             ${weightTools}
             ${asg.isObservation
-              ? `<button type="button" data-edit-trace-hdr="${asg.id}" class="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-[10px] font-bold cursor-pointer no-print" title="Ouvrir la grille de cette trace observable">Grille</button>`
+              ? `<button type="button" data-edit-trace-hdr="${escapeHtml(asg.id)}" class="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-[10px] font-bold cursor-pointer no-print" title="Ouvrir la grille de cette trace observable">Grille</button>`
               : ''
             }
           </div>
@@ -428,17 +435,55 @@
           const asgId = btn.getAttribute('data-del-asg');
           const delTarget = subData.assignments.find(a => a.id === asgId);
           const linked = getLinkedAssignments(delTarget);
+          const discardAssignmentData = (targetData, assignment) => {
+            Object.values(targetData.studentRecords || {}).forEach(rec => {
+              if (!isRecord(rec)) return;
+              if (isRecord(rec.scores)) delete rec.scores[assignment.id];
+              if (isRecord(rec.scoreMeta)) delete rec.scoreMeta[assignment.id];
+            });
+            if (targetData.currentObsSession && targetData.currentObsSession.editingAssignmentId === assignment.id) {
+              targetData.currentObsSession = createBlankObsSession(appState.students);
+            }
+            const termData = getActiveTermData();
+            if (Array.isArray(termData.observations)) {
+              termData.observations = termData.observations.filter(observation =>
+                !isRecord(observation) || observation.asgId !== assignment.id
+              );
+            }
+          };
+          const clearLinkedCopyMeta = (targetData, assignment) => {
+            Object.values(targetData.studentRecords || {}).forEach(rec => {
+              if (!isRecord(rec) || !isRecord(rec.scoreMeta)) return;
+              const meta = rec.scoreMeta[assignment.id];
+              if (!isRecord(meta)) return;
+              delete meta.linkedCopy;
+              if (!Object.keys(meta).length) delete rec.scoreMeta[assignment.id];
+            });
+          };
           const doDelete = everywhere => {
             if (everywhere) {
               linked.forEach(l => {
+                discardAssignmentData(l.subData, l.asg);
                 l.subData.assignments = l.subData.assignments.filter(a => a !== l.asg);
                 if (l.subData.equalWeights) recalculateEqualWeights(l.subData);
               });
             }
+            discardAssignmentData(subData, delTarget);
             subData.assignments = subData.assignments.filter(a => a.id !== asgId);
             if (subData.equalWeights) recalculateEqualWeights(subData);
-            if (subData.currentObsSession && subData.currentObsSession.editingAssignmentId === asgId) {
-              subData.currentObsSession = createBlankObsSession(appState.students);
+            if (!everywhere && linked.length) {
+              const remainingOrigin = linked.find(l => l.asg.linkOrigin !== false);
+              if (!remainingOrigin && linked.length > 1) {
+                linked[0].asg.linkOrigin = true;
+              }
+              if (linked.length === 1) {
+                delete linked[0].asg.linkId;
+                delete linked[0].asg.linkOrigin;
+                clearLinkedCopyMeta(linked[0].subData, linked[0].asg);
+              } else {
+                const origin = remainingOrigin || linked[0];
+                clearLinkedCopyMeta(origin.subData, origin.asg);
+              }
             }
             notifyUpdate('Colonne supprimée');
             renderAll();
@@ -780,6 +825,7 @@
             const traceObsOptions = {
               obsMode: (meta && meta.obsMode) || asg.obsMode || 'portrait',
               criteriaWeights: (meta && meta.criteriaWeights) || asg.criteriaWeights || null,
+              customRubric: (meta && meta.customRubric) || asg.customRubric || null,
               subjectId: sub.id,
               cycle: getStudentCycle(traceEffLvl)
             };
@@ -790,7 +836,7 @@
               (upperRaw === '-' && !(traceObsRes && (traceObsRes.hasEvidence || hasObservationFeedback(meta)))));
             const hasFormativeOnlyTrace = !hasScore && !hasPartialTrace && !hasNotEvaluatedTrace && !isStatusNR && !isStatusJUST && !isStatusREP &&
               traceObsRes && (traceObsRes.hasEvidence || hasObservationFeedback(meta));
-            const codeStr = (meta && meta.code) ? meta.code : (hasScore ? pctToClosestGradeCode(scoreNumber) : '-');
+            const codeStr = (meta && meta.code) ? String(meta.code) : (hasScore ? pctToClosestGradeCode(scoreNumber) : '-');
             const badgeStyle = isStatusNR
               ? 'bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100'
               : isStatusJUST
@@ -833,7 +879,7 @@
                   : hasNotEvaluatedTrace
                     ? `<span>N/A (coté)</span>`
                     : hasScore
-                      ? `<span>${codeStr} (${rawScore}%)${meta && meta.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement par l’enseignant">*</span>' : ''}</span>`
+                      ? `<span>${escapeHtml(codeStr)} (${escapeHtml(rawScore)}%)${meta && meta.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement par l’enseignant">*</span>' : ''}</span>`
                       : hasPartialTrace
                         ? `<span>En cours (${traceObsRes.total}/${scoredTraceCriteriaCount})</span>`
                         : hasFormativeOnlyTrace

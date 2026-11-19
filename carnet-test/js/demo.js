@@ -474,7 +474,21 @@
               const workComment = shouldCommentOnWork && feedbackPool
                 ? feedbackPool[(stIdx + planIdx * 2 + subjectIds.indexOf(subId) + Number(termKey)) % feedbackPool.length]
                 : '';
-              const flags = (st.adaptations || []).filter(flag => legacySeed || previousSeed || VALID_CELL_FLAG_CODES.has(flag));
+              const adaptationFlagCodes = {
+                'Temps supplémentaire': 'T+',
+                'Lecture des consignes': 'AIDE',
+                'Consignes fractionnées': 'AIDE',
+                'Correcteur': 'OUTIL',
+                'Prédicteur de mots': 'OUTIL',
+                'Synthèse vocale': 'OUTIL',
+                'Pauses planifiées': 'AIDE',
+                'PIA': 'OUTIL'
+              };
+              const flags = (st.adaptations || []).map(flag =>
+                legacySeed || previousSeed || VALID_CELL_FLAG_CODES.has(flag)
+                  ? flag
+                  : adaptationFlagCodes[flag]
+              ).filter(flag => VALID_CELL_FLAG_CODES.has(flag));
               if (!legacySeed && !previousSeed && isSubjectModifiedForStudent(st, subId)) flags.push('MOD');
 
               if (!planItem.isObs) {
@@ -499,10 +513,10 @@
                   overrideCode: null,
                   checked: getScoredObservableCriteria(criteria).map(criterion => `${criterion.id}_${family}_0`),
                   tags: studentPct >= 85
-                    ? ['Travail autonome dès l’explication', 'Stratégie efficace']
+                    ? ['Amorce la tâche sans relance', 'Réutilise une stratégie enseignée']
                     : studentPct >= 75
-                      ? ['Persévère devant un défi', 'Collabore positivement avec ses pairs']
-                      : ['Présent à la récupération'],
+                      ? ['Persévère lorsqu’un obstacle se présente', 'Collabore avec ses pairs']
+                      : ['A besoin d’une relance pour amorcer la tâche'],
                   flags,
                   comment: workComment || (type !== 'multi' || legacySeed
                     ? studentPct >= 85 ? 'Démontre une autonomie constante.' : 'Progression observée lors des ateliers.'
@@ -579,7 +593,9 @@
           firstName: parts[0],
           lastName: parts.slice(1).join(' '),
           gradeLevel: '2',
-          adaptations: idx === 3 ? ['T+'] : idx === 7 ? [previousSeed ? 'ADAPT' : 'AIDE+'] : idx === 13 ? ['OUTIL'] : [],
+          adaptations: idx === 3 ? (previousSeed ? ['T+'] : ['Temps supplémentaire'])
+            : idx === 7 ? (previousSeed ? ['ADAPT'] : ['Consignes fractionnées'])
+              : idx === 13 ? (previousSeed ? ['OUTIL'] : ['Correcteur']) : [],
           customAdapt: '',
           modifiedExpectations: {},
           competencyTerms: {},
@@ -622,7 +638,8 @@
           firstName: parts[0],
           lastName: parts.slice(1).join(' '),
           gradeLevel: def.grade,
-          adaptations: idx === 8 ? (previousSeed ? ['ADAPT', 'T+'] : ['AIDE1', 'T+', 'Bulletin modifié']) : idx === 12 ? ['OUTIL'] : [],
+          adaptations: idx === 8 ? (previousSeed ? ['ADAPT', 'T+'] : ['Lecture des consignes', 'Temps supplémentaire', 'Bulletin modifié'])
+            : idx === 12 ? (previousSeed ? ['OUTIL'] : ['Correcteur']) : [],
           customAdapt: '',
           modifiedExpectations: def.modified || {},
           competencyTerms: {},
@@ -801,10 +818,10 @@
               overrideCode: null,
               checked,
               tags: resultStage <= 1
-                ? ['Travail autonome dès l’explication', 'Stratégie efficace']
+                ? ['Accomplit les routines de façon autonome', 'Explore et pose des questions avec curiosité']
                 : resultStage === 2
-                  ? ['Persévère devant un défi', 'Collabore positivement avec ses pairs']
-                  : ['Présent à la récupération'],
+                  ? ['Partage le matériel et attend son tour', 'Classe, compare et dénombre des objets']
+                  : ['A besoin d’un accompagnement pour garder son calme devant une difficulté'],
               flags: [],
               comment: leaveWorkComment ? `Pendant le ${context.activity}, ${context.notes[resultStage]}` : ''
             };

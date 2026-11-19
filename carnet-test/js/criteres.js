@@ -53,6 +53,10 @@
     }
 
     function getObservationCriteria(subject, gradeLevel, context) {
+      if (context && context.obsMode === 'custom') {
+        const customRubric = normalizeCustomRubric(context.customRubric);
+        if (customRubric) return customRubric.criteria;
+      }
       const cycle = getStudentCycle(gradeLevel);
       if (subject.id === 'art_plast_c1c2' && context && !(context.rubricVersion >= 2) &&
           cycle && cycle !== 'P') {

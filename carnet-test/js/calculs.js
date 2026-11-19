@@ -74,8 +74,7 @@
 
       let chosenCode = FAMILY_DEFAULT_CODE[chosenFamily];
       if (chosenFamily === 'A') {
-        if (avgPct >= 97) chosenCode = 'A+';
-        else if (avgPct < 92.5) chosenCode = 'A-';
+        if (avgPct < 92.5) chosenCode = 'A-';
         else chosenCode = 'A';
       } else if (chosenFamily === 'B') {
         if (avgPct >= 82.5) chosenCode = 'B+';
@@ -107,7 +106,7 @@
       };
     }
 
-    function computeWeightedFromChecked(checkedKeys, overrideCode, scoredCriteria, weightsMap) {
+    function computeWeightedFromChecked(checkedKeys, overrideCode, scoredCriteria, weightsMap, levelPercentages = null) {
       const counts = { A: 0, B: 0, C: 0, D: 0, E: 0 };
       const pickedByCriterion = {};
       let total = 0;
@@ -123,7 +122,7 @@
       });
 
       const requiredCriteriaCount = scoredCriteria ? scoredCriteria.length : 0;
-      const familyWeights = WEIGHTED_RUBRIC_FAMILY_PERCENTAGES;
+      const familyWeights = levelPercentages || WEIGHTED_RUBRIC_FAMILY_PERCENTAGES;
       const earnedPointsMap = {};
       let weightedPctSum = 0;
       let evaluatedWeightSum = 0;
@@ -234,21 +233,29 @@
         return scoredIds.has(criterionId) && ['A', 'B', 'C', 'D', 'E'].includes(family);
       });
 
+      const customRubric = obsOptions && obsOptions.obsMode === 'custom'
+        ? normalizeCustomRubric(obsOptions.customRubric)
+        : null;
       const isWeighted = Boolean(
         obsOptions &&
-        obsOptions.obsMode === 'weighted' &&
-        typeof getEffectiveCriteriaWeights === 'function'
+        (obsOptions.obsMode === 'weighted' || obsOptions.obsMode === 'custom') &&
+        (obsOptions.obsMode === 'custom' || typeof getEffectiveCriteriaWeights === 'function')
       );
 
       let result;
       if (isWeighted && scoredCriteria.length) {
-        const weightsMap = getEffectiveCriteriaWeights(
-          obsOptions.subjectId || '',
-          obsOptions.cycle || 1,
-          scoredCriteria,
-          obsOptions.criteriaWeights || null
-        );
-        result = computeWeightedFromChecked(scoredKeys, overrideCode, scoredCriteria, weightsMap);
+        const weightsMap = customRubric
+          ? Object.fromEntries(customRubric.criteria.map(criterion => [criterion.id, criterion.weight]))
+          : getEffectiveCriteriaWeights(
+              obsOptions.subjectId || '',
+              obsOptions.cycle || 1,
+              scoredCriteria,
+              obsOptions.criteriaWeights || null
+            );
+        const levelPercentages = customRubric
+          ? Object.fromEntries(customRubric.levels.map(level => [level.key, level.percent]))
+          : null;
+        result = computeWeightedFromChecked(scoredKeys, overrideCode, scoredCriteria, weightsMap, levelPercentages);
       } else {
         result = scoredCriteria.length
           ? computeMajorityFromChecked(scoredKeys, overrideCode, scoredCriteria.length)
