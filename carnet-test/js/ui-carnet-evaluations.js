@@ -188,7 +188,7 @@
 
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
-        { label: 'Barème', sub: 'Repère de jugement', minW: 'min-w-[115px]', width: 115 },
+        { label: 'Jugement professionnel', sub: 'Barème et repères', minW: 'min-w-[145px]', width: 145 },
         { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
         { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
       ];
@@ -855,11 +855,12 @@
           ? getBadgeColorClasses(summary.baremeRes.code)
           : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-indigo-50 hover:text-indigo-700';
         btnBareme.className = `px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${barBadgeClass}`;
+        btnBareme.title = 'Ouvrir la grille Jugement professionnel — Barème et repères';
         btnBareme.innerHTML = summary.baremeRes.hasFinalGrade
           ? `<span>${summary.baremeRes.code} (${summary.baremeRes.pct}%)${rec.baremeOverrideCode ? '<span class="adj-star" title="Note ajustée manuellement par l’enseignant">*</span>' : ''}</span>`
           : summary.baremeRes.hasData
             ? `<span>En cours (${summary.baremeRes.total}/${BAREME_ECOLE_ROWS.length})</span>`
-            : `<span>Barème</span>`;
+            : `<span>Repères</span>`;
         btnBareme.addEventListener('click', () => {
           navigateToView('viewBareme', () => {
             appState.selectedStudentId = st.id;
@@ -917,6 +918,7 @@
         commWrap.className = 'comment-cell-wrap';
         const inputComm = document.createElement('input');
         inputComm.type = 'text';
+        inputComm.autocomplete = 'off';
         inputComm.placeholder = 'Commentaire au bulletin…';
         inputComm.value = rec.comment || '';
         inputComm.id = `cell_comm_${st.id}`;

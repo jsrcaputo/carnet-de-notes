@@ -201,11 +201,32 @@
     function parseBackup(text) {
       const fileData = JSON.parse(text);
       const importedPrefs = readDisplayPreferences(fileData && fileData.displayPreferences);
-      const importedPresets = fileData && fileData.customWeightedPresets;
-      if (importedPresets !== undefined && (!importedPresets || typeof importedPresets !== 'object' || Array.isArray(importedPresets) ||
-          Object.values(importedPresets).some(weights => !weights || typeof weights !== 'object' || Array.isArray(weights) ||
-            Object.values(weights).some(weight => typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0)))) {
-        throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+      const rawPresets = fileData && fileData.customWeightedPresets;
+      let importedPresets;
+      if (rawPresets !== undefined) {
+        const presetEntries = isRecord(rawPresets) ? Object.entries(rawPresets) : null;
+        if (!presetEntries || presetEntries.length > 200) {
+          throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+        }
+        const cleanPresets = {};
+        presetEntries.forEach(([presetKey, weights]) => {
+          if (!isSafeImportedId(presetKey) || !isRecord(weights)) {
+            throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+          }
+          const critEntries = Object.entries(weights);
+          if (critEntries.length > 50) {
+            throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+          }
+          const cleanWeights = {};
+          critEntries.forEach(([critKey, weight]) => {
+            if (!isSafeImportedId(critKey) || typeof weight !== 'number' || !Number.isFinite(weight) || weight < 0 || weight > 100) {
+              throw new Error('Les pondérations personnalisées de ce fichier sont invalides.');
+            }
+            cleanWeights[critKey] = weight;
+          });
+          cleanPresets[presetKey] = cleanWeights;
+        });
+        importedPresets = cleanPresets;
       }
       if (fileData && typeof fileData === 'object') {
         delete fileData.displayPreferences;

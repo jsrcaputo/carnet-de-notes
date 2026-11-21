@@ -749,7 +749,7 @@
         if (!rec) return;
         rec.baremeChecked = [];
         rec.baremeOverrideCode = null;
-        notifyUpdate('Barème réinitialisé');
+        notifyUpdate('Repères de jugement réinitialisés');
         renderAll();
       });
 

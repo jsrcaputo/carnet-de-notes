@@ -106,13 +106,40 @@
         clearTimeout(autosaveTimer);
         autosaveTimer = null;
       }
+      if (typeof closeCommentBankModal === 'function') closeCommentBankModal();
+      const customRubricDialog = document.getElementById('customRubricDialog');
+      if (customRubricDialog && customRubricDialog.open && typeof closeCustomRubricEditor === 'function') {
+        closeCustomRubricEditor();
+      }
+      if (typeof activeCommentBankContext !== 'undefined') activeCommentBankContext = null;
+      if (typeof customRubricEditorDraft !== 'undefined') customRubricEditorDraft = null;
+      if (typeof customRubricEditorId !== 'undefined') customRubricEditorId = null;
+      if (typeof renderStudentsView === 'function' && renderStudentsView._state) {
+        renderStudentsView._state.adaptStudentId = null;
+        renderStudentsView._state.modStudentId = null;
+      }
       document.querySelectorAll(
         '#compPrintSheet, #studentPrintSheet, #studentIndividualPrintSheet, #baremeBatchPrintSheet, #observablePrintSheet'
       ).forEach(element => element.remove());
       [...document.body.classList].filter(className => className.startsWith('print-'))
         .forEach(className => document.body.classList.remove(className));
-      const observationPrintGrid = document.getElementById('observationPrintGrid');
-      if (observationPrintGrid) observationPrintGrid.replaceChildren();
+      [
+        'gradebookHeaderRow', 'gradebookBody', 'grStudentBand', 'grReportContent',
+        'baremeStudentPills', 'baremeMatrixBody', 'sgMatrixBody', 'qoStudentGrid',
+        'qoActiveStudentTagsStrip', 'cbPhraseList', 'customRubricEditor',
+        'observablePrintStudents', 'summaryPrintStudents', 'baremePrintStudents'
+      ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.replaceChildren();
+      });
+      ['baremeCurrentStudentName', 'sgCurrentStudentName', 'sgMajorityExplanation', 'cbModalSubtitle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '';
+      });
+      ['qoSessionTitleInput', 'qoCommentInput', 'qoStrengthsInput', 'qoChallengesInput', 'cbTextarea'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
       const printMeta = document.getElementById('printMeta');
       if (printMeta) printMeta.textContent = '';
       carnetIsSaved = false;

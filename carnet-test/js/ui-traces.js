@@ -51,11 +51,11 @@
           if (el) el.textContent = '0';
         });
         document.getElementById('baremeMajorityExplanation').textContent = appState.students.length
-          ? 'Sélectionner un nom ci-dessus pour remplir le barème.'
+          ? 'Sélectionner un nom ci-dessus pour remplir les repères.'
           : 'Ajoutez d’abord un élève dans la liste d’élèves.';
         document.getElementById('baremeFineGradeButtons').innerHTML = '';
         document.getElementById('baremeMatrixBody').innerHTML =
-          '<tr><td colspan="6" class="p-6 text-center text-sm font-semibold text-slate-600 bg-slate-50">Sélectionner un nom ci-dessus pour afficher le barème de l’élève.</td></tr>';
+          '<tr><td colspan="6" class="p-6 text-center text-sm font-semibold text-slate-600 bg-slate-50">Sélectionner un nom ci-dessus pour afficher la grille de repères de l’élève.</td></tr>';
         return;
       }
       const rec = subData.studentRecords[st.id];
@@ -90,7 +90,7 @@
         b.addEventListener('click', () => {
           if (rec.baremeOverrideCode === g.code) rec.baremeOverrideCode = null;
           else rec.baremeOverrideCode = g.code;
-          notifyUpdate(`Barème de ${st.name} : ${g.code} (${g.pct}%)`);
+          notifyUpdate(`Jugement professionnel de ${st.name} : ${g.code} (${g.pct}%)`);
           renderBaremeView();
           renderGradebookView();
         });
@@ -129,7 +129,7 @@
               <span aria-hidden="true" class="rubric-stmt-check mt-0.5 w-3.5 h-3.5 rounded-full flex-shrink-0 flex items-center justify-center border ${
                 isChecked ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-300 bg-white'
               } text-[9px] font-bold">${isChecked ? '✓' : ''}</span>
-              <span class="rubric-stmt-text">${stmtText}</span>
+              <span class="rubric-stmt-text">${escapeHtml(stmtText)}</span>
             `;
             itemBtn.addEventListener('click', () => {
               const hadFocus = document.activeElement === itemBtn;

@@ -563,7 +563,7 @@
 
     function printCurrentBareme() {
       if (!appState.students.length) {
-        showToast('Ajoutez d’abord un élève pour imprimer son barème d’évaluation.');
+        showToast('Ajoutez d’abord un élève pour imprimer sa grille de jugement professionnel.');
         return;
       }
       const selectedStudentId = appState.students.some(st => st.id === appState.selectedStudentId)
@@ -646,9 +646,9 @@
         },
         {
           icon: 'rubric',
-          label: 'Barèmes d’évaluation',
+          label: 'Jugement professionnel',
           description: hasStudents
-            ? 'Choisir une matière, une compétence et les élèves.'
+            ? 'Barème et repères : choisir une matière, une compétence et les élèves.'
             : 'Ajoutez d’abord un élève.',
           contextual: activeView === 'viewBareme',
           disabled: !hasStudents,
@@ -701,7 +701,7 @@
       const count = document.querySelectorAll('#baremePrintStudents input:checked').length;
       const summary = document.getElementById('baremePrintSummary');
       if (summary) summary.textContent = count
-        ? `${count} barème${count > 1 ? 's' : ''} · ${count} page${count > 1 ? 's' : ''}`
+        ? `${count} grille${count > 1 ? 's' : ''} · ${count} page${count > 1 ? 's' : ''}`
         : 'Sélectionnez au moins un élève';
     }
 
@@ -709,7 +709,7 @@
       const dialog = document.getElementById('baremePrintDialog');
       const select = document.getElementById('baremePrintSubject');
       if (!dialog || !select || !SUBJECTS_CONFIG.length || !appState.students.length) {
-        showToast('Ajoutez d’abord un élève pour imprimer un barème.');
+        showToast('Ajoutez d’abord un élève pour imprimer une grille de jugement professionnel.');
         return;
       }
       select.innerHTML = '';
@@ -786,7 +786,7 @@
           <header class="observable-print-head">
             <div>
               <h1>${escapeHtml(student.name)}</h1>
-              <p><strong>Barème d’évaluation</strong> · ${escapeHtml(subject.fullName || subject.shortName)}${subject.officialWeightLabel ? ` — ${escapeHtml(subject.officialWeightLabel)}` : ''}</p>
+              <p><strong>Jugement professionnel — Barème et repères</strong> · ${escapeHtml(subject.fullName || subject.shortName)}${subject.officialWeightLabel ? ` — ${escapeHtml(subject.officialWeightLabel)}` : ''}</p>
               <p>${escapeHtml(group && !group.placeholder ? group.name : '')} · Étape ${escapeHtml(appState.activeTerm)} · ${escapeHtml(new Date().toLocaleDateString('fr-CA'))}</p>
             </div>
             <div class="observable-print-result"><strong>${escapeHtml(resultText)}</strong>${!blank && rec.baremeOverrideCode ? '<p>Note ajustée manuellement</p>' : ''}</div>
@@ -795,7 +795,7 @@
             <thead><tr><th>Critère</th><th>Niveau A</th><th>Niveau B</th><th>Niveau C</th><th>Niveau D</th><th>Niveau E</th></tr></thead>
             <tbody>${rows}</tbody>
           </table>
-          <div class="observable-print-foot">Barème d’évaluation — jugement professionnel selon les critères de l’école</div>
+          <div class="observable-print-foot">Jugement professionnel — Barème et repères</div>
         </article>`;
     }
 
@@ -817,7 +817,7 @@
       const blank = document.querySelector('input[name="baremePrintFormat"]:checked').value === 'blank';
       sheet.innerHTML = students.map(student => renderBaremePrintPage(subject, student, blank)).join('');
       if (!sheet.innerHTML) {
-        showToast('Aucun barème n’est disponible pour cette sélection.');
+        showToast('Aucune grille de repères n’est disponible pour cette sélection.');
         return;
       }
       document.getElementById('baremePrintDialog').close();

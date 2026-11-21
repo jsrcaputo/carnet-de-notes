@@ -1,6 +1,12 @@
 .DS_Store
 Thumbs.db
 node_modules/
+.vscode/
 *.tmp
 *.log
 ~$*
+*Backup*
+*.bak
+.env
+*.xlsx
+Carnet_de_notes_*.json

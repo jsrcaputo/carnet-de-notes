@@ -18,7 +18,7 @@
       { code: 'E',  pct: 40,  family: 'E', label: 'E (40%)' }
     ];
 
-    const GRADE_MAP = {};
+    const GRADE_MAP = Object.create(null);
     GRADE_SCALE.forEach(g => { GRADE_MAP[g.code] = g; });
 
     const FAMILY_DEFAULT_CODE = { A: 'A', B: 'B', C: 'C', D: 'D+', E: 'E' };
@@ -27,7 +27,7 @@
       2: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-2eCycle.pdf',
       3: 'https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-3eCycle.pdf'
     };
-    const GRADE_LEVEL_LABELS = {
+    const GRADE_LEVEL_LABELS = Object.assign(Object.create(null), {
       'P': 'Préscolaire',
       '1': '1re année',
       '2': '2e année',
@@ -35,7 +35,7 @@
       '4': '4e année',
       '5': '5e année',
       '6': '6e année'
-    };
+    });
     const CYCLE_LABELS = {
       'P': 'Préscolaire',
       1: '1er cycle',
@@ -239,7 +239,7 @@
     // Pondération officielle du bulletin unique québécois (Régime pédagogique MEQ)
     const OFFICIAL_TERM_WEIGHTS = { '1': 20, '2': 20, '3': 60 };
 
-    // Barème de l'école — 1 seule sélection par rangée, identique pour tous les niveaux.
+    // Barème d'évaluation (source : École primaire de l'Orée-du-Parc, CSSMB, « Barème d'évaluation pour 21-22 ») — 1 seule sélection par rangée.
     const BAREME_ECOLE_ROWS = [
       {
         id: 'attentes',

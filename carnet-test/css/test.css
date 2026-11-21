@@ -1080,8 +1080,7 @@
       html.design-studio.theme-dark .test-topbar .bg-slate-800 { background: var(--studio-surface-soft) !important; }
       html.design-studio.theme-dark header.test-topbar #headerStudentCount { background: var(--brand) !important; color: #fff !important; }
       html.design-studio.theme-dark .gradebook-toolbar > div:nth-of-type(2) { background: transparent !important; }
-      html.design-studio.theme-dark :is(#settingsPanel .sp-seg, .welcome-close, .welcome-actions button:disabled, .grade-picker-auto, .sort-btn) { background: var(--studio-surface-soft); color: var(--studio-text-muted); border-color: var(--line); }
-      html.design-studio.theme-dark #settingsPanel .sp-seg button.is-on { background: var(--brand); color: #fff; }
+      html.design-studio.theme-dark :is(.welcome-close, .welcome-actions button:disabled, .grade-picker-auto, .sort-btn) { background: var(--studio-surface-soft); color: var(--studio-text-muted); border-color: var(--line); }
       html.design-studio.theme-dark [id^="modal"] :is(.bg-slate-50, .bg-slate-100) { background: var(--studio-surface-soft) !important; }
       html.design-studio.theme-dark :is(main, [id^="modal"]) :is(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { background: var(--paper) !important; color: var(--ink) !important; border-color: var(--line) !important; }
       html.design-studio.theme-dark :is(main, [id^="modal"]) :is(input, textarea)::placeholder { color: #a7aaa9; opacity: 1; }
@@ -2585,6 +2584,34 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   #btnConfirmTargetLevels, #btnGroupSave, #btnOpenStudentsFromEmpty, #tourNext
 ):hover:not(:disabled) {
   background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface, #fff)) !important;
+}
+
+/* Options d’affichage : boutons Clair / Sombre sans fond encadré */
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  padding: 0 !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-seg button {
+  padding: .28rem .75rem !important;
+  border-radius: 999px !important;
+  font-size: .76rem !important;
+  font-weight: 600;
+  transition: background .14s ease, border-color .14s ease, color .14s ease;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-seg button:not(.is-on) {
+  background: var(--studio-surface-soft, #f8fafc) !important;
+  color: var(--studio-text-muted, #475569) !important;
+  border: 1px solid var(--studio-border-strong, #cbd5e1) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-seg button:not(.is-on):hover {
+  background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface, #fff)) !important;
+  border-color: color-mix(in srgb, var(--brand) 38%, transparent) !important;
+  color: var(--brand-deep) !important;
 }
 
 /* Carnets multiniveaux : filtre de niveau sans fond, plus lisible et centré */

@@ -165,7 +165,7 @@
         if (!term || typeof term !== 'object') {
           throw new Error(`La sauvegarde ne contient pas les données de l’étape ${termId}.`);
         }
-        term.subjectData = term.subjectData || {};
+        term.subjectData = isRecord(term.subjectData) ? term.subjectData : {};
         term.observations = Array.isArray(term.observations) ? term.observations : [];
 
         ALL_SUBJECTS_CONFIG.forEach(sub => {
@@ -328,6 +328,9 @@
                 ? { ...rawScoreMeta[oldAsgId] }
                 : null;
               if (!m) return;
+              if (m.code !== undefined && !GRADE_MAP[String(m.code)]) delete m.code;
+              if (m.overrideCode !== undefined && !GRADE_MAP[String(m.overrideCode)]) delete m.overrideCode;
+              if (m.gradeLevel !== undefined && !GRADE_LEVEL_LABELS[String(m.gradeLevel)]) delete m.gradeLevel;
               if (!['portrait', 'weighted', 'custom'].includes(m.obsMode)) delete m.obsMode;
               m.customRubric = normalizeCustomRubric(m.customRubric, m.obsMode === 'custom');
               if (!m.customRubric) delete m.customRubric;
@@ -339,7 +342,9 @@
               rec.scoreMeta[asg.id] = m;
             });
             rec.baremeChecked = Array.isArray(rec.baremeChecked) ? rec.baremeChecked : [];
-            rec.baremeOverrideCode = rec.baremeOverrideCode || null;
+            rec.baremeOverrideCode = (rec.baremeOverrideCode && GRADE_MAP[String(rec.baremeOverrideCode)])
+              ? String(rec.baremeOverrideCode)
+              : null;
             rec.finalJudgmentOverride = rec.finalJudgmentOverride ?? '';
             rec.comment = typeof rec.comment === 'string' ? rec.comment : '';
             cleanRecords[importedId] = rec;
@@ -349,7 +354,9 @@
               : {};
             const draft = { ...draftSource };
             draft.checked = Array.isArray(draft.checked) ? draft.checked : [];
-            draft.overrideCode = draft.overrideCode || null;
+            draft.overrideCode = (draft.overrideCode && GRADE_MAP[String(draft.overrideCode)])
+              ? String(draft.overrideCode)
+              : null;
             draft.tags = Array.isArray(draft.tags) ? draft.tags : [];
             draft.comment = typeof draft.comment === 'string' ? draft.comment : '';
             draft.strengths = typeof draft.strengths === 'string' ? draft.strengths : '';
@@ -400,9 +407,7 @@
         ? imported.activeView
         : 'viewGradebook';
       imported.selectedStudentId = null;
-      imported.tagCategories = Array.isArray(imported.tagCategories)
-        ? imported.tagCategories
-        : JSON.parse(JSON.stringify(PIA_TAG_CATEGORIES));
+      imported.tagCategories = JSON.parse(JSON.stringify(PIA_TAG_CATEGORIES));
       return imported;
     }
 

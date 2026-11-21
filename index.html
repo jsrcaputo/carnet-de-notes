@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self' blob: data:; script-src 'self' blob: https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; frame-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'self'">
   <meta name="referrer" content="no-referrer" />
   <title>Carnet de notes - 2026/2027</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js" integrity="sha384-OUW9euuUyxyHcAhTqbhI+Iyb8LMssXt/cpz0yXhs9UWG2/R/uaWdakx/4cfww7Vb" crossorigin="anonymous" defer></script>
+  <script src="carnet-test/js/init-theme.js"></script>
   <script src="echelles-niveaux.js"></script>
   <link rel="stylesheet" href="carnet-test/css/tailwind.css">
   <link rel="stylesheet" href="carnet-test/css/base.css">
@@ -16,6 +16,7 @@
   <link rel="stylesheet" href="carnet-test/css/test.css">
   <script src="carnet-test/js/demarrage.js" defer></script>
   <script src="carnet-test/js/demarrage-evenements.js" defer></script>
+  <script src="carnet-test/vendor/xlsx.bundle.js" defer></script>
 </head>
 <body class="min-h-screen flex flex-col">
 
@@ -369,7 +370,10 @@
             <button id="btnBackToGradebookFromBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer flex items-center gap-1 no-print">
               <span>← Retour au Carnet</span>
             </button>
-            <h2 class="text-base sm:text-lg font-bold text-slate-900">Barème — <span id="baremeSubjectLabel" class="text-indigo-600"></span></h2>
+            <div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900">Jugement professionnel — <span id="baremeSubjectLabel" class="text-indigo-600"></span></h2>
+              <p class="text-xs font-medium text-slate-500">Barème et repères</p>
+            </div>
           </div>
           <div class="flex items-center gap-2 no-print">
             <button id="btnClearStudentBareme" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:text-red-600 bg-slate-100 hover:bg-red-50 transition cursor-pointer">
@@ -433,6 +437,7 @@
             </tbody>
           </table>
         </div>
+        <p class="text-[11px] text-slate-500">Source : <em>Barème d’évaluation pour 21-22</em>, école primaire de l’Orée-du-Parc (Centre de services scolaire Marguerite-Bourgeoys, LaSalle, Québec).</p>
       </div>
     </section>
 
@@ -454,7 +459,7 @@
           <div class="qo-trace-main-row flex flex-wrap items-center justify-between gap-2">
             <div class="flex-1 min-w-[210px] flex items-center gap-2">
             <label for="qoSessionTitleInput" class="text-xs font-bold text-amber-950 whitespace-nowrap">Nom de la trace :</label>
-            <input id="qoSessionTitleInput" type="text" placeholder="Ex: Atelier manipulation fractions, Causerie, Jeu de rôle..." class="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500" />
+            <input id="qoSessionTitleInput" type="text" autocomplete="off" placeholder="Ex: Atelier manipulation fractions, Causerie, Jeu de rôle..." class="flex-1 min-w-0 px-2.5 py-1 rounded-lg border border-amber-300 bg-white text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500" />
             </div>
             <div id="qoTargetLevelsBox" class="hidden items-center gap-1 flex-wrap"></div>
             <div class="flex items-center gap-1.5 shrink-0">
@@ -790,6 +795,13 @@
             </div>
           </details>
           <details class="rounded bg-slate-50 p-2">
+            <summary class="font-bold cursor-pointer">Jugement professionnel — Barème et repères</summary>
+            <div class="mt-2 space-y-2">
+              <p>Centre de services scolaire Marguerite-Bourgeoys (CSSMB), école primaire de l’Orée-du-Parc (LaSalle, Québec), <em>Barème d’évaluation pour 21-22</em>, 2021-2022 : légende des niveaux de développement de la compétence (cotes A+ à E, 40 % à 100 %) et éléments observables répartis en cinq volets (attentes, exécution de la tâche, mobilisation des ressources internes, métacognition et mobilisation des ressources externes).</p>
+              <p>Les descripteurs intégrés dans la vue Jugement professionnel (Barème et repères) s’appuient directement sur ce document d’école comme repère d’aide au jugement professionnel.</p>
+            </div>
+          </details>
+          <details class="rounded bg-slate-50 p-2">
             <summary class="font-bold cursor-pointer">Ressources générales et échelles</summary>
             <ul class="mt-2 space-y-1">
               <li><a class="text-indigo-600 underline" href="https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/ressources-pedagogiques/Differenciation-pedagogique.pdf" target="_blank" rel="noopener noreferrer">MEQ — Différenciation pédagogique ↗</a></li>
@@ -1043,8 +1055,8 @@
       <div class="print-dialog-heading">
         <div class="print-dialog-heading-copy">
           <span class="print-dialog-kicker">Impression groupée</span>
-          <h2 id="baremePrintTitle">Barèmes d’évaluation</h2>
-          <p>Choisissez une matière ou compétence, puis les élèves dont vous souhaitez imprimer le barème.</p>
+          <h2 id="baremePrintTitle">Jugement professionnel — Barème et repères</h2>
+          <p>Choisissez une matière ou compétence, puis les élèves dont vous souhaitez imprimer la grille de repères.</p>
         </div>
         <button id="btnCloseBaremePrint" type="button" class="print-dialog-close" aria-label="Fermer">✕</button>
       </div>
@@ -1055,8 +1067,8 @@
           <p id="baremePrintSubjectHint" class="print-dialog-hint"></p>
         </section>
         <section id="baremePrintFormatBox" class="bareme-format-reveal" aria-labelledby="baremePrintFormatTitle">
-          <span id="baremePrintFormatTitle" class="print-field-label">Format du barème</span>
-          <div class="print-format-options" role="radiogroup" aria-label="Format du barème">
+          <span id="baremePrintFormatTitle" class="print-field-label">Format de la grille</span>
+          <div class="print-format-options" role="radiogroup" aria-label="Format de la grille">
             <label><input type="radio" name="baremePrintFormat" value="filled" checked><span><strong>Telle que remplie</strong><small>Choix et cote actuels de chaque élève.</small></span></label>
             <label><input type="radio" name="baremePrintFormat" value="blank"><span><strong>Vierge avec noms</strong><small>Grille sans choix ni cote, avec le nom préinscrit.</small></span></label>
           </div>
@@ -1075,7 +1087,7 @@
           <button id="btnCancelBaremePrint" type="button" class="print-dialog-secondary">Annuler</button>
           <button type="submit" class="print-dialog-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
-            Imprimer les barèmes
+            Imprimer les grilles
           </button>
         </div>
       </div>
@@ -1119,7 +1131,7 @@
       <div class="space-y-3">
         <div>
           <label for="inputAssignmentTitle" class="block text-xs font-semibold text-slate-700 mb-1">Nom du travail / de l'évaluation (obligatoire)</label>
-          <input id="inputAssignmentTitle" type="text" placeholder="Ex: Situation-problème : Le jardin, Dictée #1..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+          <input id="inputAssignmentTitle" type="text" autocomplete="off" placeholder="Ex: Situation-problème : Le jardin, Dictée #1..." class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
           <label for="inputAssignmentOutOf" class="block text-xs font-semibold text-slate-700 mb-1">Barème de saisie (dénominateur) : note sur…</label>

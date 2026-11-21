@@ -497,6 +497,7 @@
 
           const customInput = document.createElement('input');
           customInput.type = 'text';
+          customInput.autocomplete = 'off';
           customInput.placeholder = 'Autre adaptation...';
           customInput.value = st.customAdapt || '';
           customInput.className = 'student-adapt-custom px-2 py-1 rounded-lg border border-slate-200 text-xs w-40';

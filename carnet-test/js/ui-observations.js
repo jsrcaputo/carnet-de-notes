@@ -701,14 +701,14 @@
                   } text-[9px] font-bold">${isChecked ? '✓' : ''}</span>
                   <span class="text-[9.5px] font-extrabold ${isChecked ? 'opacity-95' : 'text-slate-500'} shrink-0 tabular-nums leading-none">${cellPts} pts</span>
                 </span>
-                <span class="rubric-stmt-text w-full">${stmtText}</span>
+                <span class="rubric-stmt-text w-full">${escapeHtml(stmtText)}</span>
               `;
             } else {
               itemBtn.innerHTML = `
                 <span aria-hidden="true" class="rubric-stmt-check mt-0.5 w-3.5 h-3.5 rounded-full flex-shrink-0 flex items-center justify-center border ${
                   isChecked ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-300 bg-white'
                 } text-[9px] font-bold">${isChecked ? '✓' : ''}</span>
-                <span class="rubric-stmt-text flex-1">${stmtText}</span>
+                <span class="rubric-stmt-text flex-1">${escapeHtml(stmtText)}</span>
               `;
             }
             itemBtn.addEventListener('click', () => {

@@ -268,8 +268,13 @@
       ['1', '2', '3'].forEach(term => {
         const picks = getCompetencyPicks(source, term);
         Object.entries(picks).forEach(([scaleId, selected]) => {
-          if (!selected || !Object.keys(selected).length) return;
-          annual[scaleId] = { ...selected };
+          if (!isSafeImportedId(scaleId) || !isRecord(selected) || !Object.keys(selected).length) return;
+          const cleanSelected = {};
+          Object.entries(selected).forEach(([rowKey, val]) => {
+            if (!RESERVED_IMPORTED_IDS.has(rowKey)) cleanSelected[rowKey] = val;
+          });
+          if (!Object.keys(cleanSelected).length) return;
+          annual[scaleId] = cleanSelected;
           const termComments = student.competencyComments && student.competencyComments[term];
           const termOverrides = student.competencyMeq && student.competencyMeq[term];
           if (termComments && Object.prototype.hasOwnProperty.call(termComments, scaleId)) comments[scaleId] = termComments[scaleId];

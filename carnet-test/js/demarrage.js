@@ -1,18 +1,3 @@
-    (function initializeThemeHint() {
-      try {
-        const raw = localStorage.getItem('carnet_notes_prefs_2026_v1');
-        const prefs = raw ? JSON.parse(raw) : null;
-        const root = document.documentElement;
-        root.setAttribute('data-palette', 'ocean');
-        root.classList.remove('theme-dark');
-        if (prefs && ['xs', 'sm', 'lg', 'xl'].indexOf(prefs.textSize) !== -1) {
-          root.classList.add(`ts-${prefs.textSize}`);
-        }
-      } catch (error) {
-        console.warn('Impossible de lire les préférences initiales.', error);
-      }
-    }());
-
     function toggleFullscreenOrPopout() {
       const docEl = document.documentElement;
       const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
@@ -26,31 +11,6 @@
       } else {
         const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
         if (exit) exit.call(document);
-      }
-    }
-
-    function openFullPageInNewTab() {
-      try {
-        const pageCopy = document.documentElement.cloneNode(true);
-        const base = document.createElement('base');
-        base.href = document.baseURI;
-        pageCopy.querySelector('head').prepend(base);
-        let htmlSource = '<!DOCTYPE html>\n' + pageCopy.outerHTML;
-        if (window.ECHELLES_PRIMAIRE) {
-          const data = `window.ECHELLES_PRIMAIRE = ${JSON.stringify(window.ECHELLES_PRIMAIRE)};`;
-          const dataUrl = URL.createObjectURL(new Blob([data], { type: 'application/javascript' }));
-          htmlSource = htmlSource.replace(
-            /<script[^>]*src="echelles-niveaux\.js"[^>]*><\/script>/,
-            () => `<script src="${dataUrl}"></script>`
-          );
-          window.setTimeout(() => URL.revokeObjectURL(dataUrl), 60000);
-        }
-        const blob = new Blob([htmlSource], { type: 'text/html;charset=utf-8' });
-        const blobUrl = URL.createObjectURL(blob);
-        window.open(blobUrl, '_blank');
-        showToast('Ouvert en pleine page dans un nouvel onglet!');
-      } catch (e) {
-        showToast('Utilisez le bouton Plein écran');
       }
     }
 

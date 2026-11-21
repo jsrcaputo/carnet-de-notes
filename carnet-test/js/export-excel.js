@@ -20,6 +20,10 @@
         const normalized = String(value ?? '').trim().replace(',', '.');
         return normalized === '' ? NaN : Number(normalized);
       };
+      const sanitizeExcelCell = value => {
+        if (typeof value !== 'string') return value;
+        return /^[\t\r\n]*[=+\-@]/.test(value) ? `'${value}` : value;
+      };
 
       const headerStyle = {
         fill: { fgColor: { rgb: brandDeepRgb } },
@@ -64,7 +68,7 @@
       synthRows.push(synthHeader);
 
       appState.students.forEach(st => {
-        const row = [st.name, formatStudentAdaptations(st)];
+        const row = [sanitizeExcelCell(st.name), sanitizeExcelCell(formatStudentAdaptations(st))];
         exportSubjects.forEach(sub => {
           if (!isSubjectApplicableForStudent(sub, st)) {
             row.push('', '');
@@ -108,12 +112,12 @@
               wLabel = lvlWeights.map(item => `${formatShortLevelTag(item.lvl)}:${item.w}%`).join(' / ');
             }
           }
-          headers.push(`${a.title}${getAssignmentOutOf(a) !== 100 ? ` [/${getAssignmentOutOf(a)}]` : ''} (${wLabel})`);
+          headers.push(sanitizeExcelCell(`${a.title}${getAssignmentOutOf(a) !== 100 ? ` [/${getAssignmentOutOf(a)}]` : ''} (${wLabel})`));
         });
         headers.push(
           'Moy. Travaux (/100)',
-          'Barème (Cote)',
-          'Barème (%)',
+          'Repères jugement (Cote)',
+          'Repères jugement (%)',
           'Jugement Final (%)',
           'Cote Finale',
           'Commentaires au bulletin'
@@ -124,7 +128,7 @@
           const rec = subData.studentRecords[st.id];
           if (!isSubjectApplicableForStudent(sub, st)) return;
           const sum = computeStudentSubjectSummary(termId, sub.id, st.id);
-          const r = [st.name, formatStudentAdaptations(st)];
+          const r = [sanitizeExcelCell(st.name), sanitizeExcelCell(formatStudentAdaptations(st))];
           subData.assignments.forEach(a => {
             if (!isAssignmentForStudent(a, st)) {
               r.push('—');
@@ -145,7 +149,7 @@
             sum.baremeRes.hasData ? sum.baremeRes.pct : '',
             sum.finalPct !== null ? sum.finalPct : '',
             sum.finalLetter !== '—' ? sum.finalLetter : '',
-            rec.comment || ''
+            sanitizeExcelCell(rec.comment || '')
           );
           rows.push(r);
         });
@@ -194,16 +198,16 @@
         const gObj = GRADE_MAP[o.gradeCode];
         const observations = groupObservationTags(o.tags);
         obsRows.push([
-          o.date,
-          stu ? stu.name : '',
+          sanitizeExcelCell(o.date || ''),
+          sanitizeExcelCell(stu ? stu.name : ''),
           sub ? sub.fullName : '',
-          o.activity || '',
-          o.gradeCode,
+          sanitizeExcelCell(o.activity || ''),
+          sanitizeExcelCell(o.gradeCode && GRADE_MAP[String(o.gradeCode)] ? String(o.gradeCode) : ''),
           gObj ? gObj.pct : '',
-          observations.previous.join(', '),
-          [...observations.strengths, o.strengths || ''].filter(Boolean).join('\n'),
-          [...observations.challenges, o.challenges || ''].filter(Boolean).join('\n'),
-          o.comment || ''
+          sanitizeExcelCell(observations.previous.join(', ')),
+          sanitizeExcelCell([...observations.strengths, o.strengths || ''].filter(Boolean).join('\n')),
+          sanitizeExcelCell([...observations.challenges, o.challenges || ''].filter(Boolean).join('\n')),
+          sanitizeExcelCell(o.comment || '')
         ]);
       });
       const wsObs = XLSX.utils.aoa_to_sheet(obsRows);
@@ -235,14 +239,14 @@
             }));
             const result = computeCompetencyResult(scale, picked);
             competencyRows.push([
-              student.name,
+              sanitizeExcelCell(student.name),
               GRADE_LEVEL_LABELS[student.gradeLevel] || '',
               cycle ? CYCLE_LABELS[cycle] : '',
               tab.label,
               scale.label,
               result ? `${result.level} / ${scale.max}` : '',
-              chosenSentences.join('\n'),
-              picked && Object.keys(picked).length ? getCompetencyComment(student, 'annual', scale, picked).text : '',
+              sanitizeExcelCell(chosenSentences.join('\n')),
+              sanitizeExcelCell(picked && Object.keys(picked).length ? getCompetencyComment(student, 'annual', scale, picked).text : ''),
               (() => {
                 const meqX = Object.keys(picked).length ? getMeqFinal(student, 'annual', scale, tab.id, picked) : null;
                 return meqX && meqX.level ? `${meqX.level}/5 — ${MEQ5_LEVELS[meqX.level].label}${meqX.override ? ' (ajusté)' : ''}` : '';
@@ -258,7 +262,7 @@
       styleSheetHelper(wsCompetencies, competencyRows.length, competencyRows[3].length, titleStyle, headerStyle, cellBorder, 3);
       XLSX.utils.book_append_sheet(wb, wsCompetencies, 'Niveaux_competence');
 
-      // 4. Données à plat (une ligne par élève × évaluation, toutes les étapes) — idéal pour tableaux croisés ou analyse par IA
+      // 4. Données à plat (une ligne par élève × évaluation, toutes les étapes) — idéal pour tableaux croisés ou analyse automatisée
       const activeGroupObj = (appState.groups || []).find(g => g.id === appState.activeGroupId);
       const groupName = activeGroupObj ? activeGroupObj.name : '';
       const dataRows = [
@@ -281,8 +285,8 @@
             const displaySub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
             const subjectLabel = displaySub.groupLabel || displaySub.shortName;
             const compLabel = `${displaySub.partLabel || ''}${displaySub.officialWeight !== null ? ` — ${displaySub.officialWeight} % bulletin : ${displaySub.bulletinName || ''}` : ''}`;
-            const base = [groupName, st.name, GRADE_LEVEL_LABELS[st.gradeLevel] || '', formatStudentAdaptations(st), t, subjectLabel, compLabel];
-            const tail = [sum.finalPct !== null ? sum.finalPct : '', sum.finalLetter !== '—' ? sum.finalLetter : '', rec.comment || ''];
+            const base = [sanitizeExcelCell(groupName), sanitizeExcelCell(st.name), GRADE_LEVEL_LABELS[st.gradeLevel] || '', sanitizeExcelCell(formatStudentAdaptations(st)), t, subjectLabel, compLabel];
+            const tail = [sum.finalPct !== null ? sum.finalPct : '', sum.finalLetter !== '—' ? sum.finalLetter : '', sanitizeExcelCell(rec.comment || '')];
             if (!sd.assignments.length) {
               dataRows.push([...base, '(aucune évaluation)', '', '', '', '', '', '', '', '', ...tail]);
               return;
@@ -290,7 +294,7 @@
             sd.assignments.forEach(a => {
               if (!isAssignmentForStudent(a, st)) {
                 dataRows.push([
-                  ...base, a.title, a.isObservation ? 'Trace observable' : 'Évaluation',
+                  ...base, sanitizeExcelCell(a.title), a.isObservation ? 'Trace observable' : 'Évaluation',
                   '—', a.isObservation ? 100 : getAssignmentOutOf(a), '',
                   '—', 0, '', a.linkId ? 'Oui' : '', ...tail
                 ]);
@@ -311,11 +315,17 @@
               else if (isSpecial) scoreCell = valUpper;
               else if (hasNum) scoreCell = num;
               const effectiveWeight = getAssignmentWeightForLevel(a, st.gradeLevel, sub, td);
+              const safeMetaCode = (meta && meta.code && GRADE_MAP[String(meta.code)]) ? String(meta.code) : '';
+              const codeCell = isSpecial
+                ? valUpper
+                : safeMetaCode
+                  ? safeMetaCode
+                  : (hasNum ? pctToClosestGradeCode(pct) : '');
 
               dataRows.push([
-                ...base, a.title, a.isObservation ? 'Trace observable' : 'Évaluation',
+                ...base, sanitizeExcelCell(a.title), a.isObservation ? 'Trace observable' : 'Évaluation',
                 scoreCell, a.isObservation ? 100 : outOf, pct,
-                (meta && meta.code) ? meta.code : (hasNum ? pctToClosestGradeCode(pct) : (isSpecial ? valUpper : '')),
+                sanitizeExcelCell(codeCell),
                 effectiveWeight || 0, meta && meta.overrideCode ? 'Oui' : '', a.linkId ? 'Oui' : '', ...tail
               ]);
             });
@@ -329,20 +339,20 @@
       wsData['!freeze'] = { xSplit: 2, ySplit: 4 };
       XLSX.utils.book_append_sheet(wb, wsData, 'Donnees_a_plat');
 
-      // 5. Lisez-moi : contexte complet pour un humain ou une IA
+      // 5. Lisez-moi : contexte complet pour l’utilisation et l’analyse automatisée
       const isP = appState.students.some(s => s.gradeLevel === 'P');
       const readme = [
         ['LISEZ-MOI — CONTEXTE DU FICHIER'],
         [],
         ['Contenu', 'Description'],
-        ['Document', `Carnet de notes 2026-2027 — groupe « ${groupName || 'unique'} » — exporté le ${new Date().toLocaleDateString('fr-CA')} (étape active : ${termId}).`],
+        ['Document', sanitizeExcelCell(`Carnet de notes 2026-2027 — groupe « ${groupName || 'unique'} » — exporté le ${new Date().toLocaleDateString('fr-CA')} (étape active : ${termId}).`)],
         ['Contexte', 'École primaire du Québec (Programme de formation de l’école québécoise, PFEQ). Une année = 3 étapes. Niveaux scolaires : préscolaire et 1re à 6e année (cycles 1 à 3).'],
         ['Matières du groupe', exportSubjects.map(s => {
           const display = getSubjectContextDisplay(s);
           return `${display.shortName}${display.officialWeightLabel ? ` (${display.officialWeightLabel})` : ''}`;
         }).join(' ; ')],
         ['Feuille Synthese_Etape_X', 'Une ligne par élève : pourcentage et cote finale de chaque matière pour l’étape active.'],
-        ['Feuilles numérotées', 'Détail par matière : chaque évaluation (note et pondération), moyenne, barème, jugement final, commentaire.'],
+        ['Feuilles numérotées', 'Détail par matière : chaque évaluation (note et pondération), moyenne, repères de jugement (barème), jugement final, commentaire.'],
         ['Traces_Visuelles', 'Journal des traces observables (observations qualitatives cotées A+ à E).'],
         ['Niveaux_competence', 'Portrait global, sans étapes : échelons des échelles du primaire et phrases retenues par l’enseignant.'],
         ['Donnees_a_plat', 'Toutes les étapes, une ligne par élève et par évaluation : la feuille à privilégier pour tout calcul, filtre ou analyse automatisée.'],
@@ -351,14 +361,15 @@
         ['Cotes', 'A+ (97-100 %), A, A−, B+, B, B−, C+, C, C−, D+, D, E : la cote est dérivée du pourcentage; la cote finale est le jugement de l’enseignant.'],
         ['Note brute / Sur', 'La note saisie et son maximum (ex. 32 sur 40). Le pourcentage est ramené sur 100. Les traces observables sont toujours sur 100.'],
         ['Pondération (%)', 'Poids de l’évaluation dans la moyenne de la matière ou de la compétence. Le total visé est 100 %.'],
-        ['Barème', 'Cote obtenue en surlignant des descripteurs dans la grille du barème école; repère de jugement, exclu du calcul automatique de la note finale.'],
+        ['Jugement professionnel (Barème et repères)', 'Cote obtenue en surlignant des descripteurs dans la grille Barème et repères; repère d’aide au jugement professionnel, exclu du calcul automatique de la note finale.'],
         ['Note ajustée (*)', '« Oui » : l’enseignant a modifié manuellement la cote proposée par la grille.'],
         ['Évaluation partagée', '« Oui » : une même évaluation est liée à plusieurs compétences ou matières; elle ne compte qu’une fois dans le résultat unique des matières à résultat unique.'],
         ['Matières à résultat unique', 'Sciences, Géographie-Histoire-Éducation à la citoyenneté et Éducation physique et à la santé : plusieurs compétences, mais un seul résultat au bulletin. Aucun partage inter-compétences fixe n’est inventé.'],
         ['Matières à compétences distinctes', 'Français, Mathématiques, Arts, Anglais : un résultat par compétence au bulletin. Les poids anglais du cycle sont informatifs ici et ne sont pas multipliés une seconde fois dans les résultats.'],
         ['Niveaux de compétence', 'Échelons sur 10 à titre d’outil d’analyse; ils ne remplacent pas la cote officielle.'],
         ['Valeurs vides', 'Aucune donnée saisie. « - » : élève non évalué pour cet item.'],
-        ['Pistes d’analyse', 'Comparer les étapes, repérer les élèves en difficulté (cote C- ou moins), les écarts entre compétences d’une même matière, les évaluations à faible moyenne de groupe, et croiser avec les adaptations.']
+        ['Pistes d’analyse', 'Comparer les étapes, repérer les élèves en difficulté (cote C- ou moins), les écarts entre compétences d’une même matière, les évaluations à faible moyenne de groupe, et croiser avec les adaptations.'],
+        ['Confidentialité (Loi 25)', 'Ce classeur contient des renseignements personnels d’élèves. Conservez-le uniquement dans un espace autorisé par votre établissement ou votre CSS, et ne le téléversez jamais dans un service en ligne ou un outil d’IA externe non approuvé.']
       ];
       if (isP) {
         readme.push(['Préscolaire', 'Il n’y a pas de pourcentage officiel : 5 compétences (physique et moteur, affectif, social, langagier, cognitif), constats « se développe très bien / adéquatement / avec certaines difficultés / avec des difficultés importantes ». Ici : A-B = très bien, C = adéquatement, D = certaines difficultés, E = difficultés importantes.']);
@@ -402,9 +413,7 @@
       if (!encryptedExcelLibraryPromise) {
         encryptedExcelLibraryPromise = new Promise((resolve, reject) => {
           const script = document.createElement('script');
-          script.src = 'https://cdn.jsdelivr.net/npm/xlsx-populate@1.21.0/browser/xlsx-populate.min.js';
-          script.integrity = 'sha384-YnsK3VaaV54M5EcU58Pt9SdJqzL0iZpQzQAcav+18Kgn5tbwk16y/3g6FpT2d83h';
-          script.crossOrigin = 'anonymous';
+          script.src = 'carnet-test/vendor/xlsx-populate.min.js';
           script.onload = () => {
             if (typeof XlsxPopulate === 'undefined') {
               script.remove();
@@ -413,7 +422,7 @@
           };
           script.onerror = () => {
             script.remove();
-            reject(new Error('Impossible de charger la bibliothèque Excel chiffré. Vérifiez la connexion Internet.'));
+            reject(new Error('Impossible de charger la bibliothèque Excel chiffré.'));
           };
           document.head.appendChild(script);
         }).catch(error => {

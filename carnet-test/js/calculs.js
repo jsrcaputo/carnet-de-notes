@@ -7,7 +7,7 @@
       (checkedKeys || []).forEach(k => {
         const parts = k.split('_');
         const fam = parts[parts.length - 2];
-        if (counts[fam] !== undefined) {
+        if (OWN.call(counts, fam)) {
           counts[fam]++;
           total++;
         }
@@ -114,7 +114,7 @@
         const parts = k.split('_');
         const fam = parts[parts.length - 2];
         const critId = parts.slice(0, -2).join('_');
-        if (counts[fam] !== undefined) {
+        if (OWN.call(counts, fam)) {
           counts[fam]++;
           pickedByCriterion[critId] = fam;
           total++;
