@@ -9,6 +9,51 @@
       });
     }
 
+    function getIncompleteModifiedCompetency(student, subject) {
+      if (!student || !subject || !isSubjectModifiedForStudent(student, subject)) return null;
+      const tabs = getCompetencyTabs();
+      const picks = getAnnualCompetencyPicks(student);
+      let target = null;
+      tabs.forEach(tab => {
+        if (target) return;
+        const directScale = tab.scales.find(scale => scale.id === subject.id);
+        if (directScale) {
+          target = { tab, scales: [directScale] };
+          return;
+        }
+        const tabKey = { sciences_global: 'sciences', univers_social: 'social' }[tab.id] || tab.id;
+        if (subject.singleResult && subject.group === tabKey) target = { tab, scales: tab.scales.slice() };
+      });
+      if (!target || !target.scales.length) return null;
+      const missing = target.scales.filter(scale => !computeCompetencyResult(scale, picks[scale.id] || {}));
+      return missing.length ? { tabId: target.tab.id, missing } : null;
+    }
+
+    let competencyGuideTarget = null;
+
+    function flashCompetencyElement(element) {
+      if (!element) return;
+      element.classList.remove('is-attention-flash');
+      void element.offsetWidth;
+      element.classList.add('is-attention-flash');
+      window.setTimeout(() => element.classList.remove('is-attention-flash'), 1700);
+    }
+
+    function beginMissingModifiedCompetencyGuide(studentId, tabId, scaleId) {
+      const student = appState.students.find(item => item.id === studentId);
+      if (!student || !tabId || !scaleId) return;
+      competencyGuideTarget = { tabId, scaleId, studentId: student.id };
+      const details = document.getElementById('competencyPositioning');
+      if (!details) return;
+      if (details.open) {
+        details.open = false;
+        competencyPanelOpen = false;
+      }
+      const summary = details.querySelector(':scope > summary');
+      flashCompetencyElement(summary);
+      scrollToCompetencyElement(summary);
+    }
+
     function renderGlobalReportView() {
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
@@ -280,7 +325,7 @@
           <section class="comp-scale${result ? ' has-picks' : ''}" aria-label="${escapeHtml(scale.label)}">
             <div>
               <h4 class="text-sm font-bold text-slate-900">${escapeHtml(scale.label)}</h4>
-              <p class="mt-0.5 text-[11px] text-slate-500">Cliquez les phrases qui décrivent l’élève. Les rapprochements entre échelons sont automatiques et peuvent être imparfaits : survolez une phrase pour les vérifier. Un clic sur une phrase rapprochée remplace le choix précédent. Le regroupement revu conserve les phrases déjà choisies, mais peut changer le niveau estimé. Ces repères de 2002 et l’estimation ne remplacent pas les échelles officielles de fin de cycle ni votre jugement professionnel.</p>
+              <p class="mt-0.5 text-[11px] text-slate-500">Chaque phrase peut être choisie séparément. Sélectionnez les constats qui décrivent précisément l’élève.</p>
             </div>
             ${cycles.map(cycle => {
               const levels = model.levels.filter(level => level.cycle === cycle);
@@ -298,7 +343,7 @@
                           <span>Échelon ${level.n} / ${scale.max}</span>
                           ${result && result.level === level.n ? '<span class="comp-badge">Niveau estimé</span>' : (cycle && level.n === lastN ? '<span class="comp-end">Attente de fin de cycle</span>' : '')}
                         </div>
-                        <p class="comp-card-text">${level.sentences.map(sentence => sentenceHtml(sentence, level)).join('')}</p>
+                        <div class="comp-card-text">${level.sentences.map(sentence => sentenceHtml(sentence, level)).join('')}</div>
                       </div>
                     `).join('')}
                   </div>
@@ -393,10 +438,7 @@
               `).join('')}
             </div>
             ${selectedTab ? `
-            <div class="flex flex-wrap items-start justify-between gap-2 text-xs text-slate-600">
-              <p class="max-w-3xl">Les échelles décrivent un portrait global : ce repère ne remplace pas votre jugement professionnel.${hasHistoricalCompetencies ? ' Pour chaque échelle, le dernier choix par étape a été repris; les anciens choix restent dans la sauvegarde.' : ''}</p>
-              ${referentielsHtml}
-            </div>
+            ${hasHistoricalCompetencies ? '<p class="comp-history-note">Pour chaque échelle, le dernier choix par étape a été repris; les anciens choix restent dans la sauvegarde.</p>' : ''}
             ${selectedTab.scales.length > 1 ? `
               <div class="comp-subtabs" role="group" aria-label="Compétence de ${escapeHtml(selectedTab.label)}">
                 ${selectedTab.scales.map(scale => {
@@ -407,6 +449,7 @@
               </div>
             ` : ''}
             ${selectedScale ? renderScaleSection(selectedScale) : '<p class="text-sm text-slate-600">Aucune échelle de niveaux de compétence pour les matières de ce groupe.</p>'}
+            ${referentielsHtml}
             ` : ''}
           </div>
         </details>
@@ -414,6 +457,12 @@
 
       // Build Horizontal Bar Chart with 60% threshold line & modified badges
       const sortedFlags = Object.entries(flagFrequency).sort((a, b) => b[1] - a[1]);
+      const competencyWarningHtml = row => {
+        if (!row.isModified) return '';
+        const incomplete = getIncompleteModifiedCompetency(st, row.sub);
+        if (!incomplete) return '';
+        return `<button type="button" class="competency-mod-warning no-print" data-competency-guide-student="${escapeHtml(st.id)}" data-competency-guide-tab="${escapeHtml(incomplete.tabId)}" data-competency-guide-scale="${escapeHtml(incomplete.missing[0].id)}" aria-label="Niveaux de compétence à compléter pour ${escapeHtml(row.sub.shortName)}" title="Niveau de compétence à compléter — cliquer pour ouvrir le parcours guidé"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 19h18.4Z"/><path d="M12 8v6M12 17.2h.01"/></svg></button>`;
+      };
       const renderTrendBadge = (deltaVal, t1Val, t2Val, t3Val) => {
         const trailParts = [
           t1Val !== null ? `É1: ${t1Val}%` : null,
@@ -436,7 +485,7 @@
         const pct = r.annualAvg !== null ? r.annualAvg : 0;
         const info = getAnnualResultInfo(r.t1, r.t2, r.t3);
         const modTag = r.isModified
-          ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>`
+          ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}`
           : '';
         return `
           <div class="space-y-1">
@@ -622,7 +671,7 @@
                 <th class="p-2.5 text-center border-l border-slate-800">Étape 1${weightMode === 'official' ? ' (20 %)' : ''}</th>
                 <th class="p-2.5 text-center border-l border-slate-800">Étape 2${weightMode === 'official' ? ' (20 %)' : ''}</th>
                 <th class="p-2.5 text-center border-l border-slate-800">Étape 3${weightMode === 'official' ? ' (60 %)' : ''}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">${weightMode === 'official' ? 'Résultat annuel (20/20/60)' : 'Moyenne des étapes'}</th>
+                <th class="p-2.5 text-center border-l border-slate-800">${weightMode === 'official' ? 'Résultat annuel' : 'Moyenne des étapes'}</th>
                 <th class="p-2.5 text-center border-l border-slate-800">Tendance (Écart)</th>
               </tr>
             </thead>
@@ -631,7 +680,7 @@
                 <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
                   <td class="p-2.5 font-bold text-slate-900">
                     <span>${r.sub.shortName}${r.sub.officialWeight !== null ? ` <small class="font-semibold text-slate-500">— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}</span>
-                    ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>` : ''}
+                    ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}` : ''}
                   </td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t2 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t2))}">${pctToClosestGradeCode(r.t2)} (${r.t2}%)</span>` : '—'}</td>
@@ -667,6 +716,16 @@
         document.getElementById('grTeacherCommentPrint').textContent = event.target.value;
         scheduleAppStateSave();
       });
+      container.querySelectorAll('[data-competency-guide-student]').forEach(button => {
+        button.addEventListener('click', event => {
+          event.preventDefault();
+          beginMissingModifiedCompetencyGuide(
+            button.getAttribute('data-competency-guide-student'),
+            button.getAttribute('data-competency-guide-tab'),
+            button.getAttribute('data-competency-guide-scale')
+          );
+        });
+      });
       const compPrintBtn = document.querySelector('#competencyPositioning [data-comp-print]');
       if (compPrintBtn) {
         compPrintBtn.addEventListener('click', (event) => {
@@ -681,6 +740,12 @@
         competencyDetails.querySelector(':scope > summary').addEventListener('click', event => {
           if (competencyDetails.open || event.target.closest('button')) return;
           scrollToCompetencyElement(competencyDetails);
+          if (competencyGuideTarget && competencyGuideTarget.studentId === st.id) {
+            window.setTimeout(() => {
+              const subjectButton = competencyDetails.querySelector(`[data-competency-subject="${CSS.escape(competencyGuideTarget.tabId)}"]`);
+              flashCompetencyElement(subjectButton);
+            }, 90);
+          }
         });
         competencyDetails.addEventListener('toggle', () => {
           if (!competencyDetails.isConnected) return;
@@ -755,11 +820,22 @@
           const subjectButton = event.target.closest('.competency-subject-button');
           if (subjectButton && !subjectButton.disabled) {
             competencySubjectSelected = subjectButton.getAttribute('data-competency-subject');
+            const guidedScaleId = competencyGuideTarget &&
+              competencyGuideTarget.studentId === st.id &&
+              competencyGuideTarget.tabId === competencySubjectSelected
+              ? competencyGuideTarget.scaleId : null;
+            if (guidedScaleId) competencyScaleSelected[competencySubjectSelected] = guidedScaleId;
             renderGlobalReportView();
             const tabs = document.querySelector('#competencyPositioning .comp-tabs');
             const selected = tabs && tabs.querySelector('.competency-subject-button.is-active');
             if (selected) selected.focus({ preventScroll: true });
             scrollToCompetencyElement(tabs);
+            if (guidedScaleId) {
+              window.setTimeout(() => {
+                const scaleButton = document.querySelector(`[data-comp-scale-tab="${CSS.escape(guidedScaleId)}"]`);
+                flashCompetencyElement(scaleButton);
+              }, 80);
+            }
             return;
           }
           const scaleTab = event.target.closest('[data-comp-scale-tab]');

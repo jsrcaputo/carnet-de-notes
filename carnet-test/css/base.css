@@ -3,7 +3,7 @@
       box-sizing: border-box;
     }
     .brand-title {
-      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
       letter-spacing: -0.025em;
     }
     html, body {

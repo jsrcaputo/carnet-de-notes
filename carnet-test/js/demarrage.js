@@ -77,17 +77,39 @@
         document.documentElement.setAttribute('data-palette', 'ocean');
         document.documentElement.classList.remove('theme-dark');
       }
+      const demoToggle = document.getElementById('welcomeDemoToggle');
+      const demoContent = document.getElementById('welcomeDemoContent');
+      if (demoToggle && demoContent) {
+        demoToggle.setAttribute('aria-expanded', 'false');
+        demoContent.classList.remove('is-open');
+        demoContent.hidden = true;
+      }
       document.getElementById('welcomeOverlay').classList.remove('hidden');
       document.getElementById('welcomeOverlay').focus({ preventScroll: true });
     }
 
     function hideWelcome() {
       document.getElementById('welcomeOverlay').classList.add('hidden');
+      hideFirstGroupHint();
       applyPrefs();
     }
 
     function dismissWelcome() {
       hideWelcome();
+      showFirstGroupHint();
+    }
+
+    function showFirstGroupHint() {
+      if (!isPristineInitialGroup()) return;
+      const hint = document.getElementById('firstGroupHint');
+      if (!hint) return;
+      hint.classList.remove('hidden');
+      window.setTimeout(() => hint.classList.add('hidden'), 9000);
+    }
+
+    function hideFirstGroupHint() {
+      const hint = document.getElementById('firstGroupHint');
+      if (hint) hint.classList.add('hidden');
     }
 
     function updateGradebookTopScroll() {
@@ -321,12 +343,46 @@
         if (!event.target.closest('.welcome-card')) dismissWelcome();
       });
       document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
+      document.getElementById('welcomeDemoToggle').addEventListener('click', event => {
+        const toggle = event.currentTarget;
+        const content = document.getElementById('welcomeDemoContent');
+        const expanded = toggle.getAttribute('aria-expanded') === 'true';
+        toggle.setAttribute('aria-expanded', String(!expanded));
+        if (expanded) {
+          content.classList.remove('is-open');
+          window.setTimeout(() => { content.hidden = true; }, 340);
+        } else {
+          content.hidden = false;
+          requestAnimationFrame(() => content.classList.add('is-open'));
+        }
+      });
+      const demoChoices = document.querySelectorAll('#welcomeDemoChoices input[type="checkbox"]');
+      const syncDemoChoices = () => {
+        const selected = [...demoChoices].filter(input => input.checked);
+        document.getElementById('welcomeDemo').disabled = selected.length !== 1;
+      };
+      demoChoices.forEach(input => input.addEventListener('change', event => {
+        if (event.target.checked) {
+          demoChoices.forEach(other => {
+            if (other !== event.target) other.checked = false;
+          });
+        }
+        syncDemoChoices();
+      }));
+      syncDemoChoices();
       document.getElementById('welcomeDemo').addEventListener('click', () => {
+        const selectedOptionIds = [...demoChoices].filter(input => input.checked).map(input => input.value);
+        if (selectedOptionIds.length !== 1) {
+          showToast('Choisissez au moins une classe de démonstration.');
+          return;
+        }
         requestObservationDraftExit(() => {
-          if (isPristineInitialGroup()) initializeExampleGroups();
-          else ensureExampleGroups();
+          if (isPristineInitialGroup()) initializeExampleGroups(selectedOptionIds);
+          else ensureExampleGroups(selectedOptionIds);
           hideWelcome();
-          switchGroup('grp_presco');
+          const firstOption = DEMO_OPTIONS.find(option => selectedOptionIds.includes(option.id));
+          const firstGroupId = firstOption && firstOption.groups[0] ? firstOption.groups[0].id : null;
+          if (firstGroupId) switchGroup(firstGroupId);
           appState.activeView = 'viewStudents';
           expandedSubjectGroup = null;
           renderAll();
@@ -355,9 +411,10 @@
         const modal = ['welcomeOverlay', 'tutorialOverlay'].map(id => document.getElementById(id))
           .find(el => !el.classList.contains('hidden'));
         if (!modal) return;
-        const buttons = [...modal.querySelectorAll('button:not(:disabled)')].filter(button => button.getClientRects().length);
-        const first = buttons[0];
-        const last = buttons[buttons.length - 1];
+        const controls = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)')]
+          .filter(control => control.getClientRects().length);
+        const first = controls[0];
+        const last = controls[controls.length - 1];
         if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
           event.preventDefault();
           last.focus();
@@ -694,12 +751,17 @@
 
       // Equal Weights Button
       const closeWeightMode = () => {
+        const controls = document.getElementById('weightControls');
         weightMode = false;
         unlockedWeights.clear();
         weightLevel = '';
         document.getElementById('btnWeightMode').setAttribute('aria-expanded', 'false');
-        document.getElementById('weightControls').classList.add('hidden');
-        renderGradebookView();
+        controls.classList.add('is-closing');
+        window.setTimeout(() => {
+          controls.classList.remove('is-closing');
+          controls.classList.add('hidden');
+          if (appState.activeView === 'viewGradebook') renderGradebookView();
+        }, 190);
       };
       document.getElementById('btnWeightMode').addEventListener('click', () => {
         weightMode = !weightMode;
@@ -711,7 +773,7 @@
         }
       });
       document.addEventListener('pointerdown', event => {
-        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, #gradebookTopScroll, #gradebookScrollContainer, .gb-scroll-arrow, #weightGuide')) return;
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, [data-weight-box], [data-weight-lock], [data-weight-step], [data-weight-input], #weightGuide')) return;
         setTimeout(() => {
           if (weightMode) closeWeightMode();
         }, 0);
@@ -737,6 +799,7 @@
 
       // Add Assignment Modal (Requires explicit custom name!)
       const modalAsg = document.getElementById('modalAddAssignment');
+      let modalEditingAssignmentId = null;
       const renderModalAddAsgTargetLevels = () => {
         const box = document.getElementById('asgTargetLevelsBox');
         const list = document.getElementById('asgTargetLevelsList');
@@ -787,6 +850,10 @@
       };
 
       document.getElementById('btnOpenAddAssignment').addEventListener('click', () => {
+        modalEditingAssignmentId = null;
+        document.getElementById('modalAddAssignmentTitle').textContent = 'Ajout d’une évaluation';
+        document.getElementById('btnConfirmAddAssignment').textContent = 'Ajouter au carnet';
+        document.getElementById('btnConfirmAddAssignment').textContent = 'Ajouter au carnet';
         const titleIn = document.getElementById('inputAssignmentTitle');
         titleIn.value = '';
         document.getElementById('inputAssignmentOutOf').value = '100';
@@ -813,9 +880,49 @@
         setTimeout(() => titleIn.focus(), 50);
       });
 
+      window.openAssignmentForEditing = asgId => {
+        const termData = getActiveTermData();
+        const subData = termData.subjectData[appState.activeSubjectId];
+        const assignment = subData && (subData.assignments || []).find(item => item.id === asgId && !item.isObservation);
+        if (!assignment) return;
+        modalEditingAssignmentId = assignment.id;
+        document.getElementById('modalAddAssignmentTitle').textContent = 'Modifier l’évaluation';
+        document.getElementById('btnConfirmAddAssignment').textContent = 'Enregistrer les modifications';
+        document.getElementById('inputAssignmentTitle').value = assignment.title || '';
+        document.getElementById('inputAssignmentOutOf').value = String(getAssignmentOutOf(assignment));
+        document.getElementById('inputAssignmentDate').value = assignment.date || new Date().toISOString().slice(0, 10);
+        modalAddAsgTargetLevels = getAssignmentTargetLevels(assignment).slice();
+        renderModalAddAsgTargetLevels();
+
+        const linkBox = document.getElementById('asgLinkedPartsBox');
+        const linkList = document.getElementById('asgLinkedParts');
+        linkList.innerHTML = '';
+        const current = getCurrentSubjectConfig();
+        const siblings = current.group ? getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(s => s.group === current.group && s.id !== current.id) : [];
+        linkBox.classList.toggle('hidden', !assignment.linkId || !siblings.length);
+        siblings.forEach(subject => {
+          const linked = assignment.linkId
+            ? getLinkedAssignments(assignment).some(link => link.sub.id === subject.id)
+            : false;
+          const label = document.createElement('label');
+          label.className = 'inline-flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer';
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.value = subject.id;
+          checkbox.checked = linked;
+          label.append(checkbox, document.createTextNode(getSubjectContextDisplay(subject).partLabel));
+          linkList.appendChild(label);
+        });
+        modalAsg.classList.remove('hidden');
+        modalAsg.classList.add('flex');
+        setTimeout(() => document.getElementById('inputAssignmentTitle').focus(), 50);
+      };
+
       const closeAsgModal = () => {
         modalAsg.classList.add('hidden');
         modalAsg.classList.remove('flex');
+        modalEditingAssignmentId = null;
+        document.getElementById('modalAddAssignmentTitle').textContent = 'Ajout d’une évaluation';
         newEvaluationButton.focus();
       };
       document.getElementById('btnCloseModalAssignment').addEventListener('click', closeAsgModal);
@@ -865,6 +972,34 @@
         if (!Number.isFinite(outOfRaw) || outOfRaw <= 0) {
           showToast('Le dénominateur (note sur…) doit être un nombre positif, par exemple 40.');
           document.getElementById('inputAssignmentOutOf').focus();
+          return;
+        }
+        if (modalEditingAssignmentId) {
+          const termData = getActiveTermData();
+          const subData = termData.subjectData[appState.activeSubjectId];
+          const assignment = subData && (subData.assignments || []).find(item => item.id === modalEditingAssignmentId);
+          if (!assignment) {
+            closeAsgModal();
+            showToast('Cette évaluation n’existe plus.');
+            return;
+          }
+          const targetLevels = (isMultiLevelGroup() && modalAddAsgTargetLevels.length > 0)
+            ? modalAddAsgTargetLevels.slice()
+            : [];
+          const linked = assignment.linkId
+            ? Object.values(termData.subjectData).flatMap(data =>
+                (data.assignments || []).filter(item => item.linkId === assignment.linkId))
+            : [assignment];
+          linked.forEach(item => {
+            item.title = title;
+            item.date = date;
+            item.outOf = outOfRaw;
+            if (targetLevels.length) item.targetLevels = targetLevels.slice();
+            else delete item.targetLevels;
+          });
+          closeAsgModal();
+          notifyUpdate(`Évaluation "${title}" modifiée`);
+          renderAll();
           return;
         }
         const termData = getActiveTermData();
@@ -1421,6 +1556,11 @@
       document.addEventListener('click', e => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettingsPanel();
       });
+      document.addEventListener('pointerdown', event => {
+        if (event.target.closest('.column-color-trigger, .column-color-popover')) return;
+        document.querySelectorAll('.column-color-popover').forEach(popover => popover.classList.add('hidden'));
+        document.querySelectorAll('.column-color-trigger').forEach(trigger => trigger.setAttribute('aria-expanded', 'false'));
+      });
       settingsPanel.querySelectorAll('.sp-seg button').forEach(b => b.addEventListener('click', () => {
         prefs[b.parentElement.getAttribute('data-pref')] = b.getAttribute('data-val');
         applyPrefs();
@@ -1441,6 +1581,8 @@
       settingsPanel.querySelectorAll('[data-pref-check]').forEach(cb => cb.addEventListener('change', () => {
         prefs[cb.getAttribute('data-pref-check')] = cb.checked;
         applyPrefs();
+        scheduleAppStateSave();
+        if (appState.activeView === 'viewGradebook') renderGradebookView();
       }));
       window.addEventListener('beforeunload', event => {
         const needsBackupPrompt = getBackupSnapshot() !== lastSavedFileSnapshot;

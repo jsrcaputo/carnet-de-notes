@@ -18,7 +18,8 @@
 
       const baseScores = [
         91, 76, 68, 84, 55, 72, 81, 48, 88, 63,
-        73, 95, 58, 79, 65, 86, 52, 75, 92, 69
+        73, 95, 58, 79, 65, 86, 52, 75, 92, 69,
+        82, 61, 89, 54
       ];
 
       const multiBaseScores = [76, 72, 80, 74, 67, 82, 75, 69, 77, 73, 81, 68, 78, 79, 71, 83, 65, 76, 74, 80];
@@ -590,104 +591,84 @@
       return terms;
     }
 
-    function buildDemoRegulierStudents(previousSeed = false) {
-      const names = [
-        'Colette Pamplemousse', 'Gaston Ravioli-Tornade', 'Mireille Cornichon', 'Hector Chaussette',
-        'Odette Spaghetti', 'Fernand Balai-à-Confettis', 'Berthe Flan-au-Caramel', 'Maurice Rutabaga',
-        'Léontine Pot-au-Feu', 'Boris Pigeon-en-Rollers', 'Suzette Trombone', 'Anatole Poisson-Bulle',
-        'Paulette Moustache-Singe', 'Octave Chaise-Pliante', 'Germaine Nouille', 'Firmin Glaçon-Majestueux',
-        'Rosalie Biscuit-Volant', 'Léopold Citrouille', 'Adèle Frigo-à-Ressort', 'Honoré Banane-Cosmique'
-      ];
-      return names.map((name, idx) => {
-        const parts = name.split(' ');
-        return {
-          id: `st_reg_${idx + 1}`,
-          name,
-          firstName: parts[0],
-          lastName: parts.slice(1).join(' '),
-          gradeLevel: '2',
-          adaptations: idx === 3 ? (previousSeed ? ['T+'] : ['Temps supplémentaire'])
-            : idx === 7 ? (previousSeed ? ['ADAPT'] : ['Consignes fractionnées'])
-              : idx === 13 ? (previousSeed ? ['OUTIL'] : ['Correcteur']) : [],
-          customAdapt: '',
-          modifiedExpectations: {},
-          competencyTerms: {},
-          competencyMeq: {},
-          ...(!previousSeed && idx === 0 ? {
-            reportComment: `${name.split(' ')[0]} participe avec curiosité et apporte de belles idées aux échanges. En lecture, elle gagne à prendre le temps de revenir au texte pour appuyer ses réponses. Nous poursuivrons la pratique de ces stratégies ensemble.`
-          } : {})
-        };
+    const DEMO_FIRST_NAMES = [
+      'Colette', 'Gaston', 'Mireille', 'Hector', 'Odette', 'Fernand',
+      'Berthe', 'Maurice', 'Léontine', 'Boris', 'Suzette', 'Anatole',
+      'Paulette', 'Octave', 'Germaine', 'Firmin', 'Rosalie', 'Léopold',
+      'Adèle', 'Honoré', 'Casimir', 'Yvette', 'Godefroy', 'Bibiane',
+      'Joséphine', 'Hubert', 'Félicie', 'Urbain', 'Mariette', 'Achille'
+    ];
+    const DEMO_LAST_NAMES = [
+      'Pamplemousse', 'Ravioli', 'Cornichon', 'Chaussette', 'Spaghetti', 'Toboggan',
+      'Flamby', 'Rutabaga', 'Galette', 'Pigeon', 'Trombone', 'Poisson',
+      'Moustache', 'Plume', 'Nouille', 'Glaçon', 'Biscuit', 'Citrouille',
+      'Frigidaire', 'Banane', 'Brocoli', 'Cacahuète', 'Patate', 'Tarte',
+      'Boudin', 'Coucou', 'Chou', 'Pétunia', 'Fromage', 'Casserole',
+      'Navet', 'Poireau', 'Omelette', 'Haricot', 'Croquette', 'Crayon'
+    ];
+    const DEMO_REPORT_COMMENTS = [
+      first => `${first} participe avec curiosité et apporte des idées pertinentes aux échanges. Prendre le temps de vérifier ses réponses consolidera ses acquis.`,
+      first => `${first} mobilise les notions apprises avec assurance et explique clairement sa démarche. Les défis plus complexes lui permettent de poursuivre ses apprentissages.`,
+      first => `${first} démontre de beaux progrès lorsqu’une routine claire et des outils visuels soutiennent le travail. Continuer à utiliser ces repères favorisera son autonomie.`,
+      first => `${first} s’investit avec constance et persévère devant les difficultés. Prendre le temps de relire les consignes demeure un objectif prioritaire.`,
+      first => `${first} contribue positivement au climat de classe et respecte bien les étapes proposées. La précision des productions peut encore se développer.`,
+      first => `${first} fait preuve d’initiative et comprend rapidement les nouvelles situations. Encourager la nuance des explications consolidera ce beau potentiel.`,
+      first => `${first} progresse à son rythme et réussit davantage avec un guidage étape par étape. Les encouragements et la pratique régulière soutiennent sa confiance.`,
+      first => `${first} utilise ses stratégies avec de plus en plus d’autonomie. Une relecture ciblée des accords et des calculs améliorera la qualité du résultat.`,
+      first => `${first} prend une place active dans les discussions et écoute les idées des autres. Organiser ses idées avant de répondre l’aidera à être plus précis.`,
+      first => `${first} démontre une bonne compréhension générale, particulièrement lorsque les apprentissages sont liés à des situations concrètes. Poursuivre les efforts de vérification.`,
+      first => `${first} travaille avec soin et accepte bien les rétroactions. Les prochains défis viseront une application plus régulière des stratégies enseignées.`,
+      first => `${first} présente une persévérance remarquable et demande de l’aide au moment opportun. Les progrès observés permettent d’aborder les prochaines notions avec confiance.`
+    ];
+
+    function buildDemoNames(count, offset) {
+      return Array.from({ length: count }, (_, index) => {
+        const first = DEMO_FIRST_NAMES[(index + offset) % DEMO_FIRST_NAMES.length];
+        const last = DEMO_LAST_NAMES[(index * 7 + offset * 3) % DEMO_LAST_NAMES.length];
+        return `${first} ${last}`;
       });
     }
 
-    function buildDemoMultiStudents(previousSeed = false) {
-      const multiDefs = [
-        { name: 'Amédée Brocoli-Rocket', grade: '5' },
-        { name: 'Yvette Cacahuète-Disco', grade: '5' },
-        { name: 'Théodore Patate-en-Savate', grade: '5' },
-        { name: 'Clothilde Tarte-à-la-Moustache', grade: '5' },
-        { name: 'Marcel Bûche-d’Arc-en-Ciel', grade: '5' },
-        { name: 'Huguette Machine-à-Coucou', grade: '5' },
-        { name: 'Barnabé Chou-Fleur-Volant', grade: '5' },
-        { name: 'Cunégonde Pétunia-à-Roulettes', grade: '5' },
-        { name: 'Casimir Fromage-en-Suspension', grade: '5', modified: { fra_ecriture: '4', math_resoudre: '4' } },
-        { name: 'Solange Casserole-Mélodieuse', grade: '5' },
-        { name: 'Godefroy Boudin-Interstellaire', grade: '6' },
-        { name: 'Bibiane Clémentine-à-Ressort', grade: '6' },
-        { name: 'Norbert Navet-du-Futur', grade: '6' },
-        { name: 'Églantine Poireau-Télégraphe', grade: '6' },
-        { name: 'Rodolphe Beigne-au-Pinceau', grade: '6' },
-        { name: 'Victoire Omelette-Nébuleuse', grade: '6' },
-        { name: 'Edmond Haricot-Magique', grade: '6' },
-        { name: 'Sidonie Salade-de-Météores', grade: '6' },
-        { name: 'Zéphirin Crayon-Volontaire', grade: '6' },
-        { name: 'Philomène Croquette-de-la-Lune', grade: '6' }
-      ];
-      return multiDefs.map((def, idx) => {
-        const parts = def.name.split(' ');
+    function buildDemoStudents(prefix, count, levels, nameOffset = 0, modifiedIndex = -1) {
+      return buildDemoNames(count, nameOffset).map((name, index) => {
+        const [firstName, lastName] = name.split(' ');
+        const gradeLevel = typeof levels === 'function' ? levels(index) : levels;
+        const modified = index === modifiedIndex && String(gradeLevel) !== 'P';
+        const adaptations = modified
+          ? ['Lecture des consignes', 'Temps supplémentaire', 'Bulletin modifié']
+          : index === 3 ? ['Temps supplémentaire']
+            : index === 7 ? ['Consignes fractionnées']
+              : index === 13 ? ['Correcteur'] : [];
+        const modifiedExpectations = modified
+          ? { fra_ecriture: String(Number(gradeLevel) - 1), math_resoudre: String(Number(gradeLevel) - 1) }
+          : {};
+        const reportComment = modified
+          ? `${firstName} fait preuve de persévérance et utilise de mieux en mieux les outils proposés. Les attentes modifiées sont indiquées au bulletin; nous poursuivrons le développement de son autonomie, une étape à la fois.`
+          : DEMO_REPORT_COMMENTS[index % DEMO_REPORT_COMMENTS.length](firstName);
         return {
-          id: `st_multi_${idx + 1}`,
-          name: def.name,
-          firstName: parts[0],
-          lastName: parts.slice(1).join(' '),
-          gradeLevel: def.grade,
-          adaptations: idx === 8 ? (previousSeed ? ['ADAPT', 'T+'] : ['Lecture des consignes', 'Temps supplémentaire', 'Bulletin modifié'])
-            : idx === 12 ? (previousSeed ? ['OUTIL'] : ['Correcteur']) : [],
+          id: `st_${prefix}_${index + 1}`,
+          name,
+          firstName,
+          lastName,
+          gradeLevel,
+          adaptations,
           customAdapt: '',
-          modifiedExpectations: def.modified || {},
+          modifiedExpectations,
           competencyTerms: {},
           competencyMeq: {},
-          ...(!previousSeed && idx === 8 ? {
-            reportComment: `${def.name.split(' ')[0]} fait preuve de persévérance et utilise de mieux en mieux les outils proposés en classe. Les attentes sont modifiées en résolution de problèmes et en écriture. Nous continuerons à souligner ses progrès et à développer son autonomie, une étape à la fois.`
-          } : {})
+          competencyComments: {},
+          reportComment
         };
       });
     }
 
     function buildDemoPreschoolData(previousSeed = false) {
-      const preschoolNames = [
-        'Joséphine Poussin-Grenouille', 'Hubert Crêpe-Soufflée', 'Félicie Nuage-en-Pantoufles', 'Urbain Biscuit-du-Matin',
-        'Albertine Cerise-Clochette', 'Boniface Carotte-à-Bicyclette', 'Mariette Bouton-Rigolo', 'Achille Soupe-de-Fusées',
-        'Gisèle Tortue-Tambour', 'Firminette Dino-d’Herbe', 'Constance Kiwi-Galaxie', 'Octavie Tracteur-Papillon',
-        'Édouardette Chausson-Musical', 'Valentine Pépin-de-Marshmallow', 'Marguerite Flocon-Parapluie', 'Basile Cornet-de-Nénuphar',
-        'Angélique Moutarde-à-Paillettes', 'Gustave Boule-de-Neige-Biscornu', 'Solène Trompette-Framboise', 'Pacôme Patapouf-Lunaire'
-      ];
-      const students = buildDemoRegulierStudents(previousSeed).map((student, index) => {
-        const nameParts = preschoolNames[index].split(' ');
-        return {
-          ...student,
-          id: `st_presco_${index + 1}`,
-          name: preschoolNames[index],
-          firstName: nameParts[0],
-          lastName: nameParts.slice(1).join(' '),
-          gradeLevel: 'P',
-          adaptations: [],
-          modifiedExpectations: {},
-          ...(!previousSeed && index === 0 ? {
-            reportComment: `${nameParts[0]} arrive en classe avec enthousiasme et aime partager ses découvertes. Les jeux en petit groupe l’aident à exprimer ses idées et à prendre confiance. Nous continuerons à l’accompagner dans ses nouvelles expériences.`
-          } : {})
-        };
-      });
+      const students = buildDemoStudents('presco', 13, 'P', 24).map((student, index) => ({
+        ...student,
+        reportComment: index === 0
+          ? `${student.firstName} arrive en classe avec enthousiasme et aime partager ses découvertes. Les jeux en petit groupe l’aident à exprimer ses idées et à prendre confiance.`
+          : student.reportComment
+      }));
       const terms = {
         '1': buildTermDataForStudents(students),
         '2': buildTermDataForStudents(students),
@@ -849,119 +830,101 @@
       return { students, terms, selectedStudentId: students[0].id };
     }
 
-    const EXAMPLE_GROUP_NAMES = {
-      grp_presco: { old: ['Modèle — Préscolaire', 'Test-Présco'], current: 'Test-001' },
-      grp_regulier_2e: { old: ['Modèle — 2e année', 'Test-2e'], current: 'Test-201' },
-      grp_multi_5e6e: { old: ['Modèle — 5e et 6e année', 'Test-5e/6e'], current: 'Test-503' }
-    };
-    const EXAMPLE_GROUP_IDS = new Set(Object.keys(EXAMPLE_GROUP_NAMES));
+    const DEMO_OPTIONS = [
+      { id: 'presco', label: 'Préscolaire', groups: [
+        { id: 'grp_presco', name: 'Démo — Préscolaire', count: 13, level: 'P', offset: 24 }
+      ] },
+      { id: 'annee1', label: '1re année', groups: [
+        { id: 'grp_annee1', name: 'Démo — 1re année', count: 19, level: '1', offset: 1 }
+      ] },
+      { id: 'annee2', label: '2e année', groups: [
+        { id: 'grp_regulier_2e', name: 'Démo — 2e année', count: 20, level: '2', offset: 2 }
+      ] },
+      { id: 'annee3', label: '3e année', groups: [
+        { id: 'grp_annee3', name: 'Démo — 3e année', count: 22, level: '3', offset: 4 }
+      ] },
+      { id: 'annee4', label: '4e année', groups: [
+        { id: 'grp_annee4', name: 'Démo — 4e année', count: 21, level: '4', offset: 7 }
+      ] },
+      { id: 'annee5', label: '5e année', groups: [
+        { id: 'grp_annee5', name: 'Démo — 5e année', count: 24, level: '5', offset: 9, modified: true }
+      ] },
+      { id: 'annee6', label: '6e année', groups: [
+        { id: 'grp_annee6', name: 'Démo — 6e année', count: 24, level: '6', offset: 13, modified: true }
+      ] },
+      { id: 'specialiste', label: 'Spécialiste 2e cycle', groups: [
+        { id: 'grp_specialiste_3a', name: 'Démo — Spécialiste 3e A', count: 22, level: '3', offset: 16, specialist: true },
+        { id: 'grp_specialiste_3b', name: 'Démo — Spécialiste 3e B', count: 21, level: '3', offset: 20, specialist: true },
+        { id: 'grp_specialiste_4a', name: 'Démo — Spécialiste 4e A', count: 21, level: '4', offset: 23, specialist: true },
+        { id: 'grp_specialiste_4b', name: 'Démo — Spécialiste 4e B', count: 20, level: '4', offset: 27, specialist: true }
+      ] },
+      { id: 'multi', label: 'Multi-niveau 5e et 6e', groups: [
+        { id: 'grp_multi_5e6e', name: 'Démo — Multi 5e/6e', count: 18, level: '', offset: 6, multi: true, modified: true }
+      ] }
+    ];
+    const EXAMPLE_GROUP_CONFIGS = DEMO_OPTIONS.flatMap(option => option.groups);
+    const EXAMPLE_GROUP_NAMES = Object.fromEntries(EXAMPLE_GROUP_CONFIGS.map(group => [group.id, group.name]));
+    const EXAMPLE_GROUP_IDS = new Set(EXAMPLE_GROUP_CONFIGS.map(group => group.id));
 
     function isExampleGroup(group) {
       return !!group && EXAMPLE_GROUP_IDS.has(group.id);
     }
 
     function updateExampleGroupName(group) {
-      const names = EXAMPLE_GROUP_NAMES[group.id];
-      if (names && names.old.includes(group.name)) group.name = names.current;
+      if (EXAMPLE_GROUP_NAMES[group.id]) group.name = EXAMPLE_GROUP_NAMES[group.id];
     }
 
-    function buildExampleGroups(previousSeed = false) {
-      const regularStudents = buildDemoRegulierStudents(previousSeed);
-      const multiStudents = buildDemoMultiStudents(previousSeed);
-      const regular = { students: regularStudents, terms: buildFullDemoTerms('regulier', regularStudents, false, previousSeed), selectedStudentId: regularStudents[0].id };
-      const multi = { students: multiStudents, terms: buildFullDemoTerms('multi', multiStudents, false, previousSeed), selectedStudentId: multiStudents[0].id };
-      const preschool = buildDemoPreschoolData(previousSeed);
+    function buildExampleGroupData(config) {
+      if (config.level === 'P') return buildDemoPreschoolData();
       const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly);
-      return {
-        groups: [
-          { id: 'grp_presco', name: EXAMPLE_GROUP_NAMES.grp_presco.current, subjectIds: ALL_SUBJECTS_CONFIG.filter(s => s.prescoOnly).map(s => s.id), level: 'P' },
-          { id: 'grp_regulier_2e', name: EXAMPLE_GROUP_NAMES.grp_regulier_2e.current, subjectIds: primarySubjects.filter(s => !['sciences', 'social'].includes(s.group)).map(s => s.id), level: '2' },
-          { id: 'grp_multi_5e6e', name: EXAMPLE_GROUP_NAMES.grp_multi_5e6e.current, subjectIds: primarySubjects.map(s => s.id), level: '' }
-        ],
-        groupStore: { grp_presco: preschool, grp_regulier_2e: regular, grp_multi_5e6e: multi }
-      };
-    }
-
-    function migratePristineExampleModel(existing, legacy, replacement) {
-      if (!existing || !Array.isArray(existing.students) || !existing.terms) return false;
-
-      const canonicalize = value => {
-        if (Array.isArray(value)) return value.map(canonicalize);
-        if (!value || typeof value !== 'object') return value;
-        const canonical = {};
-        Object.keys(value).sort().forEach(key => { canonical[key] = canonicalize(value[key]); });
-        return canonical;
-      };
-      const sameData = (left, right) => JSON.stringify(canonicalize(left)) === JSON.stringify(canonicalize(right));
-      const normalizeForComparison = data => normalizeImportedState(JSON.parse(JSON.stringify({
-        students: data.students,
-        terms: data.terms
-      })), true);
-
-      // Never normalize the saved model: that could erase a custom value before the comparison.
-      let matchesSeed = sameData(existing.students, legacy.students) && sameData(existing.terms, legacy.terms);
-      if (!matchesSeed) {
-        const normalizedLegacy = normalizeForComparison(legacy);
-        matchesSeed = sameData(existing.students, normalizedLegacy.students) &&
-          sameData(existing.terms, normalizedLegacy.terms);
+      let subjectIds = primarySubjects.map(subject => subject.id);
+      if (['1', '2'].includes(config.level)) {
+        subjectIds = primarySubjects.filter(subject => !['sciences', 'social'].includes(subject.group)).map(subject => subject.id);
+      } else if (config.specialist) {
+        subjectIds = primarySubjects
+          .filter(subject => ['education_physique', 'anglais', 'art_plast', 'art_dram'].includes(subject.group))
+          .map(subject => subject.id);
       }
-      if (!matchesSeed) return false;
-
-      existing.students = replacement.students;
-      existing.terms = replacement.terms;
-      return true;
+      const levelPicker = config.multi ? index => index < Math.ceil(config.count / 2) ? '5' : '6' : config.level;
+      const students = buildDemoStudents(
+        config.id.replace('grp_', ''),
+        config.count,
+        levelPicker,
+        config.offset,
+        config.modified ? 8 : -1
+      );
+      return {
+        students,
+        terms: buildFullDemoTerms(config.multi ? 'multi' : 'regulier', students),
+        selectedStudentId: students[0].id,
+        subjectIds
+      };
     }
 
-    function migrateEmptyPreschoolModel(existing, template) {
-      if (!existing || !Array.isArray(existing.students) || !existing.terms ||
-          existing.students.length !== template.students.length ||
-          template.students.some(student => {
-            const saved = existing.students.find(item => item.id === student.id);
-            return !saved || saved.name !== student.name || saved.gradeLevel !== 'P';
-          })) return false;
-
-      const preschoolSubjects = ALL_SUBJECTS_CONFIG.filter(subject => subject.prescoOnly);
-      const canMigrate = ['1', '2', '3'].every(termId => {
-        const term = existing.terms[termId];
-        if (!term || !term.subjectData || (term.observations || []).length) return false;
-        return preschoolSubjects.every(subject => {
-          const subData = term.subjectData[subject.id];
-          return subData && Array.isArray(subData.assignments) && !subData.assignments.length &&
-            existing.students.every(student => {
-              const rec = subData.studentRecords && subData.studentRecords[student.id];
-              return rec && !Object.keys(rec.scores || {}).length && !Object.keys(rec.scoreMeta || {}).length &&
-                !(rec.baremeChecked || []).length && !rec.finalJudgmentOverride;
-            });
-        });
+    function buildExampleGroups(selectedOptionIds = DEMO_OPTIONS.map(option => option.id)) {
+      const selected = new Set(selectedOptionIds);
+      const configs = DEMO_OPTIONS.filter(option => selected.has(option.id)).flatMap(option => option.groups);
+      const groups = [];
+      const groupStore = {};
+      configs.forEach(config => {
+        const data = buildExampleGroupData(config);
+        const subjectIds = data.subjectIds || ALL_SUBJECTS_CONFIG.filter(subject => subject.prescoOnly).map(subject => subject.id);
+        delete data.subjectIds;
+        groups.push({ id: config.id, name: config.name, subjectIds, level: config.level });
+        groupStore[config.id] = data;
       });
-      if (!canMigrate) return false;
-
-      ['1', '2', '3'].forEach(termId => {
-        preschoolSubjects.forEach(subject => {
-          const current = existing.terms[termId].subjectData[subject.id];
-          const seeded = template.terms[termId].subjectData[subject.id];
-          current.assignments = seeded.assignments.map(assignment => ({ ...assignment }));
-          existing.students.forEach(student => {
-            const oldRecord = current.studentRecords[student.id];
-            const seededRecord = seeded.studentRecords[student.id];
-            oldRecord.scores = { ...seededRecord.scores };
-            oldRecord.scoreMeta = { ...seededRecord.scoreMeta };
-          });
-        });
-      });
-      return true;
+      return { groups, groupStore };
     }
 
-    function ensureExampleGroups() {
-      const examples = buildExampleGroups();
-      const previous = appState.groups.some(isExampleGroup) ? buildExampleGroups(true) : null;
-      const multiData = appState.activeGroupId === 'grp_multi_5e6e'
-        ? appState
-        : appState.groupStore.grp_multi_5e6e;
-      const legacyMultiStudents = multiData ? buildDemoMultiStudents(true) : null;
-      const legacyMulti = legacyMultiStudents
-        ? { students: legacyMultiStudents, terms: buildFullDemoTerms('multi', legacyMultiStudents, true) }
-        : null;
+    function looksLikeLegacyExampleData(data) {
+      return !!data && Array.isArray(data.students) && data.students.some(student =>
+        /^st_(reg|multi)_/.test(String(student.id || '')) ||
+        /[-’][A-ZÀ-ÖØ-Ýa-zà-ÿ]+(?:[-’].+)?$/.test(String(student.lastName || ''))
+      );
+    }
+
+    function ensureExampleGroups(selectedOptionIds = DEMO_OPTIONS.map(option => option.id)) {
+      const examples = buildExampleGroups(selectedOptionIds);
       examples.groups.forEach(group => {
         const existingGroup = appState.groups.find(existing => existing.id === group.id);
         if (!existingGroup) appState.groups.push(group);
@@ -969,38 +932,41 @@
         const existingData = group.id === appState.activeGroupId
           ? appState
           : appState.groupStore[group.id];
-        const migrated = existingData && previous &&
-          migratePristineExampleModel(existingData, previous.groupStore[group.id], examples.groupStore[group.id]);
-        if (group.id === appState.activeGroupId) {
-          if (!migrated && group.id === 'grp_presco') {
-            migrateEmptyPreschoolModel(existingData, examples.groupStore[group.id]);
-          } else if (!migrated && group.id === 'grp_multi_5e6e' && legacyMulti) {
-            migratePristineExampleModel(existingData, legacyMulti, examples.groupStore[group.id]);
+        const replacement = examples.groupStore[group.id];
+        if (!existingData) {
+          appState.groupStore[group.id] = replacement;
+        } else if (looksLikeLegacyExampleData(existingData)) {
+          if (group.id === appState.activeGroupId) {
+            appState.students = replacement.students;
+            appState.terms = replacement.terms;
+            appState.selectedStudentId = replacement.selectedStudentId;
+          } else {
+            appState.groupStore[group.id] = replacement;
           }
-        } else if (!appState.groupStore[group.id]) {
+        } else if (!appState.groupStore[group.id] && group.id !== appState.activeGroupId) {
           appState.groupStore[group.id] = examples.groupStore[group.id];
-        } else if (!migrated && group.id === 'grp_presco') {
-          migrateEmptyPreschoolModel(existingData, examples.groupStore[group.id]);
-        } else if (!migrated && group.id === 'grp_multi_5e6e' && legacyMulti) {
-          migratePristineExampleModel(existingData, legacyMulti, examples.groupStore[group.id]);
         }
       });
+      return examples;
     }
 
-    function initializeExampleGroups() {
-      ensureExampleGroups();
+    function initializeExampleGroups(selectedOptionIds = DEMO_OPTIONS.map(option => option.id)) {
+      const examples = ensureExampleGroups(selectedOptionIds);
+      const selectedIds = new Set(examples.groups.map(group => group.id));
       appState.groups = [
         { id: 'g1', name: 'Mon groupe', subjectIds: DEFAULT_GROUP_SUBJECT_IDS.slice(), level: '', placeholder: true },
-        ...appState.groups.filter(isExampleGroup)
+        ...examples.groups
       ];
-      // Page neutre : un groupe vide et masqué est actif tant qu'aucun groupe n'est choisi
       appState.activeGroupId = 'g1';
       delete appState.groupStore.g1;
+      Object.keys(appState.groupStore).forEach(groupId => {
+        if (EXAMPLE_GROUP_IDS.has(groupId) && !selectedIds.has(groupId)) delete appState.groupStore[groupId];
+      });
       appState.students = [];
       appState.terms = { '1': buildTermDataForStudents([]), '2': buildTermDataForStudents([]), '3': buildTermDataForStudents([]) };
       appState.selectedStudentId = null;
       appState.activeView = 'viewStudents';
       applyActiveSubjects(appState);
-      renderAll();
+      return examples;
     }
 

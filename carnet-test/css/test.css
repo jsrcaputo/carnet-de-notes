@@ -309,7 +309,11 @@
       }
       #printMeta { display: none; }
       html.design-studio body, html.design-studio button, html.design-studio input, html.design-studio select, html.design-studio textarea { font-family: "Segoe UI", system-ui, sans-serif; }
-      html.design-studio :is(main h2, main h3, main h4, .test-sidebar-brand h1, .welcome-card h2) { font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+      :is(.test-sidebar-brand h1, .brand-title, .welcome-card h2) {
+        font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+        letter-spacing: -.025em;
+      }
+      html.design-studio :is(main h2, main h3, main h4, .test-sidebar-brand h1, .welcome-card h2) { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
       .test-sidebar {
         position: fixed;
         inset: 0 auto 0 0;
@@ -1016,6 +1020,12 @@
       @media (max-height: 700px) { .cb-dialog { overflow-y: auto; } .cb-body { flex: 0 0 400px; } }
       html.design-studio .welcome-card { background: var(--studio-surface); color: var(--studio-text); border-color: var(--studio-border); }
       html.design-studio .welcome-card p { color: var(--studio-text-muted); }
+      html.design-studio .welcome-demo-panel { background: var(--studio-surface-soft); border-color: var(--studio-border-strong); }
+      html.design-studio .welcome-actions .welcome-demo-heading,
+      html.design-studio .welcome-actions .welcome-demo-heading:not(:disabled):hover { background: transparent; color: var(--studio-text); border-color: transparent; }
+      html.design-studio .welcome-demo-choices label { background: var(--studio-surface); border-color: var(--studio-border); }
+      html.design-studio .welcome-demo-choices label:has(input:checked) { background: var(--brand-soft); border-color: var(--brand); }
+      html.design-studio .welcome-card .welcome-privacy { background: var(--brand-soft); border-color: var(--studio-border-strong); color: var(--studio-text); }
       html.design-studio .welcome-close:hover {
         background: var(--studio-surface-soft);
         color: var(--studio-text);
@@ -1866,7 +1876,6 @@
       body.print-gradebook #gbLevelFilterBar,
       body.print-gradebook .cell-flag-trigger,
       body.print-gradebook .weight-tools,
-      body.print-gradebook .asg-title-pencil,
       body.print-gradebook .gb-sort-btn {
         display: none !important;
       }
@@ -2356,6 +2365,153 @@ html.design-studio #viewQuickObs .qo-weight-badge {
   background: var(--brand-soft) !important;
   color: var(--brand-deep) !important;
   border-color: color-mix(in srgb, var(--brand) 28%, transparent) !important;
+}
+
+html.design-studio header.test-topbar button:not(:disabled) {
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease !important;
+}
+html.design-studio header.test-topbar button:not(:disabled):hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, .13) !important;
+}
+html.design-studio header.test-topbar button:not(:disabled):active {
+  transform: translateY(0) scale(.97) !important;
+}
+
+html.design-studio #weightControls {
+  overflow: hidden;
+}
+html.design-studio #weightControls button {
+  border-radius: 8px !important;
+  border-color: var(--studio-border-strong) !important;
+  background: var(--studio-surface-soft) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand) 25%, transparent);
+}
+html.design-studio #weightControls button:hover {
+  background: var(--brand-soft) !important;
+  border-color: var(--brand) !important;
+}
+
+html.design-studio #viewQuickObs :is(.qo-category, .qo-choice, .qo-selected-chip, .qo-selected-chip button) {
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
+}
+
+html.design-studio #competencyPositioning .comp-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  justify-content: stretch;
+  align-items: stretch;
+  gap: .4rem;
+}
+html.design-studio #competencyPositioning .comp-tab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  border-radius: 999px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand) 16%, transparent);
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease;
+}
+html.design-studio #competencyPositioning .comp-tab:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+}
+html.design-studio #competencyPositioning .comp-tab.is-active {
+  box-shadow: inset 0 -2px 0 var(--brand), 0 3px 10px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+html.design-studio #competencyPositioning .comp-subtabs {
+  justify-content: flex-start;
+}
+html.design-studio #competencyPositioning .comp-subtab {
+  min-width: 130px;
+  text-align: center;
+  border-radius: 999px;
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand) 16%, transparent);
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+}
+html.design-studio #competencyPositioning .comp-subtab:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .08);
+}
+
+html.design-studio #competencyPositioning .comp-card-text { color: #26333d; }
+html.design-studio #competencyPositioning .comp-sentence:not(.is-picked):not(.is-sibling) {
+  background: #fff;
+  border-color: #d5dce3;
+  color: #26333d;
+}
+html.design-studio #competencyPositioning .comp-sentence.is-locked:not(.is-picked) {
+  background: #f8fafc;
+  border-color: #d8dee5;
+  color: #52606f;
+}
+html.design-studio #competencyPositioning .comp-end {
+  border: 1px solid color-mix(in srgb, var(--brand) 42%, transparent);
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-weight: 800;
+}
+html.design-studio #competencyPositioning .comp-refs,
+html.design-studio #competencyPositioning .comp-refs-title,
+html.design-studio #competencyPositioning .comp-refs a {
+  color: #7b8590 !important;
+  font-size: 10px !important;
+  font-style: italic;
+  font-weight: 400 !important;
+}
+html.design-studio #competencyPositioning .comp-refs a {
+  text-decoration-color: #c2c8ce;
+}
+html.design-studio.theme-dark #competencyPositioning .comp-card-text { color: #e2e8f0; }
+html.design-studio.theme-dark #competencyPositioning .comp-sentence:not(.is-picked):not(.is-sibling) {
+  background: var(--studio-surface);
+  border-color: var(--line);
+  color: #e2e8f0;
+}
+html.design-studio.theme-dark #competencyPositioning .comp-sentence.is-locked:not(.is-picked) {
+  background: #29313c;
+  color: #cbd5e1;
+}
+html.design-studio.theme-dark #competencyPositioning .comp-refs,
+html.design-studio.theme-dark #competencyPositioning .comp-refs-title,
+html.design-studio.theme-dark #competencyPositioning .comp-refs a {
+  color: #9aa3ad !important;
+}
+
+html.design-studio .test-topbar :is(
+  .hdr-icobtn,
+  #btnPrintView,
+  #btnExportExcel,
+  #btnExportJSON,
+  #btnOpenJSONDirect,
+  #btnFullscreen
+):hover:not(:disabled) {
+  border-color: var(--brand) !important;
+  background: var(--brand-soft) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
+}
+html.design-studio #settingsPanel .sp-color-columns-toggle {
+  background: var(--studio-surface-soft);
+  border-color: var(--studio-border);
+}
+html.design-studio #gradebookScrollContainer thead th.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 9%, var(--studio-surface-soft)) !important;
+}
+html.design-studio #gradebookScrollContainer tbody td.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 7%, var(--studio-surface)) !important;
+}
+html.design-studio #gradebookScrollContainer tbody tr:hover td.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 12%, var(--studio-surface)) !important;
+}
+html.design-studio.theme-dark #gradebookScrollContainer thead th.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 16%, var(--studio-surface-soft)) !important;
+}
+html.design-studio.theme-dark #gradebookScrollContainer tbody td.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 13%, var(--studio-surface)) !important;
+}
+html.design-studio.theme-dark #gradebookScrollContainer tbody tr:hover td.gb-colored-column {
+  background: color-mix(in srgb, var(--assignment-column-color) 19%, var(--studio-surface)) !important;
 }
     /* Impressions : aucun décor d'écran, fond blanc, une seule fiche à la fois */
     @media print {

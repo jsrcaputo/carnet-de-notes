@@ -22,12 +22,38 @@
     <div class="welcome-card">
       <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
       <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
-      <p>La solution tout-en-un pour gérer vos évaluations!</p>
+      <p class="welcome-privacy">Afin de respecter les normes de confidentialité, merci d'anonymiser les étudiant(es) sur vos listes.</p>
       <p id="welcomeLegacyBrowserNotice" class="hidden">Une ancienne copie du carnet est encore conservée dans ce navigateur. Fermez cet accueil, puis ouvrez les options pour la télécharger ou l’effacer après vérification.</p>
       <div class="welcome-actions">
         <button id="welcomeLoad" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
         <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
-        <button id="welcomeDemo" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg></span>Démonstration</span><span>Trois groupes (préscolaire, 2e année et multi 5e/6e), <strong class="underline">avec des noms d’élèves fictifs</strong>, seront chargés pour explorer les fonctionnalités du site.</span></button>
+        <section class="welcome-demo-panel" aria-labelledby="welcomeDemoTitle">
+          <button id="welcomeDemoToggle" class="welcome-demo-heading" type="button" aria-expanded="false" aria-controls="welcomeDemoContent">
+            <span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg></span>
+            <span>
+              <span id="welcomeDemoTitle" class="welcome-demo-title">Explorer une démonstration</span>
+              <span class="welcome-demo-description">Un aperçu avec des noms fictifs.</span>
+            </span>
+            <span class="welcome-demo-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div id="welcomeDemoContent" hidden>
+            <fieldset id="welcomeDemoChoices" class="welcome-demo-choices">
+              <legend class="sr-only">Classes de démonstration</legend>
+              <label><input type="checkbox" value="presco" checked><span><strong>Préscolaire</strong></span></label>
+              <label><input type="checkbox" value="annee1"><span><strong>1re année</strong></span></label>
+              <label><input type="checkbox" value="annee2"><span><strong>2e année</strong></span></label>
+              <label><input type="checkbox" value="annee3"><span><strong>3e année</strong></span></label>
+              <label><input type="checkbox" value="annee4"><span><strong>4e année</strong></span></label>
+              <label><input type="checkbox" value="annee5"><span><strong>5e année</strong></span></label>
+              <label><input type="checkbox" value="annee6"><span><strong>6e année</strong></span></label>
+              <label><input type="checkbox" value="specialiste"><span><strong>Spécialiste 2e cycle</strong></span></label>
+              <label><input type="checkbox" value="multi"><span><strong>Multi-niveau 5e et 6e</strong></span></label>
+            </fieldset>
+            <div class="welcome-demo-footer">
+              <button id="welcomeDemo" class="welcome-demo-launch" type="button">Charger la démonstration</button>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -52,6 +78,11 @@
       <p id="weightGuideDescription">Les évaluations peuvent différer d’un niveau à l’autre. Sélectionnez chaque niveau dans la section Élèves pour vérifier et ajuster sa pondération séparément. La répartition égale peut aussi être appliquée automatiquement.</p>
       <div class="tour-actions"><button id="weightGuideDone" type="button">J’ai compris</button></div>
     </div>
+  </div>
+
+  <div id="firstGroupHint" class="first-group-hint hidden no-print" role="status" aria-live="polite">
+    <span class="first-group-arrow" aria-hidden="true">←</span>
+    <span class="first-group-message">Créez votre premier groupe !</span>
   </div>
 
   <aside class="test-sidebar no-print" aria-label="Navigation principale">
@@ -177,7 +208,7 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
-          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comprendre la sauvegarde" title="Comprendre la sauvegarde">?</button>
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="À quoi ça sert ?" title="À quoi ça sert ?">?</button>
           <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
           <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
 
@@ -203,6 +234,10 @@
                   <button type="button" data-val="dark">Sombre</button>
                 </div>
               </div>
+              <label class="sp-color-columns-toggle">
+                <input type="checkbox" data-pref-check="coloredColumns">
+                <span><strong>Colonnes colorées</strong><small>Afficher un sélecteur près de chaque évaluation.</small></span>
+              </label>
               <div class="sp-row sp-row-palette">
                 <div class="sp-palette-header">
                   <span>Palette</span>
@@ -535,7 +570,6 @@
             <div id="qoCategoryTabs" class="qo-category-tabs" role="group" aria-label="Domaines d’observation"></div>
             <div id="qoQuickTags" class="qo-observation-choices"></div>
             <div id="qoActiveStudentTagsStrip" class="qo-selected-observations"></div>
-            <p class="qo-help-note">Cochez ce que vous avez observé dans cette situation. Pour un même aspect, un nouveau choix remplace son opposé. Ces observations ne modifient pas la cote.</p>
             <p class="qo-observation-source qo-help-note">Repères locaux inspirés des <a href="https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire" target="_blank" rel="noopener noreferrer">compétences transversales du PFEQ ↗</a>, et non une grille officielle. Précisez le contexte dans les notes; les adaptations ne sont pas des déficits.</p>
           </div>
 

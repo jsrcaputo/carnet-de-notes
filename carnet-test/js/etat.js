@@ -201,6 +201,11 @@
             const importedId = makeImportedId(source.id, 'asg', assignmentIds);
             if (originalId && !assignmentIdMap.has(originalId)) assignmentIdMap.set(originalId, importedId);
             const asg = { ...source, id: importedId, title: typeof source.title === 'string' ? source.title : '' };
+            if (typeof asg.columnColor !== 'string' || !/^#[0-9a-f]{6}$/i.test(asg.columnColor)) {
+              delete asg.columnColor;
+            } else {
+              asg.columnColor = asg.columnColor.toLowerCase();
+            }
             if (Array.isArray(asg.targetLevels)) {
               asg.targetLevels = [...new Set(
                 asg.targetLevels.map(l => String(l || '')).filter(l => GRADE_LEVEL_LABELS[l] !== undefined)
@@ -1057,13 +1062,14 @@
       ambre: 'Ocre & Ambre',
       graphite: 'Graphite & Encre'
     };
-    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true };
+    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false };
     try {
       const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
       if (savedPrefs && typeof savedPrefs === 'object') {
         // Thème et palette viennent du carnet ouvert : un carnet vierge démarre en clair, palette bleue.
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
+        if (typeof savedPrefs.coloredColumns === 'boolean') prefs.coloredColumns = savedPrefs.coloredColumns;
       }
     } catch (_) {}
     const SUBJECT_STUDIO_ACCENTS = {
@@ -1139,7 +1145,13 @@
         throw new Error('Les paramètres d’affichage de ce fichier sont invalides.');
       }
       const palette = value.palette === 'azur' ? 'ocean' : (VALID_PALETTES.includes(value.palette) ? value.palette : (prefs.palette || 'ocean'));
-      return { theme: value.theme, palette, textSize: value.textSize, backupReminder: value.backupReminder };
+      return {
+        theme: value.theme,
+        palette,
+        textSize: value.textSize,
+        backupReminder: value.backupReminder,
+        coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false
+      };
     }
 
     function getCurrentObservationSessionSnapshot(sessionOverride) {

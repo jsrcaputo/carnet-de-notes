@@ -248,7 +248,9 @@
       });
       if (!unlockedWeights.size) weightLevel = '';
       document.getElementById('btnWeightMode').setAttribute('aria-expanded', String(weightMode));
-      document.getElementById('weightControls').classList.toggle('hidden', !weightMode);
+      const weightControls = document.getElementById('weightControls');
+      if (weightMode) weightControls.classList.remove('is-closing');
+      weightControls.classList.toggle('hidden', !weightMode);
       const filterButton = document.getElementById('btnClearStudentFilter');
       filterButton.classList.toggle('hidden', !gbFilter);
       filterButton.textContent = gbFilter ? `Recherche : ${gbFilter} ✕` : '';
@@ -322,10 +324,19 @@
       headerRow.appendChild(thStudent);
 
       const activeSub = SUBJECTS_CONFIG.find(s => s.id === appState.activeSubjectId);
+      const isValidColumnColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
+      const applyColumnTint = (element, assignment) => {
+        const colored = Boolean(prefs.coloredColumns && isValidColumnColor(assignment.columnColor));
+        element.classList.toggle('gb-colored-column', colored);
+        element.dataset.assignmentColumn = assignment.id;
+        if (colored) element.style.setProperty('--assignment-column-color', assignment.columnColor);
+        else element.style.removeProperty('--assignment-column-color');
+      };
       visibleAssignments.forEach(asg => {
         const th = document.createElement('th');
-        th.className = 'p-2 font-semibold text-center min-w-[162px] border-l border-slate-800';
+        th.className = 'p-2 font-semibold text-center min-w-[162px] border-l border-slate-800 gb-assignment-column-header';
         th.style.width = '162px';
+        applyColumnTint(th, asg);
         const boxValid = isAssignmentWeightBoxValid(subData, asg);
         const weightBoxClasses = boxValid
           ? 'bg-slate-800 border-slate-700 text-indigo-200 focus-within:ring-1 focus-within:ring-indigo-400'
@@ -358,9 +369,13 @@
         }
         th.innerHTML = `
           <div class="flex items-center justify-center gap-1 px-1">
-            <button type="button" data-title-view="${escapeHtml(asg.id)}" class="asg-title-view${asg.title && asg.title.trim() ? '' : ' hidden'}" title="Renommer ce travail ou cette trace"><span class="asg-title-text">${escapeHtml(asg.title)}</span><svg class="asg-title-pencil" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>
-            <textarea rows="1" data-title-asg="${escapeHtml(asg.id)}" placeholder="Nom du travail..." class="${asg.title && asg.title.trim() ? 'hidden ' : ''}w-36 resize-none overflow-hidden leading-tight bg-white text-slate-800 text-center text-[11px] font-bold px-1.5 py-0.5 rounded border border-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-400" title="Cliquez pour renommer ce travail ou cette trace">${escapeHtml(asg.title)}</textarea>
-            <button type="button" data-del-asg="${escapeHtml(asg.id)}" class="text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print flex-shrink-0" aria-label="Supprimer l’évaluation ${escapeHtml(asg.title)}" title="Supprimer cette colonne">✕</button>
+            <button type="button" data-title-view="${escapeHtml(asg.id)}" class="asg-title-view" title="${asg.isObservation ? 'Modifier cette évaluation observable, sa grille et ses données' : 'Modifier cette évaluation et ses paramètres'}"><span class="asg-title-text">${escapeHtml(asg.title || 'Évaluation sans titre')}</span></button>
+            ${prefs.coloredColumns ? `
+              <button type="button" class="column-color-trigger no-print" data-column-color-trigger="${escapeHtml(asg.id)}" aria-label="Choisir la couleur de la colonne ${escapeHtml(asg.title || 'sans titre')}" title="Choisir une couleur de colonne" aria-expanded="false">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m14.5 5.5 4 4L9 19H5v-4Z"/><path d="m12.5 7.5 4 4M5 21h3"/><path d="M19 3l2 2-2.5 2.5-2-2Z"/></svg>
+              </button>
+            ` : ''}
+            <button type="button" data-del-asg="${escapeHtml(asg.id)}" class="assignment-delete-button text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print" aria-label="Supprimer l’évaluation ${escapeHtml(asg.title)}" title="Supprimer cette colonne">✕</button>
           </div>
           <div class="mt-1 flex items-center justify-center gap-1 flex-wrap">
             ${targetBadgeHtml}
@@ -371,12 +386,17 @@
               <span class="text-[10px] font-bold ml-0.5">%</span>
             </div>
             ${weightTools}
-            ${asg.isObservation
-              ? `<button type="button" data-edit-trace-hdr="${escapeHtml(asg.id)}" class="px-1.5 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 border border-amber-400/40 text-amber-300 text-[10px] font-bold cursor-pointer no-print" title="Ouvrir la grille de cette trace observable">Grille</button>`
-              : ''
-            }
           </div>
           ${multiWeightSubHtml}
+          ${prefs.coloredColumns ? `
+            <div class="column-color-popover hidden no-print" data-column-color-popover="${escapeHtml(asg.id)}" role="group" aria-label="Couleur de la colonne ${escapeHtml(asg.title || 'sans titre')}">
+              <label>
+                <span>Couleur de colonne</span>
+                <input type="color" data-column-color-picker="${escapeHtml(asg.id)}" value="${escapeHtml(isValidColumnColor(asg.columnColor) ? asg.columnColor : '#93b7ef')}" aria-label="Couleur de la colonne ${escapeHtml(asg.title || 'sans titre')}">
+              </label>
+              <button type="button" data-column-color-reset="${escapeHtml(asg.id)}" ${isValidColumnColor(asg.columnColor) ? '' : 'disabled'}>Réinitialiser</button>
+            </div>
+          ` : ''}
         `;
         headerRow.appendChild(th);
       });
@@ -396,47 +416,64 @@
         headerRow.appendChild(th);
       });
 
-      // Editable column title listeners
-      headerRow.querySelectorAll('[data-title-asg]').forEach(inp => {
-        const fit = () => {
-          inp.style.height = 'auto';
-          inp.style.height = (inp.scrollHeight + inp.offsetHeight - inp.clientHeight) + 'px';
-        };
-        fit();
-        requestAnimationFrame(fit);
-        const asgIdForView = inp.getAttribute('data-title-asg');
-        const viewBtn = headerRow.querySelector(`[data-title-view="${asgIdForView}"]`);
-        const startEdit = () => {
-          if (viewBtn) viewBtn.classList.add('hidden');
-          inp.classList.remove('hidden');
-          fit();
-          inp.focus();
-          inp.setSelectionRange(inp.value.length, inp.value.length);
-        };
-        if (viewBtn) viewBtn.addEventListener('click', startEdit);
-        inp.addEventListener('blur', () => {
-          if (!viewBtn || !inp.value.trim()) return;
-          viewBtn.querySelector('.asg-title-text').textContent = inp.value;
-          inp.classList.add('hidden');
-          viewBtn.classList.remove('hidden');
-        });
-        inp.addEventListener('keydown', ev => { if (ev.key === 'Enter') { ev.preventDefault(); inp.blur(); } });
-        inp.addEventListener('input', (e) => {
-          fit();
-          const asgId = inp.getAttribute('data-title-asg');
-          const target = subData.assignments.find(a => a.id === asgId);
-          if (target) {
-            target.title = e.target.value;
-            getLinkedAssignments(target).forEach(l => { l.asg.title = e.target.value; });
+      headerRow.querySelectorAll('[data-title-view]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const asgId = btn.getAttribute('data-title-view');
+          const assignment = subData.assignments.find(item => item.id === asgId);
+          if (!assignment) return;
+          if (assignment.isObservation) {
+            openVisualTraceForEditing(asgId, null);
+          } else if (typeof window.openAssignmentForEditing === 'function') {
+            window.openAssignmentForEditing(asgId);
           }
         });
       });
 
-      // Edit visual trace from column header listener
-      headerRow.querySelectorAll('[data-edit-trace-hdr]').forEach(btn => {
-        btn.addEventListener('click', () => {
-          const asgId = btn.getAttribute('data-edit-trace-hdr');
-          openVisualTraceForEditing(asgId, null);
+      const refreshColumnTint = assignment => {
+        document.querySelectorAll(`[data-assignment-column="${assignment.id}"]`).forEach(element => {
+          applyColumnTint(element, assignment);
+        });
+      };
+      headerRow.querySelectorAll('[data-column-color-trigger]').forEach(trigger => {
+        trigger.addEventListener('click', event => {
+          event.stopPropagation();
+          const assignmentId = trigger.getAttribute('data-column-color-trigger');
+          const popover = headerRow.querySelector(`[data-column-color-popover="${assignmentId}"]`);
+          if (!popover) return;
+          const willOpen = popover.classList.contains('hidden');
+          headerRow.querySelectorAll('[data-column-color-popover]').forEach(item => item.classList.add('hidden'));
+          headerRow.querySelectorAll('[data-column-color-trigger]').forEach(item => item.setAttribute('aria-expanded', 'false'));
+          popover.classList.toggle('hidden', !willOpen);
+          trigger.setAttribute('aria-expanded', String(willOpen));
+        });
+      });
+      headerRow.querySelectorAll('[data-column-color-picker]').forEach(input => {
+        const assignment = subData.assignments.find(item => item.id === input.getAttribute('data-column-color-picker'));
+        if (!assignment) return;
+        const reset = headerRow.querySelector(`[data-column-color-reset="${assignment.id}"]`);
+        input.addEventListener('input', () => {
+          assignment.columnColor = input.value.toLowerCase();
+          if (reset) reset.disabled = false;
+          refreshColumnTint(assignment);
+          scheduleAppStateSave();
+        });
+        input.addEventListener('change', () => notifyUpdate(`Couleur appliquée à « ${assignment.title} »`));
+      });
+      headerRow.querySelectorAll('[data-column-color-reset]').forEach(button => {
+        button.addEventListener('click', () => {
+          const assignment = subData.assignments.find(item => item.id === button.getAttribute('data-column-color-reset'));
+          if (!assignment) return;
+          delete assignment.columnColor;
+          const input = headerRow.querySelector(`[data-column-color-picker="${assignment.id}"]`);
+          if (input) {
+            input.value = '#93b7ef';
+          }
+          button.disabled = true;
+          headerRow.querySelector(`[data-column-color-popover="${assignment.id}"]`)?.classList.add('hidden');
+          headerRow.querySelector(`[data-column-color-trigger="${assignment.id}"]`)?.setAttribute('aria-expanded', 'false');
+          refreshColumnTint(assignment);
+          scheduleAppStateSave();
+          notifyUpdate(`Couleur retirée de « ${assignment.title} »`);
         });
       });
 
@@ -736,12 +773,14 @@
           const td = document.createElement('td');
           if (!isAssignmentForStudent(asg, st)) {
             td.className = 'p-2 text-center border-r border-slate-100 cell-not-targeted';
+            applyColumnTint(td, asg);
             const badgeLbl = formatAssignmentTargetBadge(asg);
             td.innerHTML = `<span class="text-[10px] font-semibold" title="Évaluation ciblée pour : ${escapeHtml(badgeLbl)} — non comptabilisée pour ${escapeHtml(st.name)} (${escapeHtml(GRADE_LEVEL_LABELS[st.gradeLevel] || 'autre niveau')})">— ${escapeHtml(badgeLbl)}</span>`;
             tr.appendChild(td);
             return;
           }
           td.className = 'p-2 text-center border-r border-slate-100';
+          applyColumnTint(td, asg);
           const rawScore = rec.scores[asg.id] !== undefined ? String(rec.scores[asg.id]) : '';
           const meta = (rec.scoreMeta && rec.scoreMeta[asg.id]) ? rec.scoreMeta[asg.id] : null;
           const currentFlags = getCellFlags(rec, asg.id);

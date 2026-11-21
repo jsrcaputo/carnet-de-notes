@@ -189,8 +189,73 @@
       indicator.title = message;
     }
 
+    function isMeaningfulSubjectData(data) {
+      if (!isRecord(data)) return false;
+      if ((Array.isArray(data.assignments) && data.assignments.length > 0) ||
+          (Array.isArray(data.customRubrics) && data.customRubrics.length > 0)) return true;
+      const records = isRecord(data.studentRecords) ? Object.values(data.studentRecords) : [];
+      if (records.some(record => {
+        if (!isRecord(record)) return false;
+        return Object.keys(isRecord(record.scores) ? record.scores : {}).length > 0 ||
+          Object.keys(isRecord(record.scoreMeta) ? record.scoreMeta : {}).length > 0 ||
+          (Array.isArray(record.baremeChecked) && record.baremeChecked.length > 0) ||
+          Boolean(record.baremeOverrideCode) ||
+          Boolean(String(record.finalJudgmentOverride || '').trim()) ||
+          Boolean(String(record.comment || '').trim());
+      })) return true;
+      const session = isRecord(data.currentObsSession) ? data.currentObsSession : null;
+      if (!session) return false;
+      if (session.editingAssignmentId || String(session.title || '').trim() || session.customRubric ||
+          (Array.isArray(session.linkTargets) && session.linkTargets.length > 0)) return true;
+      return isRecord(session.studentDrafts) && Object.values(session.studentDrafts).some(draft =>
+        isRecord(draft) && (
+          (Array.isArray(draft.checked) && draft.checked.length > 0) ||
+          draft.overrideCode ||
+          (Array.isArray(draft.tags) && draft.tags.length > 0) ||
+          String(draft.comment || '').trim() ||
+          String(draft.strengths || '').trim() ||
+          String(draft.challenges || '').trim() ||
+          draft.notEvaluated === true
+        )
+      );
+    }
+
+    function compactGroupForBackup(groupData) {
+      if (!isRecord(groupData) || !isRecord(groupData.terms)) return groupData;
+      const compact = { ...groupData, terms: {} };
+      ['1', '2', '3'].forEach(termId => {
+        const sourceTerm = groupData.terms[termId];
+        if (!isRecord(sourceTerm)) {
+          compact.terms[termId] = sourceTerm;
+          return;
+        }
+        const subjectData = {};
+        Object.entries(isRecord(sourceTerm.subjectData) ? sourceTerm.subjectData : {}).forEach(([subjectId, data]) => {
+          if (isMeaningfulSubjectData(data)) subjectData[subjectId] = data;
+        });
+        compact.terms[termId] = { ...sourceTerm, subjectData };
+      });
+      return compact;
+    }
+
+    function createCompactBackupState() {
+      const compactGroups = {};
+      Object.entries(isRecord(appState.groupStore) ? appState.groupStore : {}).forEach(([groupId, data]) => {
+        compactGroups[groupId] = compactGroupForBackup(data);
+      });
+      return {
+        ...appState,
+        groupStore: compactGroups,
+        terms: compactGroupForBackup({ terms: appState.terms }).terms
+      };
+    }
+
     function serializeBackup() {
-      return JSON.stringify({ ...appState, displayPreferences: { ...prefs }, customWeightedPresets: loadAllCustomWeightedPresets() }, null, 2);
+      return JSON.stringify({
+        ...createCompactBackupState(),
+        displayPreferences: { ...prefs },
+        customWeightedPresets: loadAllCustomWeightedPresets()
+      }, null, 2);
     }
 
     function updateUnlinkedSaveStatus() {
