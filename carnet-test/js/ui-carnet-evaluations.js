@@ -1,3 +1,78 @@
+    let gradebookTextMeasureCtx = null;
+
+    function computeGradebookStudentColWidth(students, sub, isMulti) {
+      const PAD_LEFT = 16;
+      const PAD_RIGHT = 24;
+      const SAFETY_BUFFER = 8;
+      const MIN_W = isMulti ? 216 : 176;
+      const MAX_W = 280;
+
+      if (!gradebookTextMeasureCtx && typeof document !== 'undefined') {
+        const canvas = document.createElement('canvas');
+        gradebookTextMeasureCtx = canvas.getContext('2d');
+      }
+      const ctx = gradebookTextMeasureCtx;
+      if (!ctx || !Array.isArray(students) || !students.length) return MIN_W;
+
+      const bodyStyle = typeof window !== 'undefined' && document.body
+        ? window.getComputedStyle(document.body)
+        : null;
+      const fontFamily = (bodyStyle && bodyStyle.fontFamily) || 'system-ui, sans-serif';
+
+      let maxContentW = 110;
+      students.forEach(st => {
+        ctx.font = `700 15px ${fontFamily}`;
+        const nameW = ctx.measureText(st.name || '').width;
+
+        const effLevel = getEffectiveGradeLevel(st, sub);
+        const studentCycle = getStudentCycle(effLevel);
+        const metaText = studentCycle
+          ? `${GRADE_LEVEL_LABELS[st.gradeLevel] || GRADE_LEVEL_LABELS[effLevel]} • ${CYCLE_LABELS[studentCycle]}`
+          : 'Niveau à choisir';
+        ctx.font = `400 11.5px ${fontFamily}`;
+        let metaW = ctx.measureText(metaText).width;
+
+        if (isSubjectModifiedForStudent(st, sub)) {
+          ctx.font = `800 9px ${fontFamily}`;
+          const badgeW = ctx.measureText(`MOD. · ${GRADE_LEVEL_LABELS[effLevel]}`).width + 18;
+          metaW += badgeW;
+        }
+
+        maxContentW = Math.max(maxContentW, nameW, metaW);
+      });
+
+      return Math.max(MIN_W, Math.min(MAX_W, Math.ceil(PAD_LEFT + maxContentW + PAD_RIGHT + SAFETY_BUFFER)));
+    }
+
+    let gradebookFlashTimer = null;
+
+    function flashGradebookStudentRow(studentId) {
+      if (!studentId) return;
+      const tbody = document.getElementById('gradebookBody');
+      if (!tbody) return;
+      tbody.querySelectorAll('tr.gb-row-flash').forEach(r => r.classList.remove('gb-row-flash'));
+      if (gradebookFlashTimer) {
+        clearTimeout(gradebookFlashTimer);
+        gradebookFlashTimer = null;
+      }
+      const row = [...tbody.rows].find(r => r.dataset.studentId === studentId);
+      if (!row) return;
+      const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      row.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
+      void row.offsetWidth;
+      row.classList.add('gb-row-flash');
+      const cleanup = () => {
+        row.classList.remove('gb-row-flash');
+        row.removeEventListener('animationend', cleanup);
+        if (gradebookFlashTimer) {
+          clearTimeout(gradebookFlashTimer);
+          gradebookFlashTimer = null;
+        }
+      };
+      row.addEventListener('animationend', cleanup);
+      gradebookFlashTimer = window.setTimeout(cleanup, 2200);
+    }
+
     function renderGradebookView() {
       const scrollContainerEl = document.getElementById('gradebookScrollContainer');
       const savedScrollLeft = scrollContainerEl ? scrollContainerEl.scrollLeft : 0;
@@ -43,8 +118,16 @@
       const visibleAssignments = (isMulti && activeLvlFilter !== 'ALL')
         ? subData.assignments.filter(a => isAssignmentForLevel(a, activeLvlFilter))
         : subData.assignments;
+      const extraHeaders = [
+        { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
+        { label: 'Jugement professionnel', sub: 'Barème et repères', minW: 'min-w-[145px]', width: 145 },
+        { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
+        { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
+      ];
+      const extraColsWidth = extraHeaders.reduce((sum, eh) => sum + eh.width, 0);
+      const studentColWidth = computeGradebookStudentColWidth(appState.students, sub, isMulti);
       const gradebookTable = scrollContainerEl.querySelector('table');
-      gradebookTable.style.width = `${1165 + visibleAssignments.length * 162}px`;
+      gradebookTable.style.width = `${studentColWidth + extraColsWidth + visibleAssignments.length * 162}px`;
 
       const hasWorks = subData.assignments.length > 0;
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
@@ -68,7 +151,7 @@
 
       const thStudent = document.createElement('th');
       thStudent.className = 'p-2.5 font-bold sticky left-0 bg-slate-900 z-10';
-      thStudent.style.width = '380px';
+      thStudent.style.width = `${studentColWidth}px`;
       const studentHeading = document.createElement('div');
       studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
       const sortBtn = document.createElement('button');
@@ -185,13 +268,6 @@
         `;
         headerRow.appendChild(th);
       });
-
-      const extraHeaders = [
-        { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
-        { label: 'Jugement professionnel', sub: 'Barème et repères', minW: 'min-w-[145px]', width: 145 },
-        { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
-        { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
-      ];
 
       extraHeaders.forEach(eh => {
         const th = document.createElement('th');
@@ -525,6 +601,7 @@
         if (isMulti && activeLvlFilter !== 'ALL' && String(st.gradeLevel) !== activeLvlFilter) return;
 
         const tr = document.createElement('tr');
+        tr.dataset.studentId = st.id;
         tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-slate-50/80';
 
         // 1. Student cell (sticky left)
@@ -616,10 +693,12 @@
               onStatusChange: (statusCode) => {
                 const curStatus = String(rec.scores[asg.id] ?? '').trim().toUpperCase();
                 const nextVal = (curStatus === statusCode || statusCode === '') ? '' : statusCode;
-                rec.scores[asg.id] = nextVal;
+                if (nextVal === '') delete rec.scores[asg.id];
+                else rec.scores[asg.id] = nextVal;
                 if (asg.isObservation && rec.scoreMeta && rec.scoreMeta[asg.id]) {
                   rec.scoreMeta[asg.id].notEvaluated = (nextVal === '-');
                 }
+                syncLinkedScore(asg, st.id, nextVal);
                 scheduleAppStateSave();
                 renderGradebookView();
               },

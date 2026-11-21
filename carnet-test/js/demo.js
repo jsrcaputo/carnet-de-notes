@@ -539,6 +539,9 @@
               }
             });
           });
+          if (subData.assignments.length > 1 && new Set(subData.assignments.map(a => a.weight)).size > 1) {
+            subData.equalWeights = false;
+          }
 
           const commentPool = subjectComments[subId] || [
             'Démontre un engagement soutenu et une belle régularité dans ses apprentissages.',

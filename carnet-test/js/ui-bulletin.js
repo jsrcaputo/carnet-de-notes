@@ -54,6 +54,36 @@
       scrollToCompetencyElement(summary);
     }
 
+    function resolveJumpSubjectId(rawSubId) {
+      if (SUBJECTS_CONFIG.some(s => s.id === rawSubId)) return rawSubId;
+      const parts = SUBJECTS_CONFIG.filter(s => s.group === rawSubId);
+      if (!parts.length) return appState.activeSubjectId || (SUBJECTS_CONFIG[0] && SUBJECTS_CONFIG[0].id) || '';
+      const activeTermData = appState.terms && appState.terms[appState.activeTerm];
+      const inActiveTerm = parts.find(p => activeTermData && activeTermData.subjectData[p.id] && activeTermData.subjectData[p.id].assignments.length > 0);
+      if (inActiveTerm) return inActiveTerm.id;
+      for (const tKey of ['1', '2', '3']) {
+        const td = appState.terms && appState.terms[tKey];
+        const found = parts.find(p => td && td.subjectData[p.id] && td.subjectData[p.id].assignments.length > 0);
+        if (found) return found.id;
+      }
+      return parts[0].id;
+    }
+
+    function jumpFromReportToSubject(rawSubId, studentId) {
+      const targetId = resolveJumpSubjectId(rawSubId);
+      const targetSub = SUBJECTS_CONFIG.find(s => s.id === targetId);
+      if (!targetSub) return;
+      const navigated = navigateToView('viewGradebook', () => {
+        appState.activeSubjectId = targetSub.id;
+        expandedSubjectGroup = (targetSub.group && targetSub.group !== 'presco') ? targetSub.group : null;
+        gbFilter = '';
+        gbLevelFilter = 'ALL';
+      }, { skipScrollTop: true });
+      if (navigated) {
+        window.requestAnimationFrame(() => flashGradebookStudentRow(studentId));
+      }
+    }
+
     function renderGlobalReportView() {
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
@@ -490,7 +520,7 @@
         return `
           <div class="space-y-1">
             <div class="flex items-center justify-between text-xs gap-2">
-              <span class="font-semibold text-slate-700 truncate flex items-center">${r.sub.shortName}${r.sub.officialWeight !== null ? ` <small class="ml-1 text-slate-500">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
+              <span class="gr-bar-subject-wrap font-semibold text-slate-700 flex items-center min-w-0 flex-1 gap-1"><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${r.sub.officialWeight !== null ? ` <small class="text-slate-500 truncate min-w-0">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
               <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})${info.provisional ? ' · provisoire' : ''}` : '—'}</span>
             </div>
             <div class="bar-track-wrap">
@@ -542,7 +572,7 @@
           <article class="ps-row" data-domain="${escapeHtml(sub.id)}">
             <div class="ps-row-main">
               <span class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PRESCHOOL_DOMAIN_ICONS[sub.id] || ''}</svg></span>
-              <span class="ps-title"><strong>${escapeHtml(sub.partLabel || sub.shortName)}</strong>${descriptor && descriptor !== sub.partLabel ? `<small>${escapeHtml(descriptor)}</small>` : ''}</span>
+              <span class="ps-title"><button type="button" class="gr-subject-jump gr-subject-jump--presco" data-jump-subject="${escapeHtml(sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(sub.partLabel || sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(sub.partLabel || sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${descriptor && descriptor !== sub.partLabel ? `<small>${escapeHtml(descriptor)}</small>` : ''}</span>
               <ol class="ps-path" aria-label="Parcours de l’année">
                 ${steps.map(step => `<li class="ps-k${step.rank}" title="Étape ${step.term} : ${step.rank ? PRESCHOOL_CONSTATS[step.rank].label : 'aucune trace cotée'}"><i></i><span>É${step.term}</span></li>`).join('')}
               </ol>
@@ -595,7 +625,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div class="gr-kpi-strip grid grid-cols-3 gap-2.5">
             ${st.gradeLevel === 'P' ? '' : `
             <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
               <div class="text-[10px] uppercase text-slate-500 font-semibold">Matières évaluées</div>
@@ -679,7 +709,7 @@
               ${subjectRows.map((r, i) => `
                 <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
                   <td class="p-2.5 font-bold text-slate-900">
-                    <span>${r.sub.shortName}${r.sub.officialWeight !== null ? ` <small class="font-semibold text-slate-500">— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}</span>
+                    <span><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${r.sub.officialWeight !== null ? ` <small class="font-semibold text-slate-500">— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}</span>
                     ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}` : ''}
                   </td>
                   <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>
@@ -715,6 +745,14 @@
         st.reportComment = event.target.value;
         document.getElementById('grTeacherCommentPrint').textContent = event.target.value;
         scheduleAppStateSave();
+      });
+      container.querySelectorAll('[data-jump-subject]').forEach(button => {
+        button.addEventListener('click', () => {
+          jumpFromReportToSubject(
+            button.getAttribute('data-jump-subject'),
+            button.getAttribute('data-jump-student')
+          );
+        });
       });
       container.querySelectorAll('[data-competency-guide-student]').forEach(button => {
         button.addEventListener('click', event => {

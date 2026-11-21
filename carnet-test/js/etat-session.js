@@ -220,8 +220,12 @@
     }
 
     let pendingObservationExit = null;
+    let modalUnsavedOpenedAt = 0;
 
     function closeObservationWarning(continueEditing) {
+      if (continueEditing && Date.now() - modalUnsavedOpenedAt < 120) {
+        return;
+      }
       const modal = document.getElementById('modalUnsavedObservation');
       if (modal) {
         modal.classList.add('hidden');
@@ -242,14 +246,18 @@
         return true;
       }
       pendingObservationExit = continueAction;
+      modalUnsavedOpenedAt = Date.now();
       const modal = document.getElementById('modalUnsavedObservation');
       modal.classList.remove('hidden');
       modal.classList.add('flex');
-      document.getElementById('btnStayOnObservation').focus();
+      window.setTimeout(() => {
+        const stayBtn = document.getElementById('btnStayOnObservation');
+        if (stayBtn && !modal.classList.contains('hidden')) stayBtn.focus();
+      }, 60);
       return false;
     }
 
-    function navigateToView(viewId, updateState) {
+    function navigateToView(viewId, updateState, options = {}) {
       const continueNavigation = () => {
         const changedView = appState.activeView !== viewId;
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
@@ -260,7 +268,7 @@
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderAll();
-        if (changedView || updateState) {
+        if (!options.skipScrollTop && (changedView || updateState)) {
           const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
         }
@@ -322,7 +330,7 @@
             window.setTimeout(() => {
               const controls = getFocusable(modal);
               if (controls.length && !modal.contains(document.activeElement)) controls[0].focus();
-            }, 0);
+            }, 60);
           } else {
             const opener = openers.get(modal);
             openers.delete(modal);

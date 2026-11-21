@@ -309,11 +309,11 @@
       }
       #printMeta { display: none; }
       html.design-studio body, html.design-studio button, html.design-studio input, html.design-studio select, html.design-studio textarea { font-family: "Segoe UI", system-ui, sans-serif; }
-      :is(.test-sidebar-brand h1, .brand-title, .welcome-card h2) {
+      :is(.test-sidebar-brand h1, .test-sidebar-brand .brand-heading, .brand-title, .welcome-card h2) {
         font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
         letter-spacing: -.025em;
       }
-      html.design-studio :is(main h2, main h3, main h4, .test-sidebar-brand h1, .welcome-card h2) { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
+      html.design-studio :is(main h2, main h3, main h4, .test-sidebar-brand h1, .test-sidebar-brand .brand-heading, .welcome-card h2) { font-family: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif; }
       .test-sidebar {
         position: fixed;
         inset: 0 auto 0 0;
@@ -334,11 +334,23 @@
         flex-direction: column;
         align-items: flex-start;
         gap: .42rem;
-        padding: .85rem 0 .8rem 1.05rem;
+        width: 100%;
+        padding: .85rem .55rem .8rem 1.05rem;
         margin-bottom: .2rem;
         background: transparent;
         border: 0;
+        border-radius: 10px;
         box-shadow: none;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color .15s ease, color .15s ease;
+      }
+      .test-sidebar-brand:hover {
+        background: color-mix(in srgb, var(--brand) 7%, transparent);
+      }
+      .test-sidebar-brand:focus-visible {
+        outline: 2px solid var(--brand);
+        outline-offset: 2px;
       }
       .test-sidebar-brand::before {
         content: none;
@@ -347,9 +359,14 @@
         background: transparent;
         box-shadow: none;
       }
-      .test-sidebar-brand h1 { font-size: 1.65rem; line-height: 1.1; font-weight: 800; letter-spacing: -.03em; color: var(--studio-text); margin: 0; }
-      html.design-studio.theme-dark .test-sidebar-brand h1 { color: var(--ink); }
-      .test-sidebar-brand span { align-self: flex-end; padding: .16rem .52rem; border: 1px solid var(--studio-border-strong); border-radius: 999px; background: var(--brand-soft); color: var(--brand-deep); font-size: .72rem; font-weight: 800; letter-spacing: .03em; }
+      html.design-studio.theme-dark .test-sidebar-brand:hover {
+        background: color-mix(in srgb, var(--brand) 16%, transparent);
+      }
+      .test-sidebar-brand :is(h1, .brand-heading) { font-size: 1.65rem; line-height: 1.1; font-weight: 800; letter-spacing: -.03em; color: var(--studio-text); margin: 0; transition: color .15s ease; }
+      .test-sidebar-brand:hover :is(h1, .brand-heading) { color: var(--brand-deep); }
+      html.design-studio.theme-dark .test-sidebar-brand :is(h1, .brand-heading) { color: var(--ink); }
+      html.design-studio.theme-dark .test-sidebar-brand:hover :is(h1, .brand-heading) { color: #ffffff; }
+      .test-sidebar-brand :is(span:not(.brand-heading), .brand-year) { align-self: flex-end; padding: .16rem .52rem; border: 1px solid var(--studio-border-strong); border-radius: 999px; background: var(--brand-soft); color: var(--brand-deep); font-size: .72rem; font-weight: 800; letter-spacing: .03em; }
       .test-sidebar-sections { display: flex; flex-direction: column; gap: .75rem; }
       .test-sidebar-section { min-width: 0; padding-bottom: .7rem; border-bottom: 1px solid rgba(148, 163, 184, 0.28); }
       .test-sidebar-label { padding: 0 .55rem; margin: 0 0 .35rem; color: var(--studio-text-muted); font-size: .76rem; font-weight: 800; letter-spacing: .05em; text-transform: uppercase; }
@@ -560,12 +577,81 @@
       .test-topbar .term-btn:not(.bg-indigo-600) { color: var(--studio-text-muted) !important; }
       .test-sidebar .term-btn { justify-content: flex-start !important; }
       .test-sidebar #btnNavGlobalReport.bg-amber-400 { background: var(--brand-soft) !important; color: var(--brand-deep) !important; }
-      html.design-studio #studentSearchPopover { position: relative; top: auto; left: auto; z-index: auto; display: flex; align-items: center; width: clamp(180px, 17vw, 220px); padding: 0 .45rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); box-shadow: none; }
+      html.design-studio #studentSearchPopover { position: relative; top: auto; left: auto; z-index: 65; display: flex; align-items: center; width: clamp(195px, 19vw, 245px); padding: 0 .45rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); box-shadow: none; }
       html.design-studio #studentSearchPopover:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
       html.design-studio #studentSearchPopover #btnStudentSearch { display: grid; place-items: center; flex: 0 0 auto; width: 28px; height: 34px; padding: 0; border: 0; background: transparent; color: var(--studio-text-muted); cursor: pointer; }
       #btnStudentSearch svg { width: 17px; height: 17px; }
       html.design-studio #studentSearchPopover input { min-width: 0; width: 100%; padding: .4rem .1rem; border: 0; outline: 0; background: transparent; color: var(--studio-text); font-size: .8rem; }
       #headerStudentSearch::placeholder { color: var(--studio-text-muted); opacity: .8; }
+      html.design-studio .student-search-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: min(320px, calc(100vw - 24px));
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 95;
+        padding: 4px;
+        border: 1px solid var(--studio-border);
+        border-radius: 12px;
+        background: var(--studio-surface);
+        box-shadow: 0 12px 30px rgba(15, 23, 42, .16);
+      }
+      html.design-studio .student-search-dropdown.hidden { display: none; }
+      html.design-studio .student-search-option {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .6rem;
+        width: 100%;
+        padding: .48rem .65rem;
+        border: 0;
+        border-radius: 8px;
+        background: transparent;
+        text-align: left;
+        cursor: pointer;
+        transition: background-color .12s ease;
+      }
+      html.design-studio .student-search-option:hover,
+      html.design-studio .student-search-option.is-active {
+        background: var(--brand-soft);
+      }
+      html.design-studio .student-search-name {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--studio-text);
+      }
+      html.design-studio .student-search-option:hover .student-search-name,
+      html.design-studio .student-search-option.is-active .student-search-name {
+        color: var(--brand-deep);
+      }
+      html.design-studio .student-search-group {
+        flex: 0 1 auto;
+        max-width: 48%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 11px;
+        font-weight: 500;
+        color: var(--studio-text-muted);
+      }
+      html.design-studio .student-search-empty {
+        padding: .55rem .7rem;
+        font-size: 12px;
+        color: var(--studio-text-muted);
+      }
+      html.design-studio.theme-dark .student-search-dropdown {
+        background: var(--surface);
+        border-color: var(--line);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, .42);
+      }
+      html.design-studio.theme-dark .student-search-name { color: var(--ink); }
+      html.design-studio.theme-dark .student-search-option.is-active .student-search-name,
+      html.design-studio.theme-dark .student-search-option:hover .student-search-name { color: var(--brand-deep); }
       html.design-studio #studentSearchMessage:not(:empty) { position: absolute; z-index: 80; top: calc(100% + .35rem); left: 0; width: max-content; max-width: min(250px, 80vw); margin: 0; padding: .55rem .7rem; border: 1px solid var(--studio-border); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text-muted); box-shadow: var(--studio-shadow-sm); }
       #studentSearchMessage:empty { display: none; }
       html.design-studio .test-topbar .hdr-icobtn,
@@ -601,7 +687,7 @@
       #backupPasswordConfirm[aria-invalid="true"] { border-color: #b91c1c; }
       html.theme-dark :is(#backupPasswordError, #backupPasswordConfirm[aria-invalid="true"]) { color: #f2b8b5; }
       #btnConfirmBackupPassword:disabled { opacity: .5; cursor: not-allowed; }
-      html.design-studio #modalUnsavedObservation { background-color: rgba(15, 23, 42, .6) !important; }
+      html.design-studio #modalUnsavedObservation { z-index: 120; background-color: rgba(15, 23, 42, .6) !important; }
       html.design-studio #modalUnsavedObservation > div { background: var(--studio-surface) !important; color: var(--studio-text) !important; border-color: var(--studio-border) !important; box-shadow: 0 16px 48px rgba(15, 23, 42, .25) !important; }
       html.design-studio #modalUnsavedObservation #unsavedObservationTitle { color: var(--studio-text) !important; }
       html.design-studio #modalUnsavedObservation #unsavedObservationMessage { color: var(--studio-text-muted) !important; }
@@ -810,7 +896,7 @@
       html.design-studio #competencyPositioning .comp-chip b { font-weight: 800; }
       html.design-studio #competencyPositioning .comp-chip-meq { color: inherit; opacity: .9; }
       html.design-studio #competencyPositioning .comp-summary-empty { font-size: .75rem; color: var(--studio-text-muted); font-weight: 500; }
-      html.design-studio .gr-identity-main { display: flex; flex-direction: column; gap: .45rem; }
+      html.design-studio .gr-identity-main { display: flex; flex: 1 1 220px; flex-direction: column; gap: .45rem; }
       html.design-studio .gr-identity-title-row { display: flex; flex-wrap: wrap; align-items: baseline; gap: .25rem .75rem; }
       html.design-studio .gr-grade-meta { font-size: .8rem; color: var(--studio-text-muted); }
       html.design-studio .gr-grade-meta strong { color: var(--studio-text); }
@@ -1042,6 +1128,9 @@
       html.design-studio .modified-expectations[open] { width: min(100%, 900px); }
       html.design-studio .modified-expectations summary { white-space: nowrap; }
       html.design-studio .modified-expectations[open] summary { white-space: normal; }
+      @media (max-width: 640px) {
+        html.design-studio .modified-expectations summary { white-space: normal; }
+      }
       html.design-studio :is([class*="bg-emerald-"], [class*="bg-green-"]) { background-color: var(--brand-soft) !important; }
       html.design-studio :is([class~="bg-emerald-500"], [class~="bg-emerald-600"], [class~="bg-green-500"], [class~="bg-green-600"]) { background-color: var(--brand) !important; }
       html.design-studio :is([class*="text-emerald-"], [class*="text-green-"]) { color: var(--brand-deep) !important; }
@@ -2261,6 +2350,16 @@
       html.design-studio #gradebookBody .gb-student-name { font-size: 15px; line-height: 1.3; }
       html.design-studio #gradebookBody .gb-student-meta { font-size: 11.5px; }
     }
+    @media screen and (min-width: 601px) {
+      html.design-studio #gradebookHeaderRow > th:first-child,
+      html.design-studio #gradebookBody tr > td:first-child {
+        padding-left: 16px !important;
+        padding-right: 24px !important;
+      }
+      html.design-studio #gradebookBody .gb-student-name {
+        overflow-wrap: break-word;
+      }
+    }
 
     /* Synthese prescolaire : portrait doux, une ligne par domaine */
     .ps-section { --ps-surface: var(--studio-surface, #fff); --ps-ink: var(--ink, #0f172a); --ps-muted: var(--studio-text-muted, #64748b); --ps-line: var(--line, #e2e8f0); }
@@ -2490,10 +2589,6 @@ html.design-studio .test-topbar :is(
   background: var(--brand-soft) !important;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand) 12%, transparent) !important;
 }
-html.design-studio #settingsPanel .sp-color-columns-toggle {
-  background: var(--studio-surface-soft);
-  border-color: var(--studio-border);
-}
 html.design-studio #gradebookScrollContainer thead th.gb-colored-column {
   background: color-mix(in srgb, var(--assignment-column-color) 9%, var(--studio-surface-soft)) !important;
 }
@@ -2613,21 +2708,46 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-seg but
   border-color: color-mix(in srgb, var(--brand) 38%, transparent) !important;
   color: var(--brand-deep) !important;
 }
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-row {
+  padding: .35rem 0;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-color-columns-toggle {
+  background: transparent !important;
+  border: 0 !important;
+  margin: 0 !important;
+  padding: .4rem 0 !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-color-columns-toggle .sp-toggle-label {
+  color: var(--ink) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-color-columns-toggle small {
+  color: var(--studio-text-muted, #64748b) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-switch-track {
+  background: var(--studio-surface-soft, #f8fafc) !important;
+  border: 1px solid var(--studio-border-strong, #cbd5e1) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #settingsPanel .sp-switch input:checked + .sp-switch-track {
+  background: color-mix(in srgb, var(--brand-soft) 65%, var(--studio-surface, #fff)) !important;
+  border-color: color-mix(in srgb, var(--brand) 55%, transparent) !important;
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 40%, transparent) !important;
+}
 
 /* Carnets multiniveaux : filtre de niveau sans fond, plus lisible et centré */
 html.design-studio:is(.theme-dark, :not(.theme-dark)) #gradebookScrollContainer thead .gb-level-seg {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  justify-content: flex-start;
   width: 100%;
-  gap: .35rem;
+  gap: .25rem .35rem;
   padding: 0;
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
 }
 html.design-studio:is(.theme-dark, :not(.theme-dark)) #gradebookScrollContainer thead .gb-level-seg button {
-  font-size: 13px !important;
-  padding: .3rem .8rem !important;
+  font-size: 12px !important;
+  padding: .22rem .55rem !important;
   text-transform: none;
   letter-spacing: 0;
 }
@@ -2854,6 +2974,9 @@ html.design-studio.theme-dark #viewGlobalReport .trend-badge.trend-down {
 }
 
 @media screen and (max-width: 600px) {
+  html.design-studio .gr-kpi-strip {
+    width: 100%;
+  }
   html.design-studio #gradebookHeaderRow > th:first-child,
   html.design-studio #gradebookBody tr > td:first-child {
     width: clamp(104px, 28vw, 120px) !important;
@@ -2873,5 +2996,122 @@ html.design-studio.theme-dark #viewGlobalReport .trend-badge.trend-down {
     width: 26px;
     height: 26px;
     opacity: 1;
+  }
+}
+
+/* Synthèse : lien direct cliquable vers une compétence du Carnet */
+html.design-studio .gr-subject-jump {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  padding: 2px 6px 2px 2px;
+  margin-left: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: color .16s ease, background-color .16s ease;
+}
+html.design-studio .ps-title .gr-subject-jump--presco {
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+html.design-studio .gr-subject-jump-label {
+  min-width: 0;
+  transition: transform .16s ease;
+}
+html.design-studio .gr-bar-subject-wrap .gr-subject-jump-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html.design-studio .gr-subject-jump-arrow {
+  display: inline-block;
+  flex: 0 0 auto;
+  font-size: .9em;
+  line-height: 1;
+  color: var(--brand);
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: opacity .16s ease, transform .16s ease;
+}
+html.design-studio .gr-subject-jump:hover,
+html.design-studio .gr-subject-jump:focus-visible {
+  background: color-mix(in srgb, var(--brand) 9%, transparent);
+  color: var(--brand-deep);
+}
+html.design-studio .gr-subject-jump:hover .gr-subject-jump-label,
+html.design-studio .gr-subject-jump:focus-visible .gr-subject-jump-label {
+  transform: translateX(2px);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+html.design-studio .gr-subject-jump:hover .gr-subject-jump-arrow,
+html.design-studio .gr-subject-jump:focus-visible .gr-subject-jump-arrow {
+  opacity: 1;
+  transform: translateX(1px);
+}
+html.design-studio .gr-subject-jump:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 1px;
+}
+html.design-studio.theme-dark .gr-subject-jump:hover,
+html.design-studio.theme-dark .gr-subject-jump:focus-visible {
+  background: color-mix(in srgb, var(--brand) 20%, transparent);
+  color: #ffffff;
+}
+@media print {
+  html.design-studio .gr-subject-jump {
+    display: inline;
+    padding: 0;
+    margin: 0;
+    background: transparent !important;
+  }
+  html.design-studio .gr-subject-jump-arrow {
+    display: none !important;
+  }
+}
+
+/* Carnet : clignotement 3x d'une rangée élève ciblée depuis la Synthèse */
+@keyframes gbStudentRowFlash {
+  0%, 100% {
+    box-shadow: none;
+  }
+  45% {
+    box-shadow:
+      inset 0 2px 0 color-mix(in srgb, var(--brand) 65%, transparent),
+      inset 0 -2px 0 color-mix(in srgb, var(--brand) 65%, transparent),
+      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 20%, transparent);
+  }
+}
+@keyframes gbStudentRowFlashDark {
+  0%, 100% {
+    box-shadow: none;
+  }
+  45% {
+    box-shadow:
+      inset 0 2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
+      inset 0 -2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
+      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 30%, transparent);
+  }
+}
+html.design-studio #gradebookBody tr.gb-row-flash > td {
+  animation: gbStudentRowFlash .55s ease-in-out 3 !important;
+}
+html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td {
+  animation: gbStudentRowFlashDark .55s ease-in-out 3 !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  html.design-studio #gradebookBody tr.gb-row-flash > td,
+  html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td {
+    animation: none !important;
+    box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--brand) 16%, transparent);
   }
 }

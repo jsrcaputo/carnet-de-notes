@@ -127,7 +127,8 @@
         'gradebookHeaderRow', 'gradebookBody', 'grStudentBand', 'grReportContent',
         'baremeStudentPills', 'baremeMatrixBody', 'sgMatrixBody', 'qoStudentGrid',
         'qoActiveStudentTagsStrip', 'cbPhraseList', 'customRubricEditor',
-        'observablePrintStudents', 'summaryPrintStudents', 'baremePrintStudents'
+        'observablePrintStudents', 'summaryPrintStudents', 'baremePrintStudents',
+        'studentSearchDropdown'
       ].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.replaceChildren();
@@ -167,9 +168,15 @@
       updateHistoryButtons();
       setFileSyncStatus('unlinked', 'Aucun fichier lié');
       const headerSearch = document.getElementById('headerStudentSearch');
+      const searchDropdown = document.getElementById('studentSearchDropdown');
       const listSearch = document.getElementById('studentSearch');
       const searchMessage = document.getElementById('studentSearchMessage');
-      if (headerSearch) headerSearch.value = '';
+      if (headerSearch) {
+        headerSearch.value = '';
+        headerSearch.setAttribute('aria-expanded', 'false');
+        headerSearch.removeAttribute('aria-activedescendant');
+      }
+      if (searchDropdown) searchDropdown.classList.add('hidden');
       if (listSearch) listSearch.value = '';
       if (searchMessage) searchMessage.textContent = '';
       renderAll();
