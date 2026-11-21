@@ -444,20 +444,6 @@
       }
     }
 
-    async function openEncryptedExcel(file) {
-      try {
-        const decrypted = await decryptBackup(await file.text(), ENCRYPTED_EXCEL_FORMAT);
-        if (!decrypted) return;
-        const bytes = backupBase64ToBytes(decrypted.text);
-        if (bytes.length < 4 || bytes[0] !== 0x50 || bytes[1] !== 0x4b) throw new Error('Le classeur déchiffré est invalide.');
-        downloadBlob(new Blob([bytes], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }), 'Carnet_Excel_dechiffre.xlsx');
-        showToast('Classeur déchiffré téléchargé : ce fichier Excel n’est pas protégé par mot de passe.');
-      } catch (error) {
-        console.error('Impossible d’ouvrir l’export Excel chiffré.', error);
-        showToast(error instanceof SyntaxError ? 'Ce fichier chiffré est invalide.' : (error instanceof Error ? error.message : 'Impossible d’ouvrir l’export Excel chiffré.'));
-      }
-    }
-
     function styleSheetHelper(ws, maxRow, maxCol, titleStyle, headerStyle, cellBorder, headerRowIndexZeroBased) {
       if (ws['A1']) ws['A1'].s = titleStyle;
       for (let c = 0; c < maxCol; c++) {

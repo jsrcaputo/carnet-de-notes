@@ -15,6 +15,7 @@
   <link rel="stylesheet" href="carnet-test/css/studio.css">
   <link rel="stylesheet" href="carnet-test/css/test.css">
   <script src="carnet-test/js/demarrage.js" defer></script>
+  <script src="carnet-test/js/demarrage-evenements.js" defer></script>
 </head>
 <body class="min-h-screen flex flex-col">
 
@@ -270,11 +271,6 @@
                   <button id="btnDownloadLegacyBrowser" type="button" class="sort-btn">Télécharger l’ancienne copie du navigateur</button>
                   <button id="btnDeleteLegacyBrowser" type="button" class="sort-btn">Effacer l’ancienne copie du navigateur</button>
                 </div>
-              </div>
-              <div class="sp-title" style="margin-top:.6rem">Excel chiffré</div>
-              <div class="sp-backup-actions">
-                <button id="btnOpenEncryptedExcel" type="button" class="sort-btn" title="Récupérer un export créé avec l’ancienne version">Récupérer un ancien export (.json)</button>
-                <input id="inputEncryptedExcel" type="file" accept=".json,application/json" class="hidden">
               </div>
             </div>
           </div>
@@ -1330,14 +1326,22 @@
   <script src="carnet-test/js/groupes.js"></script>
   <script src="carnet-test/js/demo.js"></script>
   <script src="carnet-test/js/etat.js"></script>
+  <script src="carnet-test/js/etat-ponderations.js"></script>
+  <script src="carnet-test/js/etat-session.js"></script>
   <script src="carnet-test/js/sauvegarde.js"></script>
+  <script src="carnet-test/js/sauvegarde-modele.js"></script>
+  <script src="carnet-test/js/sauvegarde-fichier.js"></script>
   <script src="carnet-test/js/calculs.js"></script>
   <script src="carnet-test/js/competences.js"></script>
   <script src="carnet-test/js/pedagogie/banque-commentaires.js"></script>
   <script src="carnet-test/js/commentaires.js"></script>
   <script src="carnet-test/js/criteres.js"></script>
   <script src="carnet-test/js/ui-carnet.js"></script>
+  <script src="carnet-test/js/ui-carnet-evaluations.js"></script>
+  <script src="carnet-test/js/ui-carnet-outils.js"></script>
   <script src="carnet-test/js/ui-traces.js"></script>
+  <script src="carnet-test/js/ui-grilles.js"></script>
+  <script src="carnet-test/js/ui-observations.js"></script>
   <script src="carnet-test/js/ui-eleves.js"></script>
   <script src="carnet-test/js/ui-bulletin.js"></script>
   <script src="carnet-test/js/export-excel.js"></script>
