@@ -239,81 +239,66 @@
     // Pondération officielle du bulletin unique québécois (Régime pédagogique MEQ)
     const OFFICIAL_TERM_WEIGHTS = { '1': 20, '2': 20, '3': 60 };
 
-    // Barème d'évaluation (source : École primaire de l'Orée-du-Parc, CSSMB, « Barème d'évaluation pour 21-22 ») — 1 seule sélection par rangée.
+    // Grille maison d'aide au jugement professionnel (inspirée du PFEQ / MEQ et de pratiques de terrain au primaire) — 1 seule sélection par rangée.
     const BAREME_ECOLE_ROWS = [
       {
         id: 'attentes',
         title: '1. Attentes de l’étape',
+        subtitle: 'Balises du PFEQ',
         cells: {
-          A: ['Dépasse les attentes prévues pour l’étape'],
-          B: ['Satisfait aux attentes prévues à l’étape'],
-          C: ['Satisfait minimalement aux attentes prévues à l’étape'],
-          D: ['Est en deçà des attentes prévues à l’étape'],
-          E: ['Est nettement en deçà des attentes prévues à l’étape']
+          A: ['Dépasse le seuil attendu avec constance et rigueur'],
+          B: ['Atteint pleinement le niveau attendu pour l’étape'],
+          C: ['Atteint le seuil de base attendu pour l’étape'],
+          D: ['Sous le seuil attendu ; maîtrise encore fragile'],
+          E: ['Écart marqué sous le seuil attendu malgré le soutien']
         }
       },
       {
         id: 'execution',
-        title: '2. Exécution de la tâche & Autonomie',
+        title: '2. Démarche et autonomie',
+        subtitle: 'Compréhension et organisation',
         cells: {
-          A: [
-            'Comprend facilement la tâche, organise très bien sa démarche et exécute la tâche sans aide avec beaucoup d’autonomie'
-          ],
-          B: [
-            'Comprend la tâche, organise adéquatement sa démarche et exécute souvent la tâche de façon autonome'
-          ],
-          C: [
-            'A parfois besoin de soutien pour comprendre la tâche ; organise et exécute à l’occasion de façon autonome'
-          ],
-          D: [
-            'A souvent besoin de soutien pour comprendre et organiser sa démarche ; exécute la tâche avec de l’aide'
-          ],
-          E: [
-            'Comprend et organise difficilement la tâche malgré l’aide apportée ; exécute rarement la tâche'
-          ]
+          A: ['Saisit vite les consignes, planifie et mène la tâche en pleine autonomie'],
+          B: ['Comprend les consignes, s’organise bien et avance de façon autonome'],
+          C: ['Besoin de précisions au départ ; autonome par moments'],
+          D: ['Besoin fréquent de relances pour s’organiser ; avance avec guidage'],
+          E: ['Peine à décoder et structurer la tâche malgré un guidage soutenu']
         }
       },
       {
         id: 'internes',
         title: '3. Mobilisation des ressources internes',
+        subtitle: 'Savoirs, stratégies et transfert',
         cells: {
-          A: [
-            'Trouve et utilise facilement des stratégies ; fait facilement des liens et des transferts'
-          ],
-          B: [
-            'Utilise des stratégies connues pour réaliser une tâche ; fait des liens et des transferts'
-          ],
-          C: [
-            'Utilise à l’occasion des stratégies connues ; fait parfois des liens et des transferts'
-          ],
-          D: [
-            'Utilise, avec de l’aide, des stratégies connues ; fait des liens lorsqu’il est accompagné'
-          ],
-          E: [
-            'Utilise difficilement les stratégies enseignées et fait difficilement des liens malgré le support'
-          ]
+          A: ['Choisit des stratégies variées et transfère ses acquis avec aisance'],
+          B: ['Applique les stratégies enseignées et fait des liens justes'],
+          C: ['Applique certaines stratégies en contexte familier ; liens ponctuels'],
+          D: ['Applique les stratégies seulement sur rappel ; peu de liens'],
+          E: ['Peine à mobiliser les stratégies enseignées malgré l’accompagnement']
         }
       },
       {
         id: 'metacognition',
-        title: '4. Métacognition (Auto-correction)',
+        title: '4. Retour réflexif et régulation',
+        subtitle: 'Métacognition et ajustements',
         cells: {
-          A: ['Voit, comprend et corrige ses erreurs spontanément'],
-          B: ['Voit, comprend et corrige ses erreurs souvent'],
-          C: ['Voit, comprend et corrige ses erreurs à l’occasion'],
-          D: ['Voit, comprend et corrige ses erreurs avec l’aide de l’enseignant'],
-          E: ['Éprouve de la difficulté à voir, comprendre et corriger ses erreurs même avec l’aide de l’enseignant']
+          A: ['S’autoévalue, s’ajuste spontanément et explique ses choix'],
+          B: ['Vérifie son travail et corrige la plupart de ses erreurs'],
+          C: ['Repère et corrige certaines erreurs sur piste de révision'],
+          D: ['Repère et ajuste ses erreurs avec un guidage de l’adulte'],
+          E: ['Peine à reconnaître ses erreurs même avec un guidage étroit']
         }
       },
       {
         id: 'externes',
-        title: '5. Mobilisation des ressources externes (Outils, Prédicteur, Pairs)',
+        title: '5. Mobilisation des ressources externes',
+        subtitle: 'Adulte, pairs, référentiels, outils',
         cells: {
-          A: ['Utilise spontanément les ressources externes (enseignant, pairs, documents, outils technologiques)'],
-          B: ['Utilise souvent les ressources externes (enseignant, pairs, documents, outils technologiques)'],
-          C: ['Utilise à l’occasion les ressources externes (enseignant, pairs, documents, outils technologiques)'],
-          D: ['Utilise les ressources externes lorsque l’enseignant lui demande'],
-          E: ['Utilise difficilement les ressources externes qui lui sont proposées par l’enseignant']
+          A: ['Choisit et exploite avec pertinence les ressources disponibles'],
+          B: ['Consulte à bon escient les ressources pour soutenir son travail'],
+          C: ['Recourt aux ressources à l’occasion, avec une efficacité inégale'],
+          D: ['N’exploite les ressources que sur invitation et encadrement'],
+          E: ['Peine à utiliser les ressources mises à sa disposition']
         }
       }
     ];

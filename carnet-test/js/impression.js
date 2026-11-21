@@ -774,7 +774,8 @@
           }).join('');
           return `<td>${statements}</td>`;
         }).join('');
-        return `<tr><th scope="row">${escapeHtml(row.title.replace(/ & /g, ' et '))}</th>${cells}</tr>`;
+        const subHtml = row.subtitle ? `<div class="observable-print-sub">${escapeHtml(row.subtitle)}</div>` : '';
+        return `<tr><th scope="row">${escapeHtml(row.title.replace(/ & /g, ' et '))}${subHtml}</th>${cells}</tr>`;
       }).join('');
       const resultText = blank
         ? 'Vierge avec nom'

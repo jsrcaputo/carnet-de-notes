@@ -510,6 +510,9 @@
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table thead th { background: #f1f5f9 !important; color: #111827; font-size: 9px; text-align: center; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table tbody th { width: 17%; background: #f8fafc !important; font-size: 9px; line-height: 1.25; text-align: left; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-table td { font-size: 8.5px; line-height: 1.28; }
+      #baremeBatchPrintSheet .observable-print-table tbody th { font-size: 9.5px; line-height: 1.28; }
+      #baremeBatchPrintSheet .observable-print-table td { font-size: 9.5px; line-height: 1.34; padding: 2mm; }
+      :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-sub { font-size: 8px; font-weight: 500; color: #475569; margin-top: 1px; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-statement { display: flex; align-items: flex-start; gap: 1.5mm; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .observable-print-check { width: 3mm; height: 3mm; flex: 0 0 auto; margin-top: .2mm; border: 1px solid #64748b; border-radius: 50%; }
       :is(#observablePrintSheet, #baremeBatchPrintSheet) .is-selected { background: #e2e8f0 !important; outline: 1.4px solid #0f172a; outline-offset: -1.4px; font-weight: 700; }
@@ -744,7 +747,16 @@
       gap: 8px;
     }
     .flag-picker-group-title { padding: 4px 7px; color: var(--muted); font-size: 10px; font-weight: 800; }
-    #viewBareme .observation-matrix { max-width: 1100px; margin-inline: auto; }
+    #viewBareme .observation-matrix { max-width: none; }
+    #viewBareme .rubric-matrix-table { min-width: 640px; }
+    #viewBareme .rubric-matrix-table thead th { font-size: 12px; line-height: 1.3; padding: 0.6rem 0.5rem; }
+    #viewBareme .rubric-matrix-table tbody td:first-child { padding: 0.65rem 0.65rem; vertical-align: middle; }
+    #viewBareme .bareme-row-title { font-size: 13px; font-weight: 700; line-height: 1.32; }
+    #viewBareme .bareme-row-sub { font-size: 11.5px; font-weight: 500; line-height: 1.3; margin-top: 0.2rem; color: var(--studio-text-muted, #64748b); }
+    #viewBareme .rubric-matrix-table tbody td:not(:first-child) { padding: 0.45rem; height: 1px; vertical-align: stretch; }
+    #viewBareme .rubric-stmt-btn { height: 100%; padding: 0.6rem 0.65rem; gap: 0.45rem; font-size: 13px; line-height: 1.42; align-items: flex-start; }
+    #viewBareme .rubric-stmt-text { line-height: 1.42; }
+    #viewBareme .rubric-stmt-check { margin-top: 0.15rem; }
     .flag-picker-item {
       display: flex;
       align-items: center;

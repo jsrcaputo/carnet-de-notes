@@ -105,8 +105,17 @@
         tr.className = 'border-b border-slate-200 align-top';
 
         const tdTitle = document.createElement('td');
-        tdTitle.className = 'p-2 font-bold text-slate-900 bg-slate-50 border border-slate-200 break-words';
-        tdTitle.textContent = row.title.replace(/ & /g, ' et ');
+        tdTitle.className = 'p-2.5 font-bold text-slate-900 bg-slate-50 border border-slate-200 break-words';
+        const titleEl = document.createElement('div');
+        titleEl.className = 'bareme-row-title';
+        titleEl.textContent = row.title.replace(/ & /g, ' et ');
+        tdTitle.appendChild(titleEl);
+        if (row.subtitle) {
+          const subEl = document.createElement('div');
+          subEl.className = 'bareme-row-sub';
+          subEl.textContent = row.subtitle;
+          tdTitle.appendChild(subEl);
+        }
         tr.appendChild(tdTitle);
 
         ['A', 'B', 'C', 'D', 'E'].forEach(fam => {
@@ -120,15 +129,15 @@
             itemBtn.type = 'button';
             itemBtn.dataset.rubricKey = key;
             itemBtn.setAttribute('aria-pressed', String(isChecked));
-            itemBtn.className = `rubric-stmt-btn p-1.5 rounded-lg border text-[11px] leading-snug transition cursor-pointer ${
+            itemBtn.className = `rubric-stmt-btn p-2.5 rounded-lg border text-[13px] leading-snug transition cursor-pointer ${
               isChecked
                 ? `stmt-checked-${fam}`
                 : 'bg-white hover:bg-slate-50 border-slate-200 text-slate-700'
             }`;
             itemBtn.innerHTML = `
-              <span aria-hidden="true" class="rubric-stmt-check mt-0.5 w-3.5 h-3.5 rounded-full flex-shrink-0 flex items-center justify-center border ${
+              <span aria-hidden="true" class="rubric-stmt-check mt-0.5 w-4 h-4 rounded-full flex-shrink-0 flex items-center justify-center border ${
                 isChecked ? 'bg-slate-900 text-white border-slate-900' : 'border-slate-300 bg-white'
-              } text-[9px] font-bold">${isChecked ? '✓' : ''}</span>
+              } text-[10px] font-bold">${isChecked ? '✓' : ''}</span>
               <span class="rubric-stmt-text">${escapeHtml(stmtText)}</span>
             `;
             itemBtn.addEventListener('click', () => {
