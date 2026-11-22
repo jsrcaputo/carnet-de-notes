@@ -9,10 +9,12 @@
         ? `Ce carnet utilise un mot de passe : ses copies JSON restent chiffrées avec le même mot de passe${activeFileHandle ? ', y compris après déliaison' : ', même sans fichier lié'}. Sauvegardez avant de fermer ou d’actualiser la page.`
         : 'Le carnet reste en mémoire dans cet onglet : sauvegardez votre fichier JSON avant de fermer ou d’actualiser la page.';
       const indicator = document.getElementById('fileSyncStatus');
-      if (!indicator) return;
-      indicator.dataset.status = status;
-      indicator.textContent = message;
-      indicator.title = message;
+      if (indicator) {
+        indicator.dataset.status = status;
+        indicator.textContent = message;
+        indicator.title = message;
+      }
+      if (typeof renderHomeSaveCard === 'function') renderHomeSaveCard();
     }
 
     function isMeaningfulSubjectData(data) {
@@ -94,7 +96,8 @@
       try {
         const hasLegacy = !!window.localStorage.getItem(LOCAL_STORAGE_KEY);
         document.getElementById('legacyBrowserBackup').classList.toggle('hidden', !hasLegacy);
-        document.getElementById('welcomeLegacyBrowserNotice').classList.toggle('hidden', !hasLegacy);
+        const homeNotice = document.getElementById('homeLegacyBrowserNotice');
+        if (homeNotice) homeNotice.classList.toggle('hidden', !hasLegacy);
       } catch (error) {
         console.error('Impossible de vérifier l’ancienne copie du navigateur.', error);
         showToast('Impossible de vérifier si une ancienne copie existe dans ce navigateur.');
@@ -179,6 +182,7 @@
       if (searchDropdown) searchDropdown.classList.add('hidden');
       if (listSearch) listSearch.value = '';
       if (searchMessage) searchMessage.textContent = '';
+      if (typeof resetHomeDemoPanels === 'function') resetHomeDemoPanels();
       renderAll();
       showToast('Carnet réinitialisé à neuf.');
     }

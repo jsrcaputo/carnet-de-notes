@@ -20,7 +20,9 @@
       groupModalMode = { type, id: groupId || null };
       const modal = document.getElementById('modalGroup');
       const group = type === 'edit' ? appState.groups.find(g => g.id === groupId) : null;
-      document.getElementById('groupModalTitle').textContent = type === 'edit' ? 'Modifier le groupe' : 'Nouveau groupe';
+      document.getElementById('groupModalTitle').textContent = type === 'edit'
+        ? 'Modifier le groupe'
+        : (!hasActiveGroup() ? 'Créer votre premier groupe' : 'Nouveau groupe');
       document.getElementById('groupNameInput').value = group ? group.name : '';
       const lvlSel = document.getElementById('groupLevelSelect');
       lvlSel.value = group ? (group.level || '') : '';
@@ -48,8 +50,9 @@
       emptyCopyOption.value = '';
       emptyCopyOption.textContent = 'Aucune (liste vide)';
       copySel.appendChild(emptyCopyOption);
+      const activeGrp = appState.groups.find(g => g.id === appState.activeGroupId);
       appState.groups
-        .filter(g => !g.placeholder && (returnToWelcomeAfterGroup || !isExampleGroup(g)))
+        .filter(g => !g.placeholder && (isExampleGroup(activeGrp) || !isExampleGroup(g)))
         .forEach(g => {
           const option = document.createElement('option');
           option.value = g.id;
@@ -73,7 +76,6 @@
             return;
           }
           closeGroupModal();
-          returnToWelcomeAfterGroup = false;
           deleteGroup(groupId);
         });
         document.getElementById('btnGroupCancel').parentElement.prepend(del);
@@ -100,10 +102,12 @@
       });
       if (!ids.length) { showToast('Cochez au moins une matière.'); return; }
       closeGroupModal();
-      returnToWelcomeAfterGroup = false;
       const level = document.getElementById('groupLevelSelect').value;
       if (groupModalMode.type === 'new') {
+        const shouldOpenStudents = !hasActiveGroup() || appState.activeView === 'viewHome';
+        if (shouldOpenStudents) appState.activeView = 'viewStudents';
         createGroup(name, ids, document.getElementById('groupCopySelect').value || null, level);
+        applyPrefs();
       } else {
         const g = appState.groups.find(x => x.id === groupModalMode.id);
         if (!g) return;

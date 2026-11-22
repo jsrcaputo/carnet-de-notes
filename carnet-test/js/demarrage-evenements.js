@@ -40,78 +40,91 @@
         window.addEventListener('resize', positionWeightGuide);
         window.addEventListener('scroll', positionWeightGuide, true);
       }
-      document.getElementById('welcomeClose').addEventListener('click', event => {
-        event.stopPropagation();
-        dismissWelcome();
-      });
-      document.getElementById('welcomeOverlay').addEventListener('click', event => {
-        if (!event.target.closest('.welcome-card')) dismissWelcome();
-      });
-      document.getElementById('welcomeCreate').addEventListener('click', startGroupFromWelcome);
-      document.getElementById('welcomeDemoToggle').addEventListener('click', event => {
-        const toggle = event.currentTarget;
-        const content = document.getElementById('welcomeDemoContent');
-        const expanded = toggle.getAttribute('aria-expanded') === 'true';
-        toggle.setAttribute('aria-expanded', String(!expanded));
-        if (expanded) {
-          content.classList.remove('is-open');
-          window.setTimeout(() => { content.hidden = true; }, 340);
-        } else {
-          content.hidden = false;
-          requestAnimationFrame(() => content.classList.add('is-open'));
+      const homePortal = document.getElementById('homePortal');
+      const homeDropZone = document.getElementById('homeDropZone');
+      const homeDropHint = document.getElementById('homeDropHint');
+      const defaultDropHintText = homeDropHint ? homeDropHint.textContent : '';
+      let dropZoneDragDepth = 0;
+
+      const setDropHighlight = active => {
+        if (homeDropZone) homeDropZone.classList.toggle('is-dragover', active);
+        if (homeDropHint) {
+          homeDropHint.textContent = active
+            ? 'Relâchez le fichier pour charger votre carnet.'
+            : defaultDropHintText;
         }
-      });
-      const demoChoices = document.querySelectorAll('#welcomeDemoChoices input[type="checkbox"]');
-      const syncDemoChoices = () => {
-        const selected = [...demoChoices].filter(input => input.checked);
-        document.getElementById('welcomeDemo').disabled = selected.length !== 1;
       };
-      demoChoices.forEach(input => input.addEventListener('change', event => {
-        if (event.target.checked) {
-          demoChoices.forEach(other => {
-            if (other !== event.target) other.checked = false;
-          });
-        }
-        syncDemoChoices();
-      }));
-      syncDemoChoices();
-      document.getElementById('welcomeDemo').addEventListener('click', () => {
-        const selectedOptionIds = [...demoChoices].filter(input => input.checked).map(input => input.value);
-        if (selectedOptionIds.length !== 1) {
-          showToast('Choisissez au moins une classe de démonstration.');
-          return;
-        }
-        hideWelcome();
-        requestObservationDraftExit(() => {
-          const wasPristine = isPristineInitialGroup();
-          if (wasPristine) initializeExampleGroups(selectedOptionIds);
-          else ensureExampleGroups(selectedOptionIds);
-          const firstOption = DEMO_OPTIONS.find(option => selectedOptionIds.includes(option.id));
-          const firstGroupId = firstOption && firstOption.groups[0] ? firstOption.groups[0].id : null;
-          if (firstGroupId) switchGroup(firstGroupId);
-          appState.activeView = 'viewStudents';
-          expandedSubjectGroup = null;
-          renderAll();
-          if (wasPristine) {
-            history.undo = [];
-            history.redo = [];
-            history.last = getEditableStateSnapshot();
-            updateHistoryButtons();
-          }
+
+      const bindClick = (id, handler) => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('click', handler);
+      };
+
+      bindClick('homeLoadBtn', openJsonFileSmart);
+      bindClick('homeCreateBtn', () => openGroupModal('new'));
+      bindClick('btnSidebarBrandHome', openHomeDashboard);
+      bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
+      bindClick('homeBtnPrivacy', () => document.getElementById('privacyPolicyDialog')?.showModal());
+      bindClick('homeBtnDownloadLegacy', () => document.getElementById('btnDownloadLegacyBrowser')?.click());
+      bindClick('homeBtnDeleteLegacy', () => document.getElementById('btnDeleteLegacyBrowser')?.click());
+
+      bindClick('homeDemoToggle', event => {
+        const expanded = event.currentTarget.getAttribute('aria-expanded') === 'true';
+        setDemoPanelOpen('homeDemoToggle', 'homeDemoPanel', !expanded);
+      });
+      bindClick('homeDemoLaunch', () => {
+        const checked = document.querySelector('#homeDemoChoices input[type="radio"]:checked');
+        launchDemoOption(checked ? checked.value : '');
+      });
+
+      if (homePortal) {
+        homePortal.addEventListener('dragover', event => {
+          event.preventDefault();
         });
+        homePortal.addEventListener('drop', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropZoneDragDepth = 0;
+          setDropHighlight(false);
+        });
+      }
+      if (homeDropZone) {
+        homeDropZone.addEventListener('dragenter', event => {
+          event.preventDefault();
+          dropZoneDragDepth += 1;
+          setDropHighlight(true);
+        });
+        homeDropZone.addEventListener('dragover', event => {
+          event.preventDefault();
+          if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+        });
+        homeDropZone.addEventListener('dragleave', event => {
+          event.preventDefault();
+          dropZoneDragDepth = Math.max(0, dropZoneDragDepth - 1);
+          if (dropZoneDragDepth === 0) setDropHighlight(false);
+        });
+        homeDropZone.addEventListener('drop', event => {
+          event.preventDefault();
+          event.stopPropagation();
+          dropZoneDragDepth = 0;
+          setDropHighlight(false);
+          loadDroppedJsonFile(event.dataTransfer);
+        });
+      }
+      window.addEventListener('dragover', event => {
+        if (!hasActiveGroup()) event.preventDefault();
       });
-      document.getElementById('welcomeLoad').addEventListener('click', () => {
-        importFromWelcome = true;
-        hideWelcome();
-        openJsonFileSmart();
+      window.addEventListener('drop', event => {
+        if (!hasActiveGroup()) {
+          event.preventDefault();
+          dropZoneDragDepth = 0;
+          setDropHighlight(false);
+        }
       });
+
       document.getElementById('inputImportJSON').addEventListener('cancel', () => {
-        if (importFromWelcome) showWelcome();
-        importFromWelcome = false;
         pendingImportSnapshot = null;
       });
-      const brandHomeBtn = document.getElementById('btnSidebarBrandHome');
-      if (brandHomeBtn) brandHomeBtn.addEventListener('click', showWelcome);
       document.getElementById('tourSkip').addEventListener('click', finishTutorial);
       document.getElementById('tourNext').addEventListener('click', () => {
         if (tourIndex === tourSteps.length - 1) finishTutorial();
@@ -121,8 +134,8 @@
       window.addEventListener('scroll', positionTour, true);
       document.addEventListener('keydown', event => {
         if (event.key !== 'Tab') return;
-        const modal = ['welcomeOverlay', 'tutorialOverlay'].map(id => document.getElementById(id))
-          .find(el => !el.classList.contains('hidden'));
+        const modal = ['tutorialOverlay'].map(id => document.getElementById(id))
+          .find(el => el && !el.classList.contains('hidden'));
         if (!modal) return;
         const controls = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)')]
           .filter(control => control.getClientRects().length);
@@ -142,11 +155,6 @@
         if (event.target.id === 'modalUnsavedObservation') closeObservationWarning(true);
       });
       document.addEventListener('keydown', event => {
-        const welcome = document.getElementById('welcomeOverlay');
-        if (event.key === 'Escape' && welcome && !welcome.classList.contains('hidden')) {
-          dismissWelcome();
-          return;
-        }
         const modal = document.getElementById('modalUnsavedObservation');
         if (event.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
           closeObservationWarning(true);
@@ -158,7 +166,11 @@
       document.querySelectorAll('.term-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const nextTerm = btn.getAttribute('data-term');
-          const nextView = appState.activeView === 'viewGlobalReport' ? viewBeforeGlobalReport : appState.activeView;
+          const nextView = appState.activeView === 'viewGlobalReport'
+            ? viewBeforeGlobalReport
+            : appState.activeView === 'viewHome'
+              ? 'viewGradebook'
+              : appState.activeView;
           navigateToView(nextView, () => {
             appState.activeTerm = nextTerm;
             competencyTermSelected = null;
@@ -1132,8 +1144,6 @@
       // Groupes
       const cancelGroupModal = () => {
         closeGroupModal();
-        if (returnToWelcomeAfterGroup) showWelcome();
-        returnToWelcomeAfterGroup = false;
       };
       document.getElementById('btnGroupClose').addEventListener('click', cancelGroupModal);
       document.getElementById('btnGroupCancel').addEventListener('click', cancelGroupModal);
@@ -1296,8 +1306,6 @@
       const backupLoadDialog = document.getElementById('backupLoadDialog');
       const cancelBackupLoad = () => {
         backupLoadDialog.close();
-        if (importFromWelcome) showWelcome();
-        importFromWelcome = false;
       };
       document.getElementById('btnCancelBackupLoad').addEventListener('click', cancelBackupLoad);
       backupLoadDialog.addEventListener('cancel', event => {
@@ -1355,18 +1363,14 @@
       document.getElementById('inputImportJSON').addEventListener('change', async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) {
-          if (importFromWelcome) showWelcome();
-          importFromWelcome = false;
           pendingImportSnapshot = null;
           return;
         }
         e.target.value = '';
         fileOperation = true;
-        const loaded = await loadBackupFile(file, null, pendingImportSnapshot);
+        await loadBackupFile(file, null, pendingImportSnapshot);
         fileOperation = false;
         pendingImportSnapshot = null;
-        if (!loaded && importFromWelcome) showWelcome();
-        importFromWelcome = false;
         if (activeFileHandle && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) scheduleAppStateSave();
       });
 
@@ -1380,7 +1384,7 @@
       initialEditableSnapshot = getEditableStateSnapshot();
       lastSavedFileSnapshot = getBackupSnapshot();
       updateHistoryButtons();
-      showWelcome();
+      resetHomeDemoPanels();
 
       // Recherche et tri des élèves
       document.getElementById('studentSearch').addEventListener('input', e => {
@@ -1443,15 +1447,15 @@
         if (e.key === '/' && !mod && !typing) {
           const modalOpen = Boolean(
             document.querySelector('dialog[open]')
-            || ['welcomeOverlay', 'tutorialOverlay', 'modalUnsavedObservation', 'modalAddAssignment', 'modalGroup', 'modalCommentBank']
+            || ['tutorialOverlay', 'modalUnsavedObservation', 'modalAddAssignment', 'modalGroup', 'modalCommentBank']
               .some(id => {
                 const el = document.getElementById(id);
                 return el && !el.classList.contains('hidden');
               })
           );
           if (modalOpen) return;
-          const noActiveGroup = document.documentElement.classList.contains('no-active-group');
-          const target = (appState.activeView === 'viewStudents' && !noActiveGroup)
+          if (document.documentElement.classList.contains('no-active-group')) return;
+          const target = appState.activeView === 'viewStudents'
             ? 'studentSearch'
             : 'headerStudentSearch';
           const targetEl = document.getElementById(target);
@@ -1551,7 +1555,6 @@
           if (hasChanges && !window.confirm('Ce carnet contient des modifications non sauvegardées. Fermer quand même ?')) return;
           if (!window.confirm('Fermer ce carnet sur ce poste partagé ? Les données affichées dans cet onglet seront effacées.')) return;
           resetCarnetToBlank();
-          showWelcome();
         });
       });
     });

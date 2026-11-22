@@ -265,7 +265,7 @@
         }
         appState.selectedStudentId = null;
         if (updateState) updateState();
-        if (viewId === 'viewStudents' || viewId === 'viewGlobalReport') expandedSubjectGroup = null;
+        if (viewId === 'viewStudents' || viewId === 'viewGlobalReport' || viewId === 'viewHome') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderAll();
         if (!options.skipScrollTop && (changedView || updateState)) {

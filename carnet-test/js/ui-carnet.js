@@ -7,7 +7,14 @@
       renderTermSwitcher();
       renderSubjectTabs();
       renderNavTabs();
+      if (!hasActiveGroup()) {
+        renderHomeView();
+        return;
+      }
       switch (appState.activeView) {
+        case 'viewHome':
+          renderHomeView();
+          break;
         case 'viewBareme':
           renderBaremeView();
           break;
@@ -27,6 +34,7 @@
 
     function renderTermSwitcher() {
       const isGlobal = appState.activeView === 'viewGlobalReport';
+      const isHome = appState.activeView === 'viewHome';
       const studentButton = document.getElementById('btnNavStudentsTop');
       const studentCount = document.getElementById('headerStudentCount');
       if (studentCount) studentCount.textContent = String(appState.students.length);
@@ -45,8 +53,8 @@
       }
       document.querySelectorAll('.term-btn').forEach(btn => {
         const t = btn.getAttribute('data-term');
-        btn.setAttribute('aria-pressed', String(!isGlobal && t === appState.activeTerm));
-        if (!isGlobal && t === appState.activeTerm) {
+        btn.setAttribute('aria-pressed', String(!isGlobal && !isHome && t === appState.activeTerm));
+        if (!isGlobal && !isHome && t === appState.activeTerm) {
           btn.className = 'term-btn px-3 py-1 rounded-lg text-xs font-bold transition cursor-pointer bg-indigo-600 text-white shadow-xs';
         } else {
           btn.className = 'term-btn px-3 py-1 rounded-lg text-xs font-semibold transition cursor-pointer text-slate-300 hover:text-white';
@@ -98,7 +106,7 @@
         }
         return;
       }
-      const neutralBar = appState.activeView === 'viewStudents' || appState.activeView === 'viewGlobalReport';
+      const neutralBar = appState.activeView === 'viewStudents' || appState.activeView === 'viewGlobalReport' || appState.activeView === 'viewHome';
       const visibleSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG);
       if (!neutralBar && visibleSubjects.length && !visibleSubjects.some(subject => subject.id === appState.activeSubjectId)) {
         appState.activeSubjectId = visibleSubjects[0].id;
@@ -197,15 +205,21 @@
     function renderNavTabs() {
       const hasGroup = hasActiveGroup();
       document.documentElement.classList.toggle('no-active-group', !hasGroup);
-      const views = ['viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'];
+      const views = ['viewHome', 'viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'];
+      const activeView = hasGroup ? appState.activeView : 'viewHome';
       views.forEach(v => {
         const sec = document.getElementById(v);
         if (sec) {
-          if (hasGroup && appState.activeView === v) sec.classList.remove('hidden');
-          else sec.classList.add('hidden');
+          sec.classList.toggle('hidden', v !== activeView);
         }
       });
-
+      const brandBtn = document.getElementById('btnSidebarBrandHome');
+      if (brandBtn) {
+        const isHome = hasGroup && appState.activeView === 'viewHome';
+        brandBtn.classList.toggle('is-active', isHome);
+        if (isHome) brandBtn.setAttribute('aria-current', 'page');
+        else brandBtn.removeAttribute('aria-current');
+      }
     }
 
     let pendingWeightFocusSelector = null;

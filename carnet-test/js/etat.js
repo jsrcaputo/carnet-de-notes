@@ -9,7 +9,7 @@
         version: 9,
         activeTerm: '1',
         activeSubjectId: 'math_resoudre',
-        activeView: 'viewStudents',
+        activeView: 'viewHome',
         selectedStudentId: null,
         annualWeightMode: 'official',
         activeTagCategoryId: 'autonomie',

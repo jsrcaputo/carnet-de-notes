@@ -345,8 +345,6 @@
         showToast('Impossible d’ouvrir le fichier JSON.');
       } finally {
         fileOperation = false;
-        if (!loaded && importFromWelcome) showWelcome();
-        importFromWelcome = false;
         if (activeFileHandle && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) scheduleAppStateSave();
       }
     }
@@ -357,6 +355,61 @@
           document.getElementById('backupLoadDialog').showModal();
         } else {
           chooseBackupFile();
+        }
+      });
+    }
+
+    async function loadDroppedJsonFile(dataTransfer) {
+      if (fileOperation || !dataTransfer) return;
+      let handle = null;
+      let file = null;
+      const items = dataTransfer.items ? [...dataTransfer.items] : [];
+      for (const item of items) {
+        if (item.kind !== 'file') continue;
+        if (typeof item.getAsFileSystemHandle === 'function') {
+          try {
+            const candidate = await item.getAsFileSystemHandle();
+            if (candidate && candidate.kind === 'file') {
+              handle = candidate;
+              file = await handle.getFile();
+              break;
+            }
+          } catch (_) {
+            handle = null;
+          }
+        }
+        if (!file && typeof item.getAsFile === 'function') {
+          file = item.getAsFile();
+          if (file) break;
+        }
+      }
+      if (!file && dataTransfer.files && dataTransfer.files[0]) {
+        file = dataTransfer.files[0];
+      }
+      if (!file) return;
+      if (!/\.json$/i.test(file.name) && file.type !== 'application/json') {
+        showToast('Déposez un fichier de sauvegarde au format .json.');
+        return;
+      }
+      requestObservationDraftExit(async () => {
+        if (getEditableStateSnapshot() !== initialEditableSnapshot &&
+            !window.confirm('Le fichier déposé remplacera le carnet actuellement affiché. Continuer ?')) {
+          return;
+        }
+        const expectedSnapshot = getBackupSnapshot();
+        fileOperation = true;
+        try {
+          let writable = false;
+          if (handle) {
+            writable = typeof handle.queryPermission !== 'function' ||
+              await handle.queryPermission({ mode: 'readwrite' }) === 'granted';
+          }
+          await loadBackupFile(file, handle, expectedSnapshot, writable);
+        } finally {
+          fileOperation = false;
+          if (activeFileHandle && !fileWriteBlocked && getBackupSnapshot() !== lastSavedFileSnapshot) {
+            scheduleAppStateSave();
+          }
         }
       });
     }

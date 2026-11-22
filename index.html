@@ -19,46 +19,6 @@
   <script src="carnet-test/vendor/xlsx.bundle.js" defer></script>
 </head>
 <body class="min-h-screen flex flex-col">
-
-  <div id="welcomeOverlay" class="welcome-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle" tabindex="-1">
-    <div class="welcome-card">
-      <button id="welcomeClose" class="welcome-close" type="button" aria-label="Fermer" title="Fermer">✕</button>
-      <h2 id="welcomeTitle">Carnet de notes 2026-2027</h2>
-      <p class="welcome-privacy">Afin de respecter les normes de confidentialité, merci d'anonymiser les étudiant(es) sur vos listes.</p>
-      <p id="welcomeLegacyBrowserNotice" class="hidden">Une ancienne copie du carnet est encore conservée dans ce navigateur. Fermez cet accueil, puis ouvrez les options pour la télécharger ou l’effacer après vérification.</p>
-      <div class="welcome-actions">
-        <button id="welcomeLoad" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg></span>Charger un carnet</span><span>Retrouvez votre travail sauvegardé.</span></button>
-        <button id="welcomeCreate" type="button"><span class="welcome-label"><span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg></span>Créer un groupe</span><span>Commencez un nouveau carnet.</span></button>
-        <section class="welcome-demo-panel" aria-labelledby="welcomeDemoTitle">
-          <button id="welcomeDemoToggle" class="welcome-demo-heading" type="button" aria-expanded="false" aria-controls="welcomeDemoContent">
-            <span class="welcome-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg></span>
-            <span>
-              <span id="welcomeDemoTitle" class="welcome-demo-title">Explorer une démonstration</span>
-              <span class="welcome-demo-description">Un aperçu avec des noms fictifs.</span>
-            </span>
-            <span class="welcome-demo-chevron" aria-hidden="true">⌄</span>
-          </button>
-          <div id="welcomeDemoContent" hidden>
-            <fieldset id="welcomeDemoChoices" class="welcome-demo-choices">
-              <legend class="sr-only">Classes de démonstration</legend>
-              <label><input type="checkbox" value="presco" checked><span><strong>Préscolaire</strong></span></label>
-              <label><input type="checkbox" value="annee1"><span><strong>1re année</strong></span></label>
-              <label><input type="checkbox" value="annee2"><span><strong>2e année</strong></span></label>
-              <label><input type="checkbox" value="annee3"><span><strong>3e année</strong></span></label>
-              <label><input type="checkbox" value="annee4"><span><strong>4e année</strong></span></label>
-              <label><input type="checkbox" value="annee5"><span><strong>5e année</strong></span></label>
-              <label><input type="checkbox" value="annee6"><span><strong>6e année</strong></span></label>
-              <label><input type="checkbox" value="specialiste"><span><strong>Spécialiste 2e cycle</strong></span></label>
-              <label><input type="checkbox" value="multi"><span><strong>Multi-niveau 5e et 6e</strong></span></label>
-            </fieldset>
-            <div class="welcome-demo-footer">
-              <button id="welcomeDemo" class="welcome-demo-launch" type="button">Charger la démonstration</button>
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  </div>
   <div id="tutorialOverlay" class="tour-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
     <div id="tourHighlight" class="tour-highlight" aria-hidden="true"></div>
     <div id="tourCard" class="tour-card">
@@ -82,13 +42,8 @@
     </div>
   </div>
 
-  <div id="firstGroupHint" class="first-group-hint hidden no-print" role="status" aria-live="polite">
-    <span class="first-group-arrow" aria-hidden="true">←</span>
-    <span class="first-group-message">Créez votre premier groupe !</span>
-  </div>
-
   <aside class="test-sidebar no-print" aria-label="Navigation principale">
-    <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Ouvrir l’écran de démarrage et les démonstrations" aria-label="Carnet de notes 2026-2027 — Ouvrir l’écran de démarrage">
+    <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Ouvrir le tableau de bord et vos groupes" aria-label="Carnet de notes 2026-2027 — Tableau de bord">
       <span class="brand-heading">Carnet de notes</span>
       <span class="brand-year">2026-2027</span>
     </button>
@@ -127,7 +82,7 @@
       </section>
     </div>
     <nav class="test-sidebar-footer test-sidebar-nav" aria-label="Informations et aide">
-      <a class="feedback-link" href="mailto:carnetdenotes@duck.com?subject=Suggestion%20pour%20Carnet%20de%20notes" title="Écrire à Carnet de notes">
+      <a class="feedback-link" href="mailto:support@carnetdenotes.ca?subject=Suggestion%20pour%20Carnet%20de%20notes" title="Écrire à Carnet de notes">
         <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
         <span>Contact</span>
       </a>
@@ -300,6 +255,182 @@
   <!-- MAIN CONTENT AREA -->
   <main class="site-layout flex-1 max-w-7xl w-full mx-auto px-3 sm:px-5 py-4 space-y-4">
     <div id="printMeta" aria-hidden="true"></div>
+
+    <section id="viewHome" class="home-view no-print" aria-label="Accueil et tableau de bord">
+      <!-- ÉTAT 1 : PORTAIL D'ACCUEIL PLEIN ÉCRAN (AUCUN GROUPE ACTIF) -->
+      <div id="homePortal" class="home-portal">
+        <div class="home-portal-shell">
+          <div class="home-portal-header">
+            <div class="home-portal-brand">
+              <h1>Carnet de notes</h1>
+              <span class="home-year-pill">2026-2027</span>
+            </div>
+            <nav class="home-portal-links" aria-label="Informations et aide">
+              <button id="homeBtnPrivacy" type="button">Confidentialité</button>
+              <a href="mailto:support@carnetdenotes.ca?subject=Suggestion%20pour%20Carnet%20de%20notes">Contact</a>
+            </nav>
+          </div>
+
+          <div id="homeLegacyBrowserNotice" class="home-legacy-banner hidden" role="status">
+            <p>Une ancienne copie du carnet est encore conservée dans ce navigateur.</p>
+            <div class="home-legacy-actions">
+              <button id="homeBtnDownloadLegacy" type="button" class="home-btn home-btn-secondary home-btn-sm">Télécharger la copie</button>
+              <button id="homeBtnDeleteLegacy" type="button" class="home-btn home-btn-secondary home-btn-sm">Effacer du navigateur</button>
+            </div>
+          </div>
+
+          <div id="homeDropZone" class="home-resume-band">
+            <div class="home-resume-copy">
+              <span class="home-resume-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg>
+              </span>
+              <div>
+                <h2>Reprendre un carnet</h2>
+                <p id="homeDropHint">Ouvrez votre fichier de sauvegarde (.json) ou glissez-le ici.</p>
+              </div>
+            </div>
+            <button id="homeLoadBtn" type="button" class="home-btn home-btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
+              <span>Charger un fichier</span>
+            </button>
+          </div>
+
+          <div class="home-levels-grid">
+            <article class="home-level-card is-primary">
+              <div class="home-level-head">
+                <span class="home-level-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </span>
+                <div class="home-level-title-wrap">
+                  <h2>Préscolaire et primaire</h2>
+                  <span class="home-status-badge is-available">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
+                    Disponible
+                  </span>
+                </div>
+              </div>
+              <p class="home-level-desc">Préscolaire à 6e année · Titulaires, spécialistes et multiniveaux.</p>
+              <div class="home-level-actions">
+                <button id="homeCreateBtn" type="button" class="home-btn home-btn-primary">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg>
+                  <span>Créer un groupe</span>
+                  <span class="home-arrow" aria-hidden="true">→</span>
+                </button>
+                <button id="homeDemoToggle" type="button" class="home-btn home-btn-secondary" aria-expanded="false" aria-controls="homeDemoPanel">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg>
+                  <span>Démonstration</span>
+                  <span class="home-chevron" aria-hidden="true">⌄</span>
+                </button>
+              </div>
+            </article>
+
+            <article class="home-level-card is-coming-soon">
+              <div class="home-level-head">
+                <span class="home-level-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V3L4 8v13h16V8l-8 2z"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>
+                </span>
+                <div class="home-level-title-wrap">
+                  <h2>Secondaire</h2>
+                  <span class="home-status-badge is-soon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    En construction
+                  </span>
+                </div>
+              </div>
+              <p class="home-level-desc">1er et 2e cycles en préparation : groupes-matières, compétences et pondérations adaptées.</p>
+              <div class="home-level-actions">
+                <a class="home-btn home-btn-secondary" href="mailto:support@carnetdenotes.ca?subject=Carnet%20de%20notes%20%E2%80%94%20Secondaire">
+                  <span>Suggérer un besoin</span>
+                  <span class="home-arrow" aria-hidden="true">→</span>
+                </a>
+              </div>
+            </article>
+          </div>
+
+          <div id="homeDemoPanel" class="home-demo-collapse" aria-hidden="true">
+            <div class="home-demo-collapse-inner">
+              <div class="home-demo-box">
+                <fieldset id="homeDemoChoices" class="home-demo-choices">
+                  <legend class="sr-only">Classes de démonstration</legend>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="presco" checked><span>Préscolaire</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee1"><span>1re année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee2"><span>2e année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee3"><span>3e année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee4"><span>4e année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee5"><span>5e année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="annee6"><span>6e année</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="specialiste"><span>Spécialiste 2e cycle</span></label>
+                  <label class="home-demo-option"><input type="radio" name="homeDemoClass" value="multi"><span>Multi-niveau 5e et 6e</span></label>
+                </fieldset>
+                <div class="home-demo-footer">
+                  <span class="home-demo-note">Aperçu avec noms et résultats fictifs</span>
+                  <button id="homeDemoLaunch" type="button" class="home-btn home-btn-primary home-btn-sm">
+                    <span>Ouvrir la démonstration</span>
+                    <span class="home-arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="home-portal-footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 3.8-4"/></svg>
+            <p>Afin de respecter les normes de confidentialité, merci d’anonymiser les élèves sur vos listes.</p>
+          </footer>
+        </div>
+      </div>
+
+      <!-- ÉTAT 2 : TABLEAU DE BORD DE SESSION (CARNET OUVERT) -->
+      <div id="homeDashboard" class="home-dashboard" hidden>
+        <div class="dash-header">
+          <div>
+            <h2 class="dash-title">Tableau de bord</h2>
+            <p id="dashSummaryMeta" class="dash-subtitle"></p>
+          </div>
+        </div>
+
+        <div id="dashSaveNotice" class="dash-save-notice hidden" data-status="pending" role="status">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4m0 4h.01M10.3 3.9 1.9 18.5A1.7 1.7 0 0 0 3.4 21h17.2a1.7 1.7 0 0 0 1.5-2.5L13.7 3.9a1.95 1.95 0 0 0-3.4 0Z"/></svg>
+          <p id="dashSaveNoticeText"></p>
+        </div>
+
+        <section id="dashOverviewSection" class="dash-panel" aria-labelledby="dashOverviewHeading">
+          <div class="dash-panel-head">
+            <div>
+              <h3 id="dashOverviewHeading">Portrait de la classe</h3>
+              <p id="dashOverviewMeta" class="dash-panel-sub"></p>
+            </div>
+            <div id="dashProfileChips" class="dash-profile-chips"></div>
+          </div>
+
+          <div id="dashKpiStrip" class="dash-kpi-strip"></div>
+
+          <div id="dashSubjectsWrap" class="dash-subblock">
+            <h4 class="dash-subblock-title">Avancement par matière</h4>
+            <div id="dashSubjectsGrid" class="dash-subjects-grid"></div>
+          </div>
+
+          <div id="dashFollowupsWrap" class="dash-subblock hidden">
+            <h4 class="dash-subblock-title">Travaux en suivi</h4>
+            <div id="dashFollowupsList" class="dash-followups-list"></div>
+          </div>
+        </section>
+
+        <section class="dash-groups-section" aria-labelledby="dashGroupsHeading">
+          <div class="dash-section-head">
+            <div class="dash-section-title-wrap">
+              <h3 id="dashGroupsHeading">Vos groupes</h3>
+              <span id="dashGroupsCount" class="dash-count-pill">0</span>
+            </div>
+            <button id="dashBtnManageGroups" type="button" class="dash-inline-link">
+              <span>Gérer les listes</span>
+              <span class="home-arrow" aria-hidden="true">→</span>
+            </button>
+          </div>
+          <div id="dashGroupsGrid" class="dash-groups-grid"></div>
+        </section>
+      </div>
+    </section>
 
     <!-- VIEW 1: CARNET & TRAVAUX (ONLY ELEMENT THAT SCROLLS HORIZONTALLY AS WORKS ARE ADDED) -->
     <section id="viewGradebook" class="hidden space-y-3">
