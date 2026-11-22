@@ -204,7 +204,8 @@
 
     function renderNavTabs() {
       const hasGroup = hasActiveGroup();
-      document.documentElement.classList.toggle('no-active-group', !hasGroup);
+      const isLandingPortal = Boolean(landingPortalRequested);
+      document.documentElement.classList.toggle('no-active-group', !hasGroup || isLandingPortal);
       const views = ['viewHome', 'viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'];
       const activeView = hasGroup ? appState.activeView : 'viewHome';
       views.forEach(v => {
@@ -215,10 +216,15 @@
       });
       const brandBtn = document.getElementById('btnSidebarBrandHome');
       if (brandBtn) {
-        const isHome = hasGroup && appState.activeView === 'viewHome';
-        brandBtn.classList.toggle('is-active', isHome);
-        if (isHome) brandBtn.setAttribute('aria-current', 'page');
-        else brandBtn.removeAttribute('aria-current');
+        brandBtn.classList.remove('is-active');
+        brandBtn.removeAttribute('aria-current');
+      }
+      const dashboardButton = document.getElementById('btnSidebarDashboard');
+      if (dashboardButton) {
+        const isDashboard = hasGroup && !isLandingPortal && appState.activeView === 'viewHome';
+        dashboardButton.setAttribute('aria-pressed', String(isDashboard));
+        if (isDashboard) dashboardButton.setAttribute('aria-current', 'page');
+        else dashboardButton.removeAttribute('aria-current');
       }
     }
 

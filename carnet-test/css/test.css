@@ -362,7 +362,7 @@
       html.design-studio.theme-dark .test-sidebar-brand:hover {
         background: color-mix(in srgb, var(--brand) 16%, transparent);
       }
-      .test-sidebar-brand :is(h1, .brand-heading) { font-size: 1.65rem; line-height: 1.1; font-weight: 800; letter-spacing: -.03em; color: var(--studio-text); margin: 0; transition: color .15s ease; }
+      .test-sidebar-brand :is(h1, .brand-heading) { font-family: "Segoe UI", system-ui, sans-serif; font-size: 1.32rem; line-height: 1.15; font-weight: 750; letter-spacing: -.025em; white-space: nowrap; color: var(--studio-text); margin: 0; transition: color .15s ease; }
       .test-sidebar-brand:hover :is(h1, .brand-heading) { color: var(--brand-deep); }
       html.design-studio.theme-dark .test-sidebar-brand :is(h1, .brand-heading) { color: var(--ink); }
       html.design-studio.theme-dark .test-sidebar-brand:hover :is(h1, .brand-heading) { color: #ffffff; }
@@ -2951,9 +2951,6 @@ html.design-studio.theme-dark #viewGlobalReport .trend-badge.trend-down {
 }
 
 @media screen and (max-width: 600px) {
-  html.design-studio .gr-kpi-strip {
-    width: 100%;
-  }
   html.design-studio #gradebookHeaderRow > th:first-child,
   html.design-studio #gradebookBody tr > td:first-child {
     width: clamp(104px, 28vw, 120px) !important;
@@ -2994,6 +2991,20 @@ html.design-studio .gr-subject-jump {
   text-align: left;
   cursor: pointer;
   transition: color .16s ease, background-color .16s ease;
+}
+html.design-studio .gr-bar-subject-wrap .gr-subject-jump {
+  color: var(--studio-text);
+  font-size: .84rem;
+  font-weight: 750;
+}
+html.design-studio .gr-evaluation-count {
+  flex: 0 0 auto;
+  margin-left: .18rem;
+  color: var(--studio-text-muted);
+  font-size: .67rem;
+  font-style: italic;
+  font-weight: 500;
+  white-space: nowrap;
 }
 html.design-studio .ps-title .gr-subject-jump--presco {
   font-size: 16px;
@@ -3038,6 +3049,53 @@ html.design-studio .gr-subject-jump:focus-visible .gr-subject-jump-arrow {
 html.design-studio .gr-subject-jump:focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 1px;
+}
+
+html.design-studio .gr-student-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: .16rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 9px;
+  background: var(--studio-surface-soft);
+}
+html.design-studio .gr-student-view-toggle button {
+  display: grid;
+  place-items: center;
+  width: 1.85rem;
+  height: 1.7rem;
+  padding: .2rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--studio-text-muted);
+  cursor: pointer;
+}
+html.design-studio .gr-student-view-toggle button svg {
+  width: 1rem;
+  height: 1rem;
+}
+html.design-studio .gr-student-view-toggle button:hover,
+html.design-studio .gr-student-view-toggle button.is-active {
+  background: var(--studio-surface);
+  color: var(--brand-deep);
+  box-shadow: var(--studio-shadow-sm);
+}
+html.design-studio #grStudentBand.is-select {
+  display: block;
+  width: 100%;
+}
+html.design-studio .gr-student-select {
+  width: min(100%, 34rem);
+  min-height: 2.35rem;
+  padding: .45rem 2.2rem .45rem .75rem;
+  border: 1px solid var(--studio-border-strong);
+  border-radius: 9px;
+  background: var(--studio-surface);
+  color: var(--studio-text);
+  font-size: .84rem;
+  font-weight: 650;
+  cursor: pointer;
 }
 html.design-studio.theme-dark .gr-subject-jump:hover,
 html.design-studio.theme-dark .gr-subject-jump:focus-visible {
@@ -3505,18 +3563,19 @@ html.design-studio.theme-dark .home-legacy-banner {
 }
 .home-level-title-wrap {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
-  gap: .4rem .55rem;
+  gap: .45rem;
   min-width: 0;
   flex: 1 1 auto;
 }
 .home-level-title-wrap h2 {
   margin: 0;
-  font-size: 1.04rem;
+  font-size: 1rem;
   font-weight: 800;
   color: var(--studio-text);
   line-height: 1.25;
+  white-space: nowrap;
 }
 .home-level-desc {
   margin: 0;

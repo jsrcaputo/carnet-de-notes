@@ -282,6 +282,7 @@
           autosaveTimer = null;
         }
         restoreCustomWeightedPresets(importedPresets);
+        landingPortalRequested = false;
         appState = importedState;
         applyActiveSubjects(appState);
         gbFilter = '';

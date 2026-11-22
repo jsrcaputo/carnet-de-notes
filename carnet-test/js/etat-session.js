@@ -100,7 +100,7 @@
       ambre: 'Ocre & Ambre',
       graphite: 'Graphite & Encre'
     };
-    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false };
+    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false, summaryStudentListMode: 'grid' };
     try {
       const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
       if (savedPrefs && typeof savedPrefs === 'object') {
@@ -108,6 +108,7 @@
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
         if (typeof savedPrefs.coloredColumns === 'boolean') prefs.coloredColumns = savedPrefs.coloredColumns;
+        if (['select', 'grid'].includes(savedPrefs.summaryStudentListMode)) prefs.summaryStudentListMode = savedPrefs.summaryStudentListMode;
       }
     } catch (_) {}
     const SUBJECT_STUDIO_ACCENTS = {
@@ -154,6 +155,11 @@
       document.querySelectorAll('#settingsPanel [data-pref-check]').forEach(cb => {
         cb.checked = !!prefs[cb.getAttribute('data-pref-check')];
       });
+      document.querySelectorAll('[data-gr-student-view]').forEach(btn => {
+        const isActive = btn.getAttribute('data-gr-student-view') === prefs.summaryStudentListMode;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+      });
       try {
         window.localStorage.setItem('carnet_notes_prefs_2026_v1', JSON.stringify(prefs));
       } catch (_) {}
@@ -188,7 +194,10 @@
         palette,
         textSize: value.textSize,
         backupReminder: value.backupReminder,
-        coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false
+        coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false,
+        summaryStudentListMode: ['select', 'grid'].includes(value.summaryStudentListMode)
+          ? value.summaryStudentListMode
+          : (prefs.summaryStudentListMode || 'grid')
       };
     }
 

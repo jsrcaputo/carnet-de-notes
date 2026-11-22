@@ -232,6 +232,7 @@
 
     function switchGroup(groupId) {
       if (!groupId || groupId === appState.activeGroupId || !appState.groupStore[groupId]) return;
+      landingPortalRequested = false;
       flushPendingSave();
       const leaving = appState.groups.find(g => g.id === appState.activeGroupId);
       let recoveredGroup = false;

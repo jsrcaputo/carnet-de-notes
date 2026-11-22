@@ -62,7 +62,9 @@
 
       bindClick('homeLoadBtn', openJsonFileSmart);
       bindClick('homeCreateBtn', () => openGroupModal('new'));
-      bindClick('btnSidebarBrandHome', openHomeDashboard);
+      bindClick('btnSidebarDashboard', openHomeDashboard);
+      bindClick('btnSidebarBrandHome', returnToLandingPortal);
+      bindClick('homeBtnReturnDashboard', openHomeDashboard);
       bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
       bindClick('homeBtnPrivacy', () => document.getElementById('privacyPolicyDialog')?.showModal());
       bindClick('homeBtnDownloadLegacy', () => document.getElementById('btnDownloadLegacyBrowser')?.click());
@@ -208,6 +210,13 @@
       const btnNextStu = document.getElementById('btnGrNextStudent');
       if (btnPrevStu) btnPrevStu.addEventListener('click', () => cycleGlobalStudent(-1));
       if (btnNextStu) btnNextStu.addEventListener('click', () => cycleGlobalStudent(1));
+      document.querySelectorAll('[data-gr-student-view]').forEach(button => {
+        button.addEventListener('click', () => {
+          prefs.summaryStudentListMode = button.getAttribute('data-gr-student-view');
+          applyPrefs();
+          renderGlobalReportView();
+        });
+      });
 
       // Banque & Assistant de commentaires (Modale)
       const modalCb = document.getElementById('modalCommentBank');

@@ -43,12 +43,18 @@
   </div>
 
   <aside class="test-sidebar no-print" aria-label="Navigation principale">
-    <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Ouvrir le tableau de bord et vos groupes" aria-label="Carnet de notes 2026-2027 — Tableau de bord">
+    <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Retourner à la page principale" aria-label="Carnet de notes 2026-2027 — Retourner à la page principale">
       <span class="brand-heading">Carnet de notes</span>
       <span class="brand-year">2026-2027</span>
     </button>
     <div class="test-sidebar-sections">
       <section class="test-sidebar-section">
+        <nav class="test-sidebar-nav" aria-label="Tableau de bord">
+          <button id="btnSidebarDashboard" type="button" aria-pressed="false">
+            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+            <span>Tableau de bord</span>
+          </button>
+        </nav>
         <div class="test-sidebar-heading sidebar-legacy-group">
           <h2 id="sidebarGroupLabel" class="test-sidebar-label">Groupe</h2>
           <button id="sidebarSingleGroup" type="button" class="test-single-group">Créer un groupe</button>
@@ -162,6 +168,10 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
+          <button id="btnCloseCarnet" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" aria-label="Fermer le carnet et effacer les données de cet onglet" title="Fermer le carnet après confirmation">
+            <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
+            <span>Fermer</span>
+          </button>
           <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="À quoi ça sert ?" title="À quoi ça sert ?">?</button>
           <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
           <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
@@ -221,7 +231,6 @@
               <div class="sp-title" style="margin-top:.6rem">Sauvegarde</div>
               <div class="sp-backup-actions">
                 <button id="btnUnlinkJSON" type="button" class="sort-btn" disabled>Aucun fichier lié</button>
-                <button id="btnCloseCarnet" type="button" class="sort-btn" title="Pour un poste partagé : ferme le carnet et efface les données de cet onglet après confirmation">Fermer le carnet</button>
               </div>
               <p id="backupEncryptionNotice" class="sp-backup-notice" aria-live="polite">Le carnet reste en mémoire dans cet onglet : sauvegardez votre fichier JSON avant de fermer ou d’actualiser la page.</p>
               <div id="legacyBrowserBackup" class="hidden">
@@ -266,6 +275,7 @@
               <span class="home-year-pill">2026-2027</span>
             </div>
             <nav class="home-portal-links" aria-label="Informations et aide">
+              <button id="homeBtnReturnDashboard" type="button" hidden>Revenir au tableau de bord</button>
               <button id="homeBtnPrivacy" type="button">Confidentialité</button>
               <a href="mailto:support@carnetdenotes.ca?subject=Suggestion%20pour%20Carnet%20de%20notes">Contact</a>
             </nav>
@@ -958,9 +968,17 @@
       <div class="global-report-toolbar bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
           <div class="flex items-center gap-2 flex-wrap">
-            <h2 class="text-base sm:text-lg font-bold text-slate-900">Synthèse des résultats (2026-2027)</h2>
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Synthèse des résultats (2026-2027)</h2>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
+            <div class="gr-student-view-toggle" role="group" aria-label="Affichage de la liste des élèves">
+              <button type="button" data-gr-student-view="select" aria-label="Afficher les élèves dans une liste déroulante" title="Liste déroulante">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m8 10 4 4 4-4"/></svg>
+              </button>
+              <button type="button" data-gr-student-view="grid" aria-label="Afficher tous les élèves" title="Tous les élèves affichés">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+              </button>
+            </div>
             <button id="btnGrPrevStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève précédent">← Préc.</button>
             <button id="btnGrNextStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève suivant">Suiv. →</button>
           </div>
@@ -1064,6 +1082,7 @@
         <li><strong>Pour commencer :</strong> cliquez sur « Sauvegarder » et choisissez où conserver votre fichier. Si le navigateur télécharge plutôt le fichier, retrouvez-le dans Téléchargements.</li>
         <li><strong>Pendant votre travail :</strong> vérifiez le message en haut. « Fichier lié » signifie que vos changements sont enregistrés dans ce fichier. Si aucun fichier n’est lié, cliquez à nouveau sur « Sauvegarder » après vos modifications.</li>
         <li><strong>Pour reprendre :</strong> à votre retour, cliquez sur « Charger » et choisissez votre fichier .json. Si demandé, cliquez sur « Sauvegarder » pour autoriser les changements dans ce fichier.</li>
+        <li><strong>Pour fermer le carnet :</strong> utilisez « Fermer » après « Charger ». Une confirmation s’affiche : sauvegardez d’abord si nécessaire, puis confirmez pour effacer les données de cet onglet, notamment sur un poste partagé.</li>
       </ol>
       <p>La liaison dépend du navigateur et des permissions de votre école. Si elle n’est pas offerte, téléchargez une nouvelle copie après vos changements. Conservez une copie de secours dans un endroit autorisé et sûr.</p>
       <p>Le carnet reste en mémoire dans l’onglet ouvert, mais il n’est plus enregistré automatiquement dans le navigateur. Avant de fermer ou d’actualiser la page, vérifiez que le fichier est sauvegardé. Pour reprendre, chargez votre fichier.</p>

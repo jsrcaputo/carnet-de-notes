@@ -84,6 +84,39 @@
       }
     }
 
+    function getStudentCompetencyEvaluationCount(student, subjectIds) {
+      const evaluations = new Set();
+      if (!student) return 0;
+
+      (subjectIds || []).forEach(subjectId => {
+        const subject = SUBJECTS_CONFIG.find(item => item.id === subjectId);
+        if (!subject || !isSubjectApplicableForStudent(subject, student)) return;
+        const termKey = appState.activeTerm;
+        const subjectData = appState.terms[termKey].subjectData[subjectId];
+        if (!subjectData) return;
+        const record = subjectData.studentRecords[student.id];
+        if (!record) return;
+
+        subjectData.assignments.forEach(assignment => {
+          if (!isAssignmentForStudent(assignment, student)) return;
+          const raw = record.scores && record.scores[assignment.id];
+          const meta = record.scoreMeta && record.scoreMeta[assignment.id];
+          if (assignment.isObservation && meta && meta.linkedCopy) return;
+          const value = String(raw ?? '').trim();
+          const hasScore = value !== '' && value !== '-' && Number.isFinite(Number(value.replace(',', '.')));
+          const hasTrace = Boolean(assignment.isObservation && meta && (
+            meta.notEvaluated ||
+            (Array.isArray(meta.checked) && meta.checked.length > 0) ||
+            hasObservationFeedback(meta)
+          ));
+          if (!hasScore && !hasTrace) return;
+          evaluations.add(assignment.linkId ? `linked:${assignment.linkId}` : `${subjectId}:${assignment.id}`);
+        });
+      });
+
+      return evaluations.size;
+    }
+
     function renderGlobalReportView() {
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
@@ -104,23 +137,50 @@
         return;
       }
 
-      // 1. Render Student Band (2 rows of 5 students)
+      // 1. Render student selector in the saved display mode.
       band.innerHTML = '';
-      appState.students.forEach(student => {
-        const isSel = Boolean(st && student.id === st.id);
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.setAttribute('aria-pressed', String(isSel));
-        btn.className = isSel
-          ? 'w-full px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
-          : 'w-full px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
-        btn.innerHTML = `<span class="truncate">${escapeHtml(student.name)}</span><span>→</span>`;
-        btn.addEventListener('click', () => {
-          appState.selectedStudentId = student.id;
+      const useSelect = prefs.summaryStudentListMode === 'select';
+      band.className = useSelect
+        ? 'gr-student-select-wrap is-select w-full'
+        : 'grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full';
+      if (useSelect) {
+        const select = document.createElement('select');
+        select.className = 'gr-student-select';
+        select.setAttribute('aria-label', 'Choisir un élève pour la synthèse');
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Choisir un élève';
+        select.appendChild(placeholder);
+        appState.students.forEach(student => {
+          const option = document.createElement('option');
+          option.value = student.id;
+          option.textContent = student.name;
+          option.selected = Boolean(st && student.id === st.id);
+          select.appendChild(option);
+        });
+        select.value = st ? st.id : '';
+        select.addEventListener('change', () => {
+          appState.selectedStudentId = select.value || null;
           renderGlobalReportView();
         });
-        band.appendChild(btn);
-      });
+        band.appendChild(select);
+      } else {
+        appState.students.forEach(student => {
+          const isSel = Boolean(st && student.id === st.id);
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.setAttribute('aria-pressed', String(isSel));
+          btn.className = isSel
+            ? 'w-full px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
+            : 'w-full px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
+          btn.innerHTML = `<span class="truncate">${escapeHtml(student.name)}</span><span>→</span>`;
+          btn.addEventListener('click', () => {
+            appState.selectedStudentId = student.id;
+            renderGlobalReportView();
+          });
+          band.appendChild(btn);
+        });
+      }
 
       if (!st) {
         container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm font-semibold text-slate-600">Sélectionner un nom ci-dessus pour afficher la synthèse de l’élève.</div>';
@@ -130,9 +190,6 @@
       // 2. Gather grade data across the three terms and all subjects
       const subjectRows = [];
       const termGlobals = { '1': [], '2': [], '3': [] };
-      let totalEvaluatedWorksCount = 0;
-      const seenLinkedWorks = new Set();
-      let totalVisualTracesCount = 0;
       const tagFrequency = {};
       const flagFrequency = {};
       const recordedComments = [];
@@ -166,18 +223,8 @@
           const rec = sd.studentRecords[st.id];
           sd.assignments.forEach(asg => {
             if (!isAssignmentForStudent(asg, st)) return;
-            const sc = rec.scores[asg.id];
             const meta = rec.scoreMeta && rec.scoreMeta[asg.id];
             if (asg.isObservation && meta && meta.linkedCopy) return;
-            if (asg.isObservation && meta && meta.notEvaluated) {
-              totalVisualTracesCount++;
-            } else if (sc !== undefined && sc !== '' && sc !== '-' && !isNaN(Number(sc))) {
-              if (asg.isObservation) totalVisualTracesCount++;
-              else if (asg.linkId) {
-                const key = tKey + asg.linkId;
-                if (!seenLinkedWorks.has(key)) { seenLinkedWorks.add(key); totalEvaluatedWorksCount++; }
-              } else totalEvaluatedWorksCount++;
-            }
             if (meta && Array.isArray(meta.tags)) {
               meta.tags.forEach(tg => {
                 tagFrequency[tg] = (tagFrequency[tg] || 0) + 1;
@@ -225,6 +272,7 @@
 
         subjectRows.push({
           sub,
+          sourceSubjectIds: [sub.id],
           t1,
           t2,
           t3,
@@ -253,6 +301,7 @@
         const mergedSub = { ...parts[0].sub, id: groupKey, shortName: parts[0].sub.bulletinLabel };
         const merged = {
           sub: mergedSub,
+          sourceSubjectIds: parts.flatMap(part => part.sourceSubjectIds || [part.sub.id]),
           t1, t2, t3, annualAvg,
           annualCode: pctToClosestGradeCode(annualAvg),
           delta: terms.length >= 2 ? terms[terms.length - 1] - terms[0] : null,
@@ -272,9 +321,6 @@
       const avgT3 = computeDisciplineAverageForSummary(subjectRows, 't3');
 
       const populatedSubjects = subjectRows.filter(r => r.annualAvg !== null);
-      const disciplineKey = row => row.sub.group || row.sub.id;
-      const populatedDisciplines = [...new Set(populatedSubjects.map(disciplineKey))];
-      const totalDisciplines = new Set(getVisibleSubjectsForContext(SUBJECTS_CONFIG).map(sub => sub.group || sub.id)).size;
       const overallAnnualAvg = computeDisciplineAverageForSummary(subjectRows);
       const overallProvisional = populatedSubjects.length < subjectRows.length ||
         populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
@@ -514,13 +560,17 @@
       const chartBarsHtml = subjectRows.map(r => {
         const pct = r.annualAvg !== null ? r.annualAvg : 0;
         const info = getAnnualResultInfo(r.t1, r.t2, r.t3);
+        const evaluationCount = getStudentCompetencyEvaluationCount(st, r.sourceSubjectIds || [r.sub.id]);
+        const displayName = r.sub.group === 'anglais'
+          ? r.sub.shortName.replace(/\s*\([^)]*\)\s*$/, '')
+          : r.sub.shortName;
         const modTag = r.isModified
           ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}`
           : '';
         return `
           <div class="space-y-1">
             <div class="flex items-center justify-between text-xs gap-2">
-              <span class="gr-bar-subject-wrap font-semibold text-slate-700 flex items-center min-w-0 flex-1 gap-1"><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${r.sub.officialWeight !== null ? ` <small class="text-slate-500 truncate min-w-0">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
+              <span class="gr-bar-subject-wrap font-semibold text-slate-700 flex items-center min-w-0 flex-1 gap-1"><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(displayName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(displayName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button><em class="gr-evaluation-count" title="Évaluations de l’élève à l’étape ${escapeHtml(appState.activeTerm)}">${evaluationCount} éval${evaluationCount > 1 ? 's' : ''}</em>${r.sub.group !== 'anglais' && r.sub.officialWeight !== null ? ` <small class="text-slate-500 truncate min-w-0">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
               <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})${info.provisional ? ' · provisoire' : ''}` : '—'}</span>
             </div>
             <div class="bar-track-wrap">
@@ -625,21 +675,6 @@
             </div>
           </div>
 
-          <div class="gr-kpi-strip grid grid-cols-3 gap-2.5">
-            ${st.gradeLevel === 'P' ? '' : `
-            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
-              <div class="text-[10px] uppercase text-slate-500 font-semibold">Matières évaluées</div>
-              <div class="text-lg font-extrabold text-slate-900" data-num="1">${populatedDisciplines.length} / ${totalDisciplines}</div>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
-              <div class="text-[10px] uppercase text-slate-500 font-semibold">Travaux notés</div>
-              <div class="text-lg font-extrabold text-slate-900" data-num="1">${totalEvaluatedWorksCount}</div>
-            </div>
-            <div class="bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-center">
-              <div class="text-[10px] uppercase text-slate-500 font-semibold">Traces observables</div>
-              <div class="text-lg font-extrabold text-slate-900" data-num="1">${totalVisualTracesCount}</div>
-            </div>`}
-          </div>
         </div>
 
         <!-- Résultats annuels -->

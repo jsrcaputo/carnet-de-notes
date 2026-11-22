@@ -43,12 +43,26 @@
       setDemoPanelOpen('homeDemoToggle', 'homeDemoPanel', false);
     }
 
+    let landingPortalRequested = false;
+
     function openHomeDashboard() {
+      landingPortalRequested = false;
       if (!hasActiveGroup()) {
         renderHomeView();
         return;
       }
       navigateToView('viewHome');
+    }
+
+    function returnToLandingPortal() {
+      requestObservationDraftExit(() => {
+        if (!window.confirm('Retourner à la page principale ?\n\nLe tableau de bord et les groupes ouverts resteront disponibles pendant cette session.')) return;
+        landingPortalRequested = true;
+        appState.selectedStudentId = null;
+        appState.activeView = 'viewHome';
+        renderAll();
+        window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+      });
     }
 
     function launchDemoOption(optionId) {
@@ -64,6 +78,7 @@
         const firstOption = DEMO_OPTIONS.find(option => selectedOptionIds.includes(option.id));
         const firstGroupId = firstOption && firstOption.groups[0] ? firstOption.groups[0].id : null;
         if (firstGroupId) switchGroup(firstGroupId);
+        landingPortalRequested = false;
         appState.activeView = 'viewStudents';
         expandedSubjectGroup = null;
         resetHomeDemoPanels();
@@ -275,16 +290,6 @@
         };
       });
 
-      let adaptCount = 0;
-      let modifiedCount = 0;
-      students.forEach(st => {
-        const summary = getStudentAdaptationSummary(st);
-        if (summary.adaptations.length > 0) adaptCount += 1;
-        if (st.gradeLevel !== 'P' && Array.isArray(st.adaptations) && st.adaptations.includes('Bulletin modifié')) {
-          modifiedCount += 1;
-        }
-      });
-
       return {
         activeGroup,
         students,
@@ -294,9 +299,7 @@
         expectedSlots,
         commentsDone,
         commentsExpected,
-        followups,
-        adaptCount,
-        modifiedCount
+        followups
       };
     }
 
@@ -343,22 +346,6 @@
         addStudentsBtn.innerHTML = '<span>Ajouter des élèves</span><span class="home-arrow" aria-hidden="true">→</span>';
         addStudentsBtn.addEventListener('click', () => navigateToView('viewStudents'));
         chips.appendChild(addStudentsBtn);
-      } else if (data.adaptCount > 0 || data.modifiedCount > 0) {
-        const parts = [];
-        if (data.adaptCount > 0) parts.push(`${data.adaptCount} adaptation${data.adaptCount > 1 ? 's' : ''}`);
-        if (data.modifiedCount > 0) parts.push(`${data.modifiedCount} bulletin${data.modifiedCount > 1 ? 's' : ''} modifié${data.modifiedCount > 1 ? 's' : ''}`);
-        const profileBtn = document.createElement('button');
-        profileBtn.type = 'button';
-        profileBtn.className = 'home-btn home-btn-secondary home-btn-sm';
-        const txtSpan = document.createElement('span');
-        txtSpan.textContent = parts.join(' · ');
-        const arrowSpan = document.createElement('span');
-        arrowSpan.className = 'home-arrow';
-        arrowSpan.setAttribute('aria-hidden', 'true');
-        arrowSpan.textContent = '→';
-        profileBtn.append(txtSpan, arrowSpan);
-        profileBtn.addEventListener('click', () => navigateToView('viewStudents'));
-        chips.appendChild(profileBtn);
       }
 
       kpiStrip.replaceChildren();
@@ -688,16 +675,19 @@
 
     function renderHomeView() {
       const hasGroup = hasActiveGroup();
+      const showPortal = landingPortalRequested || !hasGroup;
       const portal = document.getElementById('homePortal');
       const dashboard = document.getElementById('homeDashboard');
-      if (portal) portal.hidden = hasGroup;
-      if (dashboard) dashboard.hidden = !hasGroup;
+      const returnButton = document.getElementById('homeBtnReturnDashboard');
+      if (portal) portal.hidden = !showPortal;
+      if (dashboard) dashboard.hidden = showPortal;
+      if (returnButton) returnButton.hidden = !hasGroup || !landingPortalRequested;
 
       if (!hasGroup && !carnetIsSaved) {
         document.documentElement.setAttribute('data-palette', 'ocean');
         document.documentElement.classList.remove('theme-dark');
       }
-      if (hasGroup) renderHomeDashboard();
+      if (hasGroup && !showPortal) renderHomeDashboard();
     }
 
     function updateGradebookTopScroll() {
