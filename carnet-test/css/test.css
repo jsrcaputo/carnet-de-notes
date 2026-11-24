@@ -659,7 +659,8 @@
       html.design-studio .test-topbar #btnFullscreen,
       html.design-studio .test-topbar #btnOpenJSONDirect,
       html.design-studio .test-topbar #btnExportJSON,
-      html.design-studio .test-topbar #btnExportExcel {
+      html.design-studio .test-topbar #btnExportExcel,
+      html.design-studio .test-topbar #btnCloseCarnet:not(:disabled) {
         background: var(--studio-surface) !important;
         color: var(--studio-text-muted) !important;
         border: 1px solid var(--studio-border-strong) !important;
@@ -681,6 +682,26 @@
       .backup-dialog-primary { border: 1px solid var(--brand); background: var(--brand); color: #fff; }
       .backup-dialog-secondary { border: 1px solid var(--studio-border-strong); background: var(--studio-surface); color: var(--studio-text); }
       .backup-dialog button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+      .privacy-entry-note {
+        display: flex;
+        align-items: flex-start;
+        gap: .55rem;
+        margin: 0 0 .75rem;
+        padding: .65rem .75rem;
+        border: 1px solid var(--studio-border);
+        border-radius: 8px;
+        background: var(--studio-surface-soft);
+        color: var(--studio-text-muted);
+        font-size: .78rem;
+        line-height: 1.45;
+      }
+      .privacy-entry-note svg {
+        width: 1.05rem;
+        height: 1.05rem;
+        flex: 0 0 auto;
+        margin-top: .08rem;
+        color: var(--brand);
+      }
       #backupPasswordMatch { min-height: 1.55em; margin-top: .35rem; font-size: .8rem; font-weight: 650; color: var(--studio-text-muted); }
       #backupPasswordMatch[data-state="match"] { color: var(--brand-deep); }
       #backupPasswordConfirm[aria-invalid="true"], #backupPasswordError { color: #b91c1c; }
@@ -735,6 +756,10 @@
       html.design-studio .gradebook-toolbar > div:nth-of-type(2) { background: transparent; border: 0; box-shadow: none; padding: 0; overflow: visible !important; }
       .new-eval-popover-wrap { position: relative; display: inline-flex; align-items: center; }
       html.design-studio #btnNewEvaluation {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
         background: var(--brand-soft);
         color: var(--brand-deep);
         border: 1px solid var(--studio-border-strong);
@@ -857,10 +882,6 @@
       #settingsPanel .sp-text-size input { grid-column: 1 / -1; grid-row: 2; width: 100%; accent-color: var(--brand); }
       #settingsPanel .sp-text-size output { color: var(--studio-text-muted); }
       #settingsPanel #btnUnlinkJSON:disabled { background: var(--studio-surface-soft); color: var(--studio-text-muted); opacity: .7; cursor: not-allowed; }
-      .weight-guide { position: fixed; inset: 0; z-index: 110; }
-      .weight-guide.hidden { display: none; }
-      .weight-guide-shade { position: fixed; background: rgba(15, 23, 42, .62); backdrop-filter: blur(3px); }
-      .weight-guide-highlight { position: fixed; border: 2px solid var(--brand); border-radius: 9px; pointer-events: none; }
       html.design-studio #gradebookHeaderRow > th:first-child { z-index: 20; }
       html.design-studio #gradebookBody tr > td:first-child { background: var(--studio-surface) !important; }
       html.design-studio #gradebookBody tr:nth-child(even) > td:first-child { background: var(--studio-surface-soft) !important; }
@@ -1244,8 +1265,8 @@
         .test-topbar > div:first-child > div:nth-child(2) { flex-wrap: wrap !important; }
       }
       @media (max-width: 1500px) {
-        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) > span { display: none; }
-        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
+        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen, #btnCloseCarnet) > span { display: none; }
+        .test-topbar :is(#btnExportExcel, #btnExportJSON, #btnOpenJSONDirect, #btnPrintView, #btnFullscreen, #btnCloseCarnet) { min-width: 34px; min-height: 34px; justify-content: center; }
       }
       @media (max-width: 600px) {
         html.design-studio header.test-topbar > div:first-child { position: relative; flex-wrap: wrap; }
@@ -1254,8 +1275,8 @@
         .test-topbar > div:first-child > div:nth-child(2) { flex: 1 1 100%; flex-wrap: wrap !important; }
         .test-topbar > div:first-child > div:nth-child(2) { justify-content: flex-start; }
         .test-topbar > div:first-child > div:nth-child(2) > div:first-child { max-width: 100%; flex-wrap: wrap !important; }
-        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) > span { display: none; }
-        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen) { min-width: 34px; min-height: 34px; justify-content: center; }
+        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen, #btnCloseCarnet) > span { display: none; }
+        .test-topbar :is(#btnExportExcel, #btnPrintView, #btnFullscreen, #btnCloseCarnet) { min-width: 34px; min-height: 34px; justify-content: center; }
         html.design-studio header.test-topbar > div:first-child { padding: .65rem 1rem !important; }
         html.design-studio .gradebook-toolbar, html.design-studio .studio-hero-card, html.design-studio .global-report-toolbar { padding: 1rem !important; }
         html.design-studio #gradebookHeaderRow > th:first-child,
@@ -2560,7 +2581,8 @@ html.design-studio .test-topbar :is(
   #btnExportExcel,
   #btnExportJSON,
   #btnOpenJSONDirect,
-  #btnFullscreen
+  #btnFullscreen,
+  #btnCloseCarnet
 ):hover:not(:disabled) {
   border-color: var(--brand) !important;
   background: var(--brand-soft) !important;
@@ -3216,6 +3238,59 @@ html.design-studio.no-active-group main.site-layout {
   justify-content: center;
   padding: clamp(1.25rem, 3.5vw, 2.5rem) clamp(1rem, 3vw, 1.75rem) !important;
 }
+html.design-studio.no-active-group #viewHome {
+  position: relative;
+  isolation: isolate;
+  animation: homeInterfaceReveal .35s ease-out both;
+}
+#viewHome::before {
+  content: "";
+  position: fixed;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 32%, color-mix(in srgb, var(--brand) 16%, transparent) 0 1.5px, transparent 4px),
+    radial-gradient(circle at 72% 24%, color-mix(in srgb, var(--brand) 12%, transparent) 0 2px, transparent 5px),
+    radial-gradient(circle at 58% 68%, color-mix(in srgb, var(--brand) 14%, transparent) 0 1.5px, transparent 5px),
+    radial-gradient(circle at 35% 78%, color-mix(in srgb, var(--brand) 10%, transparent) 0 2px, transparent 6px),
+    radial-gradient(ellipse at center, color-mix(in srgb, var(--studio-surface) 92%, transparent), transparent 68%);
+  background-size: 110px 110px, 150px 150px, 130px 130px, 170px 170px, 100% 100%;
+  filter: blur(5px);
+  opacity: 0;
+  animation: homeMistReform .35s ease-out both;
+}
+#viewHome > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes homeInterfaceReveal {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+    transform: scale(.995);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: scale(1);
+  }
+}
+@keyframes homeMistReform {
+  0% {
+    opacity: .75;
+    filter: blur(11px);
+    background-position: -18px 12px, 22px -8px, -12px 16px, 18px -14px, center;
+  }
+  55% {
+    opacity: .38;
+  }
+  100% {
+    opacity: 0;
+    filter: blur(5px);
+    background-position: 0 0, 0 0, 0 0, 0 0, center;
+  }
+}
 
 #viewHome.hidden,
 #homePortal[hidden],
@@ -3282,6 +3357,22 @@ html.design-studio.no-active-group main.site-layout {
 }
 #viewHome .home-btn-secondary:active {
   transform: translateY(0) scale(.985);
+}
+#viewHome .home-actions-grid .home-btn {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  border-color: color-mix(in srgb, var(--brand) 38%, transparent);
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 42%, transparent);
+}
+#viewHome .home-actions-grid .home-btn:hover {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  border-color: var(--brand);
+  box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 55%, transparent), 0 4px 12px color-mix(in srgb, var(--brand) 14%, transparent);
+}
+#viewHome .home-actions-grid .home-btn:active {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
 }
 #viewHome :is(.home-btn, .dash-inline-link, .dash-subject-card, .dash-followup-item, .dash-group-open, .dash-group-edit):focus-visible {
   outline: 2px solid var(--brand);
@@ -3371,6 +3462,15 @@ html.design-studio.theme-dark #viewHome .home-status-badge.is-soon {
   display: inline-flex;
   align-items: center;
   gap: .65rem;
+}
+.home-edition {
+  align-self: flex-end;
+  margin: 0 0 .08rem -.25rem;
+  color: var(--studio-text-muted);
+  font-size: .78rem;
+  font-style: italic;
+  line-height: 1;
+  white-space: nowrap;
 }
 .home-portal-brand h1 {
   margin: 0;
@@ -3698,6 +3798,152 @@ html.design-studio.theme-dark .home-legacy-banner {
   line-height: 1.4;
 }
 
+/* Accueil — mêmes surfaces et boutons que le reste de l’application */
+.home-portal {
+  width: min(100%, 1120px);
+}
+.home-portal-shell {
+  gap: 1.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.home-portal-header {
+  padding-bottom: 1rem;
+}
+.home-welcome {
+  padding: .1rem 0 .25rem;
+}
+.home-welcome h2 {
+  margin: 0;
+  color: var(--studio-text);
+  font-size: clamp(1.25rem, 2.5vw, 1.55rem);
+  font-weight: 650;
+  line-height: 1.25;
+}
+.home-welcome p {
+  margin: .2rem 0 0;
+  color: var(--studio-text-muted);
+  font-size: .82rem;
+}
+.home-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: .85rem;
+}
+.home-action-card {
+  display: flex;
+  min-width: 0;
+  min-height: 13.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: .7rem;
+  padding: 1.1rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 12px;
+  background: var(--studio-surface);
+  box-shadow: var(--studio-shadow-sm);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.home-action-card:hover {
+  border-color: var(--studio-border-strong);
+}
+.home-action-icon {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 9px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+.home-action-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+.home-action-copy,
+.home-action-copy.home-resume-copy {
+  display: block;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.home-action-copy h2 {
+  margin: 0;
+  color: var(--studio-text);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.3;
+}
+.home-action-copy p {
+  margin: .28rem 0 0;
+  color: var(--studio-text-muted);
+  font-size: .78rem;
+  line-height: 1.5;
+}
+.home-action-card .home-btn {
+  margin-top: .1rem;
+}
+.home-resume-band {
+  justify-content: flex-start;
+  border-style: solid;
+  background: var(--studio-surface);
+}
+.home-resume-band.is-dragover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+}
+.home-resume-band .home-resume-icon {
+  width: 2.35rem;
+  height: 2.35rem;
+  border-radius: 9px;
+}
+.home-coming-soon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem .8rem;
+  padding: .7rem .9rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 10px;
+  background: var(--studio-surface-soft);
+  color: var(--studio-text-muted);
+  font-size: .78rem;
+}
+.home-coming-soon-label {
+  padding: .18rem .45rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--studio-text-muted) 10%, transparent);
+  color: var(--studio-text-muted);
+  font-size: .67rem;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.home-coming-soon p {
+  flex: 1 1 300px;
+  margin: 0;
+  line-height: 1.45;
+}
+.home-coming-soon p strong {
+  color: var(--studio-text);
+}
+.home-coming-soon a {
+  color: var(--brand-deep);
+  font-size: .75rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.home-coming-soon a:hover {
+  text-decoration: underline;
+}
+.home-portal-footer {
+  padding-top: .85rem;
+}
+
 /* ÉTAT 2 — TABLEAU DE BORD DE SESSION */
 .home-dashboard {
   width: 100%;
@@ -3725,6 +3971,40 @@ html.design-studio.theme-dark .home-legacy-banner {
   font-size: .82rem;
   font-weight: 600;
   color: var(--studio-text-muted);
+}
+.dash-term-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: .28rem;
+  padding: .22rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 9px;
+  background: var(--studio-surface-soft);
+}
+.dash-term-picker button {
+  min-height: 2.2rem;
+  padding: .42rem .68rem;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--studio-text-muted);
+  font-size: .78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dash-term-picker button:hover {
+  color: var(--brand-deep);
+  background: var(--studio-surface);
+}
+.dash-term-picker button[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--brand) 28%, var(--studio-border));
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand) 28%, transparent);
+}
+.dash-term-picker button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
 }
 
 /* Bandeau d'avertissement sauvegarde (texte seul, sans bouton) */
@@ -3808,6 +4088,47 @@ html.design-studio.theme-dark .dash-save-notice[data-status="error"] svg {
   display: flex;
   flex-wrap: wrap;
   gap: .5rem;
+}
+.dash-quick-actions {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: .55rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--studio-border);
+}
+.dash-quick-action {
+  min-width: 0;
+  min-height: 3.45rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: .12rem;
+  padding: .55rem .68rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 9px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.dash-quick-action:hover {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand-soft) 78%, var(--studio-surface));
+}
+.dash-quick-action:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+.dash-quick-action span {
+  font-size: .78rem;
+  font-weight: 800;
+}
+.dash-quick-action small {
+  color: var(--studio-text-muted);
+  font-size: .68rem;
+  line-height: 1.25;
 }
 .dash-kpi-strip {
   display: grid;
@@ -4026,6 +4347,9 @@ html.design-studio.theme-dark .dash-followup-badge {
   display: grid;
   gap: .75rem;
 }
+.dash-groups-section[hidden] {
+  display: none !important;
+}
 .dash-section-head {
   display: flex;
   flex-wrap: wrap;
@@ -4233,15 +4557,34 @@ html.design-studio.theme-dark .dash-followup-badge {
   color: var(--studio-text-muted);
 }
 
+/* Transition courte lors du changement de matière ou de compétence */
+#viewGradebook.is-subject-changing {
+  animation: subjectViewReveal .12s linear both;
+}
+@keyframes subjectViewReveal {
+  from {
+    opacity: .82;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /* Responsive (tablette, mobile, cadres étroits) */
 @media (max-width: 820px) {
   .dash-kpi-strip {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  .dash-quick-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 @media (max-width: 760px) {
-  .home-levels-grid {
-    grid-template-columns: minmax(0, 1fr);
+  .home-actions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .home-action-card.is-primary {
+    grid-column: 1 / -1;
   }
 }
 @media (max-width: 560px) {
@@ -4249,7 +4592,16 @@ html.design-studio.theme-dark .dash-followup-badge {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .home-portal-shell {
-    padding: 1.25rem 1.1rem;
+    padding: 0;
+  }
+  .home-actions-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .home-action-card.is-primary {
+    grid-column: auto;
+  }
+  .home-action-card {
+    min-height: 0;
   }
   .home-resume-band,
   .dash-panel {
@@ -4264,7 +4616,10 @@ html.design-studio.theme-dark .dash-followup-badge {
 }
 @media (prefers-reduced-motion: reduce) {
   .home-portal-shell,
-  .home-dashboard {
+  .home-dashboard,
+  #viewHome,
+  #viewHome::before,
+  #viewGradebook.is-subject-changing {
     animation: none !important;
   }
   #viewHome .home-btn,

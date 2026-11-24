@@ -54,6 +54,24 @@
       navigateToView('viewHome');
     }
 
+    function updateCloseCarnetButton() {
+      const button = document.getElementById('btnCloseCarnet');
+      if (!button) return;
+      let hasChanges = false;
+      try {
+        hasChanges = typeof getBackupSnapshot === 'function'
+          && typeof lastSavedFileSnapshot !== 'undefined'
+          && getBackupSnapshot() !== lastSavedFileSnapshot;
+      } catch (error) {
+        hasChanges = false;
+      }
+      button.disabled = !hasChanges;
+      button.classList.toggle('is-disabled-by-save', !hasChanges);
+      button.title = hasChanges
+        ? 'Fermer le carnet après confirmation'
+        : 'Toutes les modifications sont enregistrées';
+    }
+
     function returnToLandingPortal() {
       requestObservationDraftExit(() => {
         if (!window.confirm('Retourner à la page principale ?\n\nLe tableau de bord et les groupes ouverts resteront disponibles pendant cette session.')) return;
@@ -79,7 +97,7 @@
         const firstGroupId = firstOption && firstOption.groups[0] ? firstOption.groups[0].id : null;
         if (firstGroupId) switchGroup(firstGroupId);
         landingPortalRequested = false;
-        appState.activeView = 'viewStudents';
+        appState.activeView = 'viewHome';
         expandedSubjectGroup = null;
         resetHomeDemoPanels();
         applyPrefs();
@@ -557,8 +575,12 @@
       const countEl = document.getElementById('dashGroupsCount');
       const summaryMeta = document.getElementById('dashSummaryMeta');
       if (!grid || !countEl || !summaryMeta) return;
+      document.querySelectorAll('[data-dash-term]').forEach(button =>
+        button.setAttribute('aria-pressed', String(button.dataset.dashTerm === String(appState.activeTerm))));
 
       const groups = appState.groups.filter(g => g && !g.placeholder);
+      const groupsSection = document.getElementById('dashGroupsSection');
+      if (groupsSection) groupsSection.hidden = groups.length <= 1;
       let totalStudents = 0;
       const statsByGroupId = new Map();
       groups.forEach(g => {
@@ -752,46 +774,6 @@
         else if (gradebookScrollAnim === anim) gradebookScrollAnim = null;
       };
       anim.frame = requestAnimationFrame(step);
-    }
-
-    function positionWeightGuide() {
-      const guide = document.getElementById('weightGuide');
-      if (!guide || guide.classList.contains('hidden')) return;
-      const target = document.getElementById('gbLevelFilterBar');
-      if (!target) return;
-      const rect = target.getBoundingClientRect();
-      const left = Math.max(0, rect.left - 4);
-      const top = Math.max(0, rect.top - 4);
-      const right = Math.min(window.innerWidth, rect.right + 4);
-      const bottom = Math.min(window.innerHeight, rect.bottom + 4);
-      const setRect = (element, x, y, width, height) => {
-        Object.assign(element.style, { left: `${x}px`, top: `${y}px`, width: `${Math.max(0, width)}px`, height: `${Math.max(0, height)}px` });
-      };
-      setRect(guide.querySelector('[data-side="top"]'), 0, 0, window.innerWidth, top);
-      setRect(guide.querySelector('[data-side="bottom"]'), 0, bottom, window.innerWidth, window.innerHeight - bottom);
-      setRect(guide.querySelector('[data-side="left"]'), 0, top, left, bottom - top);
-      setRect(guide.querySelector('[data-side="right"]'), right, top, window.innerWidth - right, bottom - top);
-      setRect(document.getElementById('weightGuideHighlight'), left, top, right - left, bottom - top);
-      const card = document.getElementById('weightGuideCard');
-      const cardLeft = Math.max(12, Math.min(window.innerWidth - card.offsetWidth - 12, left));
-      const cardTop = bottom + 12 + card.offsetHeight <= window.innerHeight - 12
-        ? bottom + 12 : Math.max(12, top - card.offsetHeight - 12);
-      Object.assign(card.style, { left: `${cardLeft}px`, top: `${cardTop}px` });
-    }
-
-    function showFirstMultiWeightTip() {
-      if (!isMultiLevelGroup() || !document.getElementById('weightGuide')) return;
-      try {
-        if (window.localStorage.getItem('carnet_notes_weight_guide_seen_v1') === '1') return;
-      } catch (error) {
-        console.warn('Impossible de lire la préférence du guide de pondération.', error);
-      }
-      const target = document.getElementById('gbLevelFilterBar');
-      if (!target) return;
-      target.scrollIntoView({ block: 'center', inline: 'nearest' });
-      document.getElementById('weightGuide').classList.remove('hidden');
-      positionWeightGuide();
-      document.getElementById('weightGuideDone').focus();
     }
 
     function isPristineInitialGroup() {

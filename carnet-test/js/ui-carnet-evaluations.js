@@ -531,7 +531,6 @@
             const id = box.getAttribute('data-weight-box');
             pendingWeightFocusSelector = `[data-weight-input="${id}"]`;
             renderGradebookView();
-            showFirstMultiWeightTip();
           }
         });
       });

@@ -31,16 +31,6 @@
       </div>
     </div>
   </div>
-  <div id="weightGuide" class="weight-guide hidden no-print" role="dialog" aria-modal="true" aria-labelledby="weightGuideTitle" aria-describedby="weightGuideDescription">
-    <div class="weight-guide-shade" data-side="top"></div><div class="weight-guide-shade" data-side="bottom"></div>
-    <div class="weight-guide-shade" data-side="left"></div><div class="weight-guide-shade" data-side="right"></div>
-    <div id="weightGuideHighlight" class="weight-guide-highlight" aria-hidden="true"></div>
-    <div id="weightGuideCard" class="tour-card">
-      <h2 id="weightGuideTitle">Pondération en groupe multiniveau</h2>
-      <p id="weightGuideDescription">Les évaluations peuvent différer d’un niveau à l’autre. Sélectionnez chaque niveau dans la section Élèves pour vérifier et ajuster sa pondération séparément. La répartition égale peut aussi être appliquée automatiquement.</p>
-      <div class="tour-actions"><button id="weightGuideDone" type="button">J’ai compris</button></div>
-    </div>
-  </div>
 
   <aside class="test-sidebar no-print" aria-label="Navigation principale">
     <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Retourner à la page principale" aria-label="Carnet de notes 2026-2027 — Retourner à la page principale">
@@ -168,11 +158,11 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
-          <button id="btnCloseCarnet" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" aria-label="Fermer le carnet et effacer les données de cet onglet" title="Fermer le carnet après confirmation">
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="À quoi ça sert ?" title="À quoi ça sert ?">?</button>
+          <button id="btnCloseCarnet" type="button" class="hdr-close-button inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer" aria-label="Fermer le carnet et effacer les données de cet onglet" title="Fermer le carnet après confirmation" disabled>
             <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
             <span>Fermer</span>
           </button>
-          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="À quoi ça sert ?" title="À quoi ça sert ?">?</button>
           <input id="inputImportJSON" type="file" accept=".json,application/json" class="hidden" />
           <span id="fileSyncStatus" class="file-sync-status" data-status="unlinked" role="status" aria-live="polite">Aucun fichier lié</span>
 
@@ -273,6 +263,7 @@
             <div class="home-portal-brand">
               <h1>Carnet de notes</h1>
               <span class="home-year-pill">2026-2027</span>
+              <span class="home-edition">Édition primaire</span>
             </div>
             <nav class="home-portal-links" aria-label="Informations et aide">
               <button id="homeBtnReturnDashboard" type="button" hidden>Revenir au tableau de bord</button>
@@ -289,71 +280,53 @@
             </div>
           </div>
 
-          <div id="homeDropZone" class="home-resume-band">
-            <div class="home-resume-copy">
-              <span class="home-resume-icon" aria-hidden="true">
+          <section class="home-welcome" aria-labelledby="homeWelcomeTitle">
+            <div class="home-welcome-copy">
+              <h2 id="homeWelcomeTitle">Bienvenue dans votre outil</h2>
+            </div>
+          </section>
+
+          <div class="home-actions-grid">
+            <article class="home-action-card is-primary">
+              <span class="home-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg>
+              </span>
+              <div class="home-action-copy">
+                <h2>Créer un groupe</h2>
+                <p>Configurez votre classe et commencez votre suivi.</p>
+              </div>
+              <button id="homeCreateBtn" type="button" class="home-btn home-btn-primary">
+                <span>Créer mon groupe</span>
+                <span class="home-arrow" aria-hidden="true">→</span>
+              </button>
+            </article>
+
+            <div id="homeDropZone" class="home-action-card home-resume-band">
+              <span class="home-action-icon home-resume-icon" aria-hidden="true">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 19V6a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v3"/><path d="M3 19l3-8h16l-3 8z"/></svg>
               </span>
-              <div>
+              <div class="home-action-copy home-resume-copy">
                 <h2>Reprendre un carnet</h2>
                 <p id="homeDropHint">Ouvrez votre fichier de sauvegarde (.json) ou glissez-le ici.</p>
               </div>
+              <button id="homeLoadBtn" type="button" class="home-btn home-btn-secondary">
+                <span>Charger un fichier</span>
+                <span class="home-arrow" aria-hidden="true">→</span>
+              </button>
             </div>
-            <button id="homeLoadBtn" type="button" class="home-btn home-btn-primary">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
-              <span>Charger un fichier</span>
-            </button>
-          </div>
 
-          <div class="home-levels-grid">
-            <article class="home-level-card is-primary">
-              <div class="home-level-head">
-                <span class="home-level-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                </span>
-                <div class="home-level-title-wrap">
-                  <h2>Préscolaire et primaire</h2>
-                  <span class="home-status-badge is-available">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>
-                    Disponible
-                  </span>
-                </div>
+            <article class="home-action-card">
+              <span class="home-action-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg>
+              </span>
+              <div class="home-action-copy">
+                <h2>Explorer la démonstration</h2>
+                <p>Découvrez le carnet avec des noms et des résultats fictifs.</p>
               </div>
-              <p class="home-level-desc">Préscolaire à 6e année · Titulaires, spécialistes et multiniveaux.</p>
-              <div class="home-level-actions">
-                <button id="homeCreateBtn" type="button" class="home-btn home-btn-primary">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5 1.4 0 2.6.4 3.6 1.2M18 13v7m-3.5-3.5h7"/></svg>
-                  <span>Créer un groupe</span>
-                  <span class="home-arrow" aria-hidden="true">→</span>
-                </button>
-                <button id="homeDemoToggle" type="button" class="home-btn home-btn-secondary" aria-expanded="false" aria-controls="homeDemoPanel">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m10 8 6 4-6 4z"/></svg>
-                  <span>Démonstration</span>
-                  <span class="home-chevron" aria-hidden="true">⌄</span>
-                </button>
-              </div>
-            </article>
-
-            <article class="home-level-card is-coming-soon">
-              <div class="home-level-head">
-                <span class="home-level-icon" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 10V3L4 8v13h16V8l-8 2z"/><path d="M9 21v-5a3 3 0 0 1 6 0v5"/></svg>
-                </span>
-                <div class="home-level-title-wrap">
-                  <h2>Secondaire</h2>
-                  <span class="home-status-badge is-soon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                    En construction
-                  </span>
-                </div>
-              </div>
-              <p class="home-level-desc">1er et 2e cycles en préparation : groupes-matières, compétences et pondérations adaptées.</p>
-              <div class="home-level-actions">
-                <a class="home-btn home-btn-secondary" href="mailto:support@carnetdenotes.ca?subject=Carnet%20de%20notes%20%E2%80%94%20Secondaire">
-                  <span>Suggérer un besoin</span>
-                  <span class="home-arrow" aria-hidden="true">→</span>
-                </a>
-              </div>
+              <button id="homeDemoToggle" type="button" class="home-btn home-btn-secondary" aria-expanded="false" aria-controls="homeDemoPanel">
+                <span>Choisir un exemple</span>
+                <span class="home-chevron" aria-hidden="true">⌄</span>
+              </button>
             </article>
           </div>
 
@@ -383,10 +356,12 @@
             </div>
           </div>
 
-          <footer class="home-portal-footer">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 3.8-4"/></svg>
-            <p>Afin de respecter les normes de confidentialité, merci d’anonymiser les élèves sur vos listes.</p>
-          </footer>
+          <div class="home-coming-soon">
+            <span class="home-coming-soon-label">À venir</span>
+            <p><strong>Le secondaire</strong><span> — groupes-matières et pondérations adaptées en préparation.</span></p>
+            <a href="mailto:support@carnetdenotes.ca?subject=Carnet%20de%20notes%20%E2%80%94%20Secondaire">Partager un besoin <span aria-hidden="true">→</span></a>
+          </div>
+
         </div>
       </div>
 
@@ -396,6 +371,11 @@
           <div>
             <h2 class="dash-title">Tableau de bord</h2>
             <p id="dashSummaryMeta" class="dash-subtitle"></p>
+          </div>
+          <div class="dash-term-picker" role="group" aria-label="Étape affichée dans le tableau de bord">
+            <button type="button" data-dash-term="1" aria-pressed="false">Étape 1</button>
+            <button type="button" data-dash-term="2" aria-pressed="false">Étape 2</button>
+            <button type="button" data-dash-term="3" aria-pressed="false">Étape 3</button>
           </div>
         </div>
 
@@ -413,6 +393,25 @@
             <div id="dashProfileChips" class="dash-profile-chips"></div>
           </div>
 
+          <div id="dashQuickActions" class="dash-quick-actions" aria-label="Raccourcis utiles">
+            <button type="button" data-dash-action="students" class="dash-quick-action">
+              <span>Élèves</span>
+              <small>Ajouter ou modifier</small>
+            </button>
+            <button type="button" data-dash-action="gradebook" class="dash-quick-action">
+              <span>Carnet</span>
+              <small>Saisir les résultats</small>
+            </button>
+            <button type="button" data-dash-action="new-evaluation" class="dash-quick-action">
+              <span>Nouvelle évaluation</span>
+              <small>Ajouter un travail</small>
+            </button>
+            <button type="button" data-dash-action="comments" class="dash-quick-action">
+              <span>Commentaires</span>
+              <small>Compléter le bulletin</small>
+            </button>
+          </div>
+
           <div id="dashKpiStrip" class="dash-kpi-strip"></div>
 
           <div id="dashSubjectsWrap" class="dash-subblock">
@@ -426,7 +425,7 @@
           </div>
         </section>
 
-        <section class="dash-groups-section" aria-labelledby="dashGroupsHeading">
+        <section id="dashGroupsSection" class="dash-groups-section" aria-labelledby="dashGroupsHeading">
           <div class="dash-section-head">
             <div class="dash-section-title-wrap">
               <h3 id="dashGroupsHeading">Vos groupes</h3>
@@ -1334,6 +1333,10 @@
   <dialog id="addStudentDialog" class="backup-dialog no-print" aria-labelledby="addStudentTitle">
     <form id="addStudentForm">
       <div class="backup-dialog-heading"><h2 id="addStudentTitle">Ajout d’élève</h2></div>
+      <p class="privacy-entry-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 3.8-4"/></svg>
+        <span>Pour respecter la confidentialité des élèves, veuillez utiliser des noms fictifs ou anonymisés dans vos listes.</span>
+      </p>
       <label for="newStudentName">Prénom</label>
       <input id="newStudentName" type="text" autocomplete="off" required autofocus>
       <label for="newStudentLastName">Nom de famille</label>
@@ -1357,9 +1360,8 @@
         <input id="groupNameInput" type="text" autocomplete="off" required placeholder="Ex. : 5e A, Préscolaire B…" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
       </div>
       <div>
-        <label for="groupLevelSelect" class="block text-xs font-semibold text-slate-700 mb-1">Niveau du groupe <span class="font-normal text-slate-500">(laisser sur « Multiniveau » pour une classe combinée, p. ex. 5e/6e)</span></label>
+        <label for="groupLevelSelect" class="block text-xs font-semibold text-slate-700 mb-1">Niveau du groupe</label>
         <select id="groupLevelSelect" class="w-full px-3 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-          <option value="">Multiniveau / choisir par élève</option>
           <option value="P">Préscolaire</option>
           <option value="1">1re année</option>
           <option value="2">2e année</option>
@@ -1367,17 +1369,21 @@
           <option value="4">4e année</option>
           <option value="5">5e année</option>
           <option value="6">6e année</option>
+          <option value="">Sélection individuelle</option>
         </select>
       </div>
       <div>
-        <div class="text-xs font-semibold text-slate-700 mb-1">Matières que vous enseignez à ce groupe</div>
+        <div class="text-xs font-semibold text-slate-700 mb-1">Matière(s) que vous enseignez à ce groupe</div>
         <div id="groupSubjectList" class="grid grid-cols-2 gap-x-3 gap-y-1"></div>
       </div>
       <div id="groupCopyBox" class="hidden">
         <label for="groupCopySelect" class="block text-xs font-semibold text-slate-700 mb-1">Reprendre la liste d’élèves de…</label>
         <select id="groupCopySelect" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm bg-white"></select>
-        <p class="mt-1 text-[11px] text-slate-500">Seuls les noms, niveaux et adaptations sont copiés, pas les notes.</p>
       </div>
+      <p class="privacy-entry-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6l-7-3Z"/><path d="m9.2 12 1.8 1.8 3.8-4"/></svg>
+        <span>Pour respecter la confidentialité des élèves, veuillez utiliser des noms fictifs ou anonymisés dans vos listes.</span>
+      </p>
       <div class="flex items-center justify-end gap-2 pt-2">
         <button id="btnGroupCancel" type="button" class="px-3.5 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 cursor-pointer">Annuler</button>
         <button id="btnGroupSave" type="button" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-xs cursor-pointer">Enregistrer</button>

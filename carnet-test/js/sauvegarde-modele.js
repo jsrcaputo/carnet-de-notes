@@ -14,6 +14,7 @@
         indicator.textContent = message;
         indicator.title = message;
       }
+      if (typeof updateCloseCarnetButton === 'function') updateCloseCarnetButton();
       if (typeof renderHomeSaveCard === 'function') renderHomeSaveCard();
     }
 

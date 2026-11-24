@@ -269,14 +269,26 @@
     function navigateToView(viewId, updateState, options = {}) {
       const continueNavigation = () => {
         const changedView = appState.activeView !== viewId;
+        const previousSubjectId = appState.activeSubjectId;
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
           competencyPanelOpen = false;
         }
         appState.selectedStudentId = null;
         if (updateState) updateState();
+        const changedSubject = viewId === 'viewGradebook'
+          && previousSubjectId !== appState.activeSubjectId;
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport' || viewId === 'viewHome') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderAll();
+        if (changedSubject) {
+          const gradebook = document.getElementById('viewGradebook');
+          if (gradebook) {
+            gradebook.classList.remove('is-subject-changing');
+            void gradebook.offsetWidth;
+            gradebook.classList.add('is-subject-changing');
+            window.setTimeout(() => gradebook.classList.remove('is-subject-changing'), 120);
+          }
+        }
         if (!options.skipScrollTop && (changedView || updateState)) {
           const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
           window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
@@ -378,6 +390,7 @@
 
     function scheduleAppStateSave() {
       if (autosaveTimer) clearTimeout(autosaveTimer);
+      if (typeof updateCloseCarnetButton === 'function') updateCloseCarnetButton();
       if (activeFileHandle && getBackupSnapshot() !== lastSavedFileSnapshot && !fileWriteBlocked) {
         setFileSyncStatus('pending', activeFileWritable ? 'Modifications en attente' : 'À enregistrer : cliquez sur Sauvegarder');
       }

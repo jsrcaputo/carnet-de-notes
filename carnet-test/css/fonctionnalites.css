@@ -20,6 +20,7 @@
     header #btnOpenJSONDirect,
     header #btnFullscreen,
     header #btnBackupHelp,
+    header #btnCloseCarnet,
     header #btnUndo,
     header #btnRedo,
     header #btnSettings {
@@ -161,6 +162,23 @@
     }
     header .hdr-icobtn:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--studio-border-strong, var(--line)); }
     header .hdr-icobtn:disabled { opacity: .35; cursor: default; }
+    header #btnCloseCarnet:disabled {
+      background: var(--studio-surface-soft, #f1f5f9) !important;
+      color: var(--muted) !important;
+      border-color: var(--studio-border, var(--line)) !important;
+      box-shadow: none !important;
+      opacity: .72;
+      cursor: default;
+      transform: none !important;
+      filter: none !important;
+    }
+    header #btnCloseCarnet.hdr-close-button:not(:disabled) {
+      background: var(--studio-surface) !important;
+      color: var(--studio-text-muted) !important;
+      border: 1px solid var(--studio-border-strong, var(--line)) !important;
+      box-shadow: none !important;
+      opacity: 1;
+    }
     header .hdr-icobtn svg { width: 16px; height: 16px; }
     .hdr-sep { width: 1px; height: 22px; background: var(--line); margin: 0 .15rem; }
     #settingsPanel { position: absolute; right: 0; top: calc(100% + 8px); width: 270px; z-index: 60; background: #fffefa; color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 30px rgba(40, 48, 42, .16); padding: .85rem .9rem; font-size: 12.5px; }

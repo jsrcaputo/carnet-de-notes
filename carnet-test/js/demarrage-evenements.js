@@ -7,8 +7,35 @@
           if (Math.abs(gradebookScroll.scrollLeft - topScroll.scrollLeft) > 0.5) gradebookScroll.scrollLeft = topScroll.scrollLeft;
         });
         gradebookScroll.addEventListener('scroll', updateGradebookTopScroll, { passive: true });
-        document.getElementById('gbScrollPrev').addEventListener('click', () => scrollGradebookByColumn(-1));
-        document.getElementById('gbScrollNext').addEventListener('click', () => scrollGradebookByColumn(1));
+        const bindGradebookArrowRepeat = (buttonId, direction) => {
+          const button = document.getElementById(buttonId);
+          if (!button) return;
+          let repeatDelay = 0;
+          let repeatInterval = 0;
+          const stop = () => {
+            window.clearTimeout(repeatDelay);
+            window.clearInterval(repeatInterval);
+            repeatDelay = 0;
+            repeatInterval = 0;
+          };
+          button.addEventListener('pointerdown', event => {
+            if (event.pointerType === 'mouse' && event.button !== 0) return;
+            event.preventRepeat = true;
+            button.setPointerCapture?.(event.pointerId);
+            scrollGradebookByColumn(direction);
+            repeatDelay = window.setTimeout(() => {
+              repeatInterval = window.setInterval(() => scrollGradebookByColumn(direction), 160);
+            }, 260);
+          });
+          button.addEventListener('click', event => {
+            if (event.detail === 0) scrollGradebookByColumn(direction);
+          });
+          button.addEventListener('pointerup', stop);
+          button.addEventListener('pointercancel', stop);
+          button.addEventListener('pointerleave', stop);
+        };
+        bindGradebookArrowRepeat('gbScrollPrev', -1);
+        bindGradebookArrowRepeat('gbScrollNext', 1);
         let arrowFrame = 0;
         window.addEventListener('scroll', () => {
           if (arrowFrame) return;
@@ -20,25 +47,6 @@
           observer.observe(gradebookScroll.querySelector('table'));
         }
         window.addEventListener('resize', updateGradebookTopScroll);
-      }
-      const closeWeightGuide = () => {
-        document.getElementById('weightGuide').classList.add('hidden');
-        try {
-          window.localStorage.setItem('carnet_notes_weight_guide_seen_v1', '1');
-        } catch (error) {
-          console.warn('Impossible de mémoriser le guide de pondération.', error);
-        }
-        document.getElementById('btnWeightMode').focus();
-      };
-      const weightGuide = document.getElementById('weightGuide');
-      if (weightGuide) {
-        document.getElementById('weightGuideDone').addEventListener('click', closeWeightGuide);
-        weightGuide.addEventListener('keydown', event => {
-          if (event.key === 'Escape') { event.preventDefault(); closeWeightGuide(); }
-          if (event.key === 'Tab') { event.preventDefault(); document.getElementById('weightGuideDone').focus(); }
-        });
-        window.addEventListener('resize', positionWeightGuide);
-        window.addEventListener('scroll', positionWeightGuide, true);
       }
       const homePortal = document.getElementById('homePortal');
       const homeDropZone = document.getElementById('homeDropZone');
@@ -66,6 +74,32 @@
       bindClick('btnSidebarBrandHome', returnToLandingPortal);
       bindClick('homeBtnReturnDashboard', openHomeDashboard);
       bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
+      document.querySelectorAll('[data-dash-action]').forEach(button => {
+        button.addEventListener('click', () => {
+          const action = button.dataset.dashAction;
+          if (action === 'students') {
+            navigateToView('viewStudents');
+          } else if (action === 'gradebook') {
+            navigateToView('viewGradebook');
+          } else if (action === 'new-evaluation') {
+            navigateToView('viewGradebook', () => {
+              window.setTimeout(() => document.getElementById('btnNewEvaluation')?.click(), 0);
+            });
+          } else if (action === 'comments') {
+            navigateToView('viewGlobalReport');
+          }
+        });
+      });
+      document.querySelectorAll('[data-dash-term]').forEach(button => {
+        button.setAttribute('aria-pressed', String(button.dataset.dashTerm === String(appState.activeTerm)));
+        button.addEventListener('click', () => {
+          appState.activeTerm = button.dataset.dashTerm;
+          competencyTermSelected = null;
+          document.querySelectorAll('[data-dash-term]').forEach(other =>
+            other.setAttribute('aria-pressed', String(other.dataset.dashTerm === appState.activeTerm)));
+          renderHomeDashboard();
+        });
+      });
       bindClick('homeBtnPrivacy', () => document.getElementById('privacyPolicyDialog')?.showModal());
       bindClick('homeBtnDownloadLegacy', () => document.getElementById('btnDownloadLegacyBrowser')?.click());
       bindClick('homeBtnDeleteLegacy', () => document.getElementById('btnDeleteLegacyBrowser')?.click());
@@ -735,11 +769,10 @@
           closeWeightMode();
         } else {
           renderGradebookView();
-          showFirstMultiWeightTip();
         }
       });
       document.addEventListener('pointerdown', event => {
-        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, [data-weight-box], [data-weight-lock], [data-weight-step], [data-weight-input], #weightGuide')) return;
+        if (!weightMode || event.target.closest('#btnWeightMode, #weightControls, [data-weight-box], [data-weight-lock], [data-weight-step], [data-weight-input]')) return;
         setTimeout(() => {
           if (weightMode) closeWeightMode();
         }, 0);
