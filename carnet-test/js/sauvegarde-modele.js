@@ -184,6 +184,9 @@
       if (listSearch) listSearch.value = '';
       if (searchMessage) searchMessage.textContent = '';
       if (typeof resetHomeDemoPanels === 'function') resetHomeDemoPanels();
+      if (typeof window !== 'undefined' && window.ErikaTour) {
+        window.ErikaTour.close({ silent: true });
+      }
       renderAll();
       showToast('Carnet réinitialisé à neuf.');
     }

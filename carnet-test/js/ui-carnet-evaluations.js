@@ -1,49 +1,3 @@
-    let gradebookTextMeasureCtx = null;
-
-    function computeGradebookStudentColWidth(students, sub, isMulti) {
-      const PAD_LEFT = 16;
-      const PAD_RIGHT = 24;
-      const SAFETY_BUFFER = 8;
-      const MIN_W = isMulti ? 216 : 176;
-      const MAX_W = 280;
-
-      if (!gradebookTextMeasureCtx && typeof document !== 'undefined') {
-        const canvas = document.createElement('canvas');
-        gradebookTextMeasureCtx = canvas.getContext('2d');
-      }
-      const ctx = gradebookTextMeasureCtx;
-      if (!ctx || !Array.isArray(students) || !students.length) return MIN_W;
-
-      const bodyStyle = typeof window !== 'undefined' && document.body
-        ? window.getComputedStyle(document.body)
-        : null;
-      const fontFamily = (bodyStyle && bodyStyle.fontFamily) || 'system-ui, sans-serif';
-
-      let maxContentW = 110;
-      students.forEach(st => {
-        ctx.font = `700 15px ${fontFamily}`;
-        const nameW = ctx.measureText(st.name || '').width;
-
-        const effLevel = getEffectiveGradeLevel(st, sub);
-        const studentCycle = getStudentCycle(effLevel);
-        const metaText = studentCycle
-          ? `${GRADE_LEVEL_LABELS[st.gradeLevel] || GRADE_LEVEL_LABELS[effLevel]} • ${CYCLE_LABELS[studentCycle]}`
-          : 'Niveau à choisir';
-        ctx.font = `400 11.5px ${fontFamily}`;
-        let metaW = ctx.measureText(metaText).width;
-
-        if (isSubjectModifiedForStudent(st, sub)) {
-          ctx.font = `800 9px ${fontFamily}`;
-          const badgeW = ctx.measureText(`MOD. · ${GRADE_LEVEL_LABELS[effLevel]}`).width + 18;
-          metaW += badgeW;
-        }
-
-        maxContentW = Math.max(maxContentW, nameW, metaW);
-      });
-
-      return Math.max(MIN_W, Math.min(MAX_W, Math.ceil(PAD_LEFT + maxContentW + PAD_RIGHT + SAFETY_BUFFER)));
-    }
-
     let gradebookFlashTimer = null;
 
     function flashGradebookStudentRow(studentId) {
@@ -125,9 +79,8 @@
         { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
       ];
       const extraColsWidth = extraHeaders.reduce((sum, eh) => sum + eh.width, 0);
-      const studentColWidth = computeGradebookStudentColWidth(appState.students, sub, isMulti);
       const gradebookTable = scrollContainerEl.querySelector('table');
-      gradebookTable.style.width = `${studentColWidth + extraColsWidth + visibleAssignments.length * 162}px`;
+      gradebookTable.style.width = `calc(var(--gradebook-student-width) + ${extraColsWidth + visibleAssignments.length * 162}px)`;
 
       const hasWorks = subData.assignments.length > 0;
       const totalW = hasWorks ? getTotalAssignmentWeights(subData) : 0;
@@ -151,7 +104,7 @@
 
       const thStudent = document.createElement('th');
       thStudent.className = 'p-2.5 font-bold sticky left-0 bg-slate-900 z-10';
-      thStudent.style.width = `${studentColWidth}px`;
+      thStudent.style.width = 'var(--gradebook-student-width)';
       const studentHeading = document.createElement('div');
       studentHeading.textContent = appState.students.length > 1 ? 'Élèves' : 'Élève';
       const sortBtn = document.createElement('button');

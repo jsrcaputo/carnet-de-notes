@@ -69,7 +69,7 @@
       document.getElementById('backupPasswordHelp').textContent = creating
         ? (isExcel
           ? 'Choisissez un mot de passe de 12 à 255 caractères et confirmez-le. Vous le saisirez directement dans Excel. Si vous le perdez, le fichier sera irrécupérable.'
-          : 'Choisissez un mot de passe de 12 caractères ou plus et confirmez-le. Si vous le perdez, le fichier sera irrécupérable. Cette copie ne chiffre pas un fichier déjà lié.')
+          : 'Choisissez un mot de passe de 12 caractères ou plus et confirmez-le. Si vous le perdez, le fichier sera irrécupérable. Les copies non chiffrées enregistrées auparavant restent inchangées.')
         : 'Entrez le mot de passe utilisé pour protéger ce fichier.';
       document.getElementById('backupPasswordConfirmRow').hidden = !creating;
       confirmation.required = creating;

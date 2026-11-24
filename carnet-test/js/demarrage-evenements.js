@@ -73,21 +73,36 @@
       bindClick('btnSidebarDashboard', openHomeDashboard);
       bindClick('btnSidebarBrandHome', returnToLandingPortal);
       bindClick('homeBtnReturnDashboard', openHomeDashboard);
-      bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
-      document.querySelectorAll('[data-dash-action]').forEach(button => {
-        button.addEventListener('click', () => {
-          const action = button.dataset.dashAction;
-          if (action === 'students') {
-            navigateToView('viewStudents');
-          } else if (action === 'gradebook') {
-            navigateToView('viewGradebook');
-          } else if (action === 'new-evaluation') {
-            navigateToView('viewGradebook', () => {
-              window.setTimeout(() => document.getElementById('btnNewEvaluation')?.click(), 0);
-            });
-          } else if (action === 'comments') {
-            navigateToView('viewGlobalReport');
+      bindClick('homeBtnErikaGuide', () => {
+        if (typeof window !== 'undefined' && window.ErikaTour) {
+          window.ErikaTour.start('homePortal');
+        }
+      });
+      bindClick('btnErikaGuide', () => {
+        if (typeof window !== 'undefined' && window.ErikaTour) {
+          const started = window.ErikaTour.start(window.ErikaTour.getCurrentEnv());
+          if (!started && typeof showToast === 'function') {
+            showToast('Aucun repère particulier à afficher ici.');
           }
+        }
+      });
+      bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
+      bindClick('dashBtnAddStudents', () => navigateToView('viewStudents'));
+      bindClick('dashBtnResumeWork', () => {
+        const targetView = appState.students && appState.students.length > 0 ? 'viewGradebook' : 'viewStudents';
+        navigateToView(targetView);
+      });
+      bindClick('dashPrivacyToggle', () => {
+        if (typeof toggleDashboardPrivacyMask === 'function') toggleDashboardPrivacyMask();
+      });
+      document.querySelectorAll('[data-dash-tab]').forEach(button => {
+        button.addEventListener('click', () => {
+          if (typeof setDashboardTab === 'function') setDashboardTab(button.dataset.dashTab);
+        });
+      });
+      document.querySelectorAll('[data-dash-followup-mode]').forEach(button => {
+        button.addEventListener('click', () => {
+          if (typeof setDashboardFollowupMode === 'function') setDashboardFollowupMode(button.dataset.dashFollowupMode);
         });
       });
       document.querySelectorAll('[data-dash-term]').forEach(button => {
@@ -160,30 +175,6 @@
 
       document.getElementById('inputImportJSON').addEventListener('cancel', () => {
         pendingImportSnapshot = null;
-      });
-      document.getElementById('tourSkip').addEventListener('click', finishTutorial);
-      document.getElementById('tourNext').addEventListener('click', () => {
-        if (tourIndex === tourSteps.length - 1) finishTutorial();
-        else { tourIndex++; renderTourStep(); }
-      });
-      window.addEventListener('resize', positionTour);
-      window.addEventListener('scroll', positionTour, true);
-      document.addEventListener('keydown', event => {
-        if (event.key !== 'Tab') return;
-        const modal = ['tutorialOverlay'].map(id => document.getElementById(id))
-          .find(el => el && !el.classList.contains('hidden'));
-        if (!modal) return;
-        const controls = [...modal.querySelectorAll('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)')]
-          .filter(control => control.getClientRects().length);
-        const first = controls[0];
-        const last = controls[controls.length - 1];
-        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && (document.activeElement === last || !modal.contains(document.activeElement))) {
-          event.preventDefault();
-          first.focus();
-        }
       });
       document.getElementById('btnStayOnObservation').addEventListener('click', () => closeObservationWarning(true));
       document.getElementById('btnLeaveObservation').addEventListener('click', () => closeObservationWarning(false));
@@ -1311,20 +1302,20 @@
         const encryptedDescription = document.querySelector('#btnSaveJSONEncrypted span');
         if (activeBackupEncryption) {
           normalTitle.textContent = 'Copie normale non chiffrée';
-          normalDescription.textContent = 'Crée une copie JSON lisible sans mot de passe. Le fichier chiffré lié reste inchangé.';
+          normalDescription.textContent = 'Crée une copie de sauvegarde (.json) sans mot de passe. Le fichier chiffré lié reste inchangé.';
         } else if (activeFileHandle) {
           normalTitle.textContent = 'Mettre à jour le fichier lié';
-          normalDescription.textContent = 'Enregistre immédiatement les dernières modifications dans le fichier JSON déjà lié.';
+          normalDescription.textContent = 'Enregistre immédiatement les dernières modifications dans le fichier (.json) déjà lié.';
         } else {
           normalTitle.textContent = 'Sauvegarde normale';
-          normalDescription.textContent = 'Fichier JSON permettant de rouvrir et de mettre à jour le carnet. Son contenu est lisible si le fichier est ouvert directement.';
+          normalDescription.textContent = 'Fichier de sauvegarde (.json) sans mot de passe pour rouvrir et mettre à jour le carnet. Son contenu n’est pas chiffré.';
         }
         if (activeBackupEncryption && activeFileHandle) {
           encryptedTitle.textContent = 'Mettre à jour le fichier chiffré lié';
           encryptedDescription.textContent = 'Enregistre immédiatement dans le fichier déjà protégé, avec le même mot de passe.';
         } else {
           encryptedTitle.textContent = 'Sauvegarde chiffrée';
-          encryptedDescription.textContent = 'Copie JSON protégée par mot de passe. Le fichier pourra rester lié si le navigateur autorise l’écriture directe.';
+          encryptedDescription.textContent = 'Fichier de sauvegarde (.json) protégé par mot de passe. Sur Chrome et Edge, les changements peuvent aussi s’y enregistrer automatiquement.';
         }
         saveBackupDialog.showModal();
       });
@@ -1489,7 +1480,8 @@
         if (e.key === '/' && !mod && !typing) {
           const modalOpen = Boolean(
             document.querySelector('dialog[open]')
-            || ['tutorialOverlay', 'modalUnsavedObservation', 'modalAddAssignment', 'modalGroup', 'modalCommentBank']
+            || (typeof window !== 'undefined' && window.ErikaTour && window.ErikaTour.isOpen())
+            || ['modalUnsavedObservation', 'modalAddAssignment', 'modalGroup', 'modalCommentBank']
               .some(id => {
                 const el = document.getElementById(id);
                 return el && !el.classList.contains('hidden');
@@ -1550,6 +1542,15 @@
         e.stopPropagation();
         const open = settingsPanel.classList.toggle('hidden') === false;
         settingsBtn.setAttribute('aria-expanded', String(open));
+      });
+      bindClick('btnErikaLaunchHere', () => {
+        closeSettingsPanel();
+        if (typeof window !== 'undefined' && window.ErikaTour) {
+          const started = window.ErikaTour.start(window.ErikaTour.getCurrentEnv());
+          if (!started && typeof showToast === 'function') {
+            showToast('Aucun repère particulier à afficher ici.');
+          }
+        }
       });
       document.addEventListener('click', e => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettingsPanel();

@@ -9,70 +9,121 @@
   <style>
     :root { color-scheme: light dark; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     body { margin: 0; background: #f4f6f8; color: #172033; line-height: 1.65; }
-    main { width: min(760px, calc(100% - 2rem)); margin: 3rem auto; padding: 2rem; box-sizing: border-box; border: 1px solid #dce2ea; border-radius: 18px; background: #fff; box-shadow: 0 12px 40px rgba(15, 23, 42, .08); }
-    h1 { margin: 0 0 .3rem; font-size: clamp(1.65rem, 5vw, 2.2rem); line-height: 1.2; }
-    h2 { margin-top: 1.8rem; font-size: 1.12rem; }
-    p, li { color: #364152; }
-    .date, .summary { color: #657084; }
-    .evolving { margin: 1rem 0 1.25rem; padding: .8rem 1rem; border: 1px solid #d7b86a; border-radius: 10px; background: #fff9e9; color: #694f15; font-size: .85rem; }
-    .summary { margin-top: .8rem; padding: .9rem 1rem; border-left: 4px solid #6366f1; background: #f5f5ff; }
-    a { color: #4338ca; }
-    .back { display: inline-block; margin-bottom: 1.5rem; font-size: .9rem; text-decoration: none; }
+    main { width: min(760px, calc(100% - 2rem)); margin: 2.25rem auto; padding: 2rem; box-sizing: border-box; border: 1px solid #dce2ea; border-radius: 18px; background: #fff; box-shadow: 0 12px 40px rgba(15, 23, 42, .08); }
+    h1 { margin: 0 0 .35rem; font-size: clamp(1.6rem, 4.5vw, 2.15rem); line-height: 1.2; }
+    h2 { margin: 1.75rem 0 .5rem; font-size: 1.08rem; color: #0f172a; }
+    p, li { color: #364152; margin: .45rem 0; }
+    ul, ol { padding-left: 1.35rem; margin: .45rem 0 .75rem; }
+    li + li { margin-top: .32rem; }
+    .date { color: #657084; font-size: .9rem; margin: 0 0 1.2rem; }
+    .summary { margin: 0 0 1.5rem; padding: 1rem 1.15rem; border-left: 4px solid #2563eb; border-radius: 10px; background: #f3f7ff; }
+    .summary p { margin: 0 0 .45rem; color: #1e293b; font-weight: 700; }
+    .summary ul { margin: 0; }
+    .summary li { color: #1e293b; }
+    .callout { margin: .85rem 0; padding: .85rem 1rem; border: 1px solid #dbe4f0; border-radius: 10px; background: #f8fafc; font-size: .94rem; }
+    a { color: #1d4ed8; }
+    details.tech-details { margin-top: 1.6rem; padding: .85rem 1rem; border: 1px solid #dce2ea; border-radius: 12px; background: #f8fafc; }
+    details.tech-details summary { cursor: pointer; font-weight: 700; color: #0f172a; }
+    details.tech-details ul { margin-top: .65rem; font-size: .92rem; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: .88em; padding: .1em .35em; border-radius: 5px; background: #e8eef6; color: #0f172a; }
+    @media (max-width: 600px) {
+      main { width: calc(100% - 1rem); margin: .75rem auto; padding: 1.25rem; border-radius: 14px; }
+    }
     @media (prefers-color-scheme: dark) {
       body { background: #111827; color: #f3f4f6; }
       main { border-color: #374151; background: #1f2937; }
+      h2 { color: #f9fafb; }
       p, li { color: #d1d5db; }
       .date { color: #9ca3af; }
-      .summary { color: #d8d9ff; background: #252a48; }
-      .evolving { border-color: #806d3e; background: #342d1c; color: #f3d98a; }
-      a { color: #a5b4fc; }
+      .summary { border-left-color: #60a5fa; background: #1e293b; }
+      .summary p, .summary li { color: #e5e7eb; }
+      .callout { border-color: #374151; background: #18212f; }
+      details.tech-details { border-color: #374151; background: #18212f; }
+      details.tech-details summary { color: #f9fafb; }
+      code { background: #334155; color: #f8fafc; }
+      a { color: #93c5fd; }
     }
   </style>
 </head>
 <body>
   <main>
     <h1>Politique de confidentialité</h1>
-    <p class="date">Version actuelle — mise à jour le 19 novembre 2026</p>
-    <p class="evolving"><strong>Document évolutif.</strong> Carnet de notes continue d’évoluer. Cette politique peut donc être précisée au fil des nouvelles fonctions. La date ci-dessus indique la version en vigueur. Les protections décrites ici sont déjà appliquées dans la version actuelle de l’application.</p>
+    <p class="date">Version en vigueur — 24 novembre 2026</p>
 
-    <p class="summary"><strong>En bref :</strong> Carnet de notes fonctionne principalement dans le navigateur. Il ne transmet pas les noms, les notes, les commentaires ni les adaptations des élèves à un serveur de l’application.</p>
+    <div class="summary">
+      <p>En bref</p>
+      <ul>
+        <li><strong>Rien n’est envoyé sur un serveur.</strong> Les noms, notes, observations, commentaires et adaptations de vos élèves restent sur votre appareil et dans les fichiers que vous choisissez d’enregistrer.</li>
+        <li><strong>Aucun suivi.</strong> L’application ne contient ni publicité, ni outil d’analyse de fréquentation, ni intelligence artificielle.</li>
+        <li><strong>Vous gardez le contrôle.</strong> Vos données d’élèves ne sont pas enregistrées automatiquement dans le navigateur : vous décidez où conserver vos fichiers, si vous les protégez par mot de passe et quand les supprimer.</li>
+      </ul>
+    </div>
 
-    <h2>1. Données utilisées</h2>
-    <p>Le carnet peut contenir des données saisies par l’utilisatrice ou l’utilisateur, notamment :</p>
+    <h2>1. Comment fonctionne l’application</h2>
+    <p>Lorsque vous ouvrez le site, votre navigateur télécharge simplement les fichiers nécessaires à l’affichage de l’application. Une fois la page ouverte, <strong>tout le traitement de vos données s’effectue localement dans votre navigateur</strong>.</p>
+    <p>Aucune information saisie dans le carnet n’est transmise à un serveur de l’application, à un service externe, à un outil publicitaire ou à un modèle d’intelligence artificielle. Les outils qui produisent et protègent les fichiers Excel fonctionnent eux aussi localement, sans appel extérieur.</p>
+    <p>L’application propose quelques liens facultatifs vers des ressources pédagogiques externes (notamment du ministère de l’Éducation et de centres de services scolaires). Si vous ouvrez l’un de ces liens, la politique de confidentialité du site consulté s’applique.</p>
+
+    <h2>2. Ce que contient votre carnet (et noms d’élèves)</h2>
+    <p>Votre carnet peut contenir les renseignements que vous choisissez d’y inscrire :</p>
     <ul>
-      <li>les noms des groupes et des élèves;</li>
-      <li>les niveaux scolaires, adaptations et attentes modifiées;</li>
-      <li>les évaluations, résultats, observations, commentaires et traces d’apprentissage;</li>
-      <li>les préférences d’affichage et certaines pondérations personnalisées.</li>
+      <li>les noms de vos groupes et de vos élèves ;</li>
+      <li>les niveaux scolaires, adaptations et attentes modifiées ;</li>
+      <li>les évaluations, résultats, traces observables, commentaires au bulletin et grilles personnalisées ;</li>
+      <li>vos préférences d’affichage et pondérations personnalisées.</li>
+    </ul>
+    <p class="callout"><strong>Précaution recommandée :</strong> pour limiter la présence de renseignements nominatifs dans vos fichiers, nous recommandons d’utiliser des prénoms fictifs, des initiales ou des codes numériques plutôt que les noms complets des élèves, selon les règles de votre établissement. L’application fonctionne exactement de la même façon dans les deux cas.</p>
+
+    <h2>3. Où sont conservées vos données</h2>
+    <ul>
+      <li><strong>Pendant votre séance de travail :</strong> les données du carnet restent uniquement dans la mémoire de l’onglet ouvert. Si vous fermez ou actualisez l’onglet sans enregistrer, les changements non sauvegardés sont perdus (le navigateur affiche d’abord un avertissement s’il reste des modifications non enregistrées).</li>
+      <li><strong>Dans vos fichiers de sauvegarde (<code>.json</code>) :</strong> lorsque vous cliquez sur <strong>Sauvegarder</strong>, votre carnet complet (tous vos groupes) est enregistré dans un fichier à l’emplacement de votre choix.
+        <ul>
+          <li>Sur <strong>Chrome ou Edge</strong> (sur ordinateur), si vous autorisez l’écriture, ce fichier peut rester lié au carnet : vos modifications suivantes s’y enregistrent automatiquement. Vous pouvez retirer ce lien en tout temps dans les <strong>Options</strong> (<em>Délier le fichier</em>).</li>
+          <li>Sur <strong>Safari, Firefox</strong>, sur tablette ou sur un poste aux permissions restreintes, l’application télécharge une nouvelle copie dans votre dossier <strong>Téléchargements</strong>. Comme elle ne se met pas à jour automatiquement, sauvegardez de nouveau après vos modifications importantes.</li>
+        </ul>
+      </li>
+      <li><strong>Dans vos exports Excel (<code>.xlsx</code>) :</strong> les classeurs Excel sont générés localement et téléchargés sur votre appareil pour consulter, filtrer ou imprimer les résultats du groupe affiché.</li>
+      <li><strong>Dans votre navigateur :</strong> aucune donnée d’élève n’est enregistrée automatiquement dans le navigateur. Seules quelques préférences techniques sans renseignement personnel peuvent y demeurer (thème, couleurs, taille du texte, affichage de l’aide contextuelle et pondérations numériques personnalisées). Si une ancienne version du site avait laissé une copie dans ce navigateur, un avis vous permet de la télécharger puis de l’effacer définitivement.</li>
     </ul>
 
-    <h2>2. Où ces données sont conservées</h2>
-    <p>Les données du carnet restent d’abord dans la mémoire de l’onglet. Lors de la première sauvegarde, un fichier JSON local peut être choisi puis lié au carnet. Si le navigateur accorde l’autorisation d’écriture, les changements suivants sont enregistrés automatiquement dans ce fichier. Cette liaison peut être retirée dans les options.</p>
-    <p>Quand la liaison directe n’est pas offerte ou autorisée, l’application télécharge une nouvelle copie JSON et celle-ci doit être conservée manuellement après chaque modification importante. Les exports Excel sont également créés et téléchargés par votre navigateur.</p>
-    <p>Le carnet n’enregistre plus automatiquement ses données nominatives dans le stockage Web du navigateur. Une ancienne copie peut toutefois rester visible dans les versions précédentes du carnet; elle est alors signalée dans les options afin qu’elle soit téléchargée puis effacée. Quelques préférences sans données d’élèves, comme le thème, l’affichage et certaines pondérations numériques, peuvent rester dans le stockage local du navigateur.</p>
+    <h2>4. Protéger vos fichiers par mot de passe</h2>
+    <p>Vous pouvez créer une <strong>sauvegarde chiffrée</strong> (<code>.json</code>) ou un <strong>export Excel protégé</strong> (<code>.xlsx</code>) à l’aide d’un mot de passe d’au moins 12 caractères (jusqu’à 255 caractères pour Excel).</p>
+    <ul>
+      <li>Le chiffrement s’effectue entièrement sur votre appareil.</li>
+      <li>Votre mot de passe n’est jamais envoyé ailleurs ni enregistré de façon lisible dans le fichier.</li>
+      <li><strong>Conservez votre mot de passe en lieu sûr :</strong> s’il est perdu, le fichier protégé ne peut pas être récupéré.</li>
+      <li><strong>Copies précédentes :</strong> créer un fichier protégé ne chiffre pas rétroactivement les copies ordinaires enregistrées auparavant.</li>
+    </ul>
+    <p>Une sauvegarde normale (non chiffrée) et un fichier Excel ordinaire contiennent vos données en clair. Rangez vos fichiers dans un espace autorisé par votre établissement, protégez l’accès à votre appareil et évitez de les déposer sur un service en ligne non approuvé.</p>
 
-    <h2>3. Transmission à des serveurs</h2>
-    <p>Le carnet n’envoie pas les données du dossier à un serveur, service d’analyse, outil publicitaire ou modèle d’intelligence artificielle. Aucun système de télémétrie n’est intégré.</p>
-    <p>Les bibliothèques techniques servant à générer ou chiffrer les fichiers Excel sont hébergées directement avec l’application, sans appel à un réseau de distribution externe ni transmission de données. Le site contient toutefois des liens facultatifs vers des ressources pédagogiques externes; les politiques de ces sites s’appliquent lorsqu’un de ces liens est ouvert.</p>
+    <h2>5. Utiliser l’application sur un poste partagé</h2>
+    <p>Avant de quitter un ordinateur partagé ou emprunté :</p>
+    <ol>
+      <li>Enregistrez votre carnet à l’endroit prévu (clé USB ou espace de travail autorisé).</li>
+      <li>Cliquez sur <strong>Fermer</strong> dans la barre du haut puis fermez l’onglet du navigateur afin d’effacer les données gardées en mémoire.</li>
+      <li>Si vous avez téléchargé un fichier <code>.json</code> ou un fichier Excel <code>.xlsx</code> sur ce poste, <strong>supprimez-le du dossier Téléchargements</strong> (puis videz la corbeille au besoin).</li>
+    </ol>
 
-    <h2>4. Protection des fichiers</h2>
-    <p>Le carnet peut créer une sauvegarde JSON chiffrée avec un mot de passe, ou protéger un export Excel par mot de passe. La sauvegarde JSON utilise un dérivé de clé renforcé et le chiffrement AES-GCM dans le navigateur. Choisissez un mot de passe robuste et conservez-le séparément : sans ce mot de passe, la sauvegarde chiffrée ne peut pas être récupérée. Le mot de passe n’est ni transmis ni conservé dans le fichier de façon lisible.</p>
-    <p>Une copie non chiffrée contient les renseignements tels qu’ils ont été saisis. Rangez donc vos fichiers dans un emplacement autorisé, protégez le poste utilisé et évitez de les transmettre à un service en ligne non approuvé.</p>
+    <h2>6. Modifier ou supprimer vos données</h2>
+    <p>Vous pouvez modifier ou supprimer toute information directement dans le carnet. Pour supprimer définitivement une sauvegarde, effacez simplement le fichier <code>.json</code> ou <code>.xlsx</code> concerné de votre ordinateur, de votre clé USB ou de votre espace de stockage. Les fichiers déjà exportés et les pages imprimées demeurent sous votre responsabilité.</p>
 
-    <h2>5. Poste partagé ou emprunté</h2>
-    <p>Avant de quitter un poste partagé, utilisez la fonction <strong>Fermer le carnet</strong> dans les options. Cette fonction vide le carnet actif, l’historique d’annulation, la liaison avec le fichier, la clé de chiffrement gardée en mémoire et les éléments temporaires d’impression. Fermez ensuite l’onglet.</p>
+    <h2>7. Règles de votre établissement</h2>
+    <p>Cette politique explique fidèlement le fonctionnement technique de l’application. Elle ne remplace pas les directives de votre centre de services scolaire (CSS), de votre établissement ni les lois applicables en matière de protection des renseignements personnels (notamment la Loi 25). Utilisez uniquement des appareils, emplacements et pratiques autorisés par votre milieu.</p>
 
-    <h2>6. Suppression et maîtrise des données</h2>
-    <p>Vous pouvez modifier ou supprimer les données directement dans le carnet. Pour retirer une copie sauvegardée, supprimez le fichier JSON ou Excel correspondant de l’appareil, de la clé USB ou du service où vous l’avez vous-même placé. Les copies déjà exportées ou imprimées relèvent de votre gestion documentaire.</p>
+    <h2>8. Questions et mises à jour</h2>
+    <p>Pour toute question au sujet de cette politique ou du fonctionnement du site, écrivez à <a href="mailto:support@carnetdenotes.ca?subject=Confidentialit%C3%A9%20du%20Carnet%20de%20notes">support@carnetdenotes.ca</a>.</p>
+    <p>Si une évolution de l’application modifie la façon dont vos données sont enregistrées ou protégées, cette page sera mise à jour avec une nouvelle date en haut du document. Les protections décrites ici s’appliquent dès maintenant à la version en ligne.</p>
 
-    <h2>7. Contact</h2>
-    <p>Pour une question liée au fonctionnement du site ou à cette politique, écrivez à <a href="mailto:support@carnetdenotes.ca?subject=Confidentialit%C3%A9%20du%20Carnet%20de%20notes">support@carnetdenotes.ca</a>.</p>
-
-    <h2>8. Règles de l’établissement</h2>
-    <p>Cette politique explique le fonctionnement technique de l’application. Elle ne remplace pas les règles de votre centre de services scolaire, de votre établissement ou votre protocole de gestion documentaire. Utilisez uniquement des emplacements et des pratiques approuvés par votre organisation.</p>
-
-    <h2>9. Historique des changements</h2>
-    <p>Lorsqu’une fonction modifie la manière dont les renseignements sont enregistrés, sauvegardés ou protégés, cette page sera mise à jour avec une nouvelle date de version.</p>
+    <details class="tech-details">
+      <summary>Précisions techniques (pour les équipes informatiques)</summary>
+      <ul>
+        <li><strong>Zéro transmission réseau :</strong> la politique de sécurité du contenu (CSP) impose <code>connect-src 'none'</code>, <code>object-src 'none'</code> et <code>referrer="no-referrer"</code>. Aucun script tiers, aucune télémétrie et aucun réseau de distribution externe (CDN) ne sont appelés.</li>
+        <li><strong>Chiffrement des sauvegardes <code>.json</code> :</strong> dérivation de clé PBKDF2 (SHA-256, 600 000 itérations, sel aléatoire 128 bits) et chiffrement authentifié AES-GCM 256 bits via l’API Web Crypto (<code>window.crypto.subtle</code>).</li>
+        <li><strong>Exports Excel :</strong> générés et chiffrés localement par les bibliothèques <code>xlsx.bundle.js</code> et <code>xlsx-populate.min.js</code> hébergées directement avec l’application.</li>
+        <li><strong>Stockage navigateur (<code>localStorage</code>) :</strong> aucune donnée nominative écrite. Clés techniques non nominatives utilisées : <code>carnet_notes_prefs_2026_v1</code> (préférences d’affichage), <code>carnet_notes_custom_rubrics_v1</code> (pondérations numériques) et <code>carnet_notes_erika_tour_v1</code> (état du guide contextuel). Lecture seule de détection sur l’ancienne clé <code>carnet_notes_autosave_2026_v1</code> pour permettre son téléchargement et sa suppression manuelle.</li>
+      </ul>
+    </details>
   </main>
 </body>
 </html>

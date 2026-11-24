@@ -7,7 +7,11 @@ Pour utiliser le carnet, ouvrir `index.html` avec son dossier `carnet-test` et `
 
 À chaque ouverture ou actualisation, l’accueil apparaît avec un carnet vierge : utilisez **Charger** pour reprendre un fichier JSON. **Démonstration** charge trois groupes fictifs : Test-001 (préscolaire), Test-201 (2e année) et Test-503 (multi 5e/6e). Fermer l’accueil ou créer son propre groupe ne charge pas ces groupes. La démonstration conserve les groupes de la session en cours.
 
+La visite guidée d’Erika s’ouvre uniquement à votre demande, depuis **Visite guidée** ou les commandes du guide dans l’application.
+
 Dans **Listes et groupes**, créez ou sélectionnez un groupe, puis utilisez **Ajout d’élève** pour saisir un prénom et, au besoin, un nom de famille.
+
+Dans le bilan de classe, dépliez une matière pour consulter ses compétences. La barre répartit les élèves ayant un résultat dans la compétence selon leur cote; les élèves sans résultat sont exclus. Au préscolaire, elle utilise un constat estimé à partir du résultat interne. **Masquer les notes** masque cette répartition.
 
 ## Sauvegarde des données
 

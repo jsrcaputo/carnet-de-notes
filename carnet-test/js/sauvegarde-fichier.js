@@ -284,6 +284,12 @@
         restoreCustomWeightedPresets(importedPresets);
         landingPortalRequested = false;
         appState = importedState;
+        const importedRealGroups = Array.isArray(appState.groups)
+          ? appState.groups.filter(group => group && !group.placeholder)
+          : [];
+        if (importedRealGroups.length > 1) {
+          appState.activeView = 'viewHome';
+        }
         applyActiveSubjects(appState);
         gbFilter = '';
         document.getElementById('headerStudentSearch').value = '';

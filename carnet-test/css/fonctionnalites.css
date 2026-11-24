@@ -221,10 +221,9 @@
       html.theme-dark :is(#subjectTabsContainer, #subjectSubTabsContainer) button:is(.bg-indigo-600, [aria-pressed="true"]) { background: var(--brand) !important; color: #fff !important; }
       html.theme-dark #subjectSubTabsContainer { background: var(--surface); border-color: var(--line); }
       html.theme-dark #subjectSubTabsContainer .sub-tabs-label { color: var(--muted); }
-      html.theme-dark :is(#settingsPanel, .tour-card, .grade-picker) { background: var(--surface); color: var(--ink); border-color: var(--line); }
+      html.theme-dark :is(#settingsPanel, .grade-picker) { background: var(--surface); color: var(--ink); border-color: var(--line); }
       html.theme-dark :is(#settingsPanel .sp-seg, .grade-picker-auto, .sort-btn) { background: var(--studio-surface-soft, #1e293b); color: var(--ink); border-color: var(--line); }
       html.theme-dark #settingsPanel .sp-seg button.is-on { background: var(--brand); color: #fff; }
-      html.theme-dark .tour-card p { color: var(--muted); }
       html.theme-dark [id^="modal"] > .bg-white { background: var(--surface) !important; color: var(--ink); border-color: var(--line) !important; }
       html.theme-dark [id^="modal"] :is(.bg-slate-50, .bg-slate-100) { background: var(--studio-surface-soft, #1e293b) !important; }
       html.theme-dark [id^="modal"] :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-slate-600, .text-slate-500, .text-slate-400, .text-indigo-700),
@@ -367,7 +366,6 @@
     .search-box input { padding: .38rem .6rem .38rem 1.75rem; border: 1px solid var(--line); border-radius: 10px; background: #fffefa; font-size: 12px; width: 190px; max-width: 100%; }
     .sort-btn { padding: .35rem .65rem; border: 1px solid var(--line); border-radius: 10px; background: #f5f4ef; color: var(--brand-deep); font-size: 12px; font-weight: 600; cursor: pointer; }
     .sort-btn:hover { background: var(--brand-soft); }
-    .tour-overlay.hidden { display: none; }
     .student-name-field { flex: 1 1 11rem; min-width: 0; max-width: 100%; }
     .student-add-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: .5rem; }
     .student-add-row input { width: 100%; }
@@ -588,16 +586,7 @@
       .custom-rubric-footer { align-items: stretch; flex-direction: column; }
       .custom-rubric-actions { width: 100%; justify-content: flex-end; }
     }
-    .tour-overlay { position: fixed; inset: 0; z-index: 110; pointer-events: auto; }
-    .tour-highlight { position: fixed; border: 2px solid var(--brand); border-radius: 10px; box-shadow: 0 0 0 9999px rgba(15, 23, 42, .68); pointer-events: none; }
-    .tour-card { position: fixed; width: min(360px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow: auto; padding: 1rem; border-radius: 14px; background: var(--surface, #ffffff); color: var(--ink, #1e293b); box-shadow: 0 10px 35px rgba(0, 0, 0, .25); }
-    .tour-card h2 { font-size: 1.05rem; font-weight: 800; margin: .25rem 0 .45rem; }
-    .tour-card p { font-size: .9rem; line-height: 1.45; color: var(--muted, #475569); }
-    .tour-actions { display: flex; flex-wrap: wrap; justify-content: space-between; gap: .5rem; margin-top: .9rem; }
-    .tour-actions button { padding: .45rem .7rem; border-radius: 8px; font-size: .82rem; font-weight: 700; }
-    #tourNext { background: var(--brand); color: white; }
-    #tourSkip { color: var(--brand-deep); background: var(--brand-soft); }
-    @media print { #viewHome, .tour-overlay { display: none !important; } }
+    @media print { #viewHome { display: none !important; } }
     .comp-comment { margin-top: .75rem; border: 1px solid var(--line); border-radius: 12px; background: #fffefa; padding: .65rem .75rem; }
     .comp-comment-head { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; margin-bottom: .4rem; font-size: 12px; font-weight: 700; color: var(--brand-deep); }
     .comp-comment textarea { width: 100%; min-height: 86px; border: 1px solid var(--line); border-radius: 10px; padding: .5rem .6rem; font-size: 13px; line-height: 1.5; background: #fff; resize: vertical; }

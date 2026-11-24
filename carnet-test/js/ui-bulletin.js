@@ -1000,6 +1000,7 @@
         });
         competencyDetails.addEventListener('mouseleave', () => highlightSiblings(null));
       }
+      if (typeof window !== 'undefined' && window.ErikaTour) window.ErikaTour.onAppRender();
     }
 
     // =========================================================================

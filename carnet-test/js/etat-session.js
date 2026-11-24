@@ -266,10 +266,13 @@
       return false;
     }
 
+    let gradebookTransitionTimer = null;
+
     function navigateToView(viewId, updateState, options = {}) {
       const continueNavigation = () => {
         const changedView = appState.activeView !== viewId;
         const previousSubjectId = appState.activeSubjectId;
+        const previousTerm = appState.activeTerm;
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
           competencyPanelOpen = false;
         }
@@ -277,16 +280,19 @@
         if (updateState) updateState();
         const changedSubject = viewId === 'viewGradebook'
           && previousSubjectId !== appState.activeSubjectId;
+        const changedTerm = viewId === 'viewGradebook'
+          && previousTerm !== appState.activeTerm;
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport' || viewId === 'viewHome') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderAll();
-        if (changedSubject) {
+        if (changedSubject || changedTerm) {
           const gradebook = document.getElementById('viewGradebook');
           if (gradebook) {
+            clearTimeout(gradebookTransitionTimer);
             gradebook.classList.remove('is-subject-changing');
             void gradebook.offsetWidth;
             gradebook.classList.add('is-subject-changing');
-            window.setTimeout(() => gradebook.classList.remove('is-subject-changing'), 120);
+            gradebookTransitionTimer = window.setTimeout(() => gradebook.classList.remove('is-subject-changing'), 180);
           }
         }
         if (!options.skipScrollTop && (changedView || updateState)) {

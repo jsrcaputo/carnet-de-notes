@@ -7,8 +7,10 @@
       renderTermSwitcher();
       renderSubjectTabs();
       renderNavTabs();
+      if (typeof updateSidebarDashboardBadge === 'function') updateSidebarDashboardBadge();
       if (!hasActiveGroup()) {
         renderHomeView();
+        if (typeof window !== 'undefined' && window.ErikaTour) window.ErikaTour.onAppRender();
         return;
       }
       switch (appState.activeView) {
@@ -30,6 +32,7 @@
         default:
           renderGradebookView();
       }
+      if (typeof window !== 'undefined' && window.ErikaTour) window.ErikaTour.onAppRender();
     }
 
     function renderTermSwitcher() {

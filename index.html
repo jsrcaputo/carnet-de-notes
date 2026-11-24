@@ -14,24 +14,12 @@
   <link rel="stylesheet" href="carnet-test/css/fonctionnalites.css">
   <link rel="stylesheet" href="carnet-test/css/studio.css">
   <link rel="stylesheet" href="carnet-test/css/test.css">
+  <link rel="stylesheet" href="carnet-test/css/tutoriel-erika.css">
   <script src="carnet-test/js/demarrage.js" defer></script>
   <script src="carnet-test/js/demarrage-evenements.js" defer></script>
   <script src="carnet-test/vendor/xlsx.bundle.js" defer></script>
 </head>
 <body class="min-h-screen flex flex-col">
-  <div id="tutorialOverlay" class="tour-overlay hidden no-print" role="dialog" aria-modal="true" aria-labelledby="tourTitle">
-    <div id="tourHighlight" class="tour-highlight" aria-hidden="true"></div>
-    <div id="tourCard" class="tour-card">
-      <div id="tourProgress" class="text-xs font-bold text-slate-500"></div>
-      <h2 id="tourTitle"></h2>
-      <p id="tourDescription"></p>
-      <div class="tour-actions">
-        <button id="tourSkip" type="button">Passer le tutoriel</button>
-        <button id="tourNext" type="button">Suivant →</button>
-      </div>
-    </div>
-  </div>
-
   <aside class="test-sidebar no-print" aria-label="Navigation principale">
     <button id="btnSidebarBrandHome" type="button" class="test-sidebar-brand" title="Retourner à la page principale" aria-label="Carnet de notes 2026-2027 — Retourner à la page principale">
       <span class="brand-heading">Carnet de notes</span>
@@ -42,7 +30,8 @@
         <nav class="test-sidebar-nav" aria-label="Tableau de bord">
           <button id="btnSidebarDashboard" type="button" aria-pressed="false">
             <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
-            <span>Tableau de bord</span>
+            <span id="sidebarDashboardLabel">Bilan de classe</span>
+            <span id="sidebarDashboardBadge" class="sidebar-dash-badge hidden" aria-hidden="true"></span>
           </button>
         </nav>
         <div class="test-sidebar-heading sidebar-legacy-group">
@@ -78,6 +67,10 @@
       </section>
     </div>
     <nav class="test-sidebar-footer test-sidebar-nav" aria-label="Informations et aide">
+      <button id="btnErikaGuide" type="button" title="Afficher les repères d’Erika pour cette page">
+        <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.75 9.5a2.35 2.35 0 0 1 4.55.8c0 1.4-2.3 1.85-2.3 3.2"/><path d="M12 16.8h.01"/></svg>
+        <span>Guide d’Erika</span>
+      </button>
       <a class="feedback-link" href="mailto:support@carnetdenotes.ca?subject=Suggestion%20pour%20Carnet%20de%20notes" title="Écrire à Carnet de notes">
         <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
         <span>Contact</span>
@@ -145,12 +138,12 @@
             </button>
             <div id="printMenu" class="print-menu hidden no-print" role="menu" aria-label="Options d’impression"></div>
           </div>
-          <button id="btnExportExcel" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-2xs cursor-pointer" aria-label="Exporter le carnet en Excel" title="Télécharger tout le carnet formaté en fichier Excel (.xlsx)">
+          <button id="btnExportExcel" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white shadow-2xs cursor-pointer" aria-label="Exporter ce groupe en Excel" title="Exporter le groupe affiché en fichier Excel (.xlsx)">
             <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="4" width="17" height="16" rx="2"/><path d="M3.5 10h17M3.5 15h17M10 4v16"/></svg>
             <span>Exporter</span>
           </button>
 
-          <button id="btnExportJSON" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" aria-label="Sauvegarder le carnet" title="Télécharger un fichier de sauvegarde (.json)">
+          <button id="btnExportJSON" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition cursor-pointer" aria-label="Sauvegarder le carnet" title="Sauvegarder le carnet dans un fichier (.json)">
             <svg class="hdr-ico ico-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 3h11l3 3v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M8 3v5h7V3"/><rect x="7.5" y="13" width="9" height="6" rx="1"/></svg>
             <span>Sauvegarder</span>
           </button>
@@ -158,8 +151,8 @@
             <svg class="hdr-ico ico-load" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v1H7.5a2 2 0 0 0-1.9 1.4L3 18z"/><path d="M3 18l2.6-7.6A2 2 0 0 1 7.5 9H22l-2.4 8.2a2 2 0 0 1-1.9 1.4H3"/></svg>
             <span>Charger</span>
           </button>
-          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="À quoi ça sert ?" title="À quoi ça sert ?">?</button>
-          <button id="btnCloseCarnet" type="button" class="hdr-close-button inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer" aria-label="Fermer le carnet et effacer les données de cet onglet" title="Fermer le carnet après confirmation" disabled>
+          <button id="btnBackupHelp" type="button" class="hdr-icobtn" aria-label="Comment sauvegarder mon carnet ?" title="Comment sauvegarder mon carnet ?">?</button>
+          <button id="btnCloseCarnet" type="button" class="hdr-close-button inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer" aria-label="Fermer le carnet et effacer les données de cet onglet" title="Fermer le carnet et effacer les données de cet onglet" disabled>
             <svg class="hdr-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17"/></svg>
             <span>Fermer</span>
           </button>
@@ -230,6 +223,10 @@
                   <button id="btnDeleteLegacyBrowser" type="button" class="sort-btn">Effacer l’ancienne copie du navigateur</button>
                 </div>
               </div>
+              <div class="sp-title" style="margin-top:.7rem">Guide d’Erika</div>
+              <div class="sp-backup-actions">
+                <button id="btnErikaLaunchHere" type="button" class="sort-btn">Afficher sur cette page</button>
+              </div>
             </div>
           </div>
           <span class="hdr-sep" aria-hidden="true"></span>
@@ -267,6 +264,7 @@
             </div>
             <nav class="home-portal-links" aria-label="Informations et aide">
               <button id="homeBtnReturnDashboard" type="button" hidden>Revenir au tableau de bord</button>
+              <button id="homeBtnErikaGuide" type="button">Visite guidée</button>
               <button id="homeBtnPrivacy" type="button">Confidentialité</button>
               <a href="mailto:support@carnetdenotes.ca?subject=Suggestion%20pour%20Carnet%20de%20notes">Contact</a>
             </nav>
@@ -365,17 +363,27 @@
         </div>
       </div>
 
-      <!-- ÉTAT 2 : TABLEAU DE BORD DE SESSION (CARNET OUVERT) -->
+      <!-- ÉTAT 2 : BILAN DE CLASSE / TABLEAU DE BORD DE SESSION -->
       <div id="homeDashboard" class="home-dashboard" hidden>
         <div class="dash-header">
           <div>
-            <h2 class="dash-title">Tableau de bord</h2>
+            <h2 id="dashTitle" class="dash-title">Bilan de classe</h2>
             <p id="dashSummaryMeta" class="dash-subtitle"></p>
           </div>
-          <div class="dash-term-picker" role="group" aria-label="Étape affichée dans le tableau de bord">
-            <button type="button" data-dash-term="1" aria-pressed="false">Étape 1</button>
-            <button type="button" data-dash-term="2" aria-pressed="false">Étape 2</button>
-            <button type="button" data-dash-term="3" aria-pressed="false">Étape 3</button>
+          <div class="dash-header-controls">
+            <div class="dash-term-picker" role="group" aria-label="Étape affichée dans le bilan">
+              <button type="button" data-dash-term="1" aria-pressed="false">Étape 1</button>
+              <button type="button" data-dash-term="2" aria-pressed="false">Étape 2</button>
+              <button type="button" data-dash-term="3" aria-pressed="false">Étape 3</button>
+            </div>
+            <button id="dashPrivacyToggle" type="button" class="dash-privacy-btn" aria-pressed="false" title="Masquer temporairement les notes et pourcentages à l’écran (pratique sur un TNI)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+              <span>Masquer les notes</span>
+            </button>
+            <button id="dashBtnResumeWork" type="button" class="home-btn home-btn-primary home-btn-sm">
+              <span>Reprendre le carnet</span>
+              <span class="home-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
         </div>
 
@@ -390,38 +398,73 @@
               <h3 id="dashOverviewHeading">Portrait de la classe</h3>
               <p id="dashOverviewMeta" class="dash-panel-sub"></p>
             </div>
-            <div id="dashProfileChips" class="dash-profile-chips"></div>
+            <div id="dashTabs" class="dash-tabs" role="tablist" aria-label="Vues du bilan de classe">
+              <button id="dashTabBtnTodo" type="button" role="tab" data-dash-tab="todo" aria-selected="true" aria-controls="dashPanelTodo">
+                <span>À faire</span>
+                <span id="dashTabTodoCount" class="dash-tab-badge">0</span>
+              </button>
+              <button id="dashTabBtnStudents" type="button" role="tab" data-dash-tab="students" aria-selected="false" aria-controls="dashPanelStudents">
+                <span>Vigie élèves</span>
+                <span id="dashTabWatchCount" class="dash-tab-badge">0</span>
+              </button>
+            </div>
           </div>
 
-          <div id="dashQuickActions" class="dash-quick-actions" aria-label="Raccourcis utiles">
-            <button type="button" data-dash-action="students" class="dash-quick-action">
-              <span>Élèves</span>
-              <small>Ajouter ou modifier</small>
-            </button>
-            <button type="button" data-dash-action="gradebook" class="dash-quick-action">
-              <span>Carnet</span>
-              <small>Saisir les résultats</small>
-            </button>
-            <button type="button" data-dash-action="new-evaluation" class="dash-quick-action">
-              <span>Nouvelle évaluation</span>
-              <small>Ajouter un travail</small>
-            </button>
-            <button type="button" data-dash-action="comments" class="dash-quick-action">
-              <span>Commentaires</span>
-              <small>Compléter le bulletin</small>
+          <div id="dashEmptyState" class="dash-empty-state hidden">
+            <div class="dash-empty-copy">
+              <h4>Votre groupe est prêt à démarrer</h4>
+              <ol>
+                <li>Ajoutez vos élèves et choisissez leur niveau scolaire (avec des prénoms ou initiales anonymisés).</li>
+                <li>Créez une première évaluation ou une grille d’observation dans une compétence.</li>
+                <li>Enregistrez une copie sur votre appareil avec <strong>Sauvegarder</strong> dans la barre du haut.</li>
+              </ol>
+            </div>
+            <button id="dashBtnAddStudents" type="button" class="home-btn home-btn-primary home-btn-sm">
+              <span>Ajouter des élèves</span>
+              <span class="home-arrow" aria-hidden="true">→</span>
             </button>
           </div>
 
-          <div id="dashKpiStrip" class="dash-kpi-strip"></div>
+          <div id="dashPanelTodo" class="dash-tab-panel" role="tabpanel" aria-labelledby="dashTabBtnTodo">
+            <div id="dashBlockersWrap" class="dash-subblock hidden">
+              <h4 class="dash-subblock-title">À débloquer</h4>
+              <div id="dashBlockersList" class="dash-action-list"></div>
+            </div>
 
-          <div id="dashSubjectsWrap" class="dash-subblock">
-            <h4 class="dash-subblock-title">Avancement par matière</h4>
-            <div id="dashSubjectsGrid" class="dash-subjects-grid"></div>
+            <div id="dashInProgressWrap" class="dash-subblock">
+              <h4 id="dashInProgressTitle" class="dash-subblock-title">Corrections et grilles en cours</h4>
+              <div id="dashInProgressList" class="dash-action-list"></div>
+            </div>
+
+            <div id="dashFollowupsWrap" class="dash-subblock hidden">
+              <div class="dash-subblock-head">
+                <h4 class="dash-subblock-title">Reprises et travaux non remis</h4>
+                <div class="dash-mini-seg" role="group" aria-label="Regrouper les reprises">
+                  <button type="button" data-dash-followup-mode="student" aria-pressed="true">Par élève</button>
+                  <button type="button" data-dash-followup-mode="assignment" aria-pressed="false">Par évaluation</button>
+                </div>
+              </div>
+              <div id="dashFollowupsList" class="dash-action-list"></div>
+              <p id="dashJustifiedNote" class="dash-justified-note hidden"></p>
+            </div>
+
+            <div id="dashCompetenciesWrap" class="dash-subblock">
+              <h4 id="dashCompetenciesTitle" class="dash-subblock-title">Couverture de l’étape par compétence</h4>
+              <div id="dashCompetenciesList" class="dash-comp-list"></div>
+            </div>
+
+            <div id="dashCommentsPriorityWrap" class="dash-subblock hidden">
+              <h4 class="dash-subblock-title">Commentaires prioritaires avant le bulletin</h4>
+              <div id="dashCommentsPriorityList" class="dash-action-list"></div>
+            </div>
           </div>
 
-          <div id="dashFollowupsWrap" class="dash-subblock hidden">
-            <h4 class="dash-subblock-title">Travaux en suivi</h4>
-            <div id="dashFollowupsList" class="dash-followups-list"></div>
+          <div id="dashPanelStudents" class="dash-tab-panel hidden" role="tabpanel" aria-labelledby="dashTabBtnStudents">
+            <div class="dash-radar-toolbar">
+              <div id="dashRadarFilters" class="dash-radar-filters" role="group" aria-label="Filtrer les élèves"></div>
+              <div id="dashRadarLevelFilter" class="dash-mini-seg hidden" role="group" aria-label="Filtrer par niveau scolaire"></div>
+            </div>
+            <div id="dashRadarList" class="dash-radar-list"></div>
           </div>
         </section>
 
@@ -1024,28 +1067,28 @@
     <div class="backup-dialog-heading">
       <div>
         <h2 id="saveBackupTitle">Sauvegarder le carnet</h2>
-        <p>Choisissez le type de fichier à créer.</p>
+        <p>Enregistrez tous vos groupes dans un fichier de sauvegarde (.json).</p>
       </div>
       <button id="btnCloseSaveBackup" type="button" class="backup-dialog-close" aria-label="Fermer">×</button>
     </div>
     <div class="backup-save-options">
       <button id="btnSaveJSONNormal" type="button" class="backup-save-option">
         <strong>Sauvegarde normale</strong>
-        <span>Fichier JSON permettant de rouvrir et de mettre à jour le carnet. Son contenu est lisible si le fichier est ouvert directement.</span>
+        <span>Fichier de sauvegarde (.json) sans mot de passe pour rouvrir et mettre à jour le carnet. Son contenu n’est pas chiffré.</span>
       </button>
       <button id="btnSaveJSONEncrypted" type="button" class="backup-save-option">
         <strong>Sauvegarde chiffrée</strong>
-        <span>Copie JSON protégée par mot de passe. Le carnet pourra la rouvrir avec ce même mot de passe.</span>
+        <span>Fichier de sauvegarde (.json) protégé par mot de passe. Sur Chrome et Edge, les changements peuvent aussi s’y enregistrer automatiquement.</span>
       </button>
     </div>
-    <p class="sp-backup-notice">Les deux formats conservent le carnet complet. Une copie chiffrée est préférable pour un fichier conservé sur une clé, un appareil partagé ou un emplacement moins sûr.</p>
+    <p class="sp-backup-notice">Les deux options conservent le carnet complet (tous vos groupes). Privilégiez la sauvegarde chiffrée sur une clé USB ou un appareil partagé.</p>
   </dialog>
 
   <dialog id="exportExcelDialog" class="backup-dialog no-print" aria-labelledby="exportExcelTitle">
     <div class="backup-dialog-heading">
       <div>
-        <h2 id="exportExcelTitle">Exporter le carnet en Excel</h2>
-        <p>Choisissez le type de classeur à créer.</p>
+        <h2 id="exportExcelTitle">Exporter ce groupe en Excel</h2>
+        <p>Choisissez le type de classeur à créer pour le groupe affiché.</p>
       </div>
       <button id="btnCloseExportExcel" type="button" class="backup-dialog-close" aria-label="Fermer">×</button>
     </div>
@@ -1059,7 +1102,7 @@
         <span>Classeur .xlsx qui demande le mot de passe directement dans Excel.</span>
       </button>
     </div>
-    <p class="sp-backup-notice">Les deux exports servent à consulter les données. Pour rouvrir le carnet plus tard, utilisez la sauvegarde JSON.</p>
+    <p class="sp-backup-notice">L’export Excel sert à consulter ou analyser le groupe affiché. Pour rouvrir votre carnet plus tard, utilisez le bouton Sauvegarder (.json).</p>
   </dialog>
 
   <dialog id="privacyPolicyDialog" class="privacy-policy-dialog no-print" aria-labelledby="privacyPolicyTitle">
@@ -1072,23 +1115,44 @@
 
   <dialog id="backupHelpDialog" class="backup-dialog no-print" aria-labelledby="backupHelpTitle">
     <div class="backup-dialog-heading">
-      <h2 id="backupHelpTitle">Comment sauvegarder mon carnet?</h2>
+      <h2 id="backupHelpTitle">Comment sauvegarder mon carnet ?</h2>
       <button id="btnCloseBackupHelp" type="button" class="backup-dialog-close" aria-label="Fermer">×</button>
     </div>
     <div class="backup-help-content">
-      <p>Votre fichier <strong>.json</strong> contient votre carnet : groupes, élèves, résultats et commentaires. Gardez-le dans un endroit sûr.</p>
-      <ol>
-        <li><strong>Pour commencer :</strong> cliquez sur « Sauvegarder » et choisissez où conserver votre fichier. Si le navigateur télécharge plutôt le fichier, retrouvez-le dans Téléchargements.</li>
-        <li><strong>Pendant votre travail :</strong> vérifiez le message en haut. « Fichier lié » signifie que vos changements sont enregistrés dans ce fichier. Si aucun fichier n’est lié, cliquez à nouveau sur « Sauvegarder » après vos modifications.</li>
-        <li><strong>Pour reprendre :</strong> à votre retour, cliquez sur « Charger » et choisissez votre fichier .json. Si demandé, cliquez sur « Sauvegarder » pour autoriser les changements dans ce fichier.</li>
-        <li><strong>Pour fermer le carnet :</strong> utilisez « Fermer » après « Charger ». Une confirmation s’affiche : sauvegardez d’abord si nécessaire, puis confirmez pour effacer les données de cet onglet, notamment sur un poste partagé.</li>
-      </ol>
-      <p>La liaison dépend du navigateur et des permissions de votre école. Si elle n’est pas offerte, téléchargez une nouvelle copie après vos changements. Conservez une copie de secours dans un endroit autorisé et sûr.</p>
-      <p>Le carnet reste en mémoire dans l’onglet ouvert, mais il n’est plus enregistré automatiquement dans le navigateur. Avant de fermer ou d’actualiser la page, vérifiez que le fichier est sauvegardé. Pour reprendre, chargez votre fichier.</p>
-      <p>Le fichier Excel sert à consulter les résultats : il ne remplace pas le fichier .json et ne permet pas de rouvrir le carnet.</p>
+      <p>Carnet de notes n’enregistre pas vos élèves sur un serveur en ligne ni dans votre navigateur : tout reste dans votre onglet ouvert. Pour conserver votre travail d’une séance à l’autre, enregistrez-le dans un <strong>fichier de sauvegarde</strong> (<code>.json</code>) : il contient <strong>tous vos groupes</strong>, vos élèves, vos résultats, vos observations et vos commentaires.</p>
+
+      <h4>1. Enregistrer la première fois</h4>
+      <p>Cliquez sur <strong>Sauvegarder</strong> dans la barre du haut, puis choisissez <strong>Sauvegarde normale</strong> (ou <strong>Sauvegarde chiffrée</strong> avec mot de passe). Rangez le fichier dans un dossier dédié sur votre appareil ou dans l’espace approuvé par votre établissement.</p>
+
+      <h4>2. En cours de travail : selon votre navigateur</h4>
+      <p>Vérifiez le statut affiché à droite des boutons en haut :</p>
+      <ul>
+        <li><strong>Sur Chrome ou Edge (sur ordinateur) :</strong> une fois enregistré, votre fichier reste normalement <strong>lié</strong> au carnet (<em>« Fichier lié »</em>) et vos changements suivants s’y enregistrent automatiquement. <em>(Si le statut indique « Lecture seule », cliquez sur <strong>Sauvegarder</strong> pour autoriser la mise à jour.)</em></li>
+        <li><strong>Sur Safari, Firefox, tablette ou poste restreint :</strong> chaque clic sur <strong>Sauvegarder</strong> télécharge une nouvelle copie dans votre dossier <strong>Téléchargements</strong> (<em>« Copie téléchargée : non liée »</em>). Recliquez sur <strong>Sauvegarder</strong> après vos modifications importantes et gardez la copie la plus récente.</li>
+      </ul>
+      <p class="backup-help-tip">Avant de fermer ou d’actualiser la page, le navigateur vous avertit s’il reste des changements non enregistrés.</p>
+
+      <h4>3. Reprendre votre carnet — ou changer d’appareil</h4>
+      <ul>
+        <li><strong>Sur l’écran d’accueil :</strong> cliquez sur <strong>Charger un fichier</strong> ou glissez-déposez votre fichier <code>.json</code> dans <em>Reprendre un carnet</em>.</li>
+        <li><strong>Si un carnet est déjà ouvert :</strong> cliquez sur <strong>Charger</strong> en haut (le fichier choisi remplace alors le carnet affiché).</li>
+        <li><strong>Classe ↔ maison :</strong> transférez votre fichier <code>.json</code> par un moyen autorisé par votre établissement (espace infonuagique du CSS, clé USB), puis ouvrez-le avec <strong>Charger</strong>. Évitez d’ouvrir le même fichier dans deux onglets en même temps.</li>
+      </ul>
+
+      <h4>4. Faire une copie de sécurité</h4>
+      <p>Une fois par semaine — ou avant les bulletins — enregistrez une deuxième copie de votre fichier <code>.json</code> à un autre endroit sûr (espace OneDrive ou Google Drive du CSS, ou clé USB rangée en sécurité).</p>
+
+      <h4>Sauvegarde vs Excel : quelle différence ?</h4>
+      <p>Le bouton <strong>Exporter</strong> crée un fichier Excel (<code>.xlsx</code>) pour consulter ou imprimer les résultats du <strong>groupe affiché</strong>. Il ne permet pas de rouvrir le carnet : seul le fichier de sauvegarde (<code>.json</code>) permet de reprendre votre travail.</p>
+
       <details><summary><strong>Protéger mes fichiers avec un mot de passe</strong></summary>
-        <p>Cliquez sur « Sauvegarder », puis choisissez « Sauvegarde chiffrée ». Saisissez deux fois un mot de passe de 12 caractères ou plus, puis cliquez sur « Continuer ». Pour l’ouvrir, utilisez « Charger » et le même mot de passe. Un mot de passe perdu rend ce fichier irrécupérable. Cette opération ne protège pas les copies déjà créées.</p>
-        <p>Pour un fichier Excel protégé, cliquez sur « Exporter », puis choisissez « Excel protégé ». Le mot de passe est demandé directement dans Excel. Les exports ordinaires ne sont pas protégés.</p>
+        <p><strong>Sauvegarde chiffrée (<code>.json</code>) :</strong> cliquez sur <strong>Sauvegarder</strong>, puis <strong>Sauvegarde chiffrée</strong>. Choisissez un mot de passe d’au moins 12 caractères et confirmez-le. Il sera demandé lorsque vous rouvrirez ce fichier avec <strong>Charger</strong>. Un mot de passe oublié rend le fichier irrécupérable ; les copies non chiffrées créées auparavant restent inchangées.</p>
+        <p><strong>Excel protégé (<code>.xlsx</code>) :</strong> cliquez sur <strong>Exporter</strong>, puis <strong>Excel protégé</strong> (12 à 255 caractères). Le mot de passe sera demandé directement à l’ouverture dans Excel.</p>
+      </details>
+
+      <details><summary><strong>Sur un poste partagé ou pour délier un fichier</strong></summary>
+        <p>Avant de quitter un ordinateur partagé, enregistrez votre fichier à l’endroit prévu, cliquez sur <strong>Fermer</strong> dans la barre du haut puis <strong>fermez l’onglet du navigateur</strong>. Si une copie a été téléchargée sur ce poste, supprimez-la du dossier <strong>Téléchargements</strong>.</p>
+        <p>Pour arrêter la sauvegarde automatique vers un fichier lié, ouvrez les <strong>Options</strong> (icône d’engrenage en haut à droite) et cliquez sur <strong>Délier le fichier</strong>.</p>
       </details>
     </div>
     <div class="backup-dialog-actions"><button id="btnDoneBackupHelp" type="button" class="backup-dialog-primary">J’ai compris</button></div>
@@ -1247,7 +1311,7 @@
   </dialog>
 
   <dialog id="backupLoadDialog" class="backup-dialog no-print" role="alertdialog" aria-labelledby="backupLoadTitle" aria-describedby="backupLoadMessage">
-    <div class="backup-dialog-heading"><h2 id="backupLoadTitle">Charger un autre carnet?</h2></div>
+    <div class="backup-dialog-heading"><h2 id="backupLoadTitle">Charger un autre carnet ?</h2></div>
     <p id="backupLoadMessage">Le fichier choisi remplacera le carnet actuellement affiché. Si vos dernières modifications ne sont pas sauvegardées dans un fichier, elles seront perdues. Vous pouvez annuler et cliquer sur « Sauvegarder » d’abord.</p>
     <div class="backup-dialog-actions">
       <button id="btnCancelBackupLoad" type="button" class="backup-dialog-secondary" autofocus>Annuler</button>
@@ -1517,5 +1581,7 @@
   <script src="carnet-test/js/ui-bulletin.js"></script>
   <script src="carnet-test/js/export-excel.js"></script>
   <script src="carnet-test/js/impression.js"></script>
+  <script src="carnet-test/js/tutoriel-erika-etapes.js"></script>
+  <script src="carnet-test/js/tutoriel-erika.js"></script>
 </body>
 </html>
