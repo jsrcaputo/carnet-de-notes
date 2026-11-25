@@ -12,6 +12,8 @@
         --brand-deep: #1e3a8a;
         --brand-soft: #eff6ff;
         --accent: #0284c7;
+        --mist-a: #38bdf8;
+        --mist-b: #818cf8;
         --studio-bg: #f1f5f9;
         --studio-surface: #fff;
         --studio-surface-soft: #f8fafc;
@@ -22,8 +24,8 @@
         --studio-accent: #1d4ed8;
         --studio-accent-deep: #1e3a8a;
         --studio-accent-soft: #eff6ff;
-        --studio-shadow-sm: 0 1px 3px rgba(15, 23, 42, .06);
-        --studio-shadow-md: 0 8px 24px -8px rgba(15, 23, 42, .12);
+        --studio-shadow-sm: 0 2px 8px -2px rgba(29, 78, 216, .08), 0 1px 2px rgba(15, 23, 42, .04);
+        --studio-shadow-md: 0 14px 32px -12px rgba(29, 78, 216, .14), 0 4px 12px -4px rgba(15, 23, 42, .05);
         --sidebar-bg-top: #f8f9fb;
         --sidebar-bg-bottom: #f1f4f8;
         --sidebar-border: #dde3ec;
@@ -41,6 +43,8 @@
         --brand-deep: #1b4632;
         --brand-soft: #e6f2eb;
         --accent: #1f7a68;
+        --mist-a: #34d399;
+        --mist-b: #38bdf8;
         --studio-bg: #f4f7f5;
         --studio-surface: #ffffff;
         --studio-surface-soft: #f7faf8;
@@ -68,6 +72,8 @@
         --brand-deep: #312e81;
         --brand-soft: #eef2ff;
         --accent: #6366f1;
+        --mist-a: #818cf8;
+        --mist-b: #c084fc;
         --studio-bg: #f3f4f8;
         --studio-surface: #ffffff;
         --studio-surface-soft: #f8f9fc;
@@ -95,6 +101,8 @@
         --brand-deep: #0c4a6e;
         --brand-soft: #edf7fc;
         --accent: #0284c7;
+        --mist-a: #38bdf8;
+        --mist-b: #2dd4bf;
         --studio-bg: #eff4f8;
         --studio-surface: #ffffff;
         --studio-surface-soft: #f7fafc;
@@ -122,6 +130,8 @@
         --brand-deep: #7f2d20;
         --brand-soft: #fdf2f0;
         --accent: #d96b43;
+        --mist-a: #f59e0b;
+        --mist-b: #f472b6;
         --studio-bg: #f6f3f1;
         --studio-surface: #ffffff;
         --studio-surface-soft: #fbf9f8;
@@ -149,6 +159,8 @@
         --brand-deep: #4a1d56;
         --brand-soft: #f8f0fa;
         --accent: #8b3d9e;
+        --mist-a: #c084fc;
+        --mist-b: #f472b6;
         --studio-bg: #f5f2f7;
         --studio-surface: #ffffff;
         --studio-surface-soft: #faf8fb;
@@ -176,6 +188,8 @@
         --brand-deep: #78350f;
         --brand-soft: #fef7ec;
         --accent: #d97706;
+        --mist-a: #fbbf24;
+        --mist-b: #fb923c;
         --studio-bg: #f6f3ee;
         --studio-surface: #ffffff;
         --studio-surface-soft: #fbf9f5;
@@ -203,6 +217,8 @@
         --brand-deep: #0f172a;
         --brand-soft: #f1f5f9;
         --accent: #475569;
+        --mist-a: #94a3b8;
+        --mist-b: #cbd5e1;
         --studio-bg: #f3f4f6;
         --studio-surface: #ffffff;
         --studio-surface-soft: #f9fafb;
@@ -230,6 +246,8 @@
         --brand: #3b82f6;
         --brand-deep: #a8c7fa;
         --brand-soft: #26364d;
+        --mist-a: #38bdf8;
+        --mist-b: #818cf8;
         --studio-bg: #131314;
         --studio-surface: #1e1f20;
         --studio-surface-soft: #292a2d;
@@ -249,6 +267,8 @@
         --brand: #3ea379;
         --brand-deep: #a7e3c8;
         --brand-soft: #1b362b;
+        --mist-a: #34d399;
+        --mist-b: #22d3ee;
         --studio-accent: #3ea379;
         --studio-accent-deep: #a7e3c8;
         --studio-accent-soft: #1b362b;
@@ -257,6 +277,8 @@
         --brand: #6366f1;
         --brand-deep: #a5b4fc;
         --brand-soft: #25274d;
+        --mist-a: #818cf8;
+        --mist-b: #c084fc;
         --studio-accent: #6366f1;
         --studio-accent-deep: #a5b4fc;
         --studio-accent-soft: #25274d;
@@ -265,6 +287,8 @@
         --brand: #0284c7;
         --brand-deep: #7dd3fc;
         --brand-soft: #163247;
+        --mist-a: #38bdf8;
+        --mist-b: #2dd4bf;
         --studio-accent: #0284c7;
         --studio-accent-deep: #7dd3fc;
         --studio-accent-soft: #163247;
@@ -273,6 +297,8 @@
         --brand: #e06d53;
         --brand-deep: #f5b0a1;
         --brand-soft: #3d241f;
+        --mist-a: #f97316;
+        --mist-b: #f472b6;
         --studio-accent: #e06d53;
         --studio-accent-deep: #f5b0a1;
         --studio-accent-soft: #3d241f;
@@ -281,6 +307,8 @@
         --brand: #a855f7;
         --brand-deep: #d8b4fe;
         --brand-soft: #362147;
+        --mist-a: #c084fc;
+        --mist-b: #f472b6;
         --studio-accent: #a855f7;
         --studio-accent-deep: #d8b4fe;
         --studio-accent-soft: #362147;
@@ -289,6 +317,8 @@
         --brand: #d97706;
         --brand-deep: #fcd34d;
         --brand-soft: #3b2a14;
+        --mist-a: #f59e0b;
+        --mist-b: #fb923c;
         --studio-accent: #d97706;
         --studio-accent-deep: #fcd34d;
         --studio-accent-soft: #3b2a14;
@@ -297,15 +327,27 @@
         --brand: #64748b;
         --brand-deep: #cbd5e1;
         --brand-soft: #272c35;
+        --mist-a: #64748b;
+        --mist-b: #94a3b8;
         --studio-accent: #64748b;
         --studio-accent-deep: #cbd5e1;
         --studio-accent-soft: #272c35;
       }
       html.design-studio body {
         padding: 0 !important;
-        background: var(--studio-bg) !important;
-        background-image: none !important;
+        background-color: var(--studio-bg) !important;
+        background-image:
+          radial-gradient(ellipse 68% 48% at 14% -6%, color-mix(in srgb, var(--mist-a, var(--accent)) 14%, transparent), transparent 68%),
+          radial-gradient(ellipse 62% 46% at 88% 4%, color-mix(in srgb, var(--mist-b, var(--brand)) 11%, transparent), transparent 66%),
+          linear-gradient(165deg, color-mix(in srgb, var(--mist-a, var(--brand)) 5%, var(--studio-bg)) 0%, var(--studio-bg) 52%, color-mix(in srgb, var(--mist-b, var(--brand)) 6%, var(--studio-bg)) 100%) !important;
+        background-attachment: fixed !important;
         color: var(--studio-text) !important;
+      }
+      html.design-studio.theme-dark body {
+        background-image:
+          radial-gradient(ellipse 65% 48% at 16% -6%, color-mix(in srgb, var(--mist-a, var(--brand)) 14%, transparent), transparent 68%),
+          radial-gradient(ellipse 58% 46% at 88% 4%, color-mix(in srgb, var(--mist-b, var(--brand)) 11%, transparent), transparent 68%),
+          linear-gradient(165deg, color-mix(in srgb, var(--mist-a, var(--brand)) 4%, var(--studio-bg)) 0%, var(--studio-bg) 56%, color-mix(in srgb, var(--mist-b, var(--brand)) 5%, var(--studio-bg)) 100%) !important;
       }
       #printMeta { display: none; }
       html.design-studio body, html.design-studio button, html.design-studio input, html.design-studio select, html.design-studio textarea { font-family: "Segoe UI", system-ui, sans-serif; }
@@ -324,7 +366,7 @@
         width: 246px;
         padding: 1rem .85rem;
         overflow-y: auto;
-        background: var(--sidebar-bg-top, #f8f9fb);
+        background: linear-gradient(180deg, var(--sidebar-bg-top, #f8f9fb) 0%, var(--sidebar-bg-bottom, #f1f4f8) 100%);
         border-right: 1px solid var(--sidebar-border, #dde3ec);
         box-shadow: none;
       }
@@ -3288,7 +3330,11 @@ html.design-studio.no-active-group header.test-topbar {
 }
 html.design-studio.no-active-group body {
   background-image:
-    radial-gradient(ellipse 90% 55% at 50% -10%, color-mix(in srgb, var(--brand) 7.5%, transparent), transparent 70%) !important;
+    radial-gradient(ellipse 64% 52% at 18% 8%, color-mix(in srgb, var(--mist-a, var(--accent)) 18%, transparent), transparent 68%),
+    radial-gradient(ellipse 58% 50% at 86% 14%, color-mix(in srgb, var(--mist-b, var(--brand)) 15%, transparent), transparent 68%),
+    radial-gradient(ellipse 52% 40% at 50% 96%, color-mix(in srgb, var(--mist-a, var(--brand)) 9%, transparent), transparent 72%),
+    linear-gradient(155deg, color-mix(in srgb, var(--mist-a, var(--brand)) 6%, var(--studio-bg)) 0%, var(--studio-bg) 48%, color-mix(in srgb, var(--mist-b, var(--brand)) 8%, var(--studio-bg)) 100%) !important;
+  background-attachment: fixed !important;
 }
 html.design-studio.no-active-group main.site-layout {
   width: 100% !important;
@@ -3298,12 +3344,16 @@ html.design-studio.no-active-group main.site-layout {
   min-height: 100dvh;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  padding: clamp(1.25rem, 3.5vw, 2.5rem) clamp(1rem, 3vw, 1.75rem) !important;
+  justify-content: flex-start;
+  padding: 0 !important;
 }
 html.design-studio.no-active-group #viewHome {
   position: relative;
   isolation: isolate;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
   animation: homeInterfaceReveal .35s ease-out both;
 }
 #viewHome::before {
@@ -3760,7 +3810,7 @@ html.design-studio.theme-dark .home-legacy-banner {
   overflow: hidden;
   height: 0;
   opacity: 0;
-  margin-top: -1.35rem;
+  margin-top: -1rem;
   pointer-events: none;
   will-change: height, opacity;
   transition: height .28s cubic-bezier(.22, .68, .32, 1), opacity .22s ease, margin-top .28s cubic-bezier(.22, .68, .32, 1);
@@ -3918,10 +3968,20 @@ html.design-studio.theme-dark .home-legacy-banner {
 
 /* Accueil — mêmes surfaces et boutons que le reste de l’application */
 .home-portal {
-  width: min(100%, 1120px);
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+html.no-active-group #homePortal {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
 }
 .home-portal-shell {
-  gap: 1.2rem;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -3929,16 +3989,36 @@ html.design-studio.theme-dark .home-legacy-banner {
   box-shadow: none;
 }
 .home-portal-header {
-  padding-bottom: 1rem;
+  width: 100%;
+  padding: 1.05rem clamp(1.25rem, 2.4vw, 2rem);
+  border-bottom: 0;
+}
+html:not(.no-active-group) .home-portal-header {
+  padding: .15rem 0 .75rem;
+}
+.home-portal-main {
+  flex: 1 1 auto;
+  width: min(100%, 920px);
+  margin: 0 auto;
+  padding: clamp(1.25rem, 3vw, 2.25rem) clamp(1rem, 3vw, 1.5rem) clamp(2.5rem, 6vw, 4.5rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+}
+html:not(.no-active-group) .home-portal-main {
+  justify-content: flex-start;
+  padding: 1rem 0 2rem;
 }
 .home-welcome {
-  padding: .1rem 0 .25rem;
+  padding: 0;
 }
 .home-welcome h2 {
   margin: 0;
   color: var(--studio-text);
-  font-size: clamp(1.25rem, 2.5vw, 1.55rem);
-  font-weight: 650;
+  font-size: clamp(1.25rem, 2.2vw, 1.48rem);
+  font-weight: 800;
+  letter-spacing: -.015em;
   line-height: 1.25;
 }
 .home-welcome p {
@@ -3950,7 +4030,7 @@ html.design-studio.theme-dark .home-legacy-banner {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   align-items: stretch;
-  gap: .85rem;
+  gap: 1rem;
 }
 .home-action-card {
   display: flex;
@@ -3959,15 +4039,19 @@ html.design-studio.theme-dark .home-legacy-banner {
   flex-direction: column;
   align-items: flex-start;
   gap: .7rem;
-  padding: 1.1rem;
+  padding: 1.25rem 1.3rem;
   border: 1px solid var(--studio-border);
-  border-radius: 12px;
-  background: var(--studio-surface);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--studio-surface) 90%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--studio-shadow-sm);
-  transition: border-color .15s ease, box-shadow .15s ease;
+  transition: transform .18s cubic-bezier(.22, .68, .32, 1), border-color .16s ease, box-shadow .18s ease, background-color .16s ease;
 }
 .home-action-card:hover {
-  border-color: var(--studio-border-strong);
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--brand) 30%, var(--studio-border));
+  box-shadow: 0 12px 26px -10px color-mix(in srgb, var(--brand) 18%, rgba(15, 23, 42, .12));
 }
 .home-action-icon {
   display: grid;
@@ -4008,7 +4092,7 @@ html.design-studio.theme-dark .home-legacy-banner {
 .home-resume-band {
   justify-content: flex-start;
   border-style: solid;
-  background: var(--studio-surface);
+  background: color-mix(in srgb, var(--studio-surface) 90%, transparent);
 }
 .home-resume-band.is-dragover {
   border-color: var(--brand);
@@ -4023,13 +4107,20 @@ html.design-studio.theme-dark .home-legacy-banner {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: .45rem .8rem;
-  padding: .7rem .9rem;
+  justify-content: center;
+  gap: .45rem .85rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: .65rem auto 0;
+  padding: .58rem 1.05rem;
   border: 1px solid var(--studio-border);
   border-radius: 10px;
-  background: var(--studio-surface-soft);
+  background: color-mix(in srgb, var(--studio-surface) 82%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: var(--studio-shadow-sm);
   color: var(--studio-text-muted);
-  font-size: .78rem;
+  font-size: .76rem;
 }
 .home-coming-soon-label {
   padding: .18rem .45rem;
@@ -4042,7 +4133,7 @@ html.design-studio.theme-dark .home-legacy-banner {
   text-transform: uppercase;
 }
 .home-coming-soon p {
-  flex: 1 1 300px;
+  flex: 0 1 auto;
   margin: 0;
   line-height: 1.45;
 }
@@ -4054,6 +4145,8 @@ html.design-studio.theme-dark .home-legacy-banner {
   font-size: .75rem;
   font-weight: 700;
   text-decoration: none;
+  white-space: nowrap;
+  margin-left: .2rem;
 }
 .home-coming-soon a:hover {
   text-decoration: underline;
@@ -5194,12 +5287,16 @@ html.reduce-motion::view-transition-new(carnet-workspace) {
 html.reduce-motion #viewHome .home-btn,
 html.reduce-motion #viewHome .home-arrow,
 html.reduce-motion #viewHome .home-chevron,
+html.reduce-motion .home-action-card,
 html.reduce-motion .home-demo-collapse,
 html.reduce-motion .home-demo-collapse .home-demo-box,
 html.reduce-motion .dash-comp-row,
 html.reduce-motion .dash-action-row,
 html.reduce-motion .dash-group-card {
   transition-duration: .01ms !important;
+}
+html.reduce-motion .home-action-card:hover {
+  transform: none;
 }
 @media print {
   #viewHome {
