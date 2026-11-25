@@ -39,18 +39,82 @@
       renderHomeDashboard();
     }
 
-    function setDemoPanelOpen(toggleId, panelId, open) {
+    function setDemoPanelOpen(toggleId, panelId, open, immediate = false) {
       const toggle = document.getElementById(toggleId);
       const panel = document.getElementById(panelId);
       if (!toggle || !panel) return;
-      toggle.setAttribute('aria-expanded', String(!!open));
-      panel.classList.toggle('is-open', !!open);
-      panel.setAttribute('aria-hidden', String(!open));
-      if ('inert' in panel) panel.inert = !open;
+      const isOpen = !!open;
+      toggle.setAttribute('aria-expanded', String(isOpen));
+      panel.setAttribute('aria-hidden', String(!isOpen));
+      if ('inert' in panel) panel.inert = !isOpen;
+
+      if (typeof panel._collapseCleanup === 'function') {
+        panel._collapseCleanup();
+        panel._collapseCleanup = null;
+      }
+
+      const reduced = immediate || (typeof isReducedMotionEnabled === 'function' && isReducedMotionEnabled());
+      if (reduced) {
+        panel.classList.toggle('is-open', isOpen);
+        panel.style.height = isOpen ? 'auto' : '0px';
+        return;
+      }
+
+      const inner = panel.querySelector('.home-demo-collapse-inner') || panel.firstElementChild;
+      const targetHeight = inner ? Math.ceil(inner.scrollHeight) : 0;
+
+      if (isOpen) {
+        if (panel.classList.contains('is-open') && panel.style.height === 'auto') return;
+        const startHeight = Math.round(panel.getBoundingClientRect().height);
+        panel.style.height = `${startHeight}px`;
+        void panel.offsetHeight;
+        panel.classList.add('is-open');
+        panel.style.height = `${targetHeight}px`;
+
+        const finishOpen = () => {
+          panel.removeEventListener('transitionend', onEnd);
+          window.clearTimeout(fallbackTimer);
+          panel._collapseCleanup = null;
+          if (panel.classList.contains('is-open')) {
+            panel.style.height = 'auto';
+          }
+        };
+        const onEnd = event => {
+          if (event.target === panel && event.propertyName === 'height') finishOpen();
+        };
+        panel.addEventListener('transitionend', onEnd);
+        const fallbackTimer = window.setTimeout(finishOpen, 340);
+        panel._collapseCleanup = () => {
+          panel.removeEventListener('transitionend', onEnd);
+          window.clearTimeout(fallbackTimer);
+        };
+      } else {
+        if (!panel.classList.contains('is-open') && (panel.style.height === '0px' || !panel.style.height)) return;
+        const currentHeight = Math.round(panel.getBoundingClientRect().height);
+        panel.style.height = `${currentHeight}px`;
+        void panel.offsetHeight;
+        panel.classList.remove('is-open');
+        panel.style.height = '0px';
+
+        const finishClose = () => {
+          panel.removeEventListener('transitionend', onEnd);
+          window.clearTimeout(fallbackTimer);
+          panel._collapseCleanup = null;
+        };
+        const onEnd = event => {
+          if (event.target === panel && event.propertyName === 'height') finishClose();
+        };
+        panel.addEventListener('transitionend', onEnd);
+        const fallbackTimer = window.setTimeout(finishClose, 340);
+        panel._collapseCleanup = () => {
+          panel.removeEventListener('transitionend', onEnd);
+          window.clearTimeout(fallbackTimer);
+        };
+      }
     }
 
     function resetHomeDemoPanels() {
-      setDemoPanelOpen('homeDemoToggle', 'homeDemoPanel', false);
+      setDemoPanelOpen('homeDemoToggle', 'homeDemoPanel', false, true);
     }
 
     let landingPortalRequested = false;
@@ -82,7 +146,7 @@
         appState.selectedStudentId = null;
         appState.activeView = 'viewHome';
         renderAll();
-        window.scrollTo({ top: 0, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        window.scrollTo({ top: 0, behavior: isReducedMotionEnabled() ? 'auto' : 'smooth' });
       });
     }
 
@@ -170,6 +234,10 @@
         : [];
       return drafts.some(draft => draft && typeof draft === 'object' && (
         (Array.isArray(draft.checked) && draft.checked.length > 0) ||
+        (draft.criteria && typeof draft.criteria === 'object' && Object.keys(draft.criteria).length > 0) ||
+        draft.ilssPalier ||
+        draft.ilssCote ||
+        (Array.isArray(draft.quickComments) && draft.quickComments.length > 0) ||
         draft.overrideCode ||
         (Array.isArray(draft.tags) && draft.tags.length > 0) ||
         Boolean(String(draft.comment || '').trim()) ||
@@ -277,8 +345,8 @@
       const students = Array.isArray(appState.students) ? appState.students : [];
       const termData = (appState.terms && appState.terms[termId]) || { subjectData: {}, observations: [] };
       const visibleSubjects = typeof getVisibleSubjectsForContext === 'function'
-        ? getVisibleSubjectsForContext(SUBJECTS_CONFIG)
-        : SUBJECTS_CONFIG.slice();
+        ? getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(subject => !subject.isIlss)
+        : SUBJECTS_CONFIG.filter(subject => !subject.isIlss);
       const presentLevels = typeof getPresentStudentLevels === 'function'
         ? getPresentStudentLevels()
         : [];
@@ -1383,7 +1451,9 @@
       const studentCount = students.length;
 
       let levelLabel = '';
-      if (group.level && GRADE_LEVEL_LABELS[group.level]) {
+      if (group.level === 'accueil') {
+        levelLabel = 'Accueil (Multi)';
+      } else if (group.level && GRADE_LEVEL_LABELS[group.level]) {
         levelLabel = GRADE_LEVEL_LABELS[group.level];
       } else {
         const levels = [...new Set(students.map(s => String(s.gradeLevel || '')).filter(lvl => GRADE_LEVEL_LABELS[lvl]))]
@@ -1496,7 +1566,7 @@
         openBtn.addEventListener('click', () => {
           requestObservationDraftExit(() => {
             if (group.id !== appState.activeGroupId) switchGroup(group.id);
-            const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const reducedMotion = isReducedMotionEnabled();
             window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
           });
         });
@@ -1642,7 +1712,7 @@
       if (target === undefined) target = direction > 0 ? max : 0;
       target = Math.max(0, Math.min(max, target));
       if (gradebookScrollAnim) cancelAnimationFrame(gradebookScrollAnim.frame);
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      if (typeof isReducedMotionEnabled === 'function' && isReducedMotionEnabled()) {
         gradebookScrollAnim = null;
         container.scrollLeft = target;
         return;

@@ -24,6 +24,8 @@
   background: color-mix(in srgb, var(--ink, #0f172a) 32%, transparent);
   backdrop-filter: blur(5px);
   -webkit-backdrop-filter: blur(5px);
+  will-change: clip-path;
+  contain: strict;
 }
 html.design-studio.theme-dark .erika-tour-backdrop {
   background: rgba(6, 9, 13, .6);
@@ -38,8 +40,11 @@ html.design-studio.theme-dark .erika-tour-backdrop {
 
 .erika-tour-hole-guard {
   position: fixed;
+  left: 0;
+  top: 0;
   pointer-events: auto;
   background: transparent;
+  will-change: transform, width, height;
 }
 .erika-tour-root.is-interactive .erika-tour-hole-guard {
   pointer-events: none;
@@ -47,11 +52,14 @@ html.design-studio.theme-dark .erika-tour-backdrop {
 
 .erika-tour-ring {
   position: fixed;
+  left: 0;
+  top: 0;
   pointer-events: none;
   border: 2px solid var(--brand, #1d4ed8);
   box-shadow:
     0 0 0 1px color-mix(in srgb, #fff 65%, transparent),
     0 0 0 6px color-mix(in srgb, var(--brand, #1d4ed8) 22%, transparent);
+  will-change: transform, width, height;
 }
 html.design-studio.theme-dark .erika-tour-ring {
   box-shadow:
@@ -74,7 +82,11 @@ html.design-studio.theme-dark .erika-tour-ring {
   background: var(--studio-surface, #ffffff);
   color: var(--studio-text, #0f172a);
   box-shadow: 0 20px 50px rgba(15, 23, 42, .22), 0 4px 12px rgba(15, 23, 42, .08);
-  transition: transform .22s cubic-bezier(.22, .68, .32, 1), opacity .16s ease;
+  will-change: transform, opacity;
+  transition: transform .26s cubic-bezier(.22, .68, .32, 1), opacity .16s ease;
+}
+.erika-tour-card.is-sync-instant {
+  transition: none !important;
 }
 html.design-studio.theme-dark .erika-tour-card {
   box-shadow: 0 24px 60px rgba(0, 0, 0, .52), 0 4px 14px rgba(0, 0, 0, .3);
@@ -294,21 +306,20 @@ html.design-studio.theme-dark .erika-tour-card {
   }
 }
 
-:is(body.reduce-motion, :root) .erika-tour-root,
-:is(body.reduce-motion, :root) .erika-tour-card {
-  /* géré ci-dessous si mouvement réduit */
-}
-body.reduce-motion .erika-tour-root,
-body.reduce-motion .erika-tour-card,
-body.reduce-motion .erika-tour-body {
+:is(html.reduce-motion, body.reduce-motion) .erika-tour-root,
+:is(html.reduce-motion, body.reduce-motion) .erika-tour-card,
+:is(html.reduce-motion, body.reduce-motion) .erika-tour-body {
   transition-duration: .01ms !important;
 }
-@media (prefers-reduced-motion: reduce) {
-  .erika-tour-root,
-  .erika-tour-card,
-  .erika-tour-body {
-    transition-duration: .01ms !important;
-  }
+
+.erika-spotlight-target .cell-flag-trigger,
+.cell-flag-trigger.erika-spotlight-target {
+  opacity: 1 !important;
+  pointer-events: auto;
+  border-color: rgba(14, 165, 233, 0.55);
+  background: #f0f9ff;
+  color: #0369a1;
+  box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.16);
 }
 
 @media print {

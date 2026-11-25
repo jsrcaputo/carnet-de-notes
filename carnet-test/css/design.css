@@ -394,8 +394,11 @@
       .gradebook-toolbar { grid-template-rows: 1.75rem auto; }
       .gradebook-toolbar h2 { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    :is(html, body).reduce-motion *,
+    :is(html, body).reduce-motion *::before,
+    :is(html, body).reduce-motion *::after {
+      scroll-behavior: auto !important;
+      transition-duration: .01ms !important;
     }
     @media print {
       body { background: #fff !important; }

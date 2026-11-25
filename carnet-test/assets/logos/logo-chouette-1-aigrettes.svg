@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="sc1Bg" x1="14" y1="8" x2="50" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0070ba"/>
+      <stop offset="55%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="sc1Beak" x1="32" y1="30" x2="32" y2="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Ruban Signet-Chouette avec 3 micro-plumes à gauche et 2 pointes à droite (hommage subtil) -->
+  <path d="M14.5 18.2C12.2 15.8 10.6 13.5 10.5 11.7C12.3 12 14.3 13 15.9 14.4C14.3 11.5 13.5 9.1 13.8 7.5C15.5 8.2 17.5 10 18.9 12.2C18.3 9.7 18.4 7.7 19.2 6.5C20.9 7.8 22.8 10.6 24.1 14.2C28.8 15.3 35.4 15.3 40.3 14.2C41.4 10.8 42.9 8.4 44.3 7.4C45.3 8.5 45.6 10.5 45.2 12.8C46.5 11.1 48 9.9 49.4 9.5C49.9 11 49.6 13.2 48.6 15.5L50 17.5V53.2C50 54.8 48.1 55.6 46.8 54.5L33.4 43.3C32.6 42.6 31.4 42.6 30.6 43.3L17.2 54.5C15.9 55.6 14 54.8 14 53.2V20.5L14.5 18.2Z" fill="url(#sc1Bg)" stroke="#60a5fa" stroke-width="1.5" stroke-linejoin="round"/>
+
+  <!-- Disques d'observation en espace négatif -->
+  <circle cx="25" cy="27.8" r="7" fill="#f8fafc"/>
+  <circle cx="39" cy="27.8" r="7" fill="#f8fafc"/>
+
+  <!-- Pupilles -->
+  <circle cx="25.8" cy="28" r="3.1" fill="#1e3a8a"/>
+  <circle cx="38.2" cy="28" r="3.1" fill="#1e3a8a"/>
+  <circle cx="26.8" cy="26.8" r="1" fill="#bae6fd"/>
+  <circle cx="39.2" cy="26.8" r="1" fill="#bae6fd"/>
+
+  <!-- Bec losange -->
+  <path d="M32 29.8L35.2 33.8L32 38.4L28.8 33.8L32 29.8Z" fill="url(#sc1Beak)" stroke="#f8fafc" stroke-width="1.15" stroke-linejoin="round"/>
+
+  <!-- Fin rappel chevron -->
+  <path d="M23.5 39.6L32 45.8L40.5 39.6" stroke="#93c5fd" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" opacity="0.65"/>
+</svg>

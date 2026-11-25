@@ -2,11 +2,35 @@
   let activeSession = null; // { envId, steps, index }
   let syncFrame = 0;
   let spotAnimFrame = 0;
+  let swapTimer = 0;
+  let manualSyncTimer = 0;
+  let isStepTransitioning = false;
   let currentGeom = null; // { x, y, w, h, r }
   let previousFocus = null;
   let domBuilt = false;
   let resizeObserver = null;
+  let cardResizeObserver = null;
   let dialogObserver = null;
+  let activeHighlightedEls = [];
+  let observedTargetEls = [];
+
+  function clearHighlightedTargets() {
+    activeHighlightedEls.forEach((el) => {
+      if (el && el.classList) {
+        el.classList.remove('erika-spotlight-target');
+      }
+    });
+    activeHighlightedEls = [];
+  }
+
+  function clearObservedTargets() {
+    if (resizeObserver) {
+      observedTargetEls.forEach((el) => {
+        if (el) resizeObserver.unobserve(el);
+      });
+    }
+    observedTargetEls = [];
+  }
 
   let rootEl = null;
   let backdropEl = null;
@@ -26,8 +50,19 @@
   let liveEl = null;
 
   function prefersReducedMotion() {
-    return (typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
-      || document.body.classList.contains('reduce-motion');
+    if (typeof window.isReducedMotionEnabled === 'function') return window.isReducedMotionEnabled();
+    return document.documentElement.classList.contains('reduce-motion') || document.body.classList.contains('reduce-motion');
+  }
+
+  function isInsideFixedChrome(el) {
+    if (!el) return false;
+    if (el.closest('header.test-topbar, aside.test-sidebar')) return true;
+    let node = el;
+    while (node && node !== document.body && node !== document.documentElement) {
+      if (window.getComputedStyle(node).position === 'fixed') return true;
+      node = node.parentElement;
+    }
+    return false;
   }
 
   function getToursMap() {
@@ -229,7 +264,12 @@
     if (window.ResizeObserver) {
       resizeObserver = new ResizeObserver(scheduleGeometrySync);
       resizeObserver.observe(document.documentElement);
-      if (cardEl) resizeObserver.observe(cardEl);
+      if (cardEl) {
+        cardResizeObserver = new ResizeObserver(() => {
+          repositionCardOnly();
+        });
+        cardResizeObserver.observe(cardEl);
+      }
     }
 
     if (window.MutationObserver) {
@@ -297,15 +337,11 @@
     return activeSession.steps[activeSession.index] || null;
   }
 
-  function scrollTargetIntoSafeView(els) {
+  function prepareScrollPlan(els) {
     const primary = els[0];
-    if (!primary) return;
-
-    const header = document.querySelector('header.test-topbar');
-    const headerRect = (header && window.getComputedStyle(header).display !== 'none') ? header.getBoundingClientRect() : null;
-    const stickyTop = (headerRect && ['fixed', 'sticky'].includes(window.getComputedStyle(header).position))
-      ? headerRect.bottom + 14
-      : 16;
+    if (!primary) {
+      return { startScrollY: window.scrollY, targetScrollY: window.scrollY, deltaY: 0, isFixed: false };
+    }
 
     const sidebar = primary.closest('.test-sidebar');
     if (sidebar && window.getComputedStyle(sidebar).position === 'fixed') {
@@ -315,7 +351,7 @@
         const targetScroll = sidebar.scrollTop + (tRect.top - sRect.top) - 24;
         sidebar.scrollTo({ top: Math.max(0, targetScroll), behavior: 'auto' });
       }
-      return;
+      return { startScrollY: window.scrollY, targetScrollY: window.scrollY, deltaY: 0, isFixed: true };
     }
 
     const gbContainer = primary.closest('#gradebookScrollContainer');
@@ -333,15 +369,31 @@
       }
     }
 
+    if (isInsideFixedChrome(primary)) {
+      return { startScrollY: window.scrollY, targetScrollY: window.scrollY, deltaY: 0, isFixed: true };
+    }
+
+    const header = document.querySelector('header.test-topbar');
+    const headerRect = (header && window.getComputedStyle(header).display !== 'none') ? header.getBoundingClientRect() : null;
+    const stickyTop = (headerRect && ['fixed', 'sticky'].includes(window.getComputedStyle(header).position))
+      ? headerRect.bottom + 14
+      : 16;
+
     const combined = getUnionRect(els);
+    const startScrollY = window.scrollY;
+    const maxScrollY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    let targetScrollY = startScrollY;
     const desiredBottomLimit = window.innerHeight - 24;
     if (combined.top < stickyTop || combined.bottom > desiredBottomLimit) {
-      const targetY = window.scrollY + combined.top - Math.max(stickyTop + 12, Math.round((window.innerHeight - combined.height) / 2));
-      window.scrollTo({
-        top: Math.max(0, targetY),
-        behavior: prefersReducedMotion() ? 'auto' : 'smooth'
-      });
+      const rawTargetY = startScrollY + combined.top - Math.max(stickyTop + 12, Math.round((window.innerHeight - combined.height) / 2));
+      targetScrollY = Math.max(0, Math.min(maxScrollY, Math.round(rawTargetY)));
     }
+    return {
+      startScrollY,
+      targetScrollY,
+      deltaY: targetScrollY - startScrollY,
+      isFixed: false
+    };
   }
 
   function getUnionRect(els) {
@@ -428,7 +480,7 @@
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const { x, y, w, h, r } = geom;
-    const segs = 6;
+    const segs = 4;
     const holePts = [];
 
     const addArc = (cx, cy, startDeg, endDeg) => {
@@ -453,61 +505,40 @@
 
   function applyHoleGeometry(geom) {
     currentGeom = geom;
-    backdropEl.style.clipPath = buildRoundedHoleClipPath(geom);
-    backdropEl.style.webkitClipPath = backdropEl.style.clipPath;
+    const clip = buildRoundedHoleClipPath(geom);
+    backdropEl.style.clipPath = clip;
+    backdropEl.style.webkitClipPath = clip;
 
-    Object.assign(guardEl.style, {
-      left: `${geom.x}px`,
-      top: `${geom.y}px`,
-      width: `${geom.w}px`,
-      height: `${geom.h}px`,
-      borderRadius: `${geom.r}px`
-    });
-    Object.assign(ringEl.style, {
-      left: `${geom.x}px`,
-      top: `${geom.y}px`,
-      width: `${geom.w}px`,
-      height: `${geom.h}px`,
-      borderRadius: `${geom.r}px`
-    });
+    const transformVal = `translate3d(${geom.x.toFixed(1)}px, ${geom.y.toFixed(1)}px, 0)`;
+    const wPx = `${geom.w.toFixed(1)}px`;
+    const hPx = `${geom.h.toFixed(1)}px`;
+    const rPx = `${geom.r.toFixed(1)}px`;
+
+    guardEl.style.transform = transformVal;
+    guardEl.style.width = wPx;
+    guardEl.style.height = hPx;
+    guardEl.style.borderRadius = rPx;
+
+    ringEl.style.transform = transformVal;
+    ringEl.style.width = wPx;
+    ringEl.style.height = hPx;
+    ringEl.style.borderRadius = rPx;
   }
 
-  function animateHoleTo(targetGeom) {
-    if (spotAnimFrame) {
-      window.cancelAnimationFrame(spotAnimFrame);
-      spotAnimFrame = 0;
-    }
-    if (!currentGeom || prefersReducedMotion()) {
-      applyHoleGeometry(targetGeom);
-      return;
-    }
-    const from = { ...currentGeom };
-    const duration = 240;
-    const start = performance.now();
-    const tick = now => {
-      if (!isOpen()) {
-        spotAnimFrame = 0;
-        return;
+  function applyCardTransform(transformValue, instant = false) {
+    if (instant) {
+      cardEl.classList.add('is-sync-instant');
+      cardEl.style.transform = transformValue;
+      if (!manualSyncTimer) {
+        void cardEl.offsetWidth;
+        cardEl.classList.remove('is-sync-instant');
       }
-      const t = Math.min(1, (now - start) / duration);
-      const ease = 1 - Math.pow(1 - t, 3);
-      applyHoleGeometry({
-        x: from.x + (targetGeom.x - from.x) * ease,
-        y: from.y + (targetGeom.y - from.y) * ease,
-        w: from.w + (targetGeom.w - from.w) * ease,
-        h: from.h + (targetGeom.h - from.h) * ease,
-        r: from.r + (targetGeom.r - from.r) * ease
-      });
-      if (t < 1) {
-        spotAnimFrame = window.requestAnimationFrame(tick);
-      } else {
-        spotAnimFrame = 0;
-      }
-    };
-    spotAnimFrame = window.requestAnimationFrame(tick);
+    } else {
+      cardEl.style.transform = transformValue;
+    }
   }
 
-  function positionCard(step, geom) {
+  function positionCard(step, geom, instant = false) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const gap = 14;
@@ -521,7 +552,7 @@
       const holeNearBottom = geom.y + geom.h > vh - cardRect.height - 28 && geom.y > cardRect.height + 28;
       const top = holeNearBottom ? margin : Math.max(margin, vh - cardRect.height - margin);
       cardEl.dataset.placement = holeNearBottom ? 'top' : 'bottom';
-      cardEl.style.transform = `translate3d(${left}px, ${Math.round(top)}px, 0)`;
+      applyCardTransform(`translate3d(${left}px, ${Math.round(top)}px, 0)`, instant);
       return;
     }
 
@@ -568,11 +599,97 @@
     }
 
     cardEl.dataset.placement = chosen;
-    cardEl.style.transform = `translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`;
+    applyCardTransform(`translate3d(${Math.round(left)}px, ${Math.round(top)}px, 0)`, instant);
   }
 
-  function syncGeometryNow(animate = false) {
-    if (!isOpen()) return;
+  function repositionCardOnly() {
+    if (!isOpen() || isStepTransitioning) return;
+    const step = getActiveStep();
+    if (!step || !currentGeom) return;
+    positionCard(step, currentGeom, true);
+  }
+
+  function runStepTransition(step, els, scrollPlan, animate) {
+    if (spotAnimFrame) {
+      window.cancelAnimationFrame(spotAnimFrame);
+      spotAnimFrame = 0;
+    }
+
+    const hasVerticalScroll = !scrollPlan.isFixed && Math.abs(scrollPlan.deltaY) > 1;
+    if (!animate || !currentGeom || prefersReducedMotion()) {
+      isStepTransitioning = false;
+      if (hasVerticalScroll) {
+        window.scrollTo(0, scrollPlan.targetScrollY);
+      }
+      const finalGeom = computeHoleGeometry(step, els);
+      applyHoleGeometry(finalGeom);
+      positionCard(step, finalGeom, true);
+      return;
+    }
+
+    cardEl.classList.remove('is-sync-instant');
+    if (manualSyncTimer) {
+      window.clearTimeout(manualSyncTimer);
+      manualSyncTimer = 0;
+    }
+
+    const baseGeom = computeHoleGeometry(step, els);
+    const predictedGeom = { ...baseGeom };
+    if (hasVerticalScroll) {
+      predictedGeom.y = Math.max(4, Math.min(window.innerHeight - 4 - baseGeom.h, baseGeom.y - scrollPlan.deltaY));
+    }
+    positionCard(step, predictedGeom, false);
+
+    const from = { ...currentGeom };
+    const start = performance.now();
+    const duration = 260;
+    isStepTransitioning = true;
+
+    const tick = now => {
+      if (!isOpen()) {
+        spotAnimFrame = 0;
+        isStepTransitioning = false;
+        return;
+      }
+      const t = Math.min(1, (now - start) / duration);
+      const ease = 1 - Math.pow(1 - t, 3);
+      if (hasVerticalScroll) {
+        window.scrollTo(0, scrollPlan.startScrollY + scrollPlan.deltaY * ease);
+      }
+      const liveDest = computeHoleGeometry(step, els);
+      applyHoleGeometry({
+        x: from.x + (liveDest.x - from.x) * ease,
+        y: from.y + (liveDest.y - from.y) * ease,
+        w: from.w + (liveDest.w - from.w) * ease,
+        h: from.h + (liveDest.h - from.h) * ease,
+        r: from.r + (liveDest.r - from.r) * ease
+      });
+
+      if (t < 1) {
+        spotAnimFrame = window.requestAnimationFrame(tick);
+      } else {
+        spotAnimFrame = 0;
+        isStepTransitioning = false;
+        if (hasVerticalScroll) {
+          window.scrollTo(0, scrollPlan.targetScrollY);
+        }
+        const settled = computeHoleGeometry(step, els);
+        applyHoleGeometry(settled);
+        if (
+          Math.abs(settled.x - predictedGeom.x) > 1.5
+          || Math.abs(settled.y - predictedGeom.y) > 1.5
+          || Math.abs(settled.w - predictedGeom.w) > 1.5
+          || Math.abs(settled.h - predictedGeom.h) > 1.5
+        ) {
+          positionCard(step, settled, true);
+        }
+      }
+    };
+    spotAnimFrame = window.requestAnimationFrame(tick);
+  }
+
+  function syncGeometryNow(instantCard = true) {
+    if (!isOpen() || isStepTransitioning) return;
     const step = getActiveStep();
     if (!step) return;
     const els = resolveStepElements(step);
@@ -581,16 +698,23 @@
       return;
     }
     const geom = computeHoleGeometry(step, els);
-    if (animate) animateHoleTo(geom);
-    else applyHoleGeometry(geom);
-    positionCard(step, geom);
+    applyHoleGeometry(geom);
+    positionCard(step, geom, instantCard);
   }
 
   function scheduleGeometrySync() {
-    if (!isOpen() || syncFrame) return;
+    if (!isOpen() || isStepTransitioning || syncFrame) return;
+    if (cardEl) {
+      cardEl.classList.add('is-sync-instant');
+      window.clearTimeout(manualSyncTimer);
+      manualSyncTimer = window.setTimeout(() => {
+        manualSyncTimer = 0;
+        if (cardEl) cardEl.classList.remove('is-sync-instant');
+      }, 90);
+    }
     syncFrame = window.requestAnimationFrame(() => {
       syncFrame = 0;
-      syncGeometryNow(false);
+      syncGeometryNow(true);
     });
   }
 
@@ -601,6 +725,16 @@
       close();
       return;
     }
+
+    if (syncFrame) {
+      window.cancelAnimationFrame(syncFrame);
+      syncFrame = 0;
+    }
+    if (spotAnimFrame) {
+      window.cancelAnimationFrame(spotAnimFrame);
+      spotAnimFrame = 0;
+    }
+    isStepTransitioning = false;
 
     if (typeof step.beforeEnter === 'function') {
       try {
@@ -621,7 +755,19 @@
       return;
     }
 
-    scrollTargetIntoSafeView(els);
+    clearObservedTargets();
+    if (resizeObserver) {
+      els.forEach(el => resizeObserver.observe(el));
+      observedTargetEls = els.slice();
+    }
+
+    clearHighlightedTargets();
+    els.forEach((el) => {
+      if (el && el.classList) {
+        el.classList.add('erika-spotlight-target');
+      }
+    });
+    activeHighlightedEls = els.slice();
 
     const total = activeSession.steps.length;
     const num = activeSession.index + 1;
@@ -647,27 +793,30 @@
     prevBtn.hidden = isFirst;
     prevBtn.classList.toggle('hidden', isFirst);
     nextBtn.textContent = isLast ? 'Compris' : 'Suivant →';
-    if (resizeObserver) {
-      els.forEach(el => resizeObserver.observe(el));
+
+    if (swapTimer) {
+      window.clearTimeout(swapTimer);
+      swapTimer = 0;
+    }
+    if (animate && currentGeom && !prefersReducedMotion()) {
+      bodyEl.classList.add('is-swapping');
+      swapTimer = window.setTimeout(() => {
+        swapTimer = 0;
+        if (bodyEl) bodyEl.classList.remove('is-swapping');
+      }, 110);
+    } else {
+      bodyEl.classList.remove('is-swapping');
     }
 
-    const geom = computeHoleGeometry(step, els);
-    if (animate && currentGeom) {
-      bodyEl.classList.add('is-swapping');
-      window.setTimeout(() => bodyEl.classList.remove('is-swapping'), 110);
-      animateHoleTo(geom);
-    } else {
-      applyHoleGeometry(geom);
-    }
-    positionCard(step, geom);
+    const scrollPlan = prepareScrollPlan(els);
+    runStepTransition(step, els, scrollPlan, animate);
 
     if (liveEl) {
       liveEl.textContent = `Erika : ${titleText}. ${bodyText}`;
     }
 
     window.requestAnimationFrame(() => {
-      if (isOpen()) {
-        syncGeometryNow(false);
+      if (isOpen() && nextBtn) {
         nextBtn.focus({ preventScroll: true });
       }
     });
@@ -697,6 +846,17 @@
     }
   }
 
+  function getStepVisualPosition(step) {
+    const els = resolveStepElements(step);
+    if (!els.length) return { top: Number.POSITIVE_INFINITY, left: Number.POSITIVE_INFINITY };
+    const rect = getUnionRect(els);
+    const fixed = isInsideFixedChrome(els[0]);
+    return {
+      top: fixed ? rect.top : rect.top + window.scrollY,
+      left: rect.left
+    };
+  }
+
   function start(envId, options = {}) {
     const resolvedEnv = envId || getCurrentEnv();
     const tours = getToursMap();
@@ -705,6 +865,15 @@
 
     const eligibleSteps = tour.steps.filter(isStepEligible);
     if (!eligibleSteps.length) return false;
+
+    const orderedSteps = eligibleSteps
+      .map((step, originalIndex) => ({ step, originalIndex, pos: getStepVisualPosition(step) }))
+      .sort((a, b) => {
+        if (Math.abs(a.pos.top - b.pos.top) > 16) return a.pos.top - b.pos.top;
+        if (Math.abs(a.pos.left - b.pos.left) > 4) return a.pos.left - b.pos.left;
+        return a.originalIndex - b.originalIndex;
+      })
+      .map(entry => entry.step);
 
     ensureDom();
 
@@ -715,13 +884,13 @@
 
     let startIndex = 0;
     if (options.startStepId) {
-      const idx = eligibleSteps.findIndex(step => step.id === options.startStepId);
+      const idx = orderedSteps.findIndex(step => step.id === options.startStepId);
       if (idx >= 0) startIndex = idx;
     }
 
     activeSession = {
       envId: resolvedEnv,
-      steps: eligibleSteps,
+      steps: orderedSteps,
       index: startIndex
     };
 
@@ -750,13 +919,30 @@
   }
 
   function close(options = {}) {
+    clearObservedTargets();
+    clearHighlightedTargets();
+    if (syncFrame) {
+      window.cancelAnimationFrame(syncFrame);
+      syncFrame = 0;
+    }
     if (spotAnimFrame) {
       window.cancelAnimationFrame(spotAnimFrame);
       spotAnimFrame = 0;
     }
+    if (swapTimer) {
+      window.clearTimeout(swapTimer);
+      swapTimer = 0;
+    }
+    if (manualSyncTimer) {
+      window.clearTimeout(manualSyncTimer);
+      manualSyncTimer = 0;
+    }
+    isStepTransitioning = false;
     activeSession = null;
     currentGeom = null;
 
+    if (cardEl) cardEl.classList.remove('is-sync-instant');
+    if (bodyEl) bodyEl.classList.remove('is-swapping');
     if (rootEl) {
       rootEl.classList.remove('is-visible', 'is-interactive');
       rootEl.classList.add('hidden');

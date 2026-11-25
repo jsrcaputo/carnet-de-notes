@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="c5Cover" x1="10" y1="9" x2="54" y2="55" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2563eb"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="c5Path" x1="21" y1="44" x2="47" y2="18" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#93c5fd"/>
+      <stop offset="55%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#ffffff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Couverture de carnet moderne -->
+  <rect x="10" y="9" width="44" height="46" rx="9.5" fill="url(#c5Cover)" stroke="#60a5fa" stroke-width="1.6"/>
+
+  <!-- Reliure gauche intégrée -->
+  <path d="M19 9h1.5v46H19a9 9 0 0 1-9-9V18a9 9 0 0 1 9-9Z" fill="#172554" opacity="0.72"/>
+  <rect x="13.5" y="19" width="3.5" height="3" rx="1.5" fill="#93c5fd" opacity="0.7"/>
+  <rect x="13.5" y="30.5" width="3.5" height="3" rx="1.5" fill="#93c5fd" opacity="0.7"/>
+  <rect x="13.5" y="42" width="3.5" height="3" rx="1.5" fill="#93c5fd" opacity="0.7"/>
+
+  <!-- Halo doux sous la courbe d'apprentissage -->
+  <path d="M24.5 43.5C29 43.5 31 35 35.5 33.5C40 32 42.5 23.5 46.5 19.5" stroke="#38bdf8" stroke-width="8" stroke-linecap="round" opacity="0.22"/>
+
+  <!-- Fil continu reliant les 3 étapes (20 / 20 / 60) -->
+  <path d="M24.5 43.5C29 43.5 31 35 35.5 33.5C40 32 42.5 23.5 46.5 19.5" stroke="url(#c5Path)" stroke-width="3.6" stroke-linecap="round"/>
+
+  <!-- Étape 1 (20%) -->
+  <circle cx="24.5" cy="43.5" r="3.1" fill="#bae6fd" stroke="#1e3a8a" stroke-width="1.5"/>
+  <!-- Étape 2 (20%) -->
+  <circle cx="35.5" cy="33.5" r="3.9" fill="#38bdf8" stroke="#1e3a8a" stroke-width="1.5"/>
+  <!-- Étape 3 (60% - maîtrise) -->
+  <circle cx="46.5" cy="19.5" r="5.3" fill="#ffffff" stroke="#38bdf8" stroke-width="2"/>
+</svg>

@@ -12,6 +12,7 @@
         'ccq_global',
         'eps_c1', 'eps_c2', 'eps_c3',
         'eng_c1', 'eng_c2', 'eng_c3',
+        'musique_c1c2', 'musique_c3',
         'art_plast_c1c2', 'art_plast_c3',
         'art_dram_c1c2', 'art_dram_c3'
       ];
@@ -38,6 +39,7 @@
         ccq_global: 4,
         eps_c1: 5, eps_c2: 5, eps_c3: 5,
         eng_c1: 1, eng_c2: 1, eng_c3: 1,
+        musique_c1c2: 5, musique_c3: 5,
         art_plast_c1c2: 5, art_plast_c3: 5, art_dram_c1c2: 5, art_dram_c3: 5
       };
       const domainProfiles = [
@@ -143,6 +145,34 @@
           '3': [
             { title: 'Causerie thématique et débat guidé', outOf: 30, weight: 50, date: '2027-05-12', isObs: false, targetLevels: [] },
             { title: 'Trace observable : Formulation et écoute active', outOf: 100, weight: 50, date: '2027-06-03', isObs: true, critPrefix: 'ora', targetLevels: [] }
+          ]
+        },
+        musique_c1c2: {
+          '1': [
+            { title: 'Interprétation : Motif rythmique et mélodique', outOf: 100, weight: 50, date: '2026-10-23', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Création et techniques', outOf: 100, weight: 50, date: '2026-11-10', isObs: true, critPrefix: 'mus', targetLevels: [] }
+          ],
+          '2': [
+            { title: 'Création : Courte pièce expressive', outOf: 100, weight: 50, date: '2027-01-29', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Interprétation d’ensemble', outOf: 100, weight: 50, date: '2027-02-25', isObs: true, critPrefix: 'mus', targetLevels: [] }
+          ],
+          '3': [
+            { title: 'Projet musical : Composition selon une intention', outOf: 100, weight: 60, date: '2027-05-19', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Interprétation finale', outOf: 100, weight: 40, date: '2027-06-05', isObs: true, critPrefix: 'mus', targetLevels: [] }
+          ]
+        },
+        musique_c3: {
+          '1': [
+            { title: 'Écoute : Repérage du langage musical', outOf: 100, weight: 50, date: '2026-10-30', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Appréciation d’une œuvre', outOf: 100, weight: 50, date: '2026-11-12', isObs: true, critPrefix: 'mus_app', targetLevels: [] }
+          ],
+          '2': [
+            { title: 'Appréciation : Œuvre québécoise', outOf: 100, weight: 50, date: '2027-02-04', isObs: false, targetLevels: [] },
+            { title: 'Trace observable : Liens et vocabulaire musical', outOf: 100, weight: 50, date: '2027-02-26', isObs: true, critPrefix: 'mus_app', targetLevels: [] }
+          ],
+          '3': [
+            { title: 'Écoute comparative : Effet et contexte', outOf: 100, weight: 60, date: '2027-05-24', isObs: false, targetLevels: [] },
+            { title: 'Bilan : Appréciation argumentée', outOf: 100, weight: 40, date: '2027-06-06', isObs: true, critPrefix: 'mus_app', targetLevels: [] }
           ]
         },
         sciences_global: {
@@ -833,6 +863,99 @@
       return { students, terms, selectedStudentId: students[0].id };
     }
 
+    function buildAccueilDemoData(config) {
+      const levels = ['1', '1', '2', '2', '2', '3', '3', '3', '3', '4', '4', '4', '5', '5', '5', '6', '6'];
+      const students = buildDemoStudents(
+        'accueil',
+        config.count,
+        index => levels[index % levels.length],
+        config.offset
+      );
+      const competencyLabels = {
+        oral: 'Prise de parole et écoute en situation familière',
+        lecture: 'Lecture guidée d’un court texte illustré',
+        ecriture: 'Production d’un court texte avec outils de soutien'
+      };
+      const cotes = ['B', 'C', 'B', 'A', 'C', 'D', 'B', 'C', 'A'];
+      students.forEach((student, studentIndex) => {
+        student.ilssByTerm = {};
+        ['1', '2', '3'].forEach(termId => {
+          const judgments = {};
+          const assessments = [];
+          ['oral', 'lecture', 'ecriture'].forEach((competency, competencyIndex) => {
+            const basePalier = 1 + ((studentIndex + competencyIndex) % 4);
+            const palier = String(Math.min(5, basePalier + (Number(termId) === 3 ? 1 : 0)));
+            const cote = cotes[(studentIndex + competencyIndex + Number(termId)) % cotes.length];
+            judgments[competency] = {
+              palier: '',
+              cote: '',
+              overridePalier: '',
+              overrideCote: '',
+              comment: `${ILSS_COMMENT_BANK[competency][(studentIndex + competencyIndex) % ILSS_COMMENT_BANK[competency].length]}`,
+              culture: competency === 'oral'
+                ? 'Raconte une situation de la vie scolaire et utilise des repères culturels familiers.'
+                : ''
+            };
+            assessments.push({
+              competency,
+              palier,
+              cote,
+              date: termId === '1' ? '2026-10-20' : termId === '2' ? '2027-02-20' : '2027-05-25',
+              activity: competencyLabels[competency],
+              observation: `Étape ${termId} — progression observée avec les appuis prévus pour le palier ${palier}.`,
+              culture: competency === 'oral' ? 'Interaction liée à une routine de la classe québécoise.' : ''
+            });
+          });
+          student.ilssByTerm[termId] = { judgments, assessments, disciplines: {} };
+        });
+      });
+      const terms = buildFullDemoTerms('accueil', students);
+      ILSS_SUBJECTS.forEach((ilssSubject, subjectIndex) => {
+        ['1', '2', '3'].forEach(termId => {
+          const subData = terms[termId].subjectData[ilssSubject.id];
+          const id = `demo_ilss_${ilssSubject.id}_t${termId}`;
+          subData.assignments.push({
+            id,
+            title: termId === '1'
+              ? `${competencyLabels[ilssSubject.competency]} — départ`
+              : termId === '2'
+                ? `${competencyLabels[ilssSubject.competency]} — progression`
+                : `${competencyLabels[ilssSubject.competency]} — bilan`,
+            date: termId === '1' ? '2026-10-20' : termId === '2' ? '2027-02-20' : '2027-05-25',
+            description: 'Trace structurée pour situer le palier et la cote à partir de plusieurs manifestations observables.',
+            evidenceType: ['conversation', 'observation', 'production'][subjectIndex],
+            isIlssAssessment: true,
+            isObservation: true,
+            targetLevels: []
+          });
+          students.forEach((student, studentIndex) => {
+            const judgment = student.ilssByTerm[termId].judgments[ilssSubject.competency];
+            const demoPalier = student.ilssByTerm[termId].assessments
+              .find(item => item.competency === ilssSubject.competency).palier;
+            const demoCote = student.ilssByTerm[termId].assessments
+              .find(item => item.competency === ilssSubject.competency).cote;
+            subData.studentRecords[student.id].scoreMeta[id] = {
+              ilssPalier: '',
+              ilssCote: demoCote,
+              comment: judgment.comment,
+              quickComments: [ILSS_COMMENT_BANK[ilssSubject.competency][(studentIndex + subjectIndex) % 4]],
+              criteria: Object.fromEntries(
+                ILSS_OBSERVABLE_GRIDS[ilssSubject.competency].map(criterion => [criterion.id, demoPalier])
+              )
+            };
+          });
+        });
+      });
+      return {
+        students,
+        terms,
+        selectedStudentId: students[0].id,
+        subjectIds: ALL_SUBJECTS_CONFIG
+          .filter(subject => subject.isIlss || subject.group === 'maths')
+          .map(subject => subject.id)
+      };
+    }
+
     const DEMO_OPTIONS = [
       { id: 'presco', label: 'Préscolaire', groups: [
         { id: 'grp_presco', name: 'Démo — Préscolaire', count: 13, level: 'P', offset: 24 }
@@ -863,6 +986,9 @@
       ] },
       { id: 'multi', label: 'Multi-niveau 5e et 6e', groups: [
         { id: 'grp_multi_5e6e', name: 'Démo — Multi 5e/6e', count: 18, level: '', offset: 6, multi: true, modified: true }
+      ] },
+      { id: 'accueil', label: 'Accueil (Multi)', groups: [
+        { id: 'grp_accueil', name: 'Démo — Accueil (Multi)', count: 17, level: 'accueil', offset: 31, accueil: true }
       ] }
     ];
     const EXAMPLE_GROUP_CONFIGS = DEMO_OPTIONS.flatMap(option => option.groups);
@@ -879,13 +1005,14 @@
 
     function buildExampleGroupData(config) {
       if (config.level === 'P') return buildDemoPreschoolData();
-      const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly);
+      if (config.accueil) return buildAccueilDemoData(config);
+      const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly && !s.isIlss);
       let subjectIds = primarySubjects.map(subject => subject.id);
       if (['1', '2'].includes(config.level)) {
         subjectIds = primarySubjects.filter(subject => !['sciences', 'social'].includes(subject.group)).map(subject => subject.id);
       } else if (config.specialist) {
         subjectIds = primarySubjects
-          .filter(subject => ['education_physique', 'anglais', 'art_plast', 'art_dram'].includes(subject.group))
+          .filter(subject => ['education_physique', 'anglais', 'art_plast', 'art_dram', 'musique'].includes(subject.group))
           .map(subject => subject.id);
       }
       const levelPicker = config.multi ? index => index < Math.ceil(config.count / 2) ? '5' : '6' : config.level;

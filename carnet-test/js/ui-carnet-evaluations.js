@@ -11,7 +11,7 @@
       }
       const row = [...tbody.rows].find(r => r.dataset.studentId === studentId);
       if (!row) return;
-      const reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const reducedMotion = isReducedMotionEnabled();
       row.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'center', inline: 'nearest' });
       void row.offsetWidth;
       row.classList.add('gb-row-flash');
@@ -31,6 +31,16 @@
       const scrollContainerEl = document.getElementById('gradebookScrollContainer');
       const savedScrollLeft = scrollContainerEl ? scrollContainerEl.scrollLeft : 0;
       const sub = getCurrentSubjectConfig();
+      if (sub && sub.isIlss) {
+        document.getElementById('gbSubjectTitle').textContent = sub.fullName;
+        document.getElementById('gbSubjectTitle').title = sub.fullName;
+        document.getElementById('gbSubjectIcon').innerHTML = subjectIcons.ilss || subjectIcons.francais;
+        document.getElementById('emptyRosterNotice').classList.toggle('hidden', appState.students.length > 0);
+        setIlssGradebookChrome(true);
+        renderIlssGradebookView(sub);
+        return;
+      }
+      if (typeof setIlssGradebookChrome === 'function') setIlssGradebookChrome(false);
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
 
@@ -44,6 +54,7 @@
       const presentLevels = getPresentStudentLevels();
       const isMulti = presentLevels.length > 1;
       const activeLvlFilter = isMulti ? ensureValidGbLevelFilter() : 'ALL';
+      const showGradeGroupLabels = isMulti && activeLvlFilter === 'ALL' && !isAccueilGroup();
       const currentWeightScope = [appState.activeGroupId, appState.activeTerm, sub.id].join('|');
       if (weightScope !== currentWeightScope) {
         unlockedWeights.clear();
@@ -126,7 +137,7 @@
         lvlBar.setAttribute('aria-label', 'Filtrer le carnet par niveau');
         const levels = [{ id: 'ALL', label: `Tous (${appState.students.length})` }, ...presentLevels.map(lvl => ({
           id: lvl,
-          label: `${GRADE_LEVEL_LABELS[lvl]} (${appState.students.filter(s => String(s.gradeLevel) === lvl).length})`
+          label: `${presentLevels.length > 2 ? formatShortLevelTag(lvl) : GRADE_LEVEL_LABELS[lvl]} (${appState.students.filter(s => String(s.gradeLevel) === lvl).length})`
         }))];
         levels.forEach(level => {
           const button = document.createElement('button');
@@ -544,21 +555,43 @@
       tbody.innerHTML = '';
 
       const allFinalPcts = [];
+      const orderedStudents = getGradebookStudents(sub);
+      const gradebookStudents = isMulti && activeLvlFilter === 'ALL'
+        ? [
+            ...presentLevels.flatMap(level => orderedStudents.filter(student => String(student.gradeLevel) === level)),
+            ...orderedStudents.filter(student => !presentLevels.includes(String(student.gradeLevel)))
+          ]
+        : orderedStudents;
+      let lastRenderedLevel = null;
+      let renderedStudentIndex = 0;
 
-      getGradebookStudents(sub).forEach((st, idx) => {
+      gradebookStudents.forEach((st, idx) => {
         if (gbFilter && !studentMatches(st, gbFilter)) return;
         const rec = subData.studentRecords[st.id];
         const summary = computeStudentSubjectSummary(appState.activeTerm, sub.id, st.id);
         if (summary.finalPct !== null) allFinalPcts.push(summary.finalPct);
         if (isMulti && activeLvlFilter !== 'ALL' && String(st.gradeLevel) !== activeLvlFilter) return;
+        const gradeLevel = String(st.gradeLevel || '');
+        const startsGradeGroup = showGradeGroupLabels && gradeLevel !== lastRenderedLevel;
+        lastRenderedLevel = gradeLevel;
+        const gradeGroupCount = startsGradeGroup
+          ? gradebookStudents.filter(student => String(student.gradeLevel) === gradeLevel && (!gbFilter || studentMatches(student, gbFilter))).length
+          : 0;
 
         const tr = document.createElement('tr');
         tr.dataset.studentId = st.id;
-        tr.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-slate-50/80';
+        tr.className = `${renderedStudentIndex % 2 === 0 ? 'bg-white hover:bg-slate-50/80' : 'bg-slate-50/40 hover:bg-slate-50/80'}${startsGradeGroup ? ' gb-grade-group-start' : ''}`;
+        renderedStudentIndex += 1;
 
         // 1. Student cell (sticky left)
         const tdStu = document.createElement('td');
         tdStu.className = 'p-2.5 sticky left-0 bg-inherit z-10 border-r border-slate-100';
+        if (startsGradeGroup) {
+          const groupLabel = document.createElement('div');
+          groupLabel.className = 'gb-grade-group-label';
+          groupLabel.textContent = `${GRADE_LEVEL_LABELS[gradeLevel] || 'Niveau à choisir'} (${gradeGroupCount})`;
+          tdStu.appendChild(groupLabel);
+        }
         const studentName = document.createElement('div');
         studentName.className = 'gb-student-name font-bold text-slate-900';
         studentName.textContent = st.name;
@@ -567,11 +600,13 @@
         const effLevel = getEffectiveGradeLevel(st, sub);
         const isMod = isSubjectModifiedForStudent(st, sub);
         const studentCycle = getStudentCycle(effLevel);
-        const levelSpan = document.createElement('span');
-        levelSpan.textContent = studentCycle
-          ? `${GRADE_LEVEL_LABELS[st.gradeLevel] || GRADE_LEVEL_LABELS[effLevel]} • ${CYCLE_LABELS[studentCycle]}`
-          : 'Niveau à choisir';
-        studentLevel.appendChild(levelSpan);
+        if (!showGradeGroupLabels) {
+          const levelSpan = document.createElement('span');
+          levelSpan.textContent = studentCycle
+            ? `${GRADE_LEVEL_LABELS[st.gradeLevel] || GRADE_LEVEL_LABELS[effLevel]} • ${CYCLE_LABELS[studentCycle]}`
+            : 'Niveau à choisir';
+          studentLevel.appendChild(levelSpan);
+        }
         if (isMod) {
           const modBadge = document.createElement('span');
           modBadge.className = 'px-1.5 py-0.2 rounded bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-[9px] tracking-tight';

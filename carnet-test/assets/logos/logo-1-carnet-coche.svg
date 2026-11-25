@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="c1Spine" x1="10" y1="10" x2="21" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1e40af"/>
+      <stop offset="100%" stop-color="#172554"/>
+    </linearGradient>
+    <linearGradient id="c1Check" x1="25" y1="36" x2="55" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1d4ed8"/>
+      <stop offset="55%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Pages et couverture claire (lisible sur fond clair et sombre) -->
+  <rect x="11" y="10" width="38" height="44" rx="8" fill="#f8fafc" stroke="#1d4ed8" stroke-width="2.5"/>
+
+  <!-- Dos / reliure du carnet -->
+  <path d="M19 10h2.5v44H19a8 8 0 0 1-8-8V18a8 8 0 0 1 8-8Z" fill="url(#c1Spine)"/>
+  <rect x="14.5" y="19" width="4" height="3.2" rx="1.6" fill="#dbeafe"/>
+  <rect x="14.5" y="30.4" width="4" height="3.2" rx="1.6" fill="#dbeafe"/>
+  <rect x="14.5" y="41.8" width="4" height="3.2" rx="1.6" fill="#dbeafe"/>
+
+  <!-- Repères subtils de page -->
+  <rect x="27" y="20" width="13" height="2.8" rx="1.4" fill="#bfdbfe"/>
+  <rect x="27" y="42.5" width="15" height="2.8" rx="1.4" fill="#dbeafe"/>
+
+  <!-- Halo blanc de séparation sous la pointe qui sort -->
+  <path d="M26 32.5 33.8 40.2 54.5 15.5" stroke="#ffffff" stroke-width="10.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Grande coche dynamique -->
+  <path d="M26 32.5 33.8 40.2 54.5 15.5" stroke="url(#c1Check)" stroke-width="6.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

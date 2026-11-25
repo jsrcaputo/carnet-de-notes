@@ -81,6 +81,8 @@
         firstName: typeof st.firstName === 'string' ? st.firstName.trim() : String(st.name || '').trim() || 'Élève',
         lastName: typeof st.lastName === 'string' ? st.lastName.trim() : '',
         gradeLevel: GRADE_LEVEL_LABELS[String(st.gradeLevel)] ? String(st.gradeLevel) : '',
+        ...(st.ilssByTerm !== undefined && typeof normalizeAccueilData === 'function'
+          ? { ilssByTerm: normalizeAccueilData(st.ilssByTerm) } : {}),
         adaptations: Array.isArray(st.adaptations) ? [...new Set(st.adaptations.map(a => a === 'WordQ Écriture' ? 'Prédicteur de mots' : a).filter(Boolean))] : [],
         customAdapt: typeof st.customAdapt === 'string' ? st.customAdapt : '',
         modifiedExpectations: (() => {
@@ -168,9 +170,11 @@
         term.subjectData = isRecord(term.subjectData) ? term.subjectData : {};
         term.observations = Array.isArray(term.observations) ? term.observations : [];
 
+        let defaults = null;
         ALL_SUBJECTS_CONFIG.forEach(sub => {
           if (!OWN.call(term.subjectData, sub.id) || !isRecord(term.subjectData[sub.id])) {
-            term.subjectData[sub.id] = buildTermDataForStudents(imported.students).subjectData[sub.id];
+            if (!defaults) defaults = buildTermDataForStudents(imported.students).subjectData;
+            term.subjectData[sub.id] = defaults[sub.id];
           }
           const subData = term.subjectData[sub.id];
           const rawCustomRubrics = Array.isArray(subData.customRubrics) ? subData.customRubrics : [];
@@ -402,7 +406,7 @@
       if (!isStore) normalizeGroups(imported);
       imported.activeSubjectId = SUBJECTS_CONFIG.some(sub => sub.id === imported.activeSubjectId)
         ? imported.activeSubjectId
-        : SUBJECTS_CONFIG[0].id;
+        : (SUBJECTS_CONFIG[0]?.id || '');
       imported.activeView = ['viewGradebook', 'viewBareme', 'viewQuickObs', 'viewStudents', 'viewGlobalReport'].includes(imported.activeView)
         ? imported.activeView
         : 'viewGradebook';

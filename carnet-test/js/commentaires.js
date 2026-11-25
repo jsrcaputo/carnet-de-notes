@@ -130,10 +130,24 @@
       const entries = Object.keys(picked || {}).map(rowKey => {
         const level = model.levels.find(l => l.n === Number(picked[rowKey]));
         const sentence = level && level.sentences.find(s => s.row === rowKey);
-        const [e, j] = rowKey.replace(/^v2:/, '').split(':').map(Number);
-        return sentence ? { e, j, text: sentence.text } : null;
+        return sentence ? { e: sentence.e, j: sentence.j, row: rowKey, level, text: sentence.text } : null;
       }).filter(Boolean).sort((a, b) => a.e - b.e || a.j - b.j);
-      return personalizeScaleSentences(entries.map(item => item.text), student, mode);
+      const selectedRows = new Set(entries.map(item => item.row));
+      const contextualEntries = [];
+      entries.forEach(entry => {
+        const dependsOnPrevious = /^(?:Il|Elle|Ils|Elles)\s+(?:la|le|les|lui|en|y)\b|^Ces (?:considérations|éléments|données|résultats|observations)\b/i
+          .test(entry.text);
+        const previous = dependsOnPrevious && entry.level.sentences[entry.j - 1];
+        if (previous && !selectedRows.has(previous.row) &&
+            !contextualEntries.some(item => item.row === previous.row)) {
+          contextualEntries.push({
+            e: previous.e, j: previous.j, row: previous.row, text: previous.text
+          });
+        }
+        contextualEntries.push(entry);
+      });
+      contextualEntries.sort((a, b) => a.e - b.e || a.j - b.j);
+      return personalizeScaleSentences(contextualEntries.map(item => item.text), student, mode);
     }
 
     // Banque de commentaires professionnels alignés PFEQ (utilisent le gabarit "L'élève" / "il" transformé sans répétition)

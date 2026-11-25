@@ -114,6 +114,7 @@
       const pendingStatuses = [];
 
       SUBJECTS_CONFIG.forEach(sub => {
+        if (sub.isIlss) return;
         if (!isSubjectApplicableForStudent(sub, st)) return;
         sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
         const t1 = computeStudentSubjectSummary('1', sub.id, st.id).finalPct;
@@ -421,7 +422,7 @@
               <span><strong>Date :</strong> ${escapeHtml(todayStr)}</span>
             </div>
           </div>
-          ${!options.overall || st.gradeLevel === 'P' ? '' : `<div class="sis-overall-box">
+          ${!options.overall || st.gradeLevel === 'P' || !subjectRows.length ? '' : `<div class="sis-overall-box">
             <div class="sis-overall-label">Moyenne indicative${overallProvisional ? ' · provisoire' : ''}</div>
             <div class="sis-overall-val">${overallAnnualAvg !== null ? `${overallAnnualAvg} % (${escapeHtml(pctToClosestGradeCode(overallAnnualAvg))})` : '—'}</div>
           </div>`}
@@ -430,7 +431,8 @@
         ${options.pending ? pendingHtml : ''}
         ${st.gradeLevel === 'P'
           ? (options.summary ? `<div class="sis-section-title">Portrait du développement par domaine</div><p>Portrait qualitatif à interpréter selon le jugement professionnel; il ne constitue pas un bulletin officiel.</p>${preschoolPrintHtml}${st.reportComment ? `<p><strong>Commentaire général :</strong> ${escapeHtml(st.reportComment)}</p>` : ''}` : '')
-          : (options.summary ? `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}` : '')}
+          : (options.summary && subjectRows.length ? `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}` : '')}
+        ${options.summary && typeof isAccueilGroup === 'function' && isAccueilGroup() ? getAccueilSummaryHtml(st) : ''}
         ${options.details ? detailsHtml : ''}
       `;
 
@@ -487,6 +489,9 @@
         : assignment);
       const hasDraftData = Object.values(current.studentDrafts || {}).some(draft => Boolean(
         (Array.isArray(draft.checked) && draft.checked.length) ||
+        (draft.criteria && Object.keys(draft.criteria).length) ||
+        draft.ilssPalier || draft.ilssCote ||
+        (Array.isArray(draft.quickComments) && draft.quickComments.length) ||
         (typeof draft.comment === 'string' && draft.comment.trim()) ||
         (typeof draft.strengths === 'string' && draft.strengths.trim()) ||
         (typeof draft.challenges === 'string' && draft.challenges.trim())
@@ -965,6 +970,9 @@
     }
 
     function renderObservablePrintPage(subject, assignment, student, blank) {
+      if (subject && subject.isIlss && typeof renderIlssObservablePrintPage === 'function') {
+        return renderIlssObservablePrintPage(subject, assignment, student, blank);
+      }
       const termData = getActiveTermData();
       const rec = termData.subjectData[subject.id].studentRecords[student.id] || { scores: {}, scoreMeta: {} };
       const session = termData.subjectData[subject.id].currentObsSession;

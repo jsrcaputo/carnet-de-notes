@@ -1,39 +1,97 @@
-    const COMPETENCY_STOPWORDS = new Set('eleve avec dans leur leurs elle elles ainsi aussi parfois souvent pour plus tres tout tous toute toutes sont etre cette ces ses son lui lorsqu lorsque comme selon dont tant mais peut peuvent fait font ayant avoir quelques certains certaines divers diverses'.split(' '));
+    const COMPETENCY_STOPWORDS = new Set([
+      'eleve', 'avec', 'dans', 'leur', 'leurs', 'elle', 'elles', 'ainsi', 'aussi',
+      'parfois', 'souvent', 'pour', 'plus', 'tres', 'tout', 'tous', 'toute', 'toutes',
+      'sont', 'etre', 'cette', 'ces', 'ses', 'son', 'lui', 'lorsqu', 'lorsque', 'comme',
+      'selon', 'dont', 'tant', 'mais', 'peut', 'peuvent', 'fait', 'font', 'ayant', 'avoir',
+      'quelques', 'certains', 'certaines', 'divers', 'diverses', 'plupart', 'occasion',
+      'besoin', 'aide', 'generalement', 'maniere', 'moyen', 'moyenne', 'mesure', 'mesurer',
+      'estime', 'estimer'
+    ]);
+    const LEGACY_COMPETENCY_STOPWORDS = new Set(
+      'eleve avec dans leur leurs elle elles ainsi aussi parfois souvent pour plus tres tout tous toute toutes sont etre cette ces ses son lui lorsqu lorsque comme selon dont tant mais peut peuvent fait font ayant avoir quelques certains certaines divers diverses'.split(' ')
+    );
     const competencyModelCache = {};
+    const legacyCompetencyModelCache = {};
+    const competencyMigrationWarnings = new Set();
 
-    function splitCompetencySentences(text) {
+    function splitLegacyCompetencySentences(text) {
       return String(text || '')
         .replace(/([.!?…])\s+(?=(?!Par exemple|Dans chaque cas|Mis à part)[A-ZÉÈÀÂÊÎÔÛÇ«“"])/g, '$1\u0001')
         .split('\u0001')
-        .map(s => s.trim())
+        .map(sentence => sentence.trim())
         .filter(Boolean);
     }
 
-    function getCompetencyScaleModel(scale, legacy = false) {
+    function splitCompetencySentences(text) {
+      let prepared = String(text || '')
+        .replace(/\bp\.\s*ex\./giu, match => match.replace(/\./g, '\u0002'))
+        .replace(/\betc\.(\s*[)\]»”]*)(?=\s*\p{Lu})/giu, 'etc.$1\u0001')
+        .replace(/\betc\./giu, match => match.replace(/\./g, '\u0002'))
+        .replace(/\b(?:M|Mme|Dr)\./giu, match => match.replace(/\./g, '\u0002'));
+      prepared = prepared.replace(
+        /([.!?…])([»”")\]]*)\s*(?=(?!Par exemple\b|Dans chaque cas\b|Mis à part\b)\p{Lu})/gu,
+        '$1$2\u0001'
+      );
+      return prepared
+        .split('\u0001')
+        .map(sentence => sentence.replace(/\u0002/g, '.').trim())
+        .filter(Boolean);
+    }
+
+    function normalizeCompetencyText(text) {
+      return String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/œ/g, 'oe').replace(/[^a-z0-9]+/g, ' ').trim();
+    }
+
+    function hashCompetencyAnchor(text) {
+      const value = normalizeCompetencyText(text);
+      let hash = 2166136261;
+      for (let i = 0; i < value.length; i++) {
+        hash ^= value.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return (hash >>> 0).toString(36);
+    }
+
+    function tokenizeCompetencyText(text) {
+      return normalizeCompetencyText(text).split(/\s+/).map(word => {
+        if (word === 'temps') return word;
+        if (word.length > 7 && word.endsWith('ent')) return word.slice(0, -3);
+        if (word.length > 6 && word.endsWith('es')) return word.slice(0, -2);
+        if (word.length > 5 && word.endsWith('s')) return word.slice(0, -1);
+        if (word.length > 6 && word.endsWith('e')) return word.slice(0, -1);
+        return word;
+      }).filter(word => word.length >= 4 && !COMPETENCY_STOPWORDS.has(word));
+    }
+
+    function getLegacyCompetencyScaleModel(scale, legacy = false) {
       const cacheKey = `${scale.id}:${legacy ? 'legacy' : 'v2'}`;
-      if (competencyModelCache[cacheKey]) return competencyModelCache[cacheKey];
-      const tokenize = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .split(/[^a-z]+/).filter(w => w.length >= 4 && !COMPETENCY_STOPWORDS.has(w)).map(w => w.slice(0, 6));
-      const levels = scale.echelons.map((e, ei) => {
-        const sentences = splitCompetencySentences(e.texte).map((text, j, all) => ({
+      if (legacyCompetencyModelCache[cacheKey]) return legacyCompetencyModelCache[cacheKey];
+      const tokenize = text => String(text || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .split(/[^a-z]+/).filter(word => word.length >= 4 && !LEGACY_COMPETENCY_STOPWORDS.has(word)).map(word => word.slice(0, 6));
+      const levels = scale.echelons.map((echelon, ei) => {
+        const sentences = splitLegacyCompetencySentences(echelon.texte).map((text, j, all) => ({
           text, e: ei, j, p: all.length > 1 ? j / (all.length - 1) : 0, w: tokenize(text)
         }));
-        return { n: e.n, cycle: e.cycle, sentences };
+        return { n: echelon.n, cycle: echelon.cycle, sentences };
       });
       const all = [];
       const df = {};
-      levels.forEach(level => level.sentences.forEach(s => {
-        all.push(s);
-        new Set(s.w).forEach(w => { df[w] = (df[w] || 0) + 1; });
+      levels.forEach(level => level.sentences.forEach(sentence => {
+        all.push(sentence);
+        new Set(sentence.w).forEach(word => { df[word] = (df[word] || 0) + 1; });
       }));
-      all.forEach(s => {
-        const v = {};
-        s.w.forEach(w => { v[w] = (v[w] || 0) + 1; });
+      all.forEach(sentence => {
+        const vector = {};
+        sentence.w.forEach(word => { vector[word] = (vector[word] || 0) + 1; });
         let norm = 0;
-        Object.keys(v).forEach(w => { v[w] *= Math.log(1 + all.length / df[w]); norm += v[w] * v[w]; });
-        s.v = v;
-        s.norm = Math.sqrt(norm) || 1;
-        s.cluster = [s];
+        Object.keys(vector).forEach(word => {
+          vector[word] *= Math.log(1 + all.length / df[word]);
+          norm += vector[word] * vector[word];
+        });
+        sentence.v = vector;
+        sentence.norm = Math.sqrt(norm) || 1;
+        sentence.cluster = [sentence];
       });
       const pairs = [];
       for (let x = 0; x < all.length; x++) {
@@ -42,23 +100,23 @@
           const gap = b.e - a.e;
           if (gap < 1 || gap > 3) continue;
           let dot = 0;
-          Object.keys(a.v).forEach(w => { if (b.v[w]) dot += a.v[w] * b.v[w]; });
+          Object.keys(a.v).forEach(word => { if (b.v[word]) dot += a.v[word] * b.v[word]; });
           let score = dot / (a.norm * b.norm) + 0.12 * (1 - Math.abs(a.p - b.p)) - 0.04 * (gap - 1);
           if (a.j === 0 && b.j === 0) score += 0.25;
           if (score >= 0.15) pairs.push([score, a, b]);
         }
       }
-      pairs.sort((p, q) => q[0] - p[0]);
+      pairs.sort((a, b) => b[0] - a[0]);
       pairs.forEach(([, a, b]) => {
         if (a.cluster === b.cluster) return;
-        const taken = new Set(a.cluster.map(s => s.e));
-        if (b.cluster.some(s => taken.has(s.e))) return;
+        const occupied = new Set(a.cluster.map(sentence => sentence.e));
+        if (b.cluster.some(sentence => occupied.has(sentence.e))) return;
         const merged = a.cluster.concat(b.cluster);
-        merged.forEach(s => { s.cluster = merged; });
+        merged.forEach(sentence => { sentence.cluster = merged; });
       });
       if (!legacy) {
-        const oldClusters = new Set(all.map(s => s.cluster));
-        oldClusters.forEach(cluster => {
+        const clusters = new Set(all.map(sentence => sentence.cluster));
+        clusters.forEach(cluster => {
           const groups = [];
           cluster.slice().sort((a, b) => a.e - b.e || a.j - b.j).forEach(sentence => {
             const group = groups.find(members => members.every(other => {
@@ -74,20 +132,92 @@
         });
       }
       const rows = {};
-      all.forEach(s => {
-        const members = s.cluster.slice().sort((p, q) => p.e - q.e);
-        s.row = `${legacy ? '' : 'v2:'}${members[0].e}:${members[0].j}`;
-        if (!rows[s.row]) rows[s.row] = { key: s.row, count: members.length, levels: members.map(m => levels[m.e].n) };
+      all.forEach(sentence => {
+        const members = sentence.cluster.slice().sort((a, b) => a.e - b.e);
+        sentence.row = `${legacy ? '' : 'v2:'}${members[0].e}:${members[0].j}`;
+        if (!rows[sentence.row]) {
+          rows[sentence.row] = { key: sentence.row, count: members.length, levels: members.map(member => levels[member.e].n) };
+        }
       });
       const model = { levels, rows, max: scale.max };
-      competencyModelCache[cacheKey] = model;
+      legacyCompetencyModelCache[cacheKey] = model;
+      return model;
+    }
+
+    function getCompetencyScaleModel(scale) {
+      if (competencyModelCache[scale.id]) return competencyModelCache[scale.id];
+      const levels = scale.echelons.map((echelon, ei) => {
+        const sentences = splitCompetencySentences(echelon.texte).map((text, j, all) => ({
+          text, e: ei, j, p: all.length > 1 ? j / (all.length - 1) : 0,
+          w: tokenizeCompetencyText(text), cluster: null
+        }));
+        return { n: echelon.n, cycle: echelon.cycle, sentences };
+      });
+      const all = levels.flatMap(level => level.sentences);
+      const df = {};
+      all.forEach(sentence => new Set(sentence.w).forEach(word => {
+        df[word] = (df[word] || 0) + 1;
+      }));
+      all.forEach(sentence => {
+        const vector = {};
+        sentence.w.forEach(word => { vector[word] = (vector[word] || 0) + 1; });
+        let norm = 0;
+        Object.keys(vector).forEach(word => {
+          vector[word] *= Math.log(1 + all.length / df[word]);
+          norm += vector[word] * vector[word];
+        });
+        sentence.v = vector;
+        sentence.norm = Math.sqrt(norm) || 1;
+        sentence.cluster = [sentence];
+      });
+
+      const pairs = [];
+      for (let x = 0; x < all.length; x++) {
+        for (let y = x + 1; y < all.length; y++) {
+          const a = all[x], b = all[y];
+          const gap = b.e - a.e;
+          if (gap < 1 || gap > 3) continue;
+          const shared = Object.keys(a.v).filter(word => b.v[word]);
+          // Deux mots porteurs au minimum évitent les rapprochements fondés sur des mots génériques isolés.
+          if (shared.length < 2) continue;
+          const dot = shared.reduce((sum, word) => sum + a.v[word] * b.v[word], 0);
+          const cosine = dot / (a.norm * b.norm);
+          const coverage = shared.length / Math.min(Object.keys(a.v).length, Object.keys(b.v).length);
+          const similarity = Math.max(cosine, coverage);
+          const score = similarity + 0.04 * (1 - Math.abs(a.p - b.p)) - 0.025 * (gap - 1);
+          if (score >= 0.22) pairs.push({ score, a, b });
+        }
+      }
+      pairs.sort((a, b) => b.score - a.score);
+      pairs.forEach(({ a, b }) => {
+        if (a.cluster === b.cluster) return;
+        const occupied = new Set(a.cluster.map(sentence => sentence.e));
+        if (b.cluster.some(sentence => occupied.has(sentence.e))) return;
+        const merged = a.cluster.concat(b.cluster);
+        merged.forEach(sentence => { sentence.cluster = merged; });
+      });
+
+      const rows = {};
+      all.forEach(sentence => {
+        const members = sentence.cluster.slice().sort((a, b) => a.e - b.e);
+        sentence.row = `v3:${members[0].e}:${hashCompetencyAnchor(members[0].text)}`;
+        if (!rows[sentence.row]) {
+          rows[sentence.row] = {
+            key: sentence.row,
+            count: members.length,
+            levels: members.map(member => levels[member.e].n)
+          };
+        }
+      });
+      const model = { levels, rows, max: scale.max };
+      competencyModelCache[scale.id] = model;
       return model;
     }
 
     // Barème : le niveau est l'échelon atteint par la majorité des phrases retenues (médiane pondérée), et non une moyenne.
     // Une phrase choisie à l'échelon n signifie « l'élève est au moins à n pour cet aspect »; quelques aspects plus faibles
     // ne tirent donc pas le niveau vers le bas. Une ligne de progression présente sur plusieurs échelons pèse davantage
-    // qu'un détail propre à un seul échelon. À égalité parfaite, on prend le milieu des deux échelons centraux.
+    // qu'un détail propre à un seul échelon. À égalité parfaite, le niveau suggéré reste le plus prudent.
     function computeCompetencyResult(scale, picked) {
       const model = getCompetencyScaleModel(scale);
       const items = [];
@@ -113,9 +243,11 @@
         }
       }
       const median = (lower + upper) / 2;
-      const atOrAbove = items.filter(item => item.n >= Math.round(median)).length;
+      const roundedDown = Math.floor(median);
+      const rounded = median - roundedDown === 0.5 ? roundedDown : Math.round(median);
+      const atOrAbove = items.filter(item => item.n >= rounded).length;
       return {
-        level: Math.min(model.max, Math.max(1, Math.round(median))),
+        level: Math.min(model.max, Math.max(1, rounded)),
         avg: median, min, max, count: items.length, atOrAbove
       };
     }
@@ -181,9 +313,12 @@
       items.sort((a, b) => a.q - b.q || a.n - b.n);
       const total = items.reduce((sum, item) => sum + item.w, 0);
       let acc = 0, level = items[0].q;
-      for (const item of items) {
-        acc += item.w;
-        if (acc >= total / 2) { level = item.q; break; }
+      for (let i = 0; i < items.length; i++) {
+        acc += items[i].w;
+        if (acc >= total / 2) {
+          level = items[i].q;
+          break;
+        }
       }
       return { cycle, level, items };
     }
@@ -208,7 +343,7 @@
       return { ...suggestion, suggested: suggestion.level, level: override || suggestion.level, override };
     }
 
-    // Les anciennes sélections par étape restent disponibles dans les sauvegardes.
+    // Les clés de lignes sont ancrées au texte pour résister aux changements de regroupement.
     function getCompetencyPicks(student, term, persistMigration = false) {
       const key = String(term);
       const terms = student.competencyTerms && typeof student.competencyTerms === 'object' && !Array.isArray(student.competencyTerms)
@@ -222,21 +357,43 @@
       const picks = persistMigration ? sourcePicks : JSON.parse(JSON.stringify(sourcePicks));
       let migrated = false;
       let migrationFailed = false;
+      let migrationMerged = false;
       getCompetencyTabs().flatMap(tab => tab.scales).forEach(scale => {
         const selected = picks[scale.id];
-        if (!selected || !Object.keys(selected).some(row => !row.startsWith('v2:'))) return;
-        const previous = getCompetencyScaleModel(scale, true);
+        if (!selected) return;
+        const oldRows = Object.keys(selected).filter(row =>
+          row.startsWith('v2:') || /^\d+:\d+$/.test(row)
+        );
+        if (!oldRows.length) return;
         const current = getCompetencyScaleModel(scale);
-        Object.keys(selected).filter(row => !row.startsWith('v2:')).forEach(row => {
-          const levelIndex = previous.levels.findIndex(level => level.n === Number(selected[row]));
-          const oldSentence = levelIndex < 0 ? null : previous.levels[levelIndex].sentences.find(sentence => sentence.row === row);
-          const newSentence = oldSentence && current.levels[levelIndex].sentences[oldSentence.j];
-          if (!newSentence || Object.prototype.hasOwnProperty.call(selected, newSentence.row)) {
+        oldRows.forEach(row => {
+          const legacyRow = row.replace(/^v2:/, '');
+          const [oldEchelon] = legacyRow.split(':').map(Number);
+          const previous = getLegacyCompetencyScaleModel(scale, !row.startsWith('v2:'));
+          const selectedLevelIndex = previous.levels.findIndex(level => level.n === Number(selected[row]));
+          const oldSentence = selectedLevelIndex < 0 ? null :
+            previous.levels[selectedLevelIndex].sentences.find(sentence =>
+              sentence.row === row || sentence.row === legacyRow
+            );
+          const sourceEchelon = oldSentence ? oldSentence.e : oldEchelon;
+          const targetLevel = current.levels.find(level => level.n === Number(selected[row]));
+          const newSentence = oldSentence && targetLevel && targetLevel.sentences.find(sentence =>
+            sentence.e === sourceEchelon &&
+            normalizeCompetencyText(sentence.text) === normalizeCompetencyText(oldSentence.text)
+          );
+          if (!newSentence) {
             console.warn('Impossible de migrer une sélection de niveau de compétence.', scale.id, row);
             migrationFailed = true;
             return;
           }
-          selected[newSentence.row] = selected[row];
+          if (Object.prototype.hasOwnProperty.call(selected, newSentence.row)) {
+            migrationMerged = true;
+            if (Number(selected[newSentence.row]) !== Number(selected[row])) {
+              selected[newSentence.row] = Math.max(Number(selected[newSentence.row]), Number(selected[row]));
+            }
+          } else {
+            selected[newSentence.row] = selected[row];
+          }
           delete selected[row];
           migrated = true;
         });
@@ -248,7 +405,14 @@
         student.competencyTerms[key] = picks;
         if (legacy) delete student.competencySentences;
         if (migrated) scheduleAppStateSave();
-        if (migrationFailed) showToast('Certaines phrases choisies n’ont pas pu être mises à jour; vérifiez votre sauvegarde.');
+      }
+      const warningKey = `${student.id}:${key}`;
+      if (migrationFailed && !competencyMigrationWarnings.has(warningKey)) {
+        competencyMigrationWarnings.add(warningKey);
+        showToast('Certaines phrases choisies n’ont pas pu être mises à jour; vérifiez votre sauvegarde.');
+      } else if (migrationMerged && !competencyMigrationWarnings.has(warningKey)) {
+        competencyMigrationWarnings.add(warningKey);
+        showToast('Des sélections historiques regroupées dans la même phrase ont été fusionnées; vérifiez le résultat.');
       }
       return picks;
     }

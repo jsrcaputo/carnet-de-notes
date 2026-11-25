@@ -223,12 +223,15 @@
       }
 
       const cycleGlobalStudent = (step) => {
-        if (!appState.students.length) return;
-        const idx = appState.students.findIndex(s => s.id === appState.selectedStudentId);
+        const orderedStudents = typeof getGlobalReportOrderedStudents === 'function'
+          ? getGlobalReportOrderedStudents()
+          : appState.students;
+        if (!orderedStudents.length) return;
+        const idx = orderedStudents.findIndex(s => s.id === appState.selectedStudentId);
         const nextIdx = idx < 0
           ? 0
-          : (idx + step + appState.students.length) % appState.students.length;
-        appState.selectedStudentId = appState.students[nextIdx].id;
+          : (idx + step + orderedStudents.length) % orderedStudents.length;
+        appState.selectedStudentId = orderedStudents[nextIdx].id;
         renderGlobalReportView();
       };
       const btnPrevStu = document.getElementById('btnGrPrevStudent');
@@ -238,6 +241,13 @@
       document.querySelectorAll('[data-gr-student-view]').forEach(button => {
         button.addEventListener('click', () => {
           prefs.summaryStudentListMode = button.getAttribute('data-gr-student-view');
+          applyPrefs();
+          renderGlobalReportView();
+        });
+      });
+      document.querySelectorAll('[data-gr-student-sort]').forEach(button => {
+        button.addEventListener('click', () => {
+          prefs.summaryStudentSort = button.getAttribute('data-gr-student-sort') === 'firstName' ? 'firstName' : 'lastName';
           applyPrefs();
           renderGlobalReportView();
         });
@@ -557,7 +567,7 @@
           appState.activeView = 'viewGlobalReport';
           appState.selectedStudentId = entry.studentId;
           renderAll();
-          const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const reducedMotion = isReducedMotionEnabled();
           window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
         });
       }
@@ -737,6 +747,11 @@
       });
 
       document.getElementById('btnAddVisualTraceFromGb').addEventListener('click', () => {
+        const currentSub = getCurrentSubjectConfig();
+        if (currentSub && currentSub.isIlss) {
+          startIlssObservationSession(currentSub);
+          return;
+        }
         startNewVisualTraceSession();
       });
 
@@ -790,6 +805,16 @@
       // Add Assignment Modal (Requires explicit custom name!)
       const modalAsg = document.getElementById('modalAddAssignment');
       let modalEditingAssignmentId = null;
+      // En ILSS, une évaluation déjà réalisée se consigne en palier/cote : pas de barème, de niveaux ciblés ni de compétences liées.
+      const applyIlssAssignmentModalMode = () => {
+        const current = getCurrentSubjectConfig();
+        const isIlss = Boolean(current && current.isIlss);
+        document.getElementById('asgOutOfBox').classList.toggle('hidden', isIlss);
+        if (!isIlss) return;
+        document.getElementById('asgTargetLevelsBox')?.classList.add('hidden');
+        document.getElementById('asgLinkedPartsBox').classList.add('hidden');
+        modalAddAsgTargetLevels = [];
+      };
       const renderModalAddAsgTargetLevels = () => {
         const box = document.getElementById('asgTargetLevelsBox');
         const list = document.getElementById('asgTargetLevelsList');
@@ -865,6 +890,7 @@
           linkList.appendChild(label);
         });
         document.getElementById('inputAssignmentDate').value = new Date().toISOString().slice(0, 10);
+        applyIlssAssignmentModalMode();
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
         setTimeout(() => titleIn.focus(), 50);
@@ -903,6 +929,7 @@
           label.append(checkbox, document.createTextNode(getSubjectContextDisplay(subject).partLabel));
           linkList.appendChild(label);
         });
+        applyIlssAssignmentModalMode();
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
         setTimeout(() => document.getElementById('inputAssignmentTitle').focus(), 50);
@@ -958,6 +985,28 @@
           return;
         }
         const date = document.getElementById('inputAssignmentDate').value;
+        const activeSub = getCurrentSubjectConfig();
+        if (activeSub && activeSub.isIlss) {
+          const subData = getActiveTermData().subjectData[activeSub.id];
+          if (modalEditingAssignmentId) {
+            const assignment = subData.assignments.find(item => item.id === modalEditingAssignmentId);
+            if (assignment) Object.assign(assignment, { title, date });
+            closeAsgModal();
+            notifyUpdate(`Évaluation "${title}" modifiée`);
+            renderAll();
+            return;
+          }
+          const id = `ilss_asg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+          subData.assignments.push({ id, title, date, isIlssAssessment: true, isObservation: false, targetLevels: [], evidenceType: 'production' });
+          appState.students.forEach(student => {
+            const record = subData.studentRecords[student.id];
+            if (record) record.scoreMeta[id] = { ilssPalier: '', ilssCote: '', comment: '', quickComments: [], criteria: {} };
+          });
+          closeAsgModal();
+          notifyUpdate(`Travail "${title}" ajouté au carnet`);
+          renderAll();
+          return;
+        }
         const outOfRaw = Number(String(document.getElementById('inputAssignmentOutOf').value).replace(',', '.'));
         if (!Number.isFinite(outOfRaw) || outOfRaw <= 0) {
           showToast('Le dénominateur (note sur…) doit être un nombre positif, par exemple 40.');
@@ -1045,6 +1094,12 @@
         }
         const termData = getActiveTermData();
         const session = termData.subjectData[appState.activeSubjectId].currentObsSession;
+        if (session.isIlss) {
+          clearIlssObservationDraft(session.studentDrafts[appState.selectedStudentId]);
+          notifyUpdate('Grille de l’élève effacée pour cette trace');
+          renderQuickObsView();
+          return;
+        }
         session.studentDrafts[appState.selectedStudentId] = {
           checked: [],
           overrideCode: null,
@@ -1225,12 +1280,13 @@
         }
         const name = [firstName, lastName].filter(Boolean).join(' ');
         const newId = 'stu_' + Date.now();
+        const groupLevel = (appState.groups.find(g => g.id === appState.activeGroupId) || {}).level || '';
         appState.students.push({
           id: newId,
           name,
           firstName,
           lastName,
-          gradeLevel: (appState.groups.find(g => g.id === appState.activeGroupId) || {}).level || '',
+          gradeLevel: GRADE_LEVEL_LABELS[groupLevel] ? groupLevel : '',
           adaptations: [],
           customAdapt: '',
           competencyLevelsByCycle: {},
@@ -1543,15 +1599,6 @@
         const open = settingsPanel.classList.toggle('hidden') === false;
         settingsBtn.setAttribute('aria-expanded', String(open));
       });
-      bindClick('btnErikaLaunchHere', () => {
-        closeSettingsPanel();
-        if (typeof window !== 'undefined' && window.ErikaTour) {
-          const started = window.ErikaTour.start(window.ErikaTour.getCurrentEnv());
-          if (!started && typeof showToast === 'function') {
-            showToast('Aucun repère particulier à afficher ici.');
-          }
-        }
-      });
       document.addEventListener('click', e => {
         if (!settingsPanel.contains(e.target) && e.target !== settingsBtn && !settingsBtn.contains(e.target)) closeSettingsPanel();
       });
@@ -1578,10 +1625,11 @@
         scheduleAppStateSave();
       }));
       settingsPanel.querySelectorAll('[data-pref-check]').forEach(cb => cb.addEventListener('change', () => {
-        prefs[cb.getAttribute('data-pref-check')] = cb.checked;
+        const key = cb.getAttribute('data-pref-check');
+        prefs[key] = cb.checked;
         applyPrefs();
         scheduleAppStateSave();
-        if (appState.activeView === 'viewGradebook') renderGradebookView();
+        if (key === 'coloredColumns' && appState.activeView === 'viewGradebook') renderGradebookView();
       }));
       window.addEventListener('beforeunload', event => {
         const needsBackupPrompt = getBackupSnapshot() !== lastSavedFileSnapshot;

@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'">
+  <title>Signet-Chouette vertical · 3 variantes — Carnet de notes</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --dark-stage: #0f172a;
+      --dark-panel: #162033;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #dbe3ee;
+      --brand: #0070ba;
+      --brand-soft: #dbeafe;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background:
+        radial-gradient(ellipse 85% 45% at 50% -10%, rgba(0, 112, 186, 0.08), transparent 70%),
+        var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+      padding: clamp(1.25rem, 3vw, 2.5rem) clamp(1rem, 3vw, 2rem);
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .page-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.75rem;
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: .22rem .65rem;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: #1e40af;
+      font-size: .74rem;
+      font-weight: 700;
+      letter-spacing: .02em;
+      margin-bottom: .5rem;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.45rem, 2.3vw, 1.9rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+    }
+
+    .lead {
+      margin: .35rem 0 0;
+      color: var(--muted);
+      font-size: .95rem;
+      max-width: 72ch;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .55rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 650;
+      transition: border-color .16s ease, background-color .16s ease, transform .16s ease;
+    }
+    .back-link:hover {
+      border-color: var(--brand);
+      background: var(--brand-soft);
+      color: #1e40af;
+      transform: translateY(-1px);
+    }
+
+    .logos-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1.35rem;
+      align-items: stretch;
+    }
+
+    .logo-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.25rem;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, .05);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .6rem;
+    }
+
+    .badge-num {
+      display: inline-flex;
+      align-items: center;
+      padding: .2rem .6rem;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: .74rem;
+      font-weight: 700;
+    }
+
+    .card-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -.015em;
+    }
+
+    .card-desc {
+      margin: .3rem 0 0;
+      font-size: .86rem;
+      color: var(--muted);
+      min-height: 4.1em;
+    }
+
+    .stages {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+
+    .stage {
+      border-radius: 14px;
+      padding: 1rem .75rem .75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .55rem;
+      border: 1px solid var(--border);
+    }
+
+    .stage-light {
+      background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%);
+      color: var(--muted);
+    }
+
+    .stage-dark {
+      background: linear-gradient(180deg, #0f172a 0%, #162033 100%);
+      border-color: #24324b;
+      color: #94a3b8;
+    }
+
+    .stage img {
+      display: block;
+      width: 112px;
+      height: 112px;
+    }
+
+    .stage-label {
+      font-size: .72rem;
+      font-weight: 650;
+      letter-spacing: .02em;
+    }
+
+    .context-block {
+      border-top: 1px solid var(--border);
+      padding-top: .9rem;
+      display: flex;
+      flex-direction: column;
+      gap: .75rem;
+      margin-top: auto;
+    }
+
+    .context-label {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      margin-bottom: .35rem;
+    }
+
+    .sidebar-mock {
+      display: flex;
+      align-items: center;
+      gap: .62rem;
+      padding: .62rem .8rem;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--surface-soft);
+    }
+
+    .sidebar-mock img {
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+
+    .sidebar-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+
+    .sidebar-text strong {
+      font-size: .92rem;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .sidebar-text span {
+      font-size: .72rem;
+      font-weight: 650;
+      color: var(--muted);
+    }
+
+    .favicon-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .6rem;
+      flex-wrap: wrap;
+    }
+
+    .browser-tab {
+      display: inline-flex;
+      align-items: center;
+      gap: .45rem;
+      padding: .38rem .7rem;
+      border-radius: 10px 10px 4px 4px;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, .05);
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .browser-tab img {
+      width: 16px;
+      height: 16px;
+      flex: 0 0 auto;
+    }
+
+    .size-32 {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .73rem;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .size-32 img {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      padding: 2px;
+      background: #ffffff;
+    }
+
+    @media (max-width: 980px) {
+      .logos-grid {
+        grid-template-columns: 1fr;
+      }
+      .card-desc {
+        min-height: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="page-head">
+      <div>
+        <span class="eyebrow">Identité visuelle · Signet-Chouette vertical</span>
+        <h1>Trois variantes marque-page élancées</h1>
+        <p class="lead">Silhouettes allongées en véritable marque-page, bas du ruban épuré sans chevron ni effet sourire, et hommage subtil mêlant les aigrettes 3·2 et la pointe diagonale.</p>
+      </div>
+      <a class="back-link" href="index.html">← Retour au carnet</a>
+    </header>
+
+    <section class="logos-grid" aria-label="Variantes verticales du Signet-Chouette">
+      <!-- Variante 1 -->
+      <article class="logo-card">
+        <div>
+          <div class="card-top">
+            <span class="badge-num">Variante 1</span>
+          </div>
+          <h2 class="card-title">Signet élancé (3 · 2)</h2>
+          <p class="card-desc">Marque-page vertical très épuré à encoche symétrique franche, coiffé des aigrettes asymétriques 3 plumes à gauche et 2 pointes à droite.</p>
+        </div>
+
+        <div class="stages">
+          <div class="stage stage-light">
+            <img src="carnet-test/assets/logos/logo-signet-1-elance.svg" width="112" height="112" alt="Signet élancé 3-2 sur fond clair">
+            <span class="stage-label">Fond clair</span>
+          </div>
+          <div class="stage stage-dark">
+            <img src="carnet-test/assets/logos/logo-signet-1-elance.svg" width="112" height="112" alt="Signet élancé 3-2 sur fond sombre">
+            <span class="stage-label">Fond sombre</span>
+          </div>
+        </div>
+
+        <div class="context-block">
+          <div>
+            <div class="context-label">En-tête barre latérale</div>
+            <div class="sidebar-mock">
+              <img src="carnet-test/assets/logos/logo-signet-1-elance.svg" width="28" height="28" alt="">
+              <div class="sidebar-text">
+                <strong>Carnet de notes</strong>
+                <span>2026-2027</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="context-label">Onglet &amp; icône 32 px / 16 px</div>
+            <div class="favicon-row">
+              <div class="browser-tab">
+                <img src="carnet-test/assets/logos/logo-signet-1-elance.svg" width="16" height="16" alt="">
+                <span>Carnet de notes</span>
+              </div>
+              <span class="size-32">
+                <img src="carnet-test/assets/logos/logo-signet-1-elance.svg" width="32" height="32" alt="">
+                <span>32 px</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Variante 2 -->
+      <article class="logo-card">
+        <div>
+          <div class="card-top">
+            <span class="badge-num">Variante 2</span>
+          </div>
+          <h2 class="card-title">Fusion (3 · 2 + Pointe)</h2>
+          <p class="card-desc">Alliance directe des deux favoris : verticalité marque-page, aigrettes 3·2 au sommet et pointe diagonale bas-droite discrètement étirée.</p>
+        </div>
+
+        <div class="stages">
+          <div class="stage stage-light">
+            <img src="carnet-test/assets/logos/logo-signet-2-fusion.svg" width="112" height="112" alt="Signet fusion 3-2 et Pointe sur fond clair">
+            <span class="stage-label">Fond clair</span>
+          </div>
+          <div class="stage stage-dark">
+            <img src="carnet-test/assets/logos/logo-signet-2-fusion.svg" width="112" height="112" alt="Signet fusion 3-2 et Pointe sur fond sombre">
+            <span class="stage-label">Fond sombre</span>
+          </div>
+        </div>
+
+        <div class="context-block">
+          <div>
+            <div class="context-label">En-tête barre latérale</div>
+            <div class="sidebar-mock">
+              <img src="carnet-test/assets/logos/logo-signet-2-fusion.svg" width="28" height="28" alt="">
+              <div class="sidebar-text">
+                <strong>Carnet de notes</strong>
+                <span>2026-2027</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="context-label">Onglet &amp; icône 32 px / 16 px</div>
+            <div class="favicon-row">
+              <div class="browser-tab">
+                <img src="carnet-test/assets/logos/logo-signet-2-fusion.svg" width="16" height="16" alt="">
+                <span>Carnet de notes</span>
+              </div>
+              <span class="size-32">
+                <img src="carnet-test/assets/logos/logo-signet-2-fusion.svg" width="32" height="32" alt="">
+                <span>32 px</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <!-- Variante 3 -->
+      <article class="logo-card">
+        <div>
+          <div class="card-top">
+            <span class="badge-num">Variante 3</span>
+          </div>
+          <h2 class="card-title">Ruban épuré (Plume &amp; Pointe)</h2>
+          <p class="card-desc">Silhouette marque-page encore plus longue avec fin reflet vertical de ruban à droite, double plume à gauche et pointe bas-droite.</p>
+        </div>
+
+        <div class="stages">
+          <div class="stage stage-light">
+            <img src="carnet-test/assets/logos/logo-signet-3-marquepage.svg" width="112" height="112" alt="Signet ruban Plume et Pointe épuré sur fond clair">
+            <span class="stage-label">Fond clair</span>
+          </div>
+          <div class="stage stage-dark">
+            <img src="carnet-test/assets/logos/logo-signet-3-marquepage.svg" width="112" height="112" alt="Signet ruban Plume et Pointe épuré sur fond sombre">
+            <span class="stage-label">Fond sombre</span>
+          </div>
+        </div>
+
+        <div class="context-block">
+          <div>
+            <div class="context-label">En-tête barre latérale</div>
+            <div class="sidebar-mock">
+              <img src="carnet-test/assets/logos/logo-signet-3-marquepage.svg" width="28" height="28" alt="">
+              <div class="sidebar-text">
+                <strong>Carnet de notes</strong>
+                <span>2026-2027</span>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="context-label">Onglet &amp; icône 32 px / 16 px</div>
+            <div class="favicon-row">
+              <div class="browser-tab">
+                <img src="carnet-test/assets/logos/logo-signet-3-marquepage.svg" width="16" height="16" alt="">
+                <span>Carnet de notes</span>
+              </div>
+              <span class="size-32">
+                <img src="carnet-test/assets/logos/logo-signet-3-marquepage.svg" width="32" height="32" alt="">
+                <span>32 px</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+  </main>
+</body>
+</html>

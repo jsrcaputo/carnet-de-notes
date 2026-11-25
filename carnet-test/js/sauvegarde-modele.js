@@ -20,7 +20,8 @@
 
     function isMeaningfulSubjectData(data) {
       if (!isRecord(data)) return false;
-      if ((Array.isArray(data.assignments) && data.assignments.length > 0) ||
+      if (data.equalWeights === false ||
+          (Array.isArray(data.assignments) && data.assignments.length > 0) ||
           (Array.isArray(data.customRubrics) && data.customRubrics.length > 0)) return true;
       const records = isRecord(data.studentRecords) ? Object.values(data.studentRecords) : [];
       if (records.some(record => {
@@ -35,10 +36,18 @@
       const session = isRecord(data.currentObsSession) ? data.currentObsSession : null;
       if (!session) return false;
       if (session.editingAssignmentId || String(session.title || '').trim() || session.customRubric ||
+          session.selectedCustomRubricId ||
+          (session.obsMode && session.obsMode !== 'portrait') ||
+          (isRecord(session.criteriaWeights) && Object.keys(session.criteriaWeights).length > 0) ||
+          (Array.isArray(session.targetLevels) && session.targetLevels.length > 0) ||
           (Array.isArray(session.linkTargets) && session.linkTargets.length > 0)) return true;
       return isRecord(session.studentDrafts) && Object.values(session.studentDrafts).some(draft =>
         isRecord(draft) && (
           (Array.isArray(draft.checked) && draft.checked.length > 0) ||
+          (isRecord(draft.criteria) && Object.keys(draft.criteria).length > 0) ||
+          draft.ilssPalier ||
+          draft.ilssCote ||
+          (Array.isArray(draft.quickComments) && draft.quickComments.length > 0) ||
           draft.overrideCode ||
           (Array.isArray(draft.tags) && draft.tags.length > 0) ||
           String(draft.comment || '').trim() ||

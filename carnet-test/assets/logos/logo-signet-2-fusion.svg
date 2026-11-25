@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="se2Bg" x1="16" y1="5" x2="49" y2="59" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0070ba"/>
+      <stop offset="55%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#1e3a8a"/>
+    </linearGradient>
+    <linearGradient id="se2Beak" x1="31.5" y1="28" x2="31.5" y2="36" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="100%" stop-color="#0284c7"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Marque-page vertical fusion : aigrettes 3 · 2 en haut + pointe diagonale nette bas-droite -->
+  <path d="M16.5 16.4C14.2 14.3 12.6 12.2 12.5 10.6C14.1 10.8 15.9 11.7 17.4 12.9C15.9 10.3 15.3 8 15.6 6.4C17.1 7.1 18.9 8.8 20.1 10.8C19.7 8.4 19.9 6.5 20.6 5.4C22.1 6.7 23.8 9.3 24.9 12.5C28.9 13.6 34.1 13.6 38.1 12.5C39.1 9.5 40.5 7.2 41.8 6.2C42.6 7.2 42.9 9 42.5 11.2C43.6 9.6 44.9 8.6 46.2 8.2C46.7 9.6 46.5 11.6 45.6 13.8L46.5 15.6V51.4L49.9 58.6C50.3 59.4 49.5 60.1 48.7 59.6L32.3 48.1C31.8 47.7 31.2 47.7 30.7 48.1L19.2 58.4C18.1 59.3 16.5 58.6 16.5 57.2V16.4Z" fill="url(#se2Bg)" stroke="#60a5fa" stroke-width="1.4" stroke-linejoin="round"/>
+
+  <!-- Disques d'observation en espace négatif -->
+  <circle cx="25.3" cy="25.6" r="5.8" fill="#f8fafc"/>
+  <circle cx="37.7" cy="25.6" r="5.8" fill="#f8fafc"/>
+
+  <!-- Pupilles -->
+  <circle cx="26" cy="25.8" r="2.6" fill="#1e3a8a"/>
+  <circle cx="37" cy="25.8" r="2.6" fill="#1e3a8a"/>
+  <circle cx="26.9" cy="24.8" r="0.86" fill="#bae6fd"/>
+  <circle cx="37.9" cy="24.8" r="0.86" fill="#bae6fd"/>
+
+  <!-- Bec losange -->
+  <path d="M31.5 27.6L34.3 31.3L31.5 35.5L28.7 31.3L31.5 27.6Z" fill="url(#se2Beak)" stroke="#f8fafc" stroke-width="1.1" stroke-linejoin="round"/>
+</svg>

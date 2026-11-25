@@ -5,12 +5,12 @@
         const fixedHeader = header && ['sticky', 'fixed'].includes(getComputedStyle(header).position);
         const offset = fixedHeader ? header.getBoundingClientRect().height + 12 : 12;
         const top = Math.max(0, element.getBoundingClientRect().top + window.scrollY - offset);
-        window.scrollTo({ top, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        window.scrollTo({ top, behavior: isReducedMotionEnabled() ? 'auto' : 'smooth' });
       });
     }
 
     function getIncompleteModifiedCompetency(student, subject) {
-      if (!student || !subject || !isSubjectModifiedForStudent(student, subject)) return null;
+      if (!student || !subject || isAccueilGroup() || !isSubjectModifiedForStudent(student, subject)) return null;
       const tabs = getCompetencyTabs();
       const picks = getAnnualCompetencyPicks(student);
       let target = null;
@@ -117,6 +117,35 @@
       return evaluations.size;
     }
 
+    function getGlobalReportOrderedStudents() {
+      const students = Array.isArray(appState.students) ? appState.students.slice() : [];
+      const sortMode = typeof prefs !== 'undefined' && prefs && prefs.summaryStudentSort === 'firstName'
+        ? 'firstName'
+        : 'lastName';
+      const compareText = (a, b) => String(a || '').localeCompare(String(b || ''), 'fr', { sensitivity: 'base' });
+      const getFirstName = student => (student.firstName || student.name || '').trim();
+      const getLastName = student => {
+        if (typeof student.lastName === 'string' && student.lastName.trim()) {
+          return student.lastName.trim();
+        }
+        const rawName = String(student.name || '').trim();
+        const firstSpace = rawName.indexOf(' ');
+        return firstSpace > 0 ? rawName.slice(firstSpace + 1).trim() : '';
+      };
+
+      students.sort((a, b) => {
+        if (sortMode === 'lastName') {
+          const la = getLastName(a);
+          const lb = getLastName(b);
+          if (Boolean(la) !== Boolean(lb)) return la ? -1 : 1;
+          const byLast = compareText(la, lb);
+          if (byLast !== 0) return byLast;
+        }
+        return compareText(getFirstName(a), getFirstName(b)) || compareText(getLastName(a), getLastName(b));
+      });
+      return students;
+    }
+
     function renderGlobalReportView() {
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
@@ -126,12 +155,13 @@
       appState.annualWeightMode = 'official';
       const weightMode = 'official';
 
-      const st = appState.students.find(s => s.id === appState.selectedStudentId) || null;
+      const orderedStudents = getGlobalReportOrderedStudents();
+      const st = orderedStudents.find(s => s.id === appState.selectedStudentId) || null;
       ['btnGrPrevStudent', 'btnGrNextStudent'].forEach(id => {
         document.getElementById(id).disabled = !st;
       });
 
-      if (!appState.students.length) {
+      if (!orderedStudents.length) {
         band.innerHTML = '';
         container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600">Ajoutez un élève pour consulter sa synthèse.</div>';
         return;
@@ -151,7 +181,7 @@
         placeholder.value = '';
         placeholder.textContent = 'Choisir un élève';
         select.appendChild(placeholder);
-        appState.students.forEach(student => {
+        orderedStudents.forEach(student => {
           const option = document.createElement('option');
           option.value = student.id;
           option.textContent = student.name;
@@ -165,7 +195,7 @@
         });
         band.appendChild(select);
       } else {
-        appState.students.forEach(student => {
+        orderedStudents.forEach(student => {
           const isSel = Boolean(st && student.id === st.id);
           const btn = document.createElement('button');
           btn.type = 'button';
@@ -196,6 +226,7 @@
       const preschoolDomains = {};
 
       SUBJECTS_CONFIG.forEach(sub => {
+        if (sub.isIlss) return;
         if (!isSubjectApplicableForStudent(sub, st)) return;
         sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
         const domain = preschoolDomains[sub.id] = { strengths: new Map(), challenges: new Map(), latestComment: null };
@@ -390,7 +421,16 @@
           const isPicked = pickedLevel !== undefined && Number(pickedLevel) === level.n;
           const isLocked = pickedLevel !== undefined && !isPicked;
           const rowLevels = (model.rows[sentence.row] || { levels: [] }).levels;
-          const rowTitle = rowLevels.length > 1 ? `Rapprochement suggéré aux échelons ${rowLevels.join(', ')}${isLocked ? ' — cliquer pour remplacer la phrase choisie' : ''}` : 'Précision propre à cet échelon';
+          const firstAligned = Math.min(...rowLevels);
+          const lastAligned = Math.max(...rowLevels);
+          const alignedLevels = new Set(rowLevels);
+          const unaligned = rowLevels.length > 1
+            ? Array.from({ length: lastAligned - firstAligned - 1 }, (_, index) => firstAligned + index + 1)
+              .filter(number => !alignedLevels.has(number))
+            : [];
+          const rowTitle = rowLevels.length > 1
+            ? `Rapprochement suggéré aux échelons ${rowLevels.join(', ')}${unaligned.length ? ` — aucun rapprochement suggéré aux échelons ${unaligned.join(', ')}` : ''}${isLocked ? ' — cliquer pour remplacer la phrase choisie' : ''}`
+            : 'Précision propre à cet échelon';
           return `<span class="comp-sentence${isPicked ? ' is-picked' : ''}${isLocked ? ' is-locked' : ''}" title="${rowTitle}" role="button" tabindex="0" aria-pressed="${isPicked}" data-comp-scale="${scale.id}" data-comp-row="${sentence.row}" data-comp-level="${level.n}">${escapeHtml(sentence.text)}</span> `;
         };
         const meterHtml = model.levels.map(level => {
@@ -431,7 +471,7 @@
                 ${result ? `
                   <span class="comp-result-label">Niveau estimé</span>
                   <strong class="comp-result-level">${result.level}<small> / ${scale.max}</small></strong>
-                  <span class="comp-result-note">atteint par la majorité : ${result.atOrAbove} phrase${result.atOrAbove > 1 ? 's' : ''} sur ${result.count} à l’échelon ${result.level} ou plus${result.min !== result.max ? ` (échelons ${result.min} à ${result.max})` : ''}</span>
+                  <span class="comp-result-note">atteint par la majorité : ${result.atOrAbove} phrase${result.atOrAbove > 1 ? 's' : ''} sur ${result.count} à l’échelon ${result.level} ou plus${result.min !== result.max ? ` (échelons ${result.min} à ${result.max})` : ''}. Calcul par médiane pondérée; à égalité, l’échelon inférieur est retenu.</span>
                 ` : `
                   <span class="comp-result-label">Aucune phrase choisie</span>
                   <span class="comp-result-note">Le niveau apparaîtra ici au fil de vos clics.</span>
@@ -480,7 +520,9 @@
           ${refAnchor((refSubject && refSubject.cssmbUrl) || 'https://sre.servicescsmb.com/disciplines/', 'Ressources CSSMB')}
         </div>` : '';
 
-      const competencyModuleHtml = st.gradeLevel === 'P' || competencyTabs.every(tab => tab.disabled) ? '' : `
+      const competencyModuleHtml = st.gradeLevel === 'P' ||
+        (typeof isAccueilGroup === 'function' && isAccueilGroup()) ||
+        competencyTabs.every(tab => tab.disabled) ? '' : `
         <details id="competencyPositioning" class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden" ${competencyPanelOpen ? 'open' : ''}>
           <summary class="comp-card-summary px-4 py-3 bg-slate-50 cursor-pointer flex flex-col gap-2.5">
             <div class="comp-card-summary-top flex flex-wrap items-center justify-between gap-2 w-full">
@@ -661,6 +703,7 @@
         return `${generalPills}${modPill}`;
       })();
 
+      const showNumericalResults = !(typeof isAccueilGroup === 'function' && isAccueilGroup() && !SUBJECTS_CONFIG.length);
       container.innerHTML = `
         <!-- Header Identity Card -->
         <div class="bg-white text-slate-900 rounded-xl p-4 sm:p-5 shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-4">
@@ -680,7 +723,7 @@
         <!-- Résultats annuels -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
           <!-- Résultats par matière -->
-          <div class="${st.gradeLevel === 'P' ? 'gr-span-full ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          ${showNumericalResults ? `<div class="${st.gradeLevel === 'P' ? 'gr-span-full ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
               <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Portrait du développement par domaine' : 'Résultats annuels par matière'}</h4>
               ${st.gradeLevel === 'P' ? '' : '<span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>'}
@@ -688,10 +731,10 @@
             <div class="space-y-2.5">
               ${st.gradeLevel === 'P' ? preschoolDomainsHtml : `${chartBarsHtml}<p class="text-xs text-slate-500">Un résultat provisoire utilise uniquement les étapes disponibles; leurs poids sont réajustés proportionnellement.</p>`}
             </div>
-          </div>
+          </div>` : ''}
 
           <!-- Synthèse -->
-          <div class="${st.gradeLevel === 'P' ? 'gr-span-full' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+          <div class="${st.gradeLevel === 'P' || !showNumericalResults ? 'gr-span-full' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
             <div class="flex items-center justify-between border-b border-slate-100 pb-2">
               <h4 class="text-sm font-bold text-slate-900">Commentaires de l’enseignant(e)</h4>
             </div>
@@ -721,7 +764,7 @@
         </div>
 
         <!-- Tableau récapitulatif des étapes -->
-        ${st.gradeLevel === 'P' ? '<details class="bg-white rounded-xl border border-slate-200"><summary class="p-4 text-sm font-bold cursor-pointer">Voir les résultats numériques conservés</summary><p class="px-4 pb-3 text-xs text-slate-600">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
+        ${showNumericalResults ? `${st.gradeLevel === 'P' ? '<details class="bg-white rounded-xl border border-slate-200"><summary class="p-4 text-sm font-bold cursor-pointer">Voir les résultats numériques conservés</summary><p class="px-4 pb-3 text-xs text-slate-600">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
         <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
           <div class="gr-results-heading px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
             <h4 class="text-sm font-bold text-slate-900">Résultats des trois étapes par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
@@ -771,11 +814,12 @@
           </table>
           </div>
         </div>
-        ${st.gradeLevel === 'P' ? '</details>' : ''}
+        ${st.gradeLevel === 'P' ? '</details>' : ''}` : ''}
 
         ${competencyModuleHtml}
       `;
 
+      if (typeof renderAccueilSummary === 'function') renderAccueilSummary(container, st);
       document.getElementById('grTeacherComment').addEventListener('input', event => {
         st.reportComment = event.target.value;
         document.getElementById('grTeacherCommentPrint').textContent = event.target.value;

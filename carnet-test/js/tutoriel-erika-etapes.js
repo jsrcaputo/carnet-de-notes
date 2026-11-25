@@ -13,9 +13,31 @@
     return students.length > 0 && students.every(student => student && student.gradeLevel === 'P');
   }
 
+  function isCurrentGroupAccueil() {
+    return typeof isAccueilGroup === 'function' && Boolean(isAccueilGroup());
+  }
+
+  function isCurrentSubjectIlss() {
+    if (typeof getCurrentSubjectConfig !== 'function') return false;
+    try {
+      const subject = getCurrentSubjectConfig();
+      return Boolean(subject && subject.isIlss);
+    } catch (error) {
+      return false;
+    }
+  }
+
   function countRealGroups() {
     if (typeof appState === 'undefined' || !appState || !Array.isArray(appState.groups)) return 0;
     return appState.groups.filter(group => group && !group.placeholder).length;
+  }
+
+  function hasCurrentSubjectAssignments() {
+    if (typeof appState === 'undefined' || !appState || !appState.terms) return false;
+    const term = appState.terms[String(appState.activeTerm)];
+    if (!term || !term.subjectData || !appState.activeSubjectId) return false;
+    const subject = term.subjectData[appState.activeSubjectId];
+    return Boolean(subject && Array.isArray(subject.assignments) && subject.assignments.length > 0);
   }
 
   window.ERIKA_TOURS = {
@@ -47,6 +69,34 @@
       autoOffer: true,
       steps: [
         {
+          id: 'dash-sidebar',
+          target: '.test-sidebar',
+          title: 'Votre menu permanent',
+          body: () => countRealGroups() > 1
+            ? 'À gauche, changez de groupe, passez d’une étape à l’autre, ouvrez une matière ou consultez la synthèse annuelle.'
+            : 'Votre menu à gauche vous suit partout pour changer d’étape, ouvrir une matière, gérer vos élèves ou consulter la synthèse.',
+          placement: 'right',
+          padding: 6
+        },
+        {
+          id: 'dash-search',
+          target: '#studentSearchPopover',
+          title: 'Retrouver un élève en 2 secondes',
+          body: 'Tapez un prénom ici pour ouvrir directement la synthèse complète de l’élève sans fouiller les listes.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
+        },
+        {
+          id: 'dash-privacy',
+          target: '#dashPrivacyToggle',
+          title: 'Masquer pour le TNI',
+          body: 'Avant de projeter votre écran en classe, cliquez ici pour masquer d’un seul coup les notes et noms sensibles.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
+        },
+        {
           id: 'dash-tabs',
           target: '#dashTabs',
           fallbackTarget: '#dashOverviewSection',
@@ -69,23 +119,15 @@
             }
             return isCurrentGroupPreschool()
               ? 'Chaque ligne suit un domaine du préscolaire, sans pourcentage. Cliquez dessus pour observer la classe ou utilisez « + » pour lancer une trace.'
-              : 'Chaque ligne suit une compétence du bulletin avec son avancement et sa pondération. Cliquez dessus pour l’ouvrir ou utilisez « + » pour ajouter un travail.';
+              : isCurrentGroupAccueil()
+                ? 'Chaque ligne suit une compétence. En ILSS, les résultats s’expriment en paliers et en cotes, sans pourcentage; la mathématique garde sa pondération. Cliquez sur une ligne pour l’ouvrir.'
+                : 'Chaque ligne suit une compétence du bulletin avec son avancement et sa pondération. Cliquez dessus pour l’ouvrir ou utilisez « + » pour ajouter un travail.';
           },
           placement: 'top',
           padding: 8,
           beforeEnter: () => {
             if (typeof window.setDashboardTab === 'function') window.setDashboardTab('todo');
           }
-        },
-        {
-          id: 'dash-sidebar',
-          target: '.test-sidebar',
-          title: 'Votre menu permanent',
-          body: () => countRealGroups() > 1
-            ? 'À gauche, changez de groupe, passez d’une étape à l’autre, ouvrez une matière ou consultez la synthèse annuelle.'
-            : 'Votre menu à gauche vous suit partout pour changer d’étape, ouvrir une matière, gérer vos élèves ou consulter la synthèse.',
-          placement: 'right',
-          padding: 6
         }
       ]
     },
@@ -105,10 +147,21 @@
           padding: 8
         },
         {
+          id: 'students-tools',
+          target: '#studentListTools',
+          title: 'Trier votre classe en un clic',
+          body: 'Réorganisez l’ordre d’affichage par prénom ou par nom : ce tri s’applique automatiquement à tout le carnet.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length >= 2
+        },
+        {
           id: 'students-row',
           target: '#studentManagerList > [data-student-id]:first-child',
-          title: 'Niveau, adaptations et bulletin modifié',
-          body: 'Le niveau choisi ici règle automatiquement les grilles du bon cycle. Juste à côté, vous pouvez aussi noter des adaptations ou activer un bulletin modifié.',
+          title: () => isCurrentGroupAccueil() ? 'L’année réelle de chaque élève' : 'Niveau, adaptations et bulletin modifié',
+          body: () => isCurrentGroupAccueil()
+            ? 'En classe d’accueil, choisissez l’année scolaire de chaque élève : les grilles de mathématique et les repères ILSS s’ajustent à son cycle. Vous pouvez aussi noter des adaptations.'
+            : 'Le niveau choisi ici règle automatiquement les grilles du bon cycle. Juste à côté, vous pouvez aussi noter des adaptations ou activer un bulletin modifié.',
           placement: 'bottom',
           padding: 8,
           when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
@@ -133,20 +186,21 @@
           id: 'gb-new-eval',
           target: '#btnNewEvaluation',
           title: 'Ajouter une évaluation',
-          body: 'Pour ajouter un travail, cliquez ici. Vous choisissez entre une évaluation déjà notée ou une grille observable à cocher directement à l’écran.',
+          body: () => isCurrentSubjectIlss()
+            ? 'Cliquez ici pour ajouter une évaluation : « Déjà réalisée » pour consigner un palier et une cote, ou « Observable » pour cocher une grille de paliers directement à l’écran.'
+            : 'Pour ajouter un travail, cliquez ici. Vous choisissez entre une évaluation déjà notée ou une grille observable à cocher directement à l’écran.',
           placement: 'bottom',
           padding: 8,
           when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
         },
         {
-          id: 'gb-table',
-          target: '#gradebookScrollContainer',
-          fallbackTarget: '#gradebookFrame',
-          title: 'Saisir les notes et repères',
-          body: 'Entrez les notes comme dans un tableur avec Entrée et les flèches. Survolez une case et cliquez sur « ••• » pour noter une aide, une absence ou un travail non remis.',
-          placement: 'top',
-          padding: 6,
-          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
+          id: 'gb-weights',
+          target: '#btnWeightMode',
+          title: 'Pondération et cadenas',
+          body: 'Ajustez ici le poids de chaque travail : verrouillez un cadenas sur une évaluation et les autres se rééquilibrent automatiquement.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && hasCurrentSubjectAssignments() && !isCurrentGroupPreschool()
         },
         {
           id: 'gb-summary-cols',
@@ -155,7 +209,47 @@
           body: 'À droite, le carnet prépare le bilan d’étape : repères de jugement, note finale modifiable d’un clic et commentaires au bulletin.',
           placement: 'bottom',
           padding: 6,
-          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && !isCurrentSubjectIlss()
+        },
+        {
+          id: 'gb-ilss-summary-cols',
+          target: '#gradebookHeaderRow th:nth-last-child(-n+2)',
+          title: 'Jugement d’étape et commentaires',
+          body: 'À droite, le carnet propose un jugement d’étape (palier et cote) à partir de vos évaluations. Cliquez dessus pour le modifier; « Auto » rétablit la proposition. Les commentaires viennent d’une banque propre à l’accueil.',
+          placement: 'bottom',
+          padding: 6,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && isCurrentSubjectIlss()
+        },
+        {
+          id: 'gb-ilss-cells',
+          target: '#gradebookBody [data-ilss-cell]',
+          title: 'Paliers et cotes, sans pourcentage',
+          body: 'Chaque case indique le palier (P1 à P5) et la cote (A à D). Cliquez pour les choisir; dans une grille observable, le clic rouvre la grille de l’élève.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && isCurrentSubjectIlss() && hasCurrentSubjectAssignments()
+        },
+        {
+          id: 'gb-adapt-markers',
+          target: '#gradebookBody tr:first-child td:nth-child(2) .score-cell-wrap',
+          fallbackTarget: '#gradebookBody .score-cell-wrap',
+          title: 'Marqueurs d’adaptation et de suivi',
+          body: 'Entrez les notes comme dans un tableur. Le bouton « ••• » de chaque case note les marqueurs d’adaptation (Aide, Temps+, Outil, Mod) et de suivi (NR, Justifié, À reprendre).',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && hasCurrentSubjectAssignments() && !isCurrentSubjectIlss()
+        },
+        {
+          id: 'gb-table-empty',
+          target: '#gradebookScrollContainer',
+          fallbackTarget: '#gradebookFrame',
+          title: () => isCurrentSubjectIlss() ? 'Consigner les paliers' : 'Saisir les notes et repères',
+          body: () => isCurrentSubjectIlss()
+            ? 'Votre tableau s’affichera ici dès votre première évaluation. Chaque colonne situera ensuite chaque élève sur un palier, avec sa cote.'
+            : 'Votre tableau s’affichera ici dès votre première évaluation. Vous naviguerez ensuite case par case comme dans un tableur.',
+          placement: 'top',
+          padding: 6,
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && !hasCurrentSubjectAssignments()
         }
       ]
     },
@@ -173,19 +267,32 @@
           padding: 8
         },
         {
+          id: 'qo-modes',
+          target: '#qoModeSegment',
+          fallbackTarget: '#qoToolModeBar',
+          title: 'Trois modes de grille',
+          body: 'Passez ici d’une grille rapide à une grille pondérée ou créez votre propre grille sur mesure selon l’activité observée.',
+          placement: 'bottom',
+          padding: 8
+        },
+        {
           id: 'qo-grid',
           target: '#observationPrintGrid',
           fallbackTarget: '#qoStudentBox',
           title: 'Observer en un clic',
-          body: 'Choisissez un élève en haut, puis cliquez une case par rangée : la cote se calcule toute seule. Vous pouvez aussi passer en grille pondérée ou créer la vôtre.',
+          body: () => isCurrentSubjectIlss()
+            ? 'Choisissez un élève en haut, puis cochez dans chaque rangée la manifestation observée, du palier 1 au palier 5 : le palier se propose tout seul et reste modifiable à droite.'
+            : 'Choisissez un élève en haut, puis cliquez une case par rangée : la cote se calcule toute seule. Vous pouvez aussi passer en grille pondérée ou créer la vôtre.',
           placement: 'top',
           padding: 8
         },
         {
           id: 'qo-side',
           target: '#qoSidePanel',
-          title: 'Forces, défis et notes rapides',
-          body: 'Cochez ici des forces ou des défis et ajoutez une note rapide. Tout se regroupe ensuite pour rédiger vos commentaires de bulletin plus vite.',
+          title: () => isCurrentSubjectIlss() ? 'Palier, cote, forces et défis' : 'Forces, défis et notes rapides',
+          body: () => isCurrentSubjectIlss()
+            ? 'Ici, confirmez ou ajustez le palier et la cote, cochez des forces ou des défis et ajoutez une note. Tout se regroupe ensuite pour rédiger vos commentaires plus vite.'
+            : 'Cochez ici des forces ou des défis et ajoutez une note rapide. Tout se regroupe ensuite pour rédiger vos commentaires de bulletin plus vite.',
           placement: 'left',
           padding: 8
         }
@@ -228,13 +335,24 @@
       autoOffer: true,
       steps: [
         {
+          id: 'gr-print-export',
+          target: ['#btnPrintView', '#btnExportExcel'],
+          title: 'Imprimer ou exporter',
+          body: 'Sortez une fiche propre en PDF pour les rencontres de parents ou exportez votre carnet complet vers Excel en un clic.',
+          placement: 'bottom',
+          padding: 8,
+          when: () => typeof appState !== 'undefined' && Boolean(appState.selectedStudentId)
+        },
+        {
           id: 'gr-portrait',
           target: '#grReportContent .ps-section',
           fallbackTarget: '#grReportContent > div:nth-child(2)',
           title: 'Portrait des trois étapes',
           body: () => isCurrentGroupPreschool()
             ? 'Ici, les cinq domaines du préscolaire sont réunis avec leur parcours sur l’année et vos constats, sans pourcentage officiel.'
-            : 'Retrouvez ici les trois étapes (20, 20 et 60 %), la tendance et vos commentaires. Cliquez sur une matière pour retourner dans son carnet.',
+            : isCurrentGroupAccueil()
+              ? 'Retrouvez ici les trois étapes. En ILSS, chaque compétence affiche son palier et sa cote, sans pourcentage; la mathématique garde ses étapes de 20, 20 et 60 %.'
+              : 'Retrouvez ici les trois étapes (20, 20 et 60 %), la tendance et vos commentaires. Cliquez sur une matière pour retourner dans son carnet.',
           placement: 'top',
           padding: 8,
           when: () => typeof appState !== 'undefined' && Boolean(appState.selectedStudentId)

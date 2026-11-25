@@ -29,6 +29,16 @@ L'état de la liaison apparaît en haut de la page. Si le fichier est modifié a
 
 Si l'accès direct aux fichiers n'est pas disponible, **Sauvegarder** télécharge une copie JSON : les changements ultérieurs ne sont pas enregistrés dans cette copie. L'export Excel dépend encore d'une bibliothèque chargée sur Internet ; l'ouverture locale n'implique donc pas un fonctionnement entièrement hors ligne.
 
+### Nombreux groupes et grands effectifs
+
+Un scénario fictif de 500 élèves dans 20 groupes, avec trois compétences d'éducation physique et huit évaluations par compétence à chacune des trois étapes, a été vérifié en sauvegarde et rechargement. Le carnet affiche les élèves du groupe actif, pas les 500 élèves simultanément. Ces essais ne constituent pas une garantie de performance sur tous les appareils.
+
+La limite de chargement est de 25 Mio de données JSON (environ 33,34 Mio pour leur enveloppe chiffrée). Au-delà, l'enregistrement dans le fichier lié est interrompu sans l'écraser. Utilisez **Options → Télécharger une copie JSON** : une copie complète portant le suffixe `_RECUPERATION_HORS_LIMITE` est téléchargée, chiffrée avec le même mot de passe si le carnet est chiffré. Vérifiez que ce téléchargement existe avant de fermer l'onglet et conservez le fichier précédent.
+
+Cette copie de récupération conserve les données, mais **ne peut pas être chargée tant que son JSON dépasse 25 Mio**. Elle n'est donc pas présentée comme une sauvegarde normalement rechargeable; le statut d'avertissement reste visible. L'application ne propose pas de répartition automatique des groupes entre fichiers : une réduction ou une répartition de la copie, en conservant sa structure et toutes ses données, nécessite une intervention technique (et son déchiffrement préalable si elle est protégée). Les réglages d'une session d'observation sont conservés même avant la première saisie.
+
+L'historique d'annulation est limité à 60 actions et à un budget de 32 Mio d'instantanés, avec au moins une action conservée même si son instantané dépasse ce budget. Les grands carnets disposent donc de moins d'actions annulables; l'historique reste temporaire et ne remplace pas les copies de sauvegarde.
+
 ## Résultats et pondérations
 
 Dans le carnet, la colonne « Moy. Travaux » affiche uniquement la moyenne pondérée. Les poids restent visibles dans les en-têtes des évaluations. Les notes manquantes, non évaluées, non remises, justifiées ou en reprise ne valent pas zéro : la moyenne utilise seulement les poids des résultats disponibles.
@@ -65,3 +75,34 @@ La structure des vues et des dialogues est dans [index.html](index.html). Les r�
 - `navigation.js` et `demarrage.js` : placement des commandes, initialisation et écouteurs d'événements.
 
 Les scripts sont des **scripts classiques**, chargés dans l'ordre indiqué par `index.html`, sans `async` ni modules ES6. Cet ordre est important : les variables globales, la construction des grilles et leurs versions historiques en dépendent. Ne pas déplacer ou renommer les fichiers sans mettre à jour les liens ; conserver cet ordre lors des modifications.
+
+## Musique
+
+La musique est offerte aux trois cycles. Le carnet distingue **Inventer et interpréter** (70 % au bulletin) et **Apprécier** (30 %). Ces poids ne remplacent pas les pondérations des évaluations à l’intérieur de chaque volet. La moyenne générale indicative regroupe les deux volets selon ces poids lorsqu’ils sont tous les deux renseignés; elle ne traite pas un volet manquant comme un zéro.
+
+Les critères et les commentaires proposés sont des repères locaux adaptés aux cycles, et non des grilles ministérielles. Le retour réflexif marqué d’un astérisque sert à la rétroaction et ne compte pas dans le résultat. Les échelles ministérielles restent consultables dans **Informations et sources**.
+
+## Classe d’accueil
+
+Dans **Niveau du groupe**, choisissez **Accueil (Multi)** entre « 6e année » et « Sélection individuelle ». Ajoutez ensuite les élèves comme d’habitude et choisissez le niveau scolaire propre à chacun. Le niveau « Accueil (Multi) » sert à organiser le groupe; il n’est jamais attribué à un élève.
+
+La matière **ILSS (Français)** apparaît dans la navigation des matières avec trois compétences : communiquer oralement, lire et écrire. Comme les autres matières, elle utilise un carnet à colonnes : une colonne par évaluation et une dernière colonne pour le jugement d’étape. Aucun éditeur ILSS n’apparaît dans la liste de gestion des élèves. Le module de français régulier n’est pas dupliqué pour éviter de mélanger les cadres ILSS et français, langue d’enseignement.
+
+Deux flux complètent le carnet : **Évaluation déjà réalisée** pour une production ou un entretien terminé, et **Grille d’observation** pour les manifestations constatées en contexte. Chaque compétence possède ses quatre critères observables adaptés aux cinq paliers ILSS; le niveau scolaire reste visible et le repère du cycle est rappelé dans la grille. Le palier proposé est la médiane des résultats, puis la cote proposée est la médiane prudente des cotes au palier retenu. Le résultat demeure qualitatif, sans pourcentage, et les menus de palier/cote de la dernière colonne permettent de le remplacer facilement ou de revenir à « Auto ». Cette organisation reprend la triangulation des conversations, observations et productions.
+
+Les deux compétences de mathématique sont activées avec ce niveau de groupe et utilisent le système habituel du carnet selon le niveau individuel de chaque élève. D’autres matières peuvent rester sélectionnées si elles sont effectivement enseignées et évaluées. L’application n’applique pas automatiquement les parts d’horaire de 65 % ILSS, 20 % mathématique et 15 % autres matières comme pondérations de résultats. La synthèse, l’impression et l’export Excel distinguent les jugements ILSS des résultats des autres matières.
+
+Dans Excel, les textes trop longs pour une cellule sont répartis sur des lignes numérotées : concaténez les parties dans l’ordre pour les reconstituer. Les anciens carnets créés avec un champ distinct « type de classe » sont migrés automatiquement vers **Accueil (Multi)**. L’application soutient le suivi enseignant, mais n’établit pas le bulletin officiel.
+
+La démonstration **Accueil (Multi)** contient 17 élèves fictifs répartis de la 1re à la 6e année. Ce nombre correspond au maximum indiqué par le CSSDM pour une classe d’accueil de son réseau, et non à une moyenne provinciale. La démonstration de spécialiste comprend aussi des groupes et des travaux fictifs en musique.
+
+## Sources ministérielles
+
+- Musique : [programme d’études](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-musique-primaire.pdf), [progression des apprentissages](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/progressions-apprentissages/PFEQ-progression-apprentissages-musique-primaire.pdf), [cadre d’évaluation](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-musique-primaire.pdf) et [ressources officielles](https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/musique).
+- Accueil : [programme d’intégration linguistique, scolaire et sociale](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/programmes/PFEQ-integration-linguistique-scolaire-sociale-primaire.pdf), [cadre d’évaluation](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-integration-linguistique-scolaire-sociale-primaire.pdf), [paliers pour l’évaluation du français](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/PFEQ-paliers-evaluation-integration-scolaire-linguistique-primaire.pdf) et [ressources officielles](https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/integration-linguistique-scolaire-sociale).
+- Mathématique en accueil : [programme](https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/programme-formation-ecole-quebecoise/primaire/mathematique) et [cadre d’évaluation](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/cadres-evaluation/primaire/francais/PFEQ-cadre-evaluation-mathematique-primaire.pdf).
+- Effectif de la classe d’accueil de démonstration : [page Classes d’accueil de l’école Jean-Paul-Riopelle (CSSDM)](https://jean-paul-riopelle.cssdm.gouv.qc.ca/programmes/classes-daccueil/), qui mentionne un maximum de 17 élèves au CSSDM.
+- Pratiques de suivi ILSS : [normes et modalités — classe d’accueil (CSS des Deux-Rives)](https://deuxruisseaux.csspo.gouv.qc.ca/wp-content/uploads/sites/23/2026/10/P26-27-ResumeSequenceEvaluationNormesEtModalites-Classe-daccueil.pdf), [recueillir des traces par triangulation (CSSDD)](https://ilss.cssdd.gouv.qc.ca/secondaire/support-enseignants-ilss/%C3%A9valuation/receuillir-des-traces) et [évaluation en classe d’accueil au primaire (CSSDM)](https://cybersavoir.cssdm.gouv.qc.ca/saf-pp/evaluation/).
+- [Instruction annuelle 2026-2027](https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/education/publications-adm/education/instruction-annuelle/Instruction-annuelle-2026-2027.pdf) : en accueil, 65 % du temps d’enseignement est consacré à l’ILSS, 20 % aux mathématiques et 15 % aux autres matières; ces pourcentages ne sont pas des pondérations des résultats.
+- [Pondérations et libellés du bulletin au préscolaire et au primaire](https://www.quebec.ca/education/prescolaire-primaire-et-secondaire/programmes-formations-evaluation/epreuves-ministerielles-evaluation-apprentissages/ponderations-libelles-bulletin/prescolaire-primaire).
+- Échelles des niveaux de compétence du primaire : [1er cycle](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-1erCycle.pdf), [2e cycle](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-2eCycle.pdf) et [3e cycle](https://cdn-contenu.quebec.ca/cdn-contenu/education/pfeq/primaire/Echelles-niveau-competence-primaire-3eCycle.pdf).

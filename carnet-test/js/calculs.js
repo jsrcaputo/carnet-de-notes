@@ -490,17 +490,18 @@
     }
 
     function computeDisciplineAverageForSummary(rows, valueKey = 'annualAvg') {
-      const english = rows.filter(row => row.sub.group === 'anglais');
-      const other = rows.filter(row => row.sub.group !== 'anglais');
+      const weightedGroups = ['anglais', 'musique'];
+      const other = rows.filter(row => !weightedGroups.includes(row.sub.group));
       const values = other.map(row => row[valueKey]).filter(value => value !== null && Number.isFinite(Number(value)));
-      if (english.length) {
-        if (english.every(row => row[valueKey] !== null && row.sub.officialWeight !== null)) {
-          const weight = english.reduce((sum, row) => sum + Number(row.sub.officialWeight), 0);
-          if (weight > 0) {
-            values.push(english.reduce((sum, row) => sum + Number(row[valueKey]) * Number(row.sub.officialWeight), 0) / weight);
+      weightedGroups.forEach(group => {
+        const parts = rows.filter(row => row.sub.group === group);
+        if (parts.length && parts.every(row => row[valueKey] !== null && Number.isFinite(Number(row[valueKey])) && row.sub.officialWeight !== null)) {
+          const weight = parts.reduce((sum, row) => sum + Number(row.sub.officialWeight), 0);
+          if (weight === 100) {
+            values.push(parts.reduce((sum, row) => sum + Number(row[valueKey]) * Number(row.sub.officialWeight), 0) / weight);
           }
         }
-      }
+      });
       return values.length ? Math.round(values.reduce((sum, value) => sum + Number(value), 0) / values.length) : null;
     }
 
@@ -653,6 +654,7 @@
           makeScale('art_dram_apprecier', 'Apprécier', 'Art dram. · Apprécier')
         ] },
         { id: 'art_plast', label: 'Arts plastiques', scales: [], disabled: true },
+        { id: 'musique', label: 'Musique', scales: [], disabled: true },
         { id: 'presco', label: 'Préscolaire', scales: [], disabled: true }
       ].filter(tab => {
         const key = { sciences_global: 'sciences', univers_social: 'social' }[tab.id] || tab.id;

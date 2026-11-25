@@ -1,10 +1,26 @@
+    const MAX_ENCRYPTED_JSON_IMPORT_BYTES = Math.ceil((MAX_JSON_IMPORT_BYTES + 16) / 3) * 4 + 1024;
+
+    function validateClearBackupSize(text, saving = false) {
+      if (new Blob([text]).size > MAX_JSON_IMPORT_BYTES) {
+        throw new Error(saving
+          ? 'Le carnet dépasse 25 Mio de JSON. Le fichier lié reste intact. Utilisez Options → Télécharger une copie JSON pour créer une copie de récupération hors limite.'
+          : 'Ce fichier dépasse la limite de chargement de 25 Mio de JSON. Conservez-le : une réduction ou une répartition technique de sa copie est nécessaire pour le charger.');
+      }
+    }
+
     async function downloadBackup(encryption = activeBackupEncryption) {
       try {
         const snapshot = getBackupSnapshot();
         const cleartext = serializeBackup();
+        const oversized = new Blob([cleartext]).size > MAX_JSON_IMPORT_BYTES;
         const payload = encryption ? await encryptBackup(cleartext, encryption) : cleartext;
         const data = new Blob([payload], { type: 'application/json;charset=utf-8' });
-        downloadBlob(data, `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}.json`);
+        downloadBlob(data, `Carnet_de_notes_2026_2027_${new Date().toISOString().slice(0, 10)}${oversized ? '_RECUPERATION_HORS_LIMITE' : ''}.json`);
+        if (oversized) {
+          setFileSyncStatus('error', 'Copie de récupération téléchargée : hors limite de chargement');
+          showToast(`Copie de récupération${encryption ? ' chiffrée' : ''} téléchargée. Elle conserve tout le carnet, mais ne sera pas chargeable tant que ses données JSON dépassent 25 Mio. Le fichier lié reste intact.`);
+          return;
+        }
         carnetIsSaved = true;
         if (!activeFileHandle) {
           lastSavedFileSnapshot = snapshot;
@@ -13,7 +29,7 @@
         showToast(`Copie JSON${encryption ? ' chiffrée' : ''} téléchargée. Elle ne se met pas à jour automatiquement.`);
       } catch (error) {
         console.error('Échec de la création de la sauvegarde JSON.', error);
-        showToast('Impossible de créer la copie JSON.');
+        showToast(error instanceof Error ? error.message : 'Impossible de créer la copie JSON.');
       }
     }
 
@@ -105,9 +121,10 @@
                (first || getBackupSnapshot() !== lastSavedFileSnapshot)) {
           first = false;
           const snapshot = getBackupSnapshot();
-          const cleartext = serializeBackup();
           setFileSyncStatus('saving', 'Enregistrement en cours…');
           try {
+            const cleartext = serializeBackup();
+            validateClearBackupSize(cleartext, true);
             const payload = activeBackupEncryption ? await encryptBackup(cleartext, activeBackupEncryption) : cleartext;
             const currentText = await (await handle.getFile()).text();
             if (currentText !== linkedFileText) {
@@ -130,7 +147,7 @@
             console.error('Échec de la sauvegarde directe.', error);
             fileWriteBlocked = true;
             setFileSyncStatus('error', 'Sauvegarde interrompue : téléchargez une copie');
-            showToast('Sauvegarde directe impossible. Téléchargez une copie JSON.');
+            showToast(error instanceof Error ? error.message : 'Sauvegarde directe impossible. Téléchargez une copie JSON.');
             return false;
           }
         }
@@ -255,12 +272,13 @@
 
     async function loadBackupFile(file, handle, expectedSnapshot, writable = false) {
       try {
-        if (!file || !Number.isFinite(file.size) || file.size > MAX_JSON_IMPORT_BYTES) {
-          throw new Error('Le fichier dépasse la taille maximale autorisée de 25 Mo.');
+        if (!file || !Number.isFinite(file.size) || file.size > MAX_ENCRYPTED_JSON_IMPORT_BYTES) {
+          throw new Error('Le fichier dépasse la taille maximale autorisée (25 Mo de JSON, environ 34 Mo après chiffrement).');
         }
         const text = await file.text();
         const decrypted = await decryptBackup(text);
         if (!decrypted) return false;
+        validateClearBackupSize(decrypted.text);
         const { importedState, importedPrefs, importedPresets } = parseBackup(decrypted.text);
         if (activeFileWrite) await activeFileWrite;
         if (activeFileHandle && getBackupSnapshot() !== lastSavedFileSnapshot) {

@@ -1,6 +1,7 @@
     function getDisciplines() {
       const seen = new Map();
       ALL_SUBJECTS_CONFIG.forEach(s => {
+        if (s.hiddenFromGroupSelector) return;
         const key = s.group || s.id;
         if (!seen.has(key)) {
           seen.set(key, {
@@ -33,15 +34,29 @@
           <input type="checkbox" data-discipline="${d.key}" ${d.ids.every(id => chosen.has(id)) ? 'checked' : ''} class="h-3.5 w-3.5" aria-label="${escapeHtml(d.label)}">
           <span>${escapeHtml(d.label)}</span>
         </label>`).join('');
-      lvlSel.onchange = () => {
-        const isP = lvlSel.value === 'P';
+      const syncLevel = resetDefaults => {
+        const level = lvlSel.value;
+        const isP = level === 'P';
+        const isAccueil = level === 'accueil';
         list.querySelectorAll('input[data-discipline]').forEach(cb => {
           const k = cb.getAttribute('data-discipline');
           if (k === 'art_plast') return;
-          cb.checked = isP ? k === 'presco' : k !== 'presco';
+          if (resetDefaults) {
+            cb.checked = isP ? k === 'presco'
+              : isAccueil ? k === 'maths'
+                : k !== 'presco';
+          }
+          cb.disabled = isAccueil && k === 'francais';
+          if (isAccueil && k === 'francais') cb.checked = false;
+          if (isAccueil && k === 'maths' && !resetDefaults) cb.checked = true;
         });
+        const frenchLabel = list.querySelector('[data-discipline="francais"] + span');
+        if (frenchLabel) frenchLabel.textContent = isAccueil
+          ? 'Français (ILSS dans Accueil)'
+          : 'Français';
       };
-      if (lvlSel.value === 'P') lvlSel.onchange();
+      lvlSel.onchange = () => syncLevel(true);
+      syncLevel(false);
       const copyBox = document.getElementById('groupCopyBox');
       const copySel = document.getElementById('groupCopySelect');
       copyBox.classList.toggle('hidden', type !== 'new');
@@ -100,9 +115,18 @@
         const d = getDisciplines().find(x => x.key === cb.getAttribute('data-discipline'));
         if (d) ids.push(...d.ids);
       });
+      const level = document.getElementById('groupLevelSelect').value;
+      if (level === 'accueil') {
+        const mathIds = getDisciplines().find(item => item.key === 'maths');
+        if (mathIds) mathIds.ids.forEach(id => { if (!ids.includes(id)) ids.push(id); });
+        ids.push(...ALL_SUBJECTS_CONFIG.filter(subject => subject.isIlss).map(subject => subject.id));
+        const regularFrenchIds = new Set(ALL_SUBJECTS_CONFIG.filter(subject => subject.group === 'francais').map(subject => subject.id));
+        for (let index = ids.length - 1; index >= 0; index--) {
+          if (regularFrenchIds.has(ids[index])) ids.splice(index, 1);
+        }
+      }
       if (!ids.length) { showToast('Cochez au moins une matière.'); return; }
       closeGroupModal();
-      const level = document.getElementById('groupLevelSelect').value;
       if (groupModalMode.type === 'new') {
         const shouldOpenStudents = !hasActiveGroup() || appState.activeView === 'viewHome';
         if (shouldOpenStudents) appState.activeView = 'viewStudents';
@@ -115,14 +139,14 @@
         g.subjectIds = ids;
         if (level !== g.level) {
           g.level = level;
-          if (level) {
+          if (level !== 'accueil' && GRADE_LEVEL_LABELS[level]) {
             const list = g.id === appState.activeGroupId ? appState.students : ((appState.groupStore[g.id] || {}).students || []);
             list.forEach(s => { s.gradeLevel = level; });
           }
         }
         if (g.id === appState.activeGroupId) {
           applyActiveSubjects(appState);
-          if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0].id;
+          if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0]?.id || '';
         }
         notifyUpdate('Groupe modifié');
         renderAll();

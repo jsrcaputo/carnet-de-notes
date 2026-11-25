@@ -147,18 +147,16 @@
       0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand) 0%, transparent); filter: none; }
       50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--brand) 32%, transparent); filter: brightness(1.08); }
     }
-    @media (prefers-reduced-motion: reduce) {
-      header.test-topbar button,
-      [data-weight-box],
-      #weightControls,
-      #weightControls button,
-      #viewQuickObs .qo-category,
-      #viewQuickObs .qo-choice,
-      #viewQuickObs .qo-selected-chip,
-      .is-attention-flash {
-        animation: none !important;
-        transition-duration: .01ms !important;
-      }
+    html.reduce-motion header.test-topbar button,
+    html.reduce-motion [data-weight-box],
+    html.reduce-motion #weightControls,
+    html.reduce-motion #weightControls button,
+    html.reduce-motion #viewQuickObs .qo-category,
+    html.reduce-motion #viewQuickObs .qo-choice,
+    html.reduce-motion #viewQuickObs .qo-selected-chip,
+    html.reduce-motion .is-attention-flash {
+      animation: none !important;
+      transition-duration: .01ms !important;
     }
     header .hdr-icobtn:hover:not(:disabled) { background: var(--brand-soft); border-color: var(--studio-border-strong, var(--line)); }
     header .hdr-icobtn:disabled { opacity: .35; cursor: default; }

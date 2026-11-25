@@ -3,7 +3,7 @@
       const btn = document.getElementById('btnNewEvaluation');
       if (!choices || choices.classList.contains('hidden') || choices.classList.contains('is-closing')) return;
       if (btn) btn.setAttribute('aria-expanded', 'false');
-      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !choices.offsetWidth) {
+      if (isReducedMotionEnabled() || !choices.offsetWidth) {
         choices.classList.add('hidden');
         return;
       }

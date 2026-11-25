@@ -4,13 +4,23 @@
       if (u) u.disabled = history.undo.length === 0;
       if (r) r.disabled = history.redo.length === 0;
     }
+    const MAX_HISTORY_BYTES = 32 * 1024 * 1024;
+    function trimHistory() {
+      let bytes = [...history.undo, ...history.redo].reduce((sum, snap) => sum + snap.length * 2, 0);
+      // Un très grand carnet garde au moins une action annulable.
+      while (history.undo.length + history.redo.length > 60 ||
+             (bytes > MAX_HISTORY_BYTES && history.undo.length + history.redo.length > 1)) {
+        const stack = history.undo.length ? history.undo : history.redo;
+        bytes -= stack.shift().length * 2;
+      }
+    }
     function recordHistory() {
       const snap = getEditableStateSnapshot();
       if (history.last === null) { history.last = snap; return; }
       if (snap === history.last) return;
       history.undo.push(history.last);
-      if (history.undo.length > 60) history.undo.shift();
       history.redo = [];
+      trimHistory();
       history.last = snap;
       updateHistoryButtons();
     }
@@ -21,7 +31,7 @@
         appState.activeGroupId = data.activeGroupId;
         appState.groupStore = data.groupStore || {};
         applyActiveSubjects(appState);
-        if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0].id;
+        if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0]?.id || '';
       }
       appState.students = data.students;
       appState.terms = data.terms;
@@ -42,14 +52,18 @@
       flushPendingSave();
       if (!history.undo.length) { showToast('Rien à annuler'); return; }
       history.redo.push(getEditableStateSnapshot());
-      applyHistorySnapshot(history.undo.pop());
+      const snap = history.undo.pop();
+      trimHistory();
+      applyHistorySnapshot(snap);
       showToast('Action annulée');
     }
     function redoAction() {
       flushPendingSave();
       if (!history.redo.length) { showToast('Rien à rétablir'); return; }
       history.undo.push(getEditableStateSnapshot());
-      applyHistorySnapshot(history.redo.pop());
+      const snap = history.redo.pop();
+      trimHistory();
+      applyHistorySnapshot(snap);
       showToast('Action rétablie');
     }
 
@@ -100,7 +114,7 @@
       ambre: 'Ocre & Ambre',
       graphite: 'Graphite & Encre'
     };
-    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false, summaryStudentListMode: 'grid' };
+    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false, animations: true, summaryStudentListMode: 'grid', summaryStudentSort: 'lastName' };
     try {
       const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
       if (savedPrefs && typeof savedPrefs === 'object') {
@@ -108,7 +122,9 @@
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
         if (typeof savedPrefs.coloredColumns === 'boolean') prefs.coloredColumns = savedPrefs.coloredColumns;
+        if (typeof savedPrefs.animations === 'boolean') prefs.animations = savedPrefs.animations;
         if (['select', 'grid'].includes(savedPrefs.summaryStudentListMode)) prefs.summaryStudentListMode = savedPrefs.summaryStudentListMode;
+        if (['firstName', 'lastName'].includes(savedPrefs.summaryStudentSort)) prefs.summaryStudentSort = savedPrefs.summaryStudentSort;
       }
     } catch (_) {}
     const SUBJECT_STUDIO_ACCENTS = {
@@ -130,6 +146,9 @@
       prefs.palette = activePalette;
       root.setAttribute('data-palette', activePalette);
       root.classList.toggle('theme-dark', prefs.theme === 'dark');
+      const reducedMotion = prefs.animations === false;
+      root.classList.toggle('reduce-motion', reducedMotion);
+      if (document.body) document.body.classList.toggle('reduce-motion', reducedMotion);
       ['xs', 'sm', 'lg', 'xl'].forEach(size => root.classList.toggle('ts-' + size, prefs.textSize === size));
       const sizeIndex = ['xs', 'sm', 'md', 'lg', 'xl'].indexOf(prefs.textSize);
       const sizeSlider = document.getElementById('spTextSize');
@@ -157,6 +176,11 @@
       });
       document.querySelectorAll('[data-gr-student-view]').forEach(btn => {
         const isActive = btn.getAttribute('data-gr-student-view') === prefs.summaryStudentListMode;
+        btn.classList.toggle('is-active', isActive);
+        btn.setAttribute('aria-pressed', String(isActive));
+      });
+      document.querySelectorAll('[data-gr-student-sort]').forEach(btn => {
+        const isActive = btn.getAttribute('data-gr-student-sort') === prefs.summaryStudentSort;
         btn.classList.toggle('is-active', isActive);
         btn.setAttribute('aria-pressed', String(isActive));
       });
@@ -195,9 +219,13 @@
         textSize: value.textSize,
         backupReminder: value.backupReminder,
         coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false,
+        animations: typeof value.animations === 'boolean' ? value.animations : (prefs.animations !== false),
         summaryStudentListMode: ['select', 'grid'].includes(value.summaryStudentListMode)
           ? value.summaryStudentListMode
-          : (prefs.summaryStudentListMode || 'grid')
+          : (prefs.summaryStudentListMode || 'grid'),
+        summaryStudentSort: ['firstName', 'lastName'].includes(value.summaryStudentSort)
+          ? value.summaryStudentSort
+          : (prefs.summaryStudentSort || 'lastName')
       };
     }
 
@@ -267,6 +295,34 @@
     }
 
     let gradebookTransitionTimer = null;
+    let activeCarnetTransition = null;
+
+    function renderWithCarnetMerge(render, enabled = true) {
+      const reducedMotion = typeof isReducedMotionEnabled === 'function' && isReducedMotionEnabled();
+      if (!enabled || reducedMotion || activeCarnetTransition) {
+        render();
+        return;
+      }
+      if (document.startViewTransition) {
+        try {
+          activeCarnetTransition = document.startViewTransition(render);
+          activeCarnetTransition.ready.catch(() => {});
+          activeCarnetTransition.finished.catch(() => {}).finally(() => { activeCarnetTransition = null; });
+        } catch {
+          activeCarnetTransition = null;
+          render();
+        }
+        return;
+      }
+      render();
+      const workspace = document.getElementById('appWorkspace');
+      if (!workspace) return;
+      clearTimeout(gradebookTransitionTimer);
+      workspace.classList.remove('is-carnet-merging');
+      void workspace.offsetWidth;
+      workspace.classList.add('is-carnet-merging');
+      gradebookTransitionTimer = window.setTimeout(() => workspace.classList.remove('is-carnet-merging'), 170);
+    }
 
     function navigateToView(viewId, updateState, options = {}) {
       const continueNavigation = () => {
@@ -284,19 +340,9 @@
           && previousTerm !== appState.activeTerm;
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport' || viewId === 'viewHome') expandedSubjectGroup = null;
         appState.activeView = viewId;
-        renderAll();
-        if (changedSubject || changedTerm) {
-          const gradebook = document.getElementById('viewGradebook');
-          if (gradebook) {
-            clearTimeout(gradebookTransitionTimer);
-            gradebook.classList.remove('is-subject-changing');
-            void gradebook.offsetWidth;
-            gradebook.classList.add('is-subject-changing');
-            gradebookTransitionTimer = window.setTimeout(() => gradebook.classList.remove('is-subject-changing'), 180);
-          }
-        }
+        renderWithCarnetMerge(renderAll, changedSubject || changedTerm);
         if (!options.skipScrollTop && (changedView || updateState)) {
-          const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          const reducedMotion = isReducedMotionEnabled();
           window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
         }
       };

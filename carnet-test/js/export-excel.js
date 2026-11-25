@@ -7,7 +7,8 @@
       const wb = XLSX.utils.book_new();
       const termId = appState.activeTerm;
       const termData = getActiveTermData();
-      const exportSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG);
+      const isAccueilExport = typeof isAccueilGroup === 'function' && isAccueilGroup();
+      const exportSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(subject => !subject.isIlss);
 
       const computedStyle = getComputedStyle(document.documentElement);
       const toExcelHex = (cssVar, fallback) => {
@@ -88,6 +89,7 @@
       }
       styleSheetHelper(wsSynth, synthRows.length, synthHeader.length, titleStyle, headerStyle, cellBorder, 3);
       XLSX.utils.book_append_sheet(wb, wsSynth, `Synthese_Etape_${termId}`);
+      if (typeof appendAccueilExcelSheet === 'function') appendAccueilExcelSheet(wb, sanitizeExcelCell);
 
       // 2. Une feuille par matière ou compétence applicable au groupe
       exportSubjects.forEach((sub, idx) => {
@@ -217,50 +219,52 @@
       styleSheetHelper(wsObs, obsRows.length, 10, titleStyle, headerStyle, cellBorder, 3);
       XLSX.utils.book_append_sheet(wb, wsObs, 'Traces_Visuelles');
 
-      const competencyTabs = getCompetencyTabs();
-      const competencyRows = [
-        ['NIVEAU DE COMPÉTENCE — ÉCHELONS (ÉCHELLES DU PRIMAIRE)'],
-        ['L’échelon est calculé à partir des phrases choisies par l’enseignant dans les échelles des niveaux de compétence du primaire. Il ne constitue pas une cote ministérielle.'],
-        [],
-        ['Élève', 'Niveau scolaire', 'Cycle', 'Matière', 'Compétence', 'Échelon', 'Phrases retenues (échelon : phrase)', 'Commentaire de bulletin', 'Repère échelle MEQ (5 niveaux)']
-      ];
-      appState.students.forEach(student => {
-        const cycle = getStudentCycle(student.gradeLevel);
-        const sentencesByScale = getAnnualCompetencyPicks(student);
-        competencyTabs.forEach(tab => {
-          tab.scales.forEach(scale => {
-            const picked = sentencesByScale[scale.id] || {};
-            const model = getCompetencyScaleModel(scale);
-            const chosenSentences = [];
-            model.levels.forEach(level => level.sentences.forEach(sentence => {
-              if (picked[sentence.row] !== undefined && Number(picked[sentence.row]) === level.n) {
-                chosenSentences.push(`${level.n} : ${sentence.text}`);
-              }
-            }));
-            const result = computeCompetencyResult(scale, picked);
-            competencyRows.push([
-              sanitizeExcelCell(student.name),
-              GRADE_LEVEL_LABELS[student.gradeLevel] || '',
-              cycle ? CYCLE_LABELS[cycle] : '',
-              tab.label,
-              scale.label,
-              result ? `${result.level} / ${scale.max}` : '',
-              sanitizeExcelCell(chosenSentences.join('\n')),
-              sanitizeExcelCell(picked && Object.keys(picked).length ? getCompetencyComment(student, 'annual', scale, picked).text : ''),
-              (() => {
-                const meqX = Object.keys(picked).length ? getMeqFinal(student, 'annual', scale, tab.id, picked) : null;
-                return meqX && meqX.level ? `${meqX.level}/5 — ${MEQ5_LEVELS[meqX.level].label}${meqX.override ? ' (ajusté)' : ''}` : '';
-              })()
-            ]);
+      if (!isAccueilExport) {
+        const competencyTabs = getCompetencyTabs();
+        const competencyRows = [
+          ['NIVEAU DE COMPÉTENCE — ÉCHELONS (ÉCHELLES DU PRIMAIRE)'],
+          ['L’échelon est calculé à partir des phrases choisies par l’enseignant dans les échelles des niveaux de compétence du primaire. Il ne constitue pas une cote ministérielle.'],
+          [],
+          ['Élève', 'Niveau scolaire', 'Cycle', 'Matière', 'Compétence', 'Échelon', 'Phrases retenues (échelon : phrase)', 'Commentaire de bulletin', 'Repère échelle MEQ (5 niveaux)']
+        ];
+        appState.students.forEach(student => {
+          const cycle = getStudentCycle(student.gradeLevel);
+          const sentencesByScale = getAnnualCompetencyPicks(student);
+          competencyTabs.forEach(tab => {
+            tab.scales.forEach(scale => {
+              const picked = sentencesByScale[scale.id] || {};
+              const model = getCompetencyScaleModel(scale);
+              const chosenSentences = [];
+              model.levels.forEach(level => level.sentences.forEach(sentence => {
+                if (picked[sentence.row] !== undefined && Number(picked[sentence.row]) === level.n) {
+                  chosenSentences.push(`${level.n} : ${sentence.text}`);
+                }
+              }));
+              const result = computeCompetencyResult(scale, picked);
+              competencyRows.push([
+                sanitizeExcelCell(student.name),
+                GRADE_LEVEL_LABELS[student.gradeLevel] || '',
+                cycle ? CYCLE_LABELS[cycle] : '',
+                tab.label,
+                scale.label,
+                result ? `${result.level} / ${scale.max}` : '',
+                sanitizeExcelCell(chosenSentences.join('\n')),
+                sanitizeExcelCell(picked && Object.keys(picked).length ? getCompetencyComment(student, 'annual', scale, picked).text : ''),
+                (() => {
+                  const meqX = Object.keys(picked).length ? getMeqFinal(student, 'annual', scale, tab.id, picked) : null;
+                  return meqX && meqX.level ? `${meqX.level}/5 — ${MEQ5_LEVELS[meqX.level].label}${meqX.override ? ' (ajusté)' : ''}` : '';
+                })()
+              ]);
+            });
           });
         });
-      });
-      const wsCompetencies = XLSX.utils.aoa_to_sheet(competencyRows);
-      wsCompetencies['!cols'] = [
-        { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 24 }, { wch: 50 }, { wch: 10 }, { wch: 100 }, { wch: 100 }, { wch: 34 }
-      ];
-      styleSheetHelper(wsCompetencies, competencyRows.length, competencyRows[3].length, titleStyle, headerStyle, cellBorder, 3);
-      XLSX.utils.book_append_sheet(wb, wsCompetencies, 'Niveaux_competence');
+        const wsCompetencies = XLSX.utils.aoa_to_sheet(competencyRows);
+        wsCompetencies['!cols'] = [
+          { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 24 }, { wch: 50 }, { wch: 10 }, { wch: 100 }, { wch: 100 }, { wch: 34 }
+        ];
+        styleSheetHelper(wsCompetencies, competencyRows.length, competencyRows[3].length, titleStyle, headerStyle, cellBorder, 3);
+        XLSX.utils.book_append_sheet(wb, wsCompetencies, 'Niveaux_competence');
+      }
 
       // 4. Données à plat (une ligne par élève × évaluation, toutes les étapes) — idéal pour tableaux croisés ou analyse automatisée
       const activeGroupObj = (appState.groups || []).find(g => g.id === appState.activeGroupId);
@@ -354,7 +358,7 @@
         ['Feuille Synthese_Etape_X', 'Une ligne par élève : pourcentage et cote finale de chaque matière pour l’étape active.'],
         ['Feuilles numérotées', 'Détail par matière : chaque évaluation (note et pondération), moyenne, repères de jugement (barème), jugement final, commentaire.'],
         ['Traces_Visuelles', 'Journal des traces observables (observations qualitatives cotées A+ à E).'],
-        ['Niveaux_competence', 'Portrait global, sans étapes : échelons des échelles du primaire et phrases retenues par l’enseignant.'],
+        ...(!isAccueilExport ? [['Niveaux_competence', 'Portrait global, sans étapes : échelons des échelles du primaire et phrases retenues par l’enseignant.']] : []),
         ['Donnees_a_plat', 'Toutes les étapes, une ligne par élève et par évaluation : la feuille à privilégier pour tout calcul, filtre ou analyse automatisée.'],
         [],
         ['Lexique', ''],

@@ -1228,15 +1228,13 @@
         color: var(--ink) !important;
       }
       html.design-studio #grStudentBand button, html.design-studio #grStudentBand button span:first-child { white-space: normal; overflow-wrap: anywhere; }
-      @media (prefers-reduced-motion: reduce) {
-        html.design-studio *,
-        html.design-studio *::before,
-        html.design-studio *::after {
-          scroll-behavior: auto !important;
-          animation-duration: .01ms !important;
-          animation-iteration-count: 1 !important;
-          transition-duration: .01ms !important;
-        }
+      html.design-studio.reduce-motion *,
+      html.design-studio.reduce-motion *::before,
+      html.design-studio.reduce-motion *::after {
+        scroll-behavior: auto !important;
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
       }
       @media (max-width: 900px) {
         .test-sidebar { position: static; width: 100%; padding: .7rem 1rem; gap: .6rem; overflow: visible; border-right: 0; border-bottom: 1px solid var(--sidebar-border, #dde3ec); }
@@ -1903,14 +1901,18 @@
     #addStudentDialog label { display: block; margin-top: .75rem; font-weight: 700; }
     #addStudentDialog input { width: 100%; padding: .5rem .65rem; border: 1px solid var(--studio-border-strong); border-radius: 8px; background: var(--studio-surface); color: var(--studio-text); }
     #addStudentDialog input:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
-    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#groupBar > button[aria-pressed="true"], #btnOpenAddStudent, #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnConfirmAddAssignment, #btnCommitObsSessionToGradebook, #btnAddStudent) {
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#groupBar > button[aria-pressed="true"], #btnOpenAddStudent, #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnConfirmAddAssignment, #btnCommitObsSessionToGradebook, #btnAddStudent, #btnOpenStudentsFromEmpty, #btnConfirmTargetLevels, #btnGroupSave, #btnDoneBackupHelp, #btnConfirmBackupPassword, #btnConfirmBackupLoad, #btnApplyCustomRubric, .print-dialog-primary, .backup-dialog-primary, .studio-pale-primary) {
       background: var(--brand-soft) !important;
       color: var(--brand-deep) !important;
       border: 1px solid var(--studio-border-strong) !important;
       box-shadow: none !important;
     }
-    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#groupBar > button[aria-pressed="true"], #btnOpenAddStudent, #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnConfirmAddAssignment, #btnCommitObsSessionToGradebook, #btnAddStudent):hover:not(:disabled) {
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#groupBar > button[aria-pressed="true"], #btnOpenAddStudent, #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnConfirmAddAssignment, #btnCommitObsSessionToGradebook, #btnAddStudent, #btnOpenStudentsFromEmpty, #btnConfirmTargetLevels, #btnGroupSave, #btnDoneBackupHelp, #btnConfirmBackupPassword, #btnConfirmBackupLoad, #btnApplyCustomRubric, .print-dialog-primary, .backup-dialog-primary, .studio-pale-primary):hover:not(:disabled) {
       border-color: var(--brand) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#btnOpenAddStudent, #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnConfirmAddAssignment, #btnCommitObsSessionToGradebook, #btnAddStudent, #btnOpenStudentsFromEmpty, #btnConfirmTargetLevels, #btnGroupSave, #btnDoneBackupHelp, #btnConfirmBackupPassword, #btnConfirmBackupLoad, #btnApplyCustomRubric, .print-dialog-primary, .backup-dialog-primary, .studio-pale-primary):focus-visible {
+      outline: 2px solid var(--brand);
+      outline-offset: 2px;
     }
     #btnOpenAddStudent:disabled { opacity: .5; cursor: not-allowed; }
     html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents) {
@@ -2478,6 +2480,12 @@ html.design-studio header.test-topbar button:not(:disabled):hover {
 html.design-studio header.test-topbar button:not(:disabled):active {
   transform: translateY(0) scale(.97) !important;
 }
+html.design-studio .test-topbar .term-btn[aria-pressed="true"] {
+  background: var(--brand-soft) !important;
+  color: var(--brand-deep) !important;
+  border: 1px solid var(--studio-border-strong);
+  box-shadow: none;
+}
 
 html.design-studio #weightControls {
   overflow: hidden;
@@ -2517,6 +2525,14 @@ html.design-studio #competencyPositioning .comp-tab {
 html.design-studio #competencyPositioning .comp-tab:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(15, 23, 42, .08);
+}
+.gradebook-toolbar .gb-sort-btn:focus-visible,
+.gradebook-toolbar .column-color-trigger:focus-visible,
+.print-menu button:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
 }
 html.design-studio #competencyPositioning .comp-tab.is-active {
   box-shadow: inset 0 -2px 0 var(--brand), 0 3px 10px color-mix(in srgb, var(--brand) 14%, transparent);
@@ -2656,7 +2672,8 @@ html.design-studio #newEvaluationChoices > button { filter: none; }
   from { max-width: 0; opacity: 0; transform: translateX(-10px); }
   to { max-width: 360px; opacity: 1; transform: none; }
 }
-@media (prefers-reduced-motion: reduce) { html.design-studio .new-evaluation-choices:not(.hidden) { animation: none; } }
+html.design-studio.reduce-motion .new-evaluation-choices:not(.hidden),
+html.design-studio.reduce-motion .new-evaluation-choices.is-closing { animation: none; }
 html.design-studio .new-evaluation-choices.is-closing { animation: newEvalSlideOut .22s ease-in both; pointer-events: none; }
 @keyframes newEvalSlideOut {
   from { max-width: 360px; opacity: 1; transform: none; }
@@ -3111,6 +3128,46 @@ html.design-studio .gr-student-view-toggle button.is-active {
   color: var(--brand-deep);
   box-shadow: var(--studio-shadow-sm);
 }
+html.design-studio .gr-student-sort-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: .16rem;
+  border: 1px solid var(--studio-border);
+  border-radius: 9px;
+  background: var(--studio-surface-soft);
+}
+html.design-studio .gr-student-sort-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  height: 1.7rem;
+  padding: 0 .58rem;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--studio-text-muted);
+  font-size: .74rem;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .15s ease, color .15s ease, box-shadow .15s ease;
+}
+html.design-studio .gr-student-sort-toggle .sort-icon {
+  width: .78rem;
+  height: .78rem;
+  flex: 0 0 auto;
+  opacity: .72;
+}
+html.design-studio .gr-student-sort-toggle button.is-active .sort-icon {
+  opacity: 1;
+}
+html.design-studio .gr-student-sort-toggle button:hover,
+html.design-studio .gr-student-sort-toggle button.is-active {
+  background: var(--studio-surface);
+  color: var(--brand-deep);
+  box-shadow: var(--studio-shadow-sm);
+}
 html.design-studio #grStudentBand.is-select {
   display: block;
   width: 100%;
@@ -3173,12 +3230,10 @@ html.design-studio #gradebookBody tr.gb-row-flash > td {
 html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td {
   animation: gbStudentRowFlashDark .55s ease-in-out 3 !important;
 }
-@media (prefers-reduced-motion: reduce) {
-  html.design-studio #gradebookBody tr.gb-row-flash > td,
-  html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td {
-    animation: none !important;
-    box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--brand) 16%, transparent);
-  }
+html.design-studio.reduce-motion #gradebookBody tr.gb-row-flash > td,
+html.design-studio.theme-dark.reduce-motion #gradebookBody tr.gb-row-flash > td {
+  animation: none !important;
+  box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--brand) 16%, transparent);
 }
 
 /* ==========================================================================
@@ -3701,20 +3756,29 @@ html.design-studio.theme-dark .home-legacy-banner {
 
 /* Accordéon pleine largeur sous les deux boîtes */
 .home-demo-collapse {
-  display: grid;
-  grid-template-rows: 0fr;
+  display: block;
+  overflow: hidden;
+  height: 0;
   opacity: 0;
   margin-top: -1.35rem;
-  transition: grid-template-rows .28s cubic-bezier(.22, .68, .32, 1), opacity .2s ease, margin-top .28s cubic-bezier(.22, .68, .32, 1);
+  pointer-events: none;
+  will-change: height, opacity;
+  transition: height .28s cubic-bezier(.22, .68, .32, 1), opacity .22s ease, margin-top .28s cubic-bezier(.22, .68, .32, 1);
 }
 .home-demo-collapse.is-open {
-  grid-template-rows: 1fr;
   opacity: 1;
   margin-top: 0;
+  pointer-events: auto;
 }
 .home-demo-collapse-inner {
-  overflow: hidden;
   min-height: 0;
+}
+.home-demo-collapse .home-demo-box {
+  transform: translateY(-6px);
+  transition: transform .28s cubic-bezier(.22, .68, .32, 1);
+}
+.home-demo-collapse.is-open .home-demo-box {
+  transform: translateY(0);
 }
 .home-demo-box {
   padding: 1.2rem 1.3rem;
@@ -3724,7 +3788,7 @@ html.design-studio.theme-dark .home-legacy-banner {
 }
 .home-demo-choices {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: .5rem;
   margin: 0;
   padding: 0;
@@ -3769,6 +3833,52 @@ html.design-studio.theme-dark .home-legacy-banner {
 }
 .home-demo-option span {
   min-width: 0;
+}
+.studio-pale-primary {
+  color: var(--brand-deep);
+  border: 1px solid var(--studio-border-strong);
+  background: color-mix(in srgb, var(--brand-soft) 55%, var(--studio-surface, #fff));
+  box-shadow: none;
+}
+.studio-pale-primary:hover {
+  border-color: var(--brand);
+  background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface, #fff));
+}
+#btnLeaveObservation {
+  color: #9f1239 !important;
+  border: 1px solid #fecdd3;
+  background: #fff1f2 !important;
+  box-shadow: none;
+}
+#btnLeaveObservation:hover {
+  border-color: #fb7185;
+  background: #ffe4e6 !important;
+}
+.ilss-summary-section,
+.ilss-summary-grid > section,
+.ilss-summary-term {
+  background: var(--studio-surface, #fff) !important;
+}
+.ilss-summary-term {
+  border: 1px solid var(--studio-border, #e2e8f0);
+}
+.gb-grade-group-start > td {
+  border-top: 2px solid #c7d2fe;
+}
+.gb-grade-group-label {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 3px;
+  padding: 0 5px;
+  border: 1px solid var(--studio-border, #e2e8f0);
+  border-radius: 4px;
+  color: var(--brand, #4f46e5);
+  background: var(--brand-soft, #eef2ff);
+  font-size: 9.5px;
+  font-weight: 700;
+  line-height: 15px;
+  letter-spacing: .01em;
+  white-space: nowrap;
 }
 .home-demo-footer {
   display: flex;
@@ -4981,16 +5091,48 @@ html.design-studio.theme-dark .dash-subj-pill.is-alert {
   color: var(--studio-text-muted);
 }
 
-/* Transition courte lors du changement de carnet ou d'étape */
-#viewGradebook.is-subject-changing {
-  animation: subjectViewReveal .18s ease-out both;
+/* Fusion courte lors du changement de carnet, de matière ou d'étape */
+#appWorkspace {
+  view-transition-name: carnet-workspace;
 }
-@keyframes subjectViewReveal {
+#appWorkspace.is-carnet-merging {
+  animation: carnetViewMergeFallback .16s cubic-bezier(.22, .68, .32, 1) both;
+}
+@keyframes carnetViewMergeFallback {
   from {
-    opacity: .72;
+    opacity: .7;
+    filter: blur(2px);
+    transform: translateY(2px) scale(.997);
   }
   to {
     opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
+  }
+}
+::view-transition-old(carnet-workspace) {
+  animation: carnetMergeOut .16s cubic-bezier(.4, 0, .6, 1) both;
+}
+::view-transition-new(carnet-workspace) {
+  animation: carnetMergeIn .16s cubic-bezier(.22, .68, .32, 1) both;
+}
+@keyframes carnetMergeOut {
+  to {
+    opacity: 0;
+    filter: blur(2px);
+    transform: scale(.997);
+  }
+}
+@keyframes carnetMergeIn {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(2px) scale(1.003);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0) scale(1);
   }
 }
 
@@ -5001,6 +5143,9 @@ html.design-studio.theme-dark .dash-subj-pill.is-alert {
   }
 }
 @media (max-width: 760px) {
+  .home-demo-choices {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
   .home-actions-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -5037,26 +5182,95 @@ html.design-studio.theme-dark .dash-subj-pill.is-alert {
     grid-template-columns: minmax(0, 1fr);
   }
 }
-@media (prefers-reduced-motion: reduce) {
-  .home-portal-shell,
-  .home-dashboard,
-  #viewHome,
-  #viewHome::before,
-  #viewGradebook.is-subject-changing {
-    animation: none !important;
-  }
-  #viewHome .home-btn,
-  #viewHome .home-arrow,
-  #viewHome .home-chevron,
-  .home-demo-collapse,
-  .dash-comp-row,
-  .dash-action-row,
-  .dash-group-card {
-    transition-duration: .01ms !important;
-  }
+html.reduce-motion .home-portal-shell,
+html.reduce-motion .home-dashboard,
+html.reduce-motion #viewHome,
+html.reduce-motion #viewHome::before,
+html.reduce-motion #appWorkspace.is-carnet-merging,
+html.reduce-motion::view-transition-old(carnet-workspace),
+html.reduce-motion::view-transition-new(carnet-workspace) {
+  animation: none !important;
+}
+html.reduce-motion #viewHome .home-btn,
+html.reduce-motion #viewHome .home-arrow,
+html.reduce-motion #viewHome .home-chevron,
+html.reduce-motion .home-demo-collapse,
+html.reduce-motion .home-demo-collapse .home-demo-box,
+html.reduce-motion .dash-comp-row,
+html.reduce-motion .dash-action-row,
+html.reduce-motion .dash-group-card {
+  transition-duration: .01ms !important;
 }
 @media print {
   #viewHome {
     display: none !important;
   }
 }
+/* Boutons du carnet alignés sur la barre des tâches : rectangle arrondi, surbrillance au survol, contour marine une fois actif. */
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):not(.hidden) {
+  display: inline-flex !important;
+  align-items: center;
+  gap: .3rem;
+  min-height: 34px;
+  padding: .36rem .7rem !important;
+  border: 1px solid var(--studio-border-strong) !important;
+  border-radius: 10px !important;
+  background: var(--studio-surface, #fff) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: none !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  text-decoration: none !important;
+  cursor: pointer;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--brand) !important;
+  background: var(--brand-soft) !important;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, .13) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):active:not(:disabled) {
+  transform: translateY(0) scale(.97);
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode)[aria-expanded="true"],
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnResetEqualWeights, #btnUnlockAllWeights):is(:active, :focus-visible) {
+  border-color: var(--brand-deep) !important;
+  background: var(--brand-soft) !important;
+  box-shadow: 0 0 0 1px var(--brand-deep) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar #btnWeightMode.is-weight-error {
+  border-color: #ef4444 !important;
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  box-shadow: 0 0 0 1px rgba(239, 68, 68, .3) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+html.reduce-motion #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights) { transform: none !important; }
+#viewGradebook .gradebook-toolbar :is(.gradebook-metric, #btnWeightMode).hidden { display: none !important; }
+
+/* Grille ILSS : les paliers décrivent une progression linguistique, pas une qualité; dégradé de bleus neutres, sans beige. */
+@media screen {
+  #viewQuickObs .rubric-matrix-table.ilss-rubric tr > :nth-child(2) { --rubric-color: #8aa4c8; }
+  #viewQuickObs .rubric-matrix-table.ilss-rubric tr > :nth-child(3) { --rubric-color: #6f8fbf; }
+  #viewQuickObs .rubric-matrix-table.ilss-rubric tr > :nth-child(4) { --rubric-color: #5577b0; }
+  #viewQuickObs .rubric-matrix-table.ilss-rubric tr > :nth-child(5) { --rubric-color: #3e60a0; }
+  #viewQuickObs .rubric-matrix-table.ilss-rubric tr > :nth-child(6) { --rubric-color: #2c4a8a; }
+}
+#viewQuickObs .qo-ilss-guidance { display: block; margin-top: .3rem; color: var(--studio-text-muted, #475569); font-size: .72rem; }
+#qoIlssResultBox { padding-bottom: .75rem; border-bottom: 1px solid var(--studio-border, #e2e8f0); }
+#qoIlssResultBox .qo-ilss-label { margin-bottom: .3rem; color: var(--brand-deep); font-size: .78rem; font-weight: 800; }
+#qoIlssResultBox .qo-category { min-width: 2.4rem; justify-content: center; }
+#qoIlssResultBox .qo-category:disabled { opacity: .5; cursor: not-allowed; }
+.ilss-cell-note { display: inline-flex; align-items: center; justify-content: center; min-width: 1.05rem; height: 1.05rem; padding: 0 .2rem; border-radius: 999px; background: var(--brand-soft); color: var(--brand-deep); font-size: .6rem; font-weight: 800; }
+.grade-picker.ilss-picker { grid-template-columns: repeat(5, minmax(0, 1fr)); width: min(236px, calc(100vw - 16px)); background: var(--surface, #fff); }
+.grade-picker.ilss-picker .ilss-picker-label { grid-column: 1 / -1; padding: 2px 2px 0; color: var(--studio-text-muted, #64748b); font-size: 10px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+.grade-picker.ilss-picker .ilss-picker-palier { border: 1px solid var(--studio-border-strong, #cbd5e1); background: var(--studio-surface-soft, #f8fafc); color: var(--brand-deep); }
+.grade-picker.ilss-picker .ilss-picker-palier.is-current { background: var(--brand-soft); border-color: var(--brand); }
+.grade-picker.ilss-picker .grade-picker-auto { grid-column: 1 / -1; }
+.mouse-bar.ilss-comment-bank { flex-direction: column; align-items: stretch; width: min(420px, calc(100vw - 16px)); }
+.mouse-bar.ilss-comment-bank button { white-space: normal; text-align: left; line-height: 1.35; font-weight: 600; }

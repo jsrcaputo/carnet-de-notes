@@ -3,6 +3,10 @@
     }
 
     function renderAll() {
+      if (hasActiveGroup() && !SUBJECTS_CONFIG.length &&
+          ['viewGradebook', 'viewBareme', 'viewQuickObs'].includes(appState.activeView)) {
+        appState.activeView = 'viewStudents';
+      }
       renderGroupBar();
       renderTermSwitcher();
       renderSubjectTabs();
@@ -82,10 +86,12 @@
       ccq: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2"/><path d="M3 19c0-3 2.5-5 6-5s6 2 6 5M16 14c2.8 0 5 1.8 5 4"/>',
       sciences: '<path d="M9 3h6m-5 0v6L5 18a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3M8 15h8"/>',
       social: '<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 2.5 4 5.5 4 9s-1 6.5-4 9c-3-2.5-4-5.5-4-9s1-6.5 4-9z"/>',
+      ilss: '<path d="M12 19c-2-2-5-2.5-9-2V5c4-.5 7 0 9 2m0 12c2-2 5-2.5 9-2V5c-4-.5-7 0-9 2m0 0v12"/><path d="M17 3h4v4"/>',
       education_physique: '<circle cx="14.5" cy="4.5" r="2"/><path d="m5 21 4-8 3 2 3 6M9 13 5 11l-2 2m10 1 4-4 3 1"/>',
       anglais: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M7 9h10M7 13h6M7 16h4M14 13h3"/>',
       art_dram: '<path d="M3 5c3 1 6 1 9 0v5c0 3-2 5-4.5 6C5 15 3 13 3 10V5zm9 4c3 1 6 1 9 0v4c0 3-2 5-4.5 6-1.4-.5-2.5-1.3-3.3-2.4M6 9h.01M9 9h.01M15 13h.01M18 13h.01M6 12c1 1 2 1 3 0"/>',
       art_plast: '<path d="M12 3a9 9 0 1 0 0 18h1a2 2 0 0 0 1.4-3.4 1.8 1.8 0 0 1 1.3-3.1H18a3 3 0 0 0 3-3A9 9 0 0 0 12 3z"/><path d="M7.5 11h.01M10 7.5h.01M14 7.5h.01M17 10h.01"/>',
+      musique: '<path d="M9 18V5l10-2v13M9 9l10-2"/><ellipse cx="6.5" cy="18.5" rx="2.5" ry="1.5"/><ellipse cx="16.5" cy="16.5" rx="2.5" ry="1.5"/>',
       presco: '<path d="M12 3l2.7 5.5 6.1.9-4.4 4.3 1 6.1-5.4-2.9-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/>'
     };
 

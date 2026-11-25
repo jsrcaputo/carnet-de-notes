@@ -1,5 +1,10 @@
     function renderQuickObsView() {
       const sub = getCurrentSubjectConfig();
+      if (sub && sub.isIlss) {
+        renderIlssObservationWorkspace(sub);
+        return;
+      }
+      if (typeof restoreRegularObservationChrome === 'function') restoreRegularObservationChrome();
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
       const session = subData.currentObsSession;
@@ -842,6 +847,7 @@
 
     function commitObservationSessionToGradebook() {
       const sub = getCurrentSubjectConfig();
+      if (sub && sub.isIlss) return commitIlssObservationSession(sub);
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
       const session = subData.currentObsSession;

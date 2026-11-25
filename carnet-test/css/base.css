@@ -79,12 +79,12 @@
       outline: 3px solid rgba(99, 102, 241, 0.55);
       outline-offset: 2px;
     }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after {
-        scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
-      }
+    :is(html, body).reduce-motion *,
+    :is(html, body).reduce-motion *::before,
+    :is(html, body).reduce-motion *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
     }
     @media (max-width: 640px) {
       header.no-print {

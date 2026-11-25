@@ -150,9 +150,19 @@
 
     // ---- Groupes : chaque groupe a ses élèves, ses notes et ses matières ----
     const DEFAULT_GROUP_SUBJECT_IDS = ALL_SUBJECTS_CONFIG
-      .filter(s => !s.prescoOnly && s.group !== 'art_plast').map(s => s.id);
+      .filter(s => !s.prescoOnly && s.group !== 'art_plast' && !s.isIlss).map(s => s.id);
     const LEGACY_DEFAULT_GROUP_SUBJECT_IDS = DEFAULT_GROUP_SUBJECT_IDS
-      .filter(id => !/^(eps_|eng_)/.test(id));
+      .filter(id => !/^(eps_|eng_|musique_)/.test(id));
+    const ILSS_DEFAULT_SUBJECT_IDS = ALL_SUBJECTS_CONFIG.filter(s => s.isIlss).map(s => s.id);
+    const MATH_DEFAULT_SUBJECT_IDS = ALL_SUBJECTS_CONFIG.filter(s => s.group === 'maths').map(s => s.id);
+
+    function ensureAccueilSubjectIds(subjectIds) {
+      const ids = (Array.isArray(subjectIds) ? subjectIds : []).filter(id =>
+        ALL_SUBJECTS_CONFIG.some(subject => subject.id === id));
+      return [...new Set(ids
+        .filter(id => !id.startsWith('fra_'))
+        .concat(ILSS_DEFAULT_SUBJECT_IDS, MATH_DEFAULT_SUBJECT_IDS))];
+    }
 
     function createBlankGroupData() {
       return {
@@ -167,7 +177,9 @@
       const ids = new Set(group ? group.subjectIds : DEFAULT_GROUP_SUBJECT_IDS);
       const chosen = ALL_SUBJECTS_CONFIG.filter(s => ids.has(s.id));
       SUBJECTS_CONFIG.length = 0;
-      SUBJECTS_CONFIG.push(...(chosen.length ? chosen : ALL_SUBJECTS_CONFIG.filter(s => DEFAULT_GROUP_SUBJECT_IDS.includes(s.id))));
+      const isAccueil = group && (group.level === 'accueil' || group.classType === 'accueil');
+      SUBJECTS_CONFIG.push(...(chosen.length || isAccueil
+        ? chosen : ALL_SUBJECTS_CONFIG.filter(s => DEFAULT_GROUP_SUBJECT_IDS.includes(s.id))));
     }
 
     function normalizeGroups(state) {
@@ -183,11 +195,14 @@
       let groups = groupSources.map(item => {
         if (!groupIdMap.has(item.originalId)) groupIdMap.set(item.originalId, item.importedId);
         const g = item.source;
+        const isAccueil = g.classType === 'accueil' || g.level === 'accueil';
+        const normalizedSubjectIds = (Array.isArray(g.subjectIds) ? g.subjectIds : LEGACY_DEFAULT_GROUP_SUBJECT_IDS)
+          .filter(id => valid.has(id));
         return {
           id: item.importedId,
           name: String(g.name || '').trim() || 'Groupe',
-          subjectIds: (Array.isArray(g.subjectIds) ? g.subjectIds : LEGACY_DEFAULT_GROUP_SUBJECT_IDS).filter(id => valid.has(id)),
-          level: GRADE_LEVEL_LABELS[String(g.level)] ? String(g.level) : '',
+          subjectIds: isAccueil ? ensureAccueilSubjectIds(normalizedSubjectIds) : normalizedSubjectIds,
+          level: isAccueil ? 'accueil' : (GRADE_LEVEL_LABELS[String(g.level)] ? String(g.level) : ''),
           ...(g.placeholder ? { placeholder: true } : {})
         };
       });
@@ -261,24 +276,27 @@
       appState.activeGroupId = groupId;
       expandedSubjectGroup = null;
       applyActiveSubjects(appState);
-      if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0].id;
+      if (!SUBJECTS_CONFIG.some(s => s.id === appState.activeSubjectId)) appState.activeSubjectId = SUBJECTS_CONFIG[0]?.id || '';
       competencySubjectSelected = null;
       const g = appState.groups.find(x => x.id === groupId);
       notifyUpdate(recoveredGroup ? `Vos données précédentes ont été conservées dans « ${leaving.name} ».` : `Groupe « ${g ? g.name : ''} »`);
-      renderAll();
+      if (typeof renderWithCarnetMerge === 'function') renderWithCarnetMerge(renderAll, true);
+      else renderAll();
     }
 
     function createGroup(name, subjectIds, copyFromGroupId, level) {
       expandedSubjectGroup = null;
       const id = 'g' + Date.now();
-      appState.groups.push({ id, name: name || 'Nouveau groupe', subjectIds, level: level || '' });
+      const groupLevel = level === 'accueil' || GRADE_LEVEL_LABELS[String(level)] ? String(level) : '';
+      const groupSubjectIds = groupLevel === 'accueil' ? ensureAccueilSubjectIds(subjectIds) : subjectIds;
+      appState.groups.push({ id, name: name || 'Nouveau groupe', subjectIds: groupSubjectIds, level: groupLevel });
       const data = createBlankGroupData();
       if (copyFromGroupId) {
         const src = copyFromGroupId === appState.activeGroupId
           ? { students: appState.students }
           : appState.groupStore[copyFromGroupId];
         (src ? src.students : []).forEach(st => {
-          data.students.push({ ...JSON.parse(JSON.stringify(st)), gradeLevel: level || st.gradeLevel || '', competencyLevelsByCycle: {}, competencyCriterionLevelsByCycle: {}, competencyEvidenceByCycle: {}, competencyTerms: undefined, competencySentences: undefined, competencyComments: undefined });
+          data.students.push({ ...JSON.parse(JSON.stringify(st)), gradeLevel: groupLevel === 'accueil' || !groupLevel ? (st.gradeLevel || '') : groupLevel, ilssByTerm: undefined, competencyLevelsByCycle: {}, competencyCriterionLevelsByCycle: {}, competencyEvidenceByCycle: {}, competencyTerms: undefined, competencySentences: undefined, competencyComments: undefined });
         });
         const fresh = { '1': buildTermDataForStudents(data.students), '2': buildTermDataForStudents(data.students), '3': buildTermDataForStudents(data.students) };
         data.terms = fresh;
