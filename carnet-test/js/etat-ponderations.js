@@ -41,6 +41,10 @@
 
     function openVisualTraceForEditing(asgId, focusStudentId) {
       const sub = getCurrentSubjectConfig();
+      if (sub && sub.isIlss && typeof startIlssObservationSession === 'function') {
+        startIlssObservationSession(sub, asgId, focusStudentId || '');
+        return;
+      }
       const termData = getActiveTermData();
       const subData = termData.subjectData[sub.id];
       const asg = subData.assignments.find(a => a.id === asgId && a.isObservation);
@@ -371,11 +375,41 @@
       { key: 'avg', label: 'Moyenne', dir: -1 },
       { key: 'final', label: 'Note finale', dir: -1 }
     ];
+    const GB_SORT_OPTIONS_ILSS = [
+      { key: 'firstName', label: 'Prénom', dir: 1 },
+      { key: 'lastName', label: 'Nom de famille', dir: 1 },
+      { key: 'ilssPalier', label: 'Palier et cote', dir: -1 },
+      { key: 'level', label: 'Niveau scolaire', dir: 1 }
+    ];
     // Tri d'affichage seulement : l'ordre de la liste d'élèves n'est pas modifié
     function getGradebookStudents(sub) {
       const list = appState.students.slice();
       if (!gbSort.key) return list;
       const text = s => gbSort.key === 'lastName' ? (s.lastName || '') : (s.firstName || s.name || '');
+      if (gbSort.key === 'level') {
+        const lvlRank = s => s.gradeLevel === 'P' ? 0 : (Number(s.gradeLevel) || 99);
+        return list.sort((a, b) => {
+          const la = lvlRank(a), lb = lvlRank(b);
+          if ((la === 99 || lb === 99) && la !== lb) return la === 99 ? 1 : -1;
+          const tie = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+          return ((la - lb) * gbSort.dir) || tie;
+        });
+      }
+      if (gbSort.key === 'ilssPalier' && sub && sub.isIlss && typeof getIlssFinalJudgment === 'function') {
+        const coteRank = { A: 4, B: 3, C: 2, D: 1 };
+        const ilssRank = s => {
+          const j = getIlssFinalJudgment(sub, appState.activeTerm, s);
+          const p = Number(j && j.palier) || 0;
+          const c = coteRank[j && j.cote] || 0;
+          return (p || c) ? (p * 10 + c) : null;
+        };
+        return list.sort((a, b) => {
+          const x = ilssRank(a), y = ilssRank(b);
+          if (x === null || y === null) return x === y ? 0 : (x === null ? 1 : -1);
+          const tie = (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' });
+          return ((x - y) * gbSort.dir) || tie;
+        });
+      }
       const num = s => {
         const summary = computeStudentSubjectSummary(appState.activeTerm, sub.id, s.id);
         return gbSort.key === 'avg' ? summary.assignmentsAvg : summary.finalPct;
@@ -393,7 +427,9 @@
     }
     function openGradebookSortBar(event) {
       const rect = event.currentTarget.getBoundingClientRect();
-      const options = GB_SORT_OPTIONS.map(o => ({
+      const currentSub = typeof getCurrentSubjectConfig === 'function' ? getCurrentSubjectConfig() : null;
+      const sourceOptions = (currentSub && currentSub.isIlss) ? GB_SORT_OPTIONS_ILSS : GB_SORT_OPTIONS;
+      const options = sourceOptions.map(o => ({
         id: o.key,
         label: o.label + (gbSort.key === o.key ? (gbSort.dir === o.dir ? ' ↓' : ' ↑') : ''),
         onPick: () => {

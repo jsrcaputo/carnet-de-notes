@@ -39,10 +39,9 @@
           <button id="sidebarSingleGroup" type="button" class="test-single-group">Créer un groupe</button>
           <select id="headerGroupSelect" class="hidden" aria-label="Groupe actif" title="Changer de groupe"></select>
           <div class="test-group-actions">
-            <button id="btnSidebarGroupMenu" type="button" aria-label="Options des groupes" aria-expanded="false" aria-controls="sidebarGroupMenu" title="Ajouter ou gérer les groupes">+</button>
+            <button id="btnSidebarGroupMenu" type="button" aria-label="Options des groupes" aria-expanded="false" aria-controls="sidebarGroupMenu" title="Ajouter un groupe">+</button>
             <div id="sidebarGroupMenu" class="test-group-menu hidden">
               <button id="btnSidebarNewGroup" type="button">Créer un groupe</button>
-              <button id="btnSidebarManageGroups" type="button">Gérer les groupes</button>
             </div>
           </div>
         </div>
@@ -85,7 +84,7 @@
       </button>
     </nav>
   </aside>
-  <div id="sidebarChoiceMenu" class="sidebar-choice-menu hidden no-print" role="menu" aria-label="Choisir ou gérer les groupes"></div>
+  <div id="sidebarChoiceMenu" class="sidebar-choice-menu hidden no-print" role="menu" aria-label="Choisir un groupe"></div>
 
   <!-- TOP HEADER (ERGONOMIC, ZERO HORIZONTAL OVERFLOW AT ANY WIDTH) -->
   <header class="test-topbar bg-slate-900 text-white sticky top-0 z-30 shadow-md no-print w-full">
@@ -188,16 +187,6 @@
                 </span>
                 <span class="sp-switch">
                   <input type="checkbox" role="switch" data-pref-check="coloredColumns">
-                  <span class="sp-switch-track" aria-hidden="true"></span>
-                </span>
-              </label>
-              <label class="sp-row sp-color-columns-toggle">
-                <span class="sp-toggle-copy">
-                  <span class="sp-toggle-label">Animations</span>
-                  <small>Transitions et effets visuels</small>
-                </span>
-                <span class="sp-switch">
-                  <input type="checkbox" role="switch" data-pref-check="animations" checked>
                   <span class="sp-switch-track" aria-hidden="true"></span>
                 </span>
               </label>
@@ -385,14 +374,6 @@
               <button type="button" data-dash-term="2" aria-pressed="false">Étape 2</button>
               <button type="button" data-dash-term="3" aria-pressed="false">Étape 3</button>
             </div>
-            <button id="dashPrivacyToggle" type="button" class="dash-privacy-btn" aria-pressed="false" title="Masquer temporairement les notes et pourcentages à l’écran (pratique sur un TNI)">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-              <span>Masquer les notes</span>
-            </button>
-            <button id="dashBtnResumeWork" type="button" class="home-btn home-btn-primary home-btn-sm">
-              <span>Reprendre le carnet</span>
-              <span class="home-arrow" aria-hidden="true">→</span>
-            </button>
           </div>
         </div>
 
@@ -483,10 +464,6 @@
               <h3 id="dashGroupsHeading">Vos groupes</h3>
               <span id="dashGroupsCount" class="dash-count-pill">0</span>
             </div>
-            <button id="dashBtnManageGroups" type="button" class="dash-inline-link">
-              <span>Gérer les listes</span>
-              <span class="home-arrow" aria-hidden="true">→</span>
-            </button>
           </div>
           <div id="dashGroupsGrid" class="dash-groups-grid"></div>
         </section>
@@ -522,6 +499,7 @@
           <div class="gradebook-metrics">
             <div class="gradebook-metric"><span>Travaux et traces observables</span><strong id="kpiAssignmentCount">0</strong></div>
             <div class="gradebook-metric"><span>Moyenne du groupe</span><strong id="kpiClassAverage">—</strong></div>
+            <div id="kpiIlssPositionedMetric" class="gradebook-metric hidden"><span>Élèves situés</span><strong id="kpiIlssPositionedCount">0 / 0</strong></div>
             <button id="btnWeightMode" type="button" aria-expanded="false" aria-controls="weightControls">Pondération</button>
             <span id="weightWarningBanner" class="hidden px-2 py-0.5 rounded-md text-[11px] font-bold bg-red-100 text-red-800 border border-red-300" role="alert">
               Erreur pondération : <span id="weightTotalVal">0</span> % (doit donner 100 %)
@@ -791,7 +769,7 @@
         <!-- Manage Students & Per-Student Adaptations -->
         <div class="student-manager-card bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
           <div class="student-page-heading">
-              <h2>Listes et groupes</h2>
+              <h2 id="studentPageHeading">Liste d’élèves</h2>
           </div>
 
           <div id="groupBar" class="flex flex-wrap items-center gap-1.5 border-b border-slate-100 pb-2.5"></div>
@@ -806,7 +784,7 @@
             <button id="btnSortGrade" type="button" class="sort-btn" title="Trier par niveau scolaire">Niveau <span aria-hidden="true">↓</span></button>
           </div>
 
-          <p id="noGroupNotice" class="no-group-notice hidden">Pour ajouter des élèves, créez d’abord un groupe avec « Nouveau groupe ».</p>
+          <p id="noGroupNotice" class="no-group-notice hidden">Pour ajouter des élèves, créez d’abord un groupe depuis « Groupe » dans le menu à gauche.</p>
           <div id="studentManagerList" class="divide-y divide-slate-100">
             <!-- Populated dynamically -->
           </div>
@@ -1043,13 +1021,18 @@
 
     <!-- VIEW 5: BULLETIN GLOBAL & BILAN FACTUEL ANNUEL DE L'ÉLÈVE -->
     <section id="viewGlobalReport" class="hidden space-y-4">
-      <!-- Student Selector Band (Equitable 2 lines of 5 students) -->
       <div class="global-report-toolbar bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3 no-print">
-        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
-          <div class="flex items-center gap-2 flex-wrap">
-            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Synthèse des résultats (2026-2027)</h2>
+        <div class="gr-toolbar-head flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
+          <div class="flex items-center gap-2 flex-wrap min-w-0">
+            <h2 class="text-xl sm:text-2xl font-extrabold text-slate-900">Synthèse annuelle</h2>
+            <span id="grGroupNamePill" class="gr-group-pill hidden"></span>
+            <span id="grStudentCounter" class="gr-student-counter hidden" aria-live="polite"></span>
           </div>
           <div class="flex items-center gap-1.5 flex-wrap">
+            <label id="grStudentSearchWrap" class="gr-search-box hidden">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+              <input id="grStudentSearch" type="search" placeholder="Filtrer un élève…" autocomplete="off" aria-label="Filtrer les élèves dans la synthèse">
+            </label>
             <div class="gr-student-sort-toggle" role="group" aria-label="Ordre des élèves dans la synthèse">
               <button type="button" data-gr-student-sort="firstName" aria-pressed="false" title="Trier par prénom (A à Z)"><svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5"/></svg><span>Prénom</span></button>
               <button type="button" data-gr-student-sort="lastName" aria-pressed="true" title="Trier par nom de famille (A à Z)"><svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M3.5 16.5 7 20l3.5-3.5M17 20V4M13.5 7.5 17 4l3.5 3.5"/></svg><span>Nom de famille</span></button>
@@ -1062,8 +1045,8 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
               </button>
             </div>
-            <button id="btnGrPrevStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève précédent">← Préc.</button>
-            <button id="btnGrNextStudent" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 cursor-pointer" title="Élève suivant">Suiv. →</button>
+            <button id="btnGrPrevStudent" type="button" class="gr-nav-btn" title="Élève précédent (Alt + ←)">← Préc.</button>
+            <button id="btnGrNextStudent" type="button" class="gr-nav-btn" title="Élève suivant (Alt + →)">Suiv. →</button>
           </div>
         </div>
 
@@ -1397,6 +1380,15 @@
             <input id="inputAssignmentOutOf" type="number" min="1" step="any" value="100" class="w-24 px-3 py-2 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             <span class="text-[11px] text-slate-500">Ex. : 40 signifie que la note brute est sur 40. Les notes saisies sont ensuite ramenées sur 100 (note ÷ 40 × 100). La pondération de la colonne, en %, se règle dans le carnet.</span>
           </div>
+        </div>
+        <div id="asgIlssEvidenceBox" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-2.5 space-y-2">
+          <div class="text-xs font-semibold text-slate-700">Nature de la trace (triangulation)</div>
+          <div class="flex flex-wrap gap-3 text-xs text-slate-700">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="asgIlssEvidence" value="observation"><span>Observation</span></label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="asgIlssEvidence" value="conversation"><span>Conversation</span></label>
+            <label class="inline-flex items-center gap-1.5 cursor-pointer"><input type="radio" name="asgIlssEvidence" value="production" checked><span>Production</span></label>
+          </div>
+          <p class="text-[11px] text-slate-500">En ILSS, le palier (P1–P5) et la cote (A–D) se consignent directement dans le tableau, sans note numérique.</p>
         </div>
         <div id="asgTargetLevelsBox" class="hidden rounded-lg border border-slate-200 bg-slate-50 p-2.5">
           <div class="text-xs font-semibold text-slate-700 mb-1.5">Niveaux visés par cette évaluation :</div>

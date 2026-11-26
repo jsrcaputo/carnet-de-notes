@@ -54,6 +54,15 @@
         if (frenchLabel) frenchLabel.textContent = isAccueil
           ? 'Français (ILSS dans Accueil)'
           : 'Français';
+        let accueilHint = document.getElementById('groupAccueilHint');
+        if (!accueilHint) {
+          accueilHint = document.createElement('p');
+          accueilHint.id = 'groupAccueilHint';
+          accueilHint.className = 'mt-1.5 text-[11px] text-slate-600 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 hidden';
+          accueilHint.textContent = 'Les 3 compétences ILSS (Oral, Lecture, Écriture) sont incluses automatiquement avec suivi par paliers 1–5 et cotes A–D.';
+          list.after(accueilHint);
+        }
+        accueilHint.classList.toggle('hidden', !isAccueil);
       };
       lvlSel.onchange = () => syncLevel(true);
       syncLevel(false);
@@ -65,9 +74,8 @@
       emptyCopyOption.value = '';
       emptyCopyOption.textContent = 'Aucune (liste vide)';
       copySel.appendChild(emptyCopyOption);
-      const activeGrp = appState.groups.find(g => g.id === appState.activeGroupId);
       appState.groups
-        .filter(g => !g.placeholder && (isExampleGroup(activeGrp) || !isExampleGroup(g)))
+        .filter(g => !g.placeholder)
         .forEach(g => {
           const option = document.createElement('option');
           option.value = g.id;
@@ -158,15 +166,16 @@
       const sel = document.getElementById('headerGroupSelect');
       const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId) || {};
       const activeIsPlaceholder = !!activeGroup.placeholder;
-      const visibleGroups = appState.groups.filter(g => !g.placeholder && !isExampleGroup(g));
-      const managedGroups = isExampleGroup(activeGroup)
-        ? [...appState.groups.filter(g => !g.placeholder && isExampleGroup(g)), ...visibleGroups]
-        : visibleGroups;
+      const managedGroups = appState.groups.filter(g => !g.placeholder);
+      const heading = document.getElementById('studentPageHeading');
+      if (heading) {
+        heading.textContent = managedGroups.length > 1 ? 'Listes d’élèves' : 'Liste d’élèves';
+      }
       const groupLabel = () => 'Groupe';
       const activeGroupLabel = document.getElementById('sidebarActiveGroup');
       if (activeGroupLabel) activeGroupLabel.textContent = activeIsPlaceholder ? '' : (activeGroup.name || '');
       if (sel) {
-        const choices = appState.groups.filter(g => !g.placeholder && (isExampleGroup(activeGroup) || !isExampleGroup(g)));
+        const choices = appState.groups.filter(g => !g.placeholder);
         const needsChoice = activeIsPlaceholder && choices.length > 0;
         const showSelect = choices.length > 0;
         document.getElementById('sidebarGroupLabel').textContent = groupLabel(choices.length);
@@ -209,20 +218,26 @@
         const b = document.createElement('button');
         b.type = 'button';
         b.className = active
-          ? 'px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white cursor-pointer'
+          ? 'px-2.5 py-1 rounded-lg text-xs font-bold bg-indigo-600 text-white cursor-pointer inline-flex items-center gap-1.5'
           : 'px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer';
         b.setAttribute('aria-pressed', String(active));
-        b.textContent = g.name;
-        b.title = active ? 'Cliquer pour modifier ce groupe' : 'Passer à ce groupe';
+        if (active) {
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = g.name;
+          const editIcon = document.createElement('span');
+          editIcon.className = 'inline-flex items-center opacity-85 shrink-0';
+          editIcon.setAttribute('aria-hidden', 'true');
+          editIcon.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>';
+          b.append(nameSpan, editIcon);
+          b.title = 'Modifier le nom, le niveau ou les matières de ce groupe';
+          b.setAttribute('aria-label', `Modifier le groupe ${g.name}`);
+        } else {
+          b.textContent = g.name;
+          b.title = 'Passer à ce groupe';
+        }
         b.addEventListener('click', () => active ? openGroupModal('edit', g.id) : switchGroup(g.id));
         bar.appendChild(b);
       });
-      const add = document.createElement('button');
-      add.type = 'button';
-      add.className = 'px-2.5 py-1 rounded-lg text-xs font-semibold border border-dashed border-slate-300 text-slate-600 hover:bg-slate-50 cursor-pointer';
-      add.textContent = '＋ Nouveau groupe';
-      add.addEventListener('click', () => openGroupModal('new'));
-      bar.appendChild(add);
       const addStudent = document.createElement('button');
       addStudent.id = 'btnOpenAddStudent';
       addStudent.type = 'button';
@@ -246,7 +261,7 @@
       const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId);
       notice.textContent = appState.students.length
         ? `Créez un groupe avant d’ajouter des élèves. Les élèves déjà présents seront conservés dans « ${activeGroup ? activeGroup.name : 'Mon groupe'} ».`
-        : 'Pour ajouter des élèves, créez d’abord un groupe avec « Nouveau groupe ».';
+        : 'Pour ajouter des élèves, créez d’abord un groupe depuis « Groupe » dans le menu à gauche.';
       document.getElementById('studentListTools').hidden = !hasGroup && !appState.students.length;
       const listEl = document.getElementById('studentManagerList');
       if (!listEl) return;
@@ -380,6 +395,7 @@
         const activeGroupLevel = (appState.groups.find(g => g.id === appState.activeGroupId) || {}).level;
         Object.entries(GRADE_LEVEL_LABELS).sort((a, b) => (a[0] === 'P' ? -1 : b[0] === 'P' ? 1 : 0)).forEach(([level, label]) => {
           if (activeGroupLevel === 'P' && level !== 'P' && level !== '1' && level !== st.gradeLevel) return;
+          if (activeGroupLevel === 'accueil' && level === 'P' && level !== st.gradeLevel) return;
           const option = document.createElement('option');
           option.value = level;
           option.textContent = label;
@@ -609,7 +625,7 @@
           const modTargets = [];
           const seenGroups = new Set();
           getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(s => {
-            if (s.prescoOnly) return;
+            if (s.prescoOnly || s.isIlss) return;
             if (s.group && s.singleResult) {
               if (seenGroups.has(s.group)) return;
               seenGroups.add(s.group);

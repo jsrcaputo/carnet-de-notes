@@ -271,6 +271,36 @@
           ? `Bulletin modifié — ${modifiedItems.map(item => `${item.label} (${item.levelLabel})`).join(', ')}`
           : 'Bulletin modifié');
       }
+      const ilssDetails = [];
+      if (typeof isAccueilGroup === 'function' && isAccueilGroup() && typeof getIlssAssignments === 'function') {
+        SUBJECTS_CONFIG.filter(sub => sub.isIlss).forEach(sub => {
+          const evalItems = [];
+          ['1', '2', '3'].forEach(tKey => {
+            getIlssAssignments(sub, tKey).forEach(asg => {
+              const res = typeof getIlssAssignmentResult === 'function'
+                ? getIlssAssignmentResult(sub, tKey, asg, st)
+                : { palier: '', cote: '', meta: null };
+              const meta = res.meta || {};
+              const hasNotes = Boolean((meta.quickComments && meta.quickComments.length) || String(meta.comment || '').trim());
+              if (!res.palier && !res.cote && !hasNotes) return;
+              if (Array.isArray(meta.quickComments)) {
+                meta.quickComments.forEach(tg => { tagFrequency[tg] = (tagFrequency[tg] || 0) + 1; });
+              }
+              const resultDisplay = typeof accueilLabel === 'function' ? accueilLabel(res) : 'Observé';
+              evalItems.push({
+                term: tKey,
+                title: asg.title || 'Évaluation ILSS',
+                isObs: Boolean(asg.isObservation),
+                resultDisplay
+              });
+            });
+          });
+          if (evalItems.length) {
+            ilssDetails.push({ sub, items: evalItems });
+          }
+        });
+      }
+
       const flagsEntries = Object.entries(flagFrequency).sort((a, b) => b[1] - a[1]);
       const tagsEntries = Object.entries(tagFrequency).sort((a, b) => b[1] - a[1]);
 
@@ -410,7 +440,28 @@
         </div>
       ` : '';
 
+      const ilssDetailsHtml = ilssDetails.length > 0 ? `
+        <div class="sis-section-title">Détail des évaluations et traces ILSS</div>
+        <div class="sis-details-grid">
+          ${ilssDetails.map(block => `
+            <div class="sis-subject-card">
+              <div class="sis-subject-card-head">${escapeHtml(block.sub.shortName)}</div>
+              <table class="sis-eval-table">
+                <tbody>
+                  ${block.items.map(it => `
+                    <tr>
+                      <td class="sis-eval-term">Ét. ${escapeHtml(it.term)}</td>
+                      <td class="sis-eval-title">${escapeHtml(it.title)}${it.isObs ? ' <span class="sis-obs-tag">Trace</span>' : ''}</td>
+                      <td class="sis-eval-res">${escapeHtml(it.resultDisplay)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`).join('')}
+        </div>
+      ` : '';
+
       const todayStr = new Date().toLocaleDateString('fr-CA', { year: 'numeric', month: 'short', day: 'numeric' });
+      const isAccueil = typeof isAccueilGroup === 'function' && isAccueilGroup();
       const sheetHtml = `
         <header class="sis-header">
           <div>
@@ -423,7 +474,7 @@
             </div>
           </div>
           ${!options.overall || st.gradeLevel === 'P' || !subjectRows.length ? '' : `<div class="sis-overall-box">
-            <div class="sis-overall-label">Moyenne indicative${overallProvisional ? ' · provisoire' : ''}</div>
+            <div class="sis-overall-label">${isAccueil ? 'Moyenne · matières chiffrées' : 'Moyenne indicative'}${overallProvisional ? ' · provisoire' : ''}</div>
             <div class="sis-overall-val">${overallAnnualAvg !== null ? `${overallAnnualAvg} % (${escapeHtml(pctToClosestGradeCode(overallAnnualAvg))})` : '—'}</div>
           </div>`}
         </header>
@@ -432,8 +483,8 @@
         ${st.gradeLevel === 'P'
           ? (options.summary ? `<div class="sis-section-title">Portrait du développement par domaine</div><p>Portrait qualitatif à interpréter selon le jugement professionnel; il ne constitue pas un bulletin officiel.</p>${preschoolPrintHtml}${st.reportComment ? `<p><strong>Commentaire général :</strong> ${escapeHtml(st.reportComment)}</p>` : ''}` : '')
           : (options.summary && subjectRows.length ? `<div class="sis-section-title">Portrait des résultats par matière</div><p>Les résultats provisoires utilisent seulement les étapes disponibles, dont les poids sont réajustés proportionnellement.</p>${summaryTableHtml}` : '')}
-        ${options.summary && typeof isAccueilGroup === 'function' && isAccueilGroup() ? getAccueilSummaryHtml(st) : ''}
-        ${options.details ? detailsHtml : ''}
+        ${options.summary && isAccueil ? getAccueilSummaryHtml(st) : ''}
+        ${options.details ? `${ilssDetailsHtml}${detailsHtml}` : ''}
       `;
 
       if (!printNow) return sheetHtml;
@@ -718,7 +769,12 @@
         return;
       }
       select.innerHTML = '';
-      getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(subject => {
+      const printableSubjects = getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(subject => !subject.isIlss);
+      if (!printableSubjects.length) {
+        showToast('Les compétences ILSS utilisent les paliers qualitatifs, sans barème chiffré.');
+        return;
+      }
+      printableSubjects.forEach(subject => {
         const display = getSubjectContextDisplay(subject);
         const option = document.createElement('option');
         option.value = subject.id;
@@ -727,9 +783,9 @@
           : (display.fullName || display.shortName);
         select.appendChild(option);
       });
-      select.value = SUBJECTS_CONFIG.some(subject => subject.id === appState.activeSubjectId)
+      select.value = printableSubjects.some(subject => subject.id === appState.activeSubjectId)
         ? appState.activeSubjectId
-        : SUBJECTS_CONFIG[0].id;
+        : printableSubjects[0].id;
       renderBaremePrintStudents();
       dialog.showModal();
       revealBaremePrintFormat();

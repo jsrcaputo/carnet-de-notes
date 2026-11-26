@@ -86,15 +86,7 @@
           }
         }
       });
-      bindClick('dashBtnManageGroups', () => navigateToView('viewStudents'));
       bindClick('dashBtnAddStudents', () => navigateToView('viewStudents'));
-      bindClick('dashBtnResumeWork', () => {
-        const targetView = appState.students && appState.students.length > 0 ? 'viewGradebook' : 'viewStudents';
-        navigateToView(targetView);
-      });
-      bindClick('dashPrivacyToggle', () => {
-        if (typeof toggleDashboardPrivacyMask === 'function') toggleDashboardPrivacyMask();
-      });
       document.querySelectorAll('[data-dash-tab]').forEach(button => {
         button.addEventListener('click', () => {
           if (typeof setDashboardTab === 'function') setDashboardTab(button.dataset.dashTab);
@@ -238,6 +230,31 @@
       const btnNextStu = document.getElementById('btnGrNextStudent');
       if (btnPrevStu) btnPrevStu.addEventListener('click', () => cycleGlobalStudent(-1));
       if (btnNextStu) btnNextStu.addEventListener('click', () => cycleGlobalStudent(1));
+      const grSearchInput = document.getElementById('grStudentSearch');
+      if (grSearchInput) {
+        grSearchInput.addEventListener('input', () => {
+          if (typeof renderGrStudentSelectorOnly === 'function') renderGrStudentSelectorOnly();
+          else renderGlobalReportView();
+        });
+        grSearchInput.addEventListener('keydown', event => {
+          if (event.key === 'Escape' && grSearchInput.value) {
+            grSearchInput.value = '';
+            if (typeof renderGrStudentSelectorOnly === 'function') renderGrStudentSelectorOnly();
+          }
+        });
+      }
+      document.addEventListener('keydown', event => {
+        if (appState.activeView !== 'viewGlobalReport' || !event.altKey || event.ctrlKey || event.metaKey) return;
+        const t = event.target;
+        if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault();
+          cycleGlobalStudent(-1);
+        } else if (event.key === 'ArrowRight') {
+          event.preventDefault();
+          cycleGlobalStudent(1);
+        }
+      });
       document.querySelectorAll('[data-gr-student-view]').forEach(button => {
         button.addEventListener('click', () => {
           prefs.summaryStudentListMode = button.getAttribute('data-gr-student-view');
@@ -312,9 +329,14 @@
         document.getElementById('btnCbSave').addEventListener('click', () => {
           if (!activeCommentBankContext) return;
           const { termId, subjectId, studentId } = activeCommentBankContext;
-          const rec = appState.terms[termId].subjectData[subjectId].studentRecords[studentId];
-          if (rec) {
-            rec.comment = document.getElementById('cbTextarea').value.trim();
+          const sub = SUBJECTS_CONFIG.find(s => s.id === subjectId);
+          const commentText = document.getElementById('cbTextarea').value.trim();
+          if (sub && sub.isIlss && typeof getIlssJudgmentRecord === 'function') {
+            const st = appState.students.find(s => s.id === studentId);
+            if (st) getIlssJudgmentRecord(st, termId, sub.ilssCompetency).comment = commentText;
+          } else {
+            const rec = appState.terms[termId].subjectData[subjectId].studentRecords[studentId];
+            if (rec) rec.comment = commentText;
           }
           closeCommentBankModal();
           notifyUpdate('Commentaire appliqué au carnet');
@@ -362,10 +384,6 @@
         });
       };
       document.getElementById('btnSidebarNewGroup').addEventListener('click', startNewGroup);
-      document.getElementById('btnSidebarManageGroups').addEventListener('click', () => {
-        closeSidebarGroupMenu();
-        navigateToView('viewStudents');
-      });
       const groupChoiceButton = document.getElementById('btnSidebarGroupChoice');
       const groupChoiceMenu = document.getElementById('sidebarChoiceMenu');
       if (groupChoiceButton && groupChoiceMenu) {
@@ -398,8 +416,7 @@
             button.addEventListener('click', () => { closeGroupChoice(); action(); });
             groupChoiceMenu.appendChild(button);
           };
-          addAction('＋ Créer un groupe', startNewGroup);
-          if (choices.length) addAction('Gérer les groupes', () => navigateToView('viewStudents'));
+          addAction('＋ Nouveau groupe', startNewGroup);
           groupChoiceMenu.classList.remove('hidden');
           groupChoiceButton.setAttribute('aria-expanded', 'true');
           const rect = groupChoiceButton.getBoundingClientRect();
@@ -806,11 +823,29 @@
       const modalAsg = document.getElementById('modalAddAssignment');
       let modalEditingAssignmentId = null;
       // En ILSS, une évaluation déjà réalisée se consigne en palier/cote : pas de barème, de niveaux ciblés ni de compétences liées.
-      const applyIlssAssignmentModalMode = () => {
+      const applyIlssAssignmentModalMode = (evidenceType = 'production') => {
         const current = getCurrentSubjectConfig();
         const isIlss = Boolean(current && current.isIlss);
         document.getElementById('asgOutOfBox').classList.toggle('hidden', isIlss);
+        const evidenceBox = document.getElementById('asgIlssEvidenceBox');
+        if (evidenceBox) evidenceBox.classList.toggle('hidden', !isIlss);
+        const titleInput = document.getElementById('inputAssignmentTitle');
+        if (titleInput) {
+          if (isIlss) {
+            const placeholders = {
+              oral: 'Ex. : Causerie, jeu de rôle, écoute d’une histoire...',
+              lecture: 'Ex. : Lecture guidée, compréhension d’un album...',
+              ecriture: 'Ex. : Court récit, message, fiche d’information...'
+            };
+            titleInput.placeholder = placeholders[current.ilssCompetency] || 'Ex. : Activité ou tâche observée...';
+          } else {
+            titleInput.placeholder = 'Ex: Situation-problème : Le jardin, Dictée #1...';
+          }
+        }
         if (!isIlss) return;
+        const chosenRadio = document.querySelector(`input[name="asgIlssEvidence"][value="${evidenceType || 'production'}"]`)
+          || document.querySelector('input[name="asgIlssEvidence"][value="production"]');
+        if (chosenRadio) chosenRadio.checked = true;
         document.getElementById('asgTargetLevelsBox')?.classList.add('hidden');
         document.getElementById('asgLinkedPartsBox').classList.add('hidden');
         modalAddAsgTargetLevels = [];
@@ -868,7 +903,6 @@
         modalEditingAssignmentId = null;
         document.getElementById('modalAddAssignmentTitle').textContent = 'Ajout d’une évaluation';
         document.getElementById('btnConfirmAddAssignment').textContent = 'Ajouter au carnet';
-        document.getElementById('btnConfirmAddAssignment').textContent = 'Ajouter au carnet';
         const titleIn = document.getElementById('inputAssignmentTitle');
         titleIn.value = '';
         document.getElementById('inputAssignmentOutOf').value = '100';
@@ -890,7 +924,7 @@
           linkList.appendChild(label);
         });
         document.getElementById('inputAssignmentDate').value = new Date().toISOString().slice(0, 10);
-        applyIlssAssignmentModalMode();
+        applyIlssAssignmentModalMode(assignment.evidenceType || 'production');
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
         setTimeout(() => titleIn.focus(), 50);
@@ -929,7 +963,7 @@
           label.append(checkbox, document.createTextNode(getSubjectContextDisplay(subject).partLabel));
           linkList.appendChild(label);
         });
-        applyIlssAssignmentModalMode();
+        applyIlssAssignmentModalMode(assignment.evidenceType || 'production');
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
         setTimeout(() => document.getElementById('inputAssignmentTitle').focus(), 50);
@@ -988,16 +1022,18 @@
         const activeSub = getCurrentSubjectConfig();
         if (activeSub && activeSub.isIlss) {
           const subData = getActiveTermData().subjectData[activeSub.id];
+          const evidenceRadio = document.querySelector('input[name="asgIlssEvidence"]:checked');
+          const evidenceType = evidenceRadio ? evidenceRadio.value : 'production';
           if (modalEditingAssignmentId) {
             const assignment = subData.assignments.find(item => item.id === modalEditingAssignmentId);
-            if (assignment) Object.assign(assignment, { title, date });
+            if (assignment) Object.assign(assignment, { title, date, evidenceType });
             closeAsgModal();
             notifyUpdate(`Évaluation "${title}" modifiée`);
             renderAll();
             return;
           }
           const id = `ilss_asg_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-          subData.assignments.push({ id, title, date, isIlssAssessment: true, isObservation: false, targetLevels: [], evidenceType: 'production' });
+          subData.assignments.push({ id, title, date, isIlssAssessment: true, isObservation: false, targetLevels: [], evidenceType });
           appState.students.forEach(student => {
             const record = subData.studentRecords[student.id];
             if (record) record.scoreMeta[id] = { ilssPalier: '', ilssCote: '', comment: '', quickComments: [], criteria: {} };
@@ -1128,11 +1164,16 @@
       [['qoCommentInput', 'comment'], ['qoStrengthsInput', 'strengths'], ['qoChallengesInput', 'challenges']].forEach(([id, field]) => {
         document.getElementById(id).addEventListener('input', (e) => {
           const termData = getActiveTermData();
-          const draft = termData.subjectData[appState.activeSubjectId].currentObsSession.studentDrafts[appState.selectedStudentId];
+          const session = termData.subjectData[appState.activeSubjectId].currentObsSession;
+          const draft = session.studentDrafts[appState.selectedStudentId];
           if (draft) {
             draft[field] = e.target.value;
             if (e.target.value.trim()) draft.notEvaluated = false;
-            renderQuickObsView();
+            if (session.isIlss) {
+              scheduleAppStateSave();
+            } else {
+              renderQuickObsView();
+            }
           }
         });
       });
@@ -1506,6 +1547,8 @@
           const label = id === 'firstName' ? 'Prénom' : id === 'lastName' ? 'Nom' : 'Niveau';
           const direction = id === key && studentSortDirection === -1 ? '↑' : '↓';
           button.innerHTML = `${label} <span aria-hidden="true">${direction}</span>`;
+          button.classList.toggle('is-active', id === key);
+          button.setAttribute('aria-pressed', String(id === key));
           button.setAttribute('aria-label', `Trier par ${label.toLowerCase()}${id === key ? (studentSortDirection === 1 ? ', ordre croissant' : ', ordre décroissant') : ''}`);
         });
         renderAll();

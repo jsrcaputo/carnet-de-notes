@@ -929,16 +929,18 @@
             targetLevels: []
           });
           students.forEach((student, studentIndex) => {
-            const judgment = student.ilssByTerm[termId].judgments[ilssSubject.competency];
             const demoPalier = student.ilssByTerm[termId].assessments
               .find(item => item.competency === ilssSubject.competency).palier;
             const demoCote = student.ilssByTerm[termId].assessments
               .find(item => item.competency === ilssSubject.competency).cote;
+            const pairs = (typeof ILSS_OBSERVATION_PAIRS !== 'undefined' && ILSS_OBSERVATION_PAIRS[ilssSubject.competency]) || [];
+            const pair = pairs[(studentIndex + subjectIndex) % Math.max(1, pairs.length)];
+            const quickComment = pair ? pair[(demoCote === 'C' || demoCote === 'D') ? 1 : 0] : '';
             subData.studentRecords[student.id].scoreMeta[id] = {
               ilssPalier: '',
               ilssCote: demoCote,
-              comment: judgment.comment,
-              quickComments: [ILSS_COMMENT_BANK[ilssSubject.competency][(studentIndex + subjectIndex) % 4]],
+              comment: `Appui observé au palier ${demoPalier} lors de l’activité.`,
+              quickComments: quickComment ? [quickComment] : [],
               criteria: Object.fromEntries(
                 ILSS_OBSERVABLE_GRIDS[ilssSubject.competency].map(criterion => [criterion.id, demoPalier])
               )

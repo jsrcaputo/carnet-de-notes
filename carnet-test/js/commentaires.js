@@ -226,11 +226,66 @@
       return personalizeScaleSentences(sentences, student, mode);
     }
 
+    function synthesizeIlssSubjectComment(termId, subject, student, mode) {
+      if (!subject || !subject.isIlss || !student) return '';
+      const comp = subject.ilssCompetency;
+      const compLabels = {
+        oral: 'communication orale',
+        lecture: 'lecture',
+        ecriture: 'écriture'
+      };
+      const label = compLabels[comp] || 'français (ILSS)';
+      const judgment = typeof getIlssFinalJudgment === 'function'
+        ? getIlssFinalJudgment(subject, termId, student)
+        : { palier: '', cote: '' };
+      const sentences = [];
+      if (judgment.palier && judgment.cote) {
+        const coteText = {
+          A: 'dépasse les exigences attendues à ce palier',
+          B: 'satisfait clairement aux exigences attendues à ce palier',
+          C: 'satisfait minimalement aux exigences de ce palier avec des appuis ponctuels',
+          D: 'demeure en deçà des exigences de ce palier et bénéficie d’un accompagnement soutenu'
+        }[judgment.cote] || 'progresse au regard des tâches de ce palier';
+        sentences.push(`En ${label} (palier ${judgment.palier}), l’élève ${coteText}.`);
+      } else if (judgment.palier) {
+        sentences.push(`En ${label}, l’élève travaille présentement au palier ${judgment.palier}.`);
+      } else {
+        sentences.push(`En ${label}, l’élève participe aux activités d’intégration linguistique proposées en classe.`);
+      }
+
+      const subData = appState.terms?.[termId]?.subjectData?.[subject.id];
+      const rec = subData?.studentRecords?.[student.id];
+      const pairs = (typeof ILSS_OBSERVATION_PAIRS !== 'undefined' && ILSS_OBSERVATION_PAIRS[comp]) || [];
+      const strengths = [];
+      const challenges = [];
+      if (rec && rec.scoreMeta) {
+        Object.values(rec.scoreMeta).forEach(meta => {
+          if (!meta || !Array.isArray(meta.quickComments)) return;
+          meta.quickComments.forEach(text => {
+            if (pairs.some(pair => pair[0] === text) && !strengths.includes(text)) strengths.push(text);
+            else if (pairs.some(pair => pair[1] === text) && !challenges.includes(text)) challenges.push(text);
+          });
+        });
+      }
+      if (strengths.length) {
+        const list = strengths.slice(0, 2).map(s => s.charAt(0).toLowerCase() + s.slice(1)).join(' et ');
+        sentences.push(`On observe notamment qu’il ${list}.`);
+      }
+      if (challenges.length) {
+        const list = challenges.slice(0, 2).map(s => s.charAt(0).toLowerCase() + s.slice(1)).join(' et ');
+        sentences.push(`En soutien, on note qu’il ${list}.`);
+      } else if (!strengths.length && typeof ILSS_COMMENT_BANK !== 'undefined' && ILSS_COMMENT_BANK[comp]?.[1]) {
+        sentences.push(ILSS_COMMENT_BANK[comp][1]);
+      }
+      return personalizeScaleSentences(sentences, student, mode);
+    }
+
     function synthesizeStudentSubjectComment(termId, subjectId, studentId, modeOverride) {
       const st = appState.students.find(s => s.id === studentId);
       const sub = SUBJECTS_CONFIG.find(s => s.id === subjectId) || getCurrentSubjectConfig();
       if (!st || !sub) return '';
       const mode = modeOverride || st.pronoun || 'prenom';
+      if (sub.isIlss) return synthesizeIlssSubjectComment(termId, sub, st, mode);
       if (getStudentCycle(st.gradeLevel) === 'P') return synthesizePreschoolSubjectComment(termId, sub, st, mode);
       if (getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))) return '';
       const displaySub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);

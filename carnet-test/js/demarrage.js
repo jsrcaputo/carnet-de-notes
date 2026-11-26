@@ -274,7 +274,10 @@
         univers_social: 'U.S. C1',
         us_changement: 'U.S. C2',
         us_diversite: 'U.S. C3',
-        ccq_global: 'CCQ'
+        ccq_global: 'CCQ',
+        ilss_oral: 'ILSS Oral',
+        ilss_lecture: 'ILSS Lect.',
+        ilss_ecriture: 'ILSS Écr.'
       };
       if (exactLabels[sub.id]) return exactLabels[sub.id];
       const match = String(sub.id || '').match(/_(c\d+(?:c\d+)?)$/i);
@@ -314,7 +317,7 @@
         const sub = ALL_SUBJECTS_CONFIG.find(item => item.id === subId);
         if (hasActiveObsSessionDraft(subData)) count += 1;
         const assignments = Array.isArray(subData.assignments) ? subData.assignments : [];
-        if (sub && !sub.prescoOnly && assignments.length > 0 && typeof isWeightSumValid100 === 'function') {
+        if (sub && !sub.prescoOnly && !sub.isIlss && assignments.length > 0 && typeof isWeightSumValid100 === 'function') {
           if (!isWeightSumValid100(subData)) count += 1;
         }
         const records = subData.studentRecords || {};
@@ -345,8 +348,8 @@
       const students = Array.isArray(appState.students) ? appState.students : [];
       const termData = (appState.terms && appState.terms[termId]) || { subjectData: {}, observations: [] };
       const visibleSubjects = typeof getVisibleSubjectsForContext === 'function'
-        ? getVisibleSubjectsForContext(SUBJECTS_CONFIG).filter(subject => !subject.isIlss)
-        : SUBJECTS_CONFIG.filter(subject => !subject.isIlss);
+        ? getVisibleSubjectsForContext(SUBJECTS_CONFIG)
+        : SUBJECTS_CONFIG.slice();
       const presentLevels = typeof getPresentStudentLevels === 'function'
         ? getPresentStudentLevels()
         : [];
@@ -413,17 +416,25 @@
             title: `Trace observable non enregistrée — ${label}`,
             detail: draftTitle ? `Activité « ${draftTitle} » en attente d’enregistrement au carnet.` : 'Une grille commencée n’a pas encore été enregistrée au carnet.',
             actionLabel: 'Reprendre la grille',
-            onClick: () => navigateToView('viewQuickObs', () => {
-              appState.activeSubjectId = sub.id;
-              expandedSubjectGroup = (sub.group && sub.group !== 'presco') ? sub.group : null;
-            })
+            onClick: () => {
+              if (sub.isIlss && typeof startIlssObservationSession === 'function') {
+                appState.activeSubjectId = sub.id;
+                expandedSubjectGroup = sub.group || null;
+                startIlssObservationSession(sub, (subData.currentObsSession && subData.currentObsSession.editingAssignmentId) || '');
+                return;
+              }
+              navigateToView('viewQuickObs', () => {
+                appState.activeSubjectId = sub.id;
+                expandedSubjectGroup = (sub.group && sub.group !== 'presco') ? sub.group : null;
+              });
+            }
           });
         }
 
         let weightValid = null;
         let weightIssueText = '';
         let invalidWeightLevel = '';
-        if (!sub.prescoOnly && assignments.length > 0 && typeof isWeightSumValid100 === 'function') {
+        if (!sub.prescoOnly && !sub.isIlss && assignments.length > 0 && typeof isWeightSumValid100 === 'function') {
           if (isMulti && presentLevels.length > 0 && typeof isLevelWeightSumValid100 === 'function') {
             const invalidLevels = [];
             presentLevels.forEach(lvl => {
@@ -493,9 +504,16 @@
             const flags = rec && typeof getCellFlags === 'function' ? getCellFlags(rec, asg.id) : [];
 
             const isNotEval = Boolean(asg.isObservation && meta && meta.notEvaluated === true);
-            const hasScore = valStr !== '' || isNotEval;
-            const isPartialTrace = Boolean(asg.isObservation && meta && meta.hasData && meta.isComplete === false && valStr === '');
-            const isLinkedPending = Boolean(meta && meta.linkedCopy === true);
+            let hasScore = valStr !== '' || isNotEval;
+            let isPartialTrace = Boolean(asg.isObservation && meta && meta.hasData && meta.isComplete === false && valStr === '');
+            let isLinkedPending = Boolean(meta && meta.linkedCopy === true);
+            if (sub.isIlss && typeof getIlssAssignmentResult === 'function') {
+              const ilssRes = getIlssAssignmentResult(sub, termId, asg, st);
+              const critCount = ilssRes.meta && ilssRes.meta.criteria ? Object.keys(ilssRes.meta.criteria).length : 0;
+              hasScore = Boolean(ilssRes.palier || ilssRes.cote);
+              isPartialTrace = Boolean(asg.isObservation && critCount > 0 && !hasScore);
+              isLinkedPending = false;
+            }
 
             const radarEntry = studentSignalsMap.get(st.id);
             if (radarEntry) {
@@ -506,6 +524,14 @@
                 const grouped = groupObservationTags(meta.tags);
                 (grouped.challenges || []).forEach(tag => {
                   radarEntry.challengeCounts.set(tag, (radarEntry.challengeCounts.get(tag) || 0) + 1);
+                });
+              }
+              if (sub.isIlss && meta && Array.isArray(meta.quickComments) && typeof ILSS_OBSERVATION_PAIRS !== 'undefined') {
+                const pairs = ILSS_OBSERVATION_PAIRS[sub.ilssCompetency] || [];
+                meta.quickComments.forEach(txt => {
+                  if (pairs.some(pair => pair[1] === txt)) {
+                    radarEntry.challengeCounts.set(txt, (radarEntry.challengeCounts.get(txt) || 0) + 1);
+                  }
                 });
               }
             }
@@ -558,6 +584,7 @@
             title: asg.title || 'Évaluation',
             date: sortStamp,
             isObservation: Boolean(asg.isObservation),
+            isIlss: Boolean(sub.isIlss),
             subjectId: sub.id,
             subjectGroup: sub.group || '',
             subjectLabel: label,
@@ -576,7 +603,9 @@
 
         const distribution = sub.prescoOnly
           ? { 4: 0, 3: 0, 2: 0, 1: 0 }
-          : { A: 0, B: 0, C: 0, D: 0, E: 0 };
+          : sub.isIlss
+            ? { p1: 0, p2: 0, p3: 0, p4: 0, p5: 0 }
+            : { A: 0, B: 0, C: 0, D: 0, E: 0 };
         let applicableCount = 0;
         let evaluatedCount = 0;
 
@@ -585,6 +614,45 @@
           applicableCount += 1;
           const radarEntry = studentSignalsMap.get(st.id);
           const rec = records[st.id];
+          if (sub.isIlss) {
+            const ilssFinal = typeof getIlssFinalJudgment === 'function'
+              ? getIlssFinalJudgment(sub, termId, st)
+              : { palier: '', cote: '' };
+            const ilssLabel = typeof formatIlssResult === 'function' ? formatIlssResult(ilssFinal) : '';
+            if (ilssFinal.palier || ilssFinal.cote) evaluatedCount += 1;
+            if (ilssFinal.palier && Object.prototype.hasOwnProperty.call(distribution, `p${ilssFinal.palier}`)) {
+              distribution[`p${ilssFinal.palier}`] += 1;
+            }
+            if (radarEntry) {
+              radarEntry.pills.push({
+                subjectId: sub.id,
+                shortLabel: getCompactSubjectBadgeLabel(sub, displaySub),
+                fullLabel: label,
+                code: ilssLabel || '—',
+                ilssCote: ilssFinal.cote || '',
+                pct: null,
+                isIlss: true,
+                isPresco: false,
+                isModified: false
+              });
+              if (ilssFinal.cote === 'D') {
+                radarEntry.below60.push({ subjectId: sub.id, label, pct: null, ilssCote: 'D', ilssLabel: ilssLabel || 'Cote D' });
+              }
+            }
+            const ilssComment = st.ilssByTerm?.[termId]?.judgments?.[sub.ilssCompetency]?.comment;
+            if (ilssFinal.cote === 'D' && !(typeof ilssComment === 'string' && ilssComment.trim())) {
+              priorityComments.push({
+                studentId: st.id,
+                studentName: st.name || 'Élève',
+                subjectId: sub.id,
+                subjectGroup: sub.group || '',
+                subjectLabel: label,
+                statusText: ilssLabel || 'Cote D',
+                isIlss: true
+              });
+            }
+            return;
+          }
           const sum = computeStudentSubjectSummary(termId, sub.id, st.id);
           const finalPct = sum && sum.finalPct !== null && Number.isFinite(sum.finalPct) ? sum.finalPct : null;
           const isModified = typeof isSubjectModifiedForStudent === 'function' && isSubjectModifiedForStudent(st, sub);
@@ -717,7 +785,7 @@
         const effectiveWeight = (rawWeight !== null && rawWeight !== undefined && Number.isFinite(Number(rawWeight)))
           ? Number(rawWeight)
           : fallbackWeight;
-        const officialWeightLabel = !sub.prescoOnly && !sub.singleResult
+        const officialWeightLabel = !sub.prescoOnly && !sub.singleResult && !sub.isIlss
           ? (effectiveWeight !== null
             ? `${effectiveWeight} %`
             : displaySub.officialWeightLabel
@@ -731,6 +799,7 @@
           label,
           iconKey: sub.group || (sub.id === 'ccq_global' ? 'ccq' : 'maths'),
           isPresco: Boolean(sub.prescoOnly),
+          isIlss: Boolean(sub.isIlss),
           officialWeightLabel,
           writtenCount,
           obsCount,
@@ -775,10 +844,13 @@
 
         const signals = [];
         entry.below60.forEach(item => {
+          const shortSubject = item.label.split('•').pop().trim();
           signals.push({
             tone: 'warn',
-            text: item.pct !== null ? `${item.label.split('•').pop().trim()} : ${item.pct} %` : `${item.label} : ${PRESCHOOL_CONSTAT_SHORT[item.constatRank]}`,
-            maskedText: item.pct !== null ? `${item.label.split('•').pop().trim()} : suivi` : `${item.label} : suivi`,
+            text: item.ilssCote
+              ? `${shortSubject} : ${item.ilssLabel || 'Cote D'}`
+              : item.pct !== null ? `${shortSubject} : ${item.pct} %` : `${item.label} : ${PRESCHOOL_CONSTAT_SHORT[item.constatRank]}`,
+            maskedText: `${shortSubject} : suivi`,
             onClick: () => jumpFromReportToSubject(item.subjectId, entry.student.id)
           });
         });
@@ -972,6 +1044,15 @@
             detail: details.join(' · '),
             actionLabel: ev.isObservation ? 'Continuer' : 'Compléter',
             onClick: () => {
+              if (ev.isIlss && ev.isObservation && typeof startIlssObservationSession === 'function') {
+                const subObj = SUBJECTS_CONFIG.find(s => s.id === ev.subjectId);
+                if (subObj) {
+                  appState.activeSubjectId = ev.subjectId;
+                  expandedSubjectGroup = ev.subjectGroup || null;
+                  startIlssObservationSession(subObj, ev.asgId, ev.firstStudentId || '');
+                  return;
+                }
+              }
               if (ev.isObservation && typeof openVisualTraceForEditing === 'function') {
                 appState.activeSubjectId = ev.subjectId;
                 expandedSubjectGroup = (ev.subjectGroup && ev.subjectGroup !== 'presco') ? ev.subjectGroup : null;
@@ -1063,11 +1144,14 @@
       });
       compList.replaceChildren();
       compList.classList.toggle('is-presco', data.isPrescoGroup);
+      const hasIlssComp = data.competencies.some(comp => comp.isIlss);
       const distributionHelp = document.createElement('p');
       distributionHelp.className = 'dash-dist-help';
       distributionHelp.textContent = data.isPrescoGroup
         ? 'La barre répartit les élèves ayant un résultat selon un constat estimé à partir de ce résultat. Les élèves sans résultat sont exclus.'
-        : 'La barre répartit les élèves ayant un résultat final dans la compétence, par cote de A à E. Les élèves sans résultat sont exclus.';
+        : hasIlssComp
+          ? 'En ILSS, la barre répartit les élèves selon leur palier (1 à 5), sans pourcentage. En mathématique et autres matières, elle répartit les cotes de A à E.'
+          : 'La barre répartit les élèves ayant un résultat final dans la compétence, par cote de A à E. Les élèves sans résultat sont exclus.';
       compList.appendChild(distributionHelp);
       const subjectGroups = new Map();
       data.competencies.forEach(comp => {
@@ -1150,7 +1234,7 @@
           meta.appendChild(statsSpan);
         }
 
-        if (!comp.isPresco && comp.weightValid !== null) {
+        if (!comp.isPresco && !comp.isIlss && comp.weightValid !== null) {
           const wState = document.createElement('span');
           wState.className = `dash-comp-wstate ${comp.weightValid ? 'is-ok' : 'is-warn'}`;
           wState.textContent = comp.weightValid ? '100 % ✓' : '⚠ Pondération ≠ 100 %';
@@ -1159,15 +1243,21 @@
 
         mainBtn.append(head, meta);
 
-        // Mini-barre de distribution des constats / cotes (sans moyenne trompeuse)
+        // Mini-barre de distribution des constats / paliers / cotes (sans moyenne trompeuse)
         const totalDist = Object.values(comp.distribution).reduce((acc, n) => acc + n, 0);
         if (totalDist > 0 && !dashPrivacyMasked) {
           const distBar = document.createElement('div');
           distBar.className = 'dash-dist-bar';
-          const order = comp.isPresco ? ['4', '3', '2', '1'] : ['A', 'B', 'C', 'D', 'E'];
+          const order = comp.isPresco
+            ? ['4', '3', '2', '1']
+            : comp.isIlss
+              ? ['p1', 'p2', 'p3', 'p4', 'p5']
+              : ['A', 'B', 'C', 'D', 'E'];
           const labels = comp.isPresco
             ? PRESCHOOL_CONSTAT_SHORT
-            : { A: 'Très satisfaisant (A)', B: 'Satisfaisant (B)', C: 'Acceptable (C)', D: 'Peu satisfaisant (D)', E: 'Insuffisant (E)' };
+            : comp.isIlss
+              ? { p1: 'Palier 1', p2: 'Palier 2', p3: 'Palier 3', p4: 'Palier 4', p5: 'Palier 5' }
+              : { A: 'Très satisfaisant (A)', B: 'Satisfaisant (B)', C: 'Acceptable (C)', D: 'Peu satisfaisant (D)', E: 'Insuffisant (E)' };
           distBar.setAttribute('aria-hidden', 'true');
           order.forEach(k => {
             const count = comp.distribution[k] || 0;
@@ -1203,7 +1293,9 @@
           title: `${item.studentName} — ${item.subjectLabel}`,
           detail: data.isPrescoGroup
             ? `Constat « ${item.statusText} » sans commentaire rédigé.`
-            : `Résultat de ${item.statusText} sans commentaire rédigé pour les parents.`,
+            : item.isIlss
+              ? `Jugement « ${item.statusText} » sans commentaire rédigé.`
+              : `Résultat de ${item.statusText} sans commentaire rédigé pour les parents.`,
           actionLabel: 'Rédiger',
           onClick: () => {
             const opened = navigateToView('viewGradebook', () => {
@@ -1376,6 +1468,8 @@
             if (!dashPrivacyMasked) {
               if (pill.isPresco) {
                 tone = pill.rank >= 3 ? 'ok' : pill.rank === 2 ? 'warn' : pill.rank === 1 ? 'alert' : 'neutral';
+              } else if (pill.isIlss) {
+                tone = (pill.ilssCote === 'A' || pill.ilssCote === 'B') ? 'ok' : pill.ilssCote === 'C' ? 'mid' : pill.ilssCote === 'D' ? 'warn' : 'neutral';
               } else if (pill.pct !== null) {
                 tone = pill.pct >= 75 ? 'ok' : pill.pct >= 60 ? 'mid' : 'alert';
               }
@@ -1383,7 +1477,7 @@
             pBtn.className = `dash-subj-pill is-${tone}`;
             pBtn.title = dashPrivacyMasked
               ? `${pill.fullLabel} — ouvrir au carnet`
-              : `${pill.fullLabel} : ${pill.pct !== null ? `${pill.pct} % (${pill.code})` : (pill.isPresco ? PRESCHOOL_CONSTAT_SHORT[pill.rank] : 'aucun résultat')}`;
+              : `${pill.fullLabel} : ${pill.isIlss ? pill.code : (pill.pct !== null ? `${pill.pct} % (${pill.code})` : (pill.isPresco ? PRESCHOOL_CONSTAT_SHORT[pill.rank] : 'aucun résultat'))}`;
             pBtn.textContent = dashPrivacyMasked
               ? pill.shortLabel
               : (pill.isPresco ? pill.shortLabel : `${pill.shortLabel} · ${pill.code}`);
@@ -1509,29 +1603,17 @@
       const grid = document.getElementById('dashGroupsGrid');
       const countEl = document.getElementById('dashGroupsCount');
       const summaryMeta = document.getElementById('dashSummaryMeta');
-      const privacyBtn = document.getElementById('dashPrivacyToggle');
-      const resumeBtn = document.getElementById('dashBtnResumeWork');
       if (!grid || !countEl || !summaryMeta) return;
 
+      dashPrivacyMasked = false;
       document.querySelectorAll('[data-dash-term]').forEach(button =>
         button.setAttribute('aria-pressed', String(button.dataset.dashTerm === String(appState.activeTerm))));
 
-      if (root) root.classList.toggle('is-privacy-masked', dashPrivacyMasked);
-      if (privacyBtn) {
-        privacyBtn.setAttribute('aria-pressed', String(dashPrivacyMasked));
-        const label = privacyBtn.querySelector('span');
-        if (label) label.textContent = dashPrivacyMasked ? 'Afficher les notes' : 'Masquer les notes';
-      }
+      if (root) root.classList.remove('is-privacy-masked');
 
       const groups = appState.groups.filter(g => g && !g.placeholder);
       const isMultiGroup = groups.length > 1;
       if (dashTitle) dashTitle.textContent = isMultiGroup ? 'Tableau de bord' : 'Bilan de classe';
-      if (resumeBtn) {
-        const resumeLabel = resumeBtn.querySelector('span:first-child');
-        if (resumeLabel) {
-          resumeLabel.textContent = appState.students.length > 0 ? 'Reprendre le carnet' : 'Ajouter des élèves';
-        }
-      }
 
       const groupsSection = document.getElementById('dashGroupsSection');
       if (groupsSection) groupsSection.hidden = groups.length <= 1;
@@ -1646,9 +1728,7 @@
       addIcon.textContent = '＋';
       const addTitle = document.createElement('strong');
       addTitle.textContent = 'Nouveau groupe';
-      const addSub = document.createElement('span');
-      addSub.textContent = 'Créer une classe ou un groupe supplémentaire';
-      addCard.append(addIcon, addTitle, addSub);
+      addCard.append(addIcon, addTitle);
       grid.appendChild(addCard);
     }
 

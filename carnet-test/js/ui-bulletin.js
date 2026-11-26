@@ -69,11 +69,14 @@
       return parts[0].id;
     }
 
-    function jumpFromReportToSubject(rawSubId, studentId) {
+    function jumpFromReportToSubject(rawSubId, studentId, targetTerm) {
       const targetId = resolveJumpSubjectId(rawSubId);
       const targetSub = SUBJECTS_CONFIG.find(s => s.id === targetId);
       if (!targetSub) return;
       const navigated = navigateToView('viewGradebook', () => {
+        if (targetTerm && ['1', '2', '3'].includes(String(targetTerm))) {
+          appState.activeTerm = String(targetTerm);
+        }
         appState.activeSubjectId = targetSub.id;
         expandedSubjectGroup = (targetSub.group && targetSub.group !== 'presco') ? targetSub.group : null;
         gbFilter = '';
@@ -84,37 +87,204 @@
       }
     }
 
-    function getStudentCompetencyEvaluationCount(student, subjectIds) {
-      const evaluations = new Set();
-      if (!student) return 0;
+    function getStudentAnnualEvaluationSummary(student, subjectIds) {
+      const seen = new Set();
+      const byTerm = { '1': 0, '2': 0, '3': 0 };
+      if (!student) return { total: 0, byTerm };
 
-      (subjectIds || []).forEach(subjectId => {
-        const subject = SUBJECTS_CONFIG.find(item => item.id === subjectId);
-        if (!subject || !isSubjectApplicableForStudent(subject, student)) return;
-        const termKey = appState.activeTerm;
-        const subjectData = appState.terms[termKey].subjectData[subjectId];
-        if (!subjectData) return;
-        const record = subjectData.studentRecords[student.id];
-        if (!record) return;
+      ['1', '2', '3'].forEach(termKey => {
+        const termSeen = new Set();
+        (subjectIds || []).forEach(subjectId => {
+          const subject = SUBJECTS_CONFIG.find(item => item.id === subjectId);
+          if (!subject || !isSubjectApplicableForStudent(subject, student)) return;
+          const subjectData = appState.terms?.[termKey]?.subjectData?.[subjectId];
+          if (!subjectData) return;
+          const record = subjectData.studentRecords?.[student.id];
+          if (!record) return;
 
-        subjectData.assignments.forEach(assignment => {
-          if (!isAssignmentForStudent(assignment, student)) return;
-          const raw = record.scores && record.scores[assignment.id];
-          const meta = record.scoreMeta && record.scoreMeta[assignment.id];
-          if (assignment.isObservation && meta && meta.linkedCopy) return;
-          const value = String(raw ?? '').trim();
-          const hasScore = value !== '' && value !== '-' && Number.isFinite(Number(value.replace(',', '.')));
-          const hasTrace = Boolean(assignment.isObservation && meta && (
-            meta.notEvaluated ||
-            (Array.isArray(meta.checked) && meta.checked.length > 0) ||
-            hasObservationFeedback(meta)
-          ));
-          if (!hasScore && !hasTrace) return;
-          evaluations.add(assignment.linkId ? `linked:${assignment.linkId}` : `${subjectId}:${assignment.id}`);
+          (subjectData.assignments || []).forEach(assignment => {
+            if (!isAssignmentForStudent(assignment, student)) return;
+            const raw = record.scores && record.scores[assignment.id];
+            const meta = record.scoreMeta && record.scoreMeta[assignment.id];
+            if (assignment.isObservation && meta && meta.linkedCopy) return;
+            const value = String(raw ?? '').trim();
+            const upper = value.toUpperCase();
+            const hasScore = value !== '' && value !== '-' &&
+              (Number.isFinite(Number(value.replace(',', '.'))) || ['NR', 'REP', 'JUST', 'JUS'].includes(upper));
+            const hasTrace = Boolean(assignment.isObservation && meta && (
+              meta.notEvaluated ||
+              (Array.isArray(meta.checked) && meta.checked.length > 0) ||
+              hasObservationFeedback(meta)
+            ));
+            if (!hasScore && !hasTrace) return;
+            const key = assignment.linkId ? `linked:${termKey}:${assignment.linkId}` : `${termKey}:${subjectId}:${assignment.id}`;
+            seen.add(key);
+            termSeen.add(key);
+          });
         });
+        byTerm[termKey] = termSeen.size;
       });
 
-      return evaluations.size;
+      return { total: seen.size, byTerm };
+    }
+
+    function getGlobalReportStudentStatus(student) {
+      let hasAlert = false;
+      let hasFollowup = Boolean(student && Array.isArray(student.adaptations) && student.adaptations.includes('Bulletin modifié'));
+      if (!student) return { hasAlert, hasFollowup };
+      SUBJECTS_CONFIG.forEach(sub => {
+        if (!isSubjectApplicableForStudent(sub, student)) return;
+        if (sub.isIlss) {
+          ['1', '2', '3'].forEach(tk => {
+            if (typeof getIlssFinalJudgment === 'function') {
+              const f = getIlssFinalJudgment(sub, tk, student);
+              if (f && f.cote === 'D') hasAlert = true;
+            }
+          });
+          return;
+        }
+        const cycle = getStudentCycle(student.gradeLevel);
+        const isFeedbackOnly = cycle === 1 && ['sciences', 'social'].includes(sub.group || sub.id);
+        let hasLow = false;
+        const tVals = ['1', '2', '3'].map(tk => {
+          const sd = appState.terms?.[tk]?.subjectData?.[sub.id];
+          const rec = sd?.studentRecords?.[student.id];
+          if (sd && rec) {
+            (sd.assignments || []).forEach(asg => {
+              const val = String((rec.scores && rec.scores[asg.id]) ?? '').trim().toUpperCase();
+              const flags = typeof getCellFlags === 'function' ? getCellFlags(rec, asg.id) : [];
+              if (val === 'NR' || val === 'REP' || flags.includes('ABS')) hasFollowup = true;
+            });
+          }
+          return computeStudentSubjectSummary(tk, sub.id, student.id).finalPct;
+        });
+        const avg = computeWeightedAnnualAverage(tVals[0], tVals[1], tVals[2], 'official');
+        if (!isFeedbackOnly && avg !== null && avg < 60 && student.gradeLevel !== 'P') hasLow = true;
+        if (hasLow) hasAlert = true;
+      });
+      return { hasAlert, hasFollowup };
+    }
+
+    function renderGrStudentSelectorOnly() {
+      const band = document.getElementById('grStudentBand');
+      if (!band) return null;
+      const orderedStudents = getGlobalReportOrderedStudents();
+      const st = orderedStudents.find(s => s.id === appState.selectedStudentId) || null;
+      ['btnGrPrevStudent', 'btnGrNextStudent'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = !st || orderedStudents.length < 2;
+      });
+
+      const activeGroup = appState.groups.find(g => g.id === appState.activeGroupId);
+      const groupPill = document.getElementById('grGroupNamePill');
+      if (groupPill) {
+        const showPill = Boolean(activeGroup && !activeGroup.placeholder);
+        groupPill.classList.toggle('hidden', !showPill);
+        groupPill.textContent = showPill ? activeGroup.name : '';
+      }
+      const counterEl = document.getElementById('grStudentCounter');
+      if (counterEl) {
+        if (!orderedStudents.length) {
+          counterEl.classList.add('hidden');
+        } else {
+          counterEl.classList.remove('hidden');
+          const idx = st ? orderedStudents.findIndex(s => s.id === st.id) : -1;
+          counterEl.textContent = idx >= 0
+            ? `Élève ${idx + 1} / ${orderedStudents.length}`
+            : `${orderedStudents.length} élève${orderedStudents.length > 1 ? 's' : ''}`;
+        }
+      }
+
+      const useSelect = prefs.summaryStudentListMode === 'select';
+      const searchWrap = document.getElementById('grStudentSearchWrap');
+      const searchInput = document.getElementById('grStudentSearch');
+      const showSearch = !useSelect && orderedStudents.length >= 6;
+      if (searchWrap) searchWrap.classList.toggle('hidden', !showSearch);
+      const query = showSearch && searchInput ? searchInput.value.trim() : '';
+
+      band.innerHTML = '';
+      if (!orderedStudents.length) {
+        band.className = 'w-full';
+        return { orderedStudents, st: null };
+      }
+
+      band.className = useSelect
+        ? 'gr-student-select-wrap is-select w-full'
+        : 'gr-student-grid w-full';
+
+      if (useSelect) {
+        const select = document.createElement('select');
+        select.className = 'gr-student-select';
+        select.setAttribute('aria-label', 'Choisir un élève pour la synthèse');
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.textContent = 'Choisir un élève…';
+        select.appendChild(placeholder);
+        orderedStudents.forEach(student => {
+          const option = document.createElement('option');
+          option.value = student.id;
+          option.textContent = student.name;
+          option.selected = Boolean(st && student.id === st.id);
+          select.appendChild(option);
+        });
+        select.value = st ? st.id : '';
+        select.addEventListener('change', () => {
+          appState.selectedStudentId = select.value || null;
+          renderGlobalReportView();
+        });
+        band.appendChild(select);
+        return { orderedStudents, st };
+      }
+
+      const isMulti = typeof getPresentStudentLevels === 'function' && getPresentStudentLevels().length > 1;
+      const filteredStudents = query
+        ? orderedStudents.filter(student => studentMatches(student, query))
+        : orderedStudents;
+
+      if (!filteredStudents.length) {
+        const emptyMsg = document.createElement('p');
+        emptyMsg.className = 'text-xs text-slate-500 py-1';
+        emptyMsg.textContent = `Aucun élève ne correspond à « ${query} ».`;
+        band.appendChild(emptyMsg);
+        return { orderedStudents, st };
+      }
+
+      filteredStudents.forEach(student => {
+        const isSel = Boolean(st && student.id === st.id);
+        const status = getGlobalReportStudentStatus(student);
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-pressed', String(isSel));
+        btn.className = `gr-student-pill${isSel ? ' is-selected' : ''}`;
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'gr-student-pill-name';
+        nameSpan.textContent = student.name;
+        btn.appendChild(nameSpan);
+        const metaWrap = document.createElement('span');
+        metaWrap.className = 'gr-student-pill-meta';
+        if (isMulti && student.gradeLevel) {
+          const lvl = document.createElement('span');
+          lvl.className = 'gr-student-pill-lvl';
+          lvl.textContent = formatShortLevelTag(student.gradeLevel);
+          metaWrap.appendChild(lvl);
+        }
+        if (status.hasAlert || status.hasFollowup) {
+          const dot = document.createElement('span');
+          dot.className = `gr-student-dot ${status.hasAlert ? 'is-alert' : 'is-warn'}`;
+          dot.title = status.hasAlert
+            ? 'Résultat sous le seuil ou cote D à suivre'
+            : 'Bulletin modifié ou travail en suivi (NR/REP)';
+          dot.setAttribute('aria-hidden', 'true');
+          metaWrap.appendChild(dot);
+        }
+        if (metaWrap.childElementCount > 0) btn.appendChild(metaWrap);
+        btn.addEventListener('click', () => {
+          appState.selectedStudentId = student.id;
+          renderGlobalReportView();
+        });
+        band.appendChild(btn);
+      });
+      return { orderedStudents, st };
     }
 
     function getGlobalReportOrderedStudents() {
@@ -155,65 +325,17 @@
       appState.annualWeightMode = 'official';
       const weightMode = 'official';
 
-      const orderedStudents = getGlobalReportOrderedStudents();
-      const st = orderedStudents.find(s => s.id === appState.selectedStudentId) || null;
-      ['btnGrPrevStudent', 'btnGrNextStudent'].forEach(id => {
-        document.getElementById(id).disabled = !st;
-      });
+      const selResult = renderGrStudentSelectorOnly();
+      if (!selResult) return;
+      const { orderedStudents, st } = selResult;
 
       if (!orderedStudents.length) {
-        band.innerHTML = '';
-        container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm text-slate-600">Ajoutez un élève pour consulter sa synthèse.</div>';
+        container.innerHTML = '<div class="gr-empty-card">Ajoutez un élève pour consulter sa synthèse.</div>';
         return;
       }
 
-      // 1. Render student selector in the saved display mode.
-      band.innerHTML = '';
-      const useSelect = prefs.summaryStudentListMode === 'select';
-      band.className = useSelect
-        ? 'gr-student-select-wrap is-select w-full'
-        : 'grid grid-cols-2 sm:grid-cols-5 gap-1.5 w-full';
-      if (useSelect) {
-        const select = document.createElement('select');
-        select.className = 'gr-student-select';
-        select.setAttribute('aria-label', 'Choisir un élève pour la synthèse');
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.textContent = 'Choisir un élève';
-        select.appendChild(placeholder);
-        orderedStudents.forEach(student => {
-          const option = document.createElement('option');
-          option.value = student.id;
-          option.textContent = student.name;
-          option.selected = Boolean(st && student.id === st.id);
-          select.appendChild(option);
-        });
-        select.value = st ? st.id : '';
-        select.addEventListener('change', () => {
-          appState.selectedStudentId = select.value || null;
-          renderGlobalReportView();
-        });
-        band.appendChild(select);
-      } else {
-        orderedStudents.forEach(student => {
-          const isSel = Boolean(st && student.id === st.id);
-          const btn = document.createElement('button');
-          btn.type = 'button';
-          btn.setAttribute('aria-pressed', String(isSel));
-          btn.className = isSel
-            ? 'w-full px-3 py-2 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
-            : 'w-full px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
-          btn.innerHTML = `<span class="truncate">${escapeHtml(student.name)}</span><span>→</span>`;
-          btn.addEventListener('click', () => {
-            appState.selectedStudentId = student.id;
-            renderGlobalReportView();
-          });
-          band.appendChild(btn);
-        });
-      }
-
       if (!st) {
-        container.innerHTML = '<div class="bg-white rounded-xl border border-slate-200 p-6 text-center text-sm font-semibold text-slate-600">Sélectionner un nom ci-dessus pour afficher la synthèse de l’élève.</div>';
+        container.innerHTML = '<div class="gr-empty-card">Sélectionner un nom ci-dessus pour afficher la synthèse de l’élève.</div>';
         return;
       }
 
@@ -223,17 +345,49 @@
       const tagFrequency = {};
       const flagFrequency = {};
       const recordedComments = [];
+      const pendingStatuses = [];
+      const evalDetailsBySubject = {};
       const preschoolDomains = {};
 
       SUBJECTS_CONFIG.forEach(sub => {
-        if (sub.isIlss) return;
         if (!isSubjectApplicableForStudent(sub, st)) return;
+        if (sub.isIlss) {
+          ['1', '2', '3'].forEach(tKey => {
+            const j = st.ilssByTerm?.[tKey]?.judgments?.[sub.ilssCompetency];
+            if (j && j.comment && j.comment.trim()) {
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: 'Jugement d’étape', text: j.comment.trim() });
+            }
+            const sd = appState.terms?.[tKey]?.subjectData?.[sub.id];
+            const rec = sd?.studentRecords?.[st.id];
+            if (sd && rec) {
+              (sd.assignments || []).forEach(asg => {
+                const meta = rec.scoreMeta?.[asg.id];
+                if (!meta) return;
+                if (Array.isArray(meta.quickComments)) {
+                  meta.quickComments.forEach(tg => { tagFrequency[tg] = (tagFrequency[tg] || 0) + 1; });
+                }
+                if (meta.comment && meta.comment.trim()) {
+                  recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title || 'Trace ILSS', text: meta.comment.trim() });
+                }
+              });
+            }
+          });
+          return;
+        }
         sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
         const domain = preschoolDomains[sub.id] = { strengths: new Map(), challenges: new Map(), latestComment: null };
         const countTag = (map, tag) => map.set(tag, (map.get(tag) || 0) + 1);
-        const t1 = computeStudentSubjectSummary('1', sub.id, st.id).finalPct;
-        const t2 = computeStudentSubjectSummary('2', sub.id, st.id).finalPct;
-        const t3 = computeStudentSubjectSummary('3', sub.id, st.id).finalPct;
+        const s1 = computeStudentSubjectSummary('1', sub.id, st.id);
+        const s2 = computeStudentSubjectSummary('2', sub.id, st.id);
+        const s3 = computeStudentSubjectSummary('3', sub.id, st.id);
+        const t1 = s1.finalPct;
+        const t2 = s2.finalPct;
+        const t3 = s3.finalPct;
+        const termOverrides = {
+          '1': { overridden: Boolean(appState.terms['1']?.subjectData?.[sub.id]?.studentRecords?.[st.id]?.finalJudgmentOverride !== ''), avg: s1.assignmentsAvg },
+          '2': { overridden: Boolean(appState.terms['2']?.subjectData?.[sub.id]?.studentRecords?.[st.id]?.finalJudgmentOverride !== ''), avg: s2.assignmentsAvg },
+          '3': { overridden: Boolean(appState.terms['3']?.subjectData?.[sub.id]?.studentRecords?.[st.id]?.finalJudgmentOverride !== ''), avg: s3.assignmentsAvg }
+        };
 
         if (t1 !== null) termGlobals['1'].push(t1);
         if (t2 !== null) termGlobals['2'].push(t2);
@@ -241,14 +395,12 @@
 
         const validTerms = [t1, t2, t3].filter(v => v !== null);
         const annualAvg = computeWeightedAnnualAverage(t1, t2, t3, weightMode);
-
-        // Evolution delta between earliest and latest available term
         let delta = null;
         if (validTerms.length >= 2) {
           delta = validTerms[validTerms.length - 1] - validTerms[0];
         }
 
-        // Count works, visual traces, tags, flags, and comments for this student across all 3 terms
+        const evalItems = [];
         ['1', '2', '3'].forEach(tKey => {
           const sd = appState.terms[tKey].subjectData[sub.id];
           const rec = sd.studentRecords[st.id];
@@ -267,13 +419,12 @@
                 if (values.length) recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `${label} : ${values.join(' · ')}`, fromTags: true });
               });
             }
-            if (meta && Array.isArray(meta.flags)) {
-              meta.flags.forEach(fl => {
-                if (VALID_CELL_FLAG_CODES.has(fl)) {
-                  flagFrequency[fl] = (flagFrequency[fl] || 0) + 1;
-                }
-              });
-            }
+            const flags = getCellFlags(rec, asg.id);
+            flags.forEach(fl => {
+              if (VALID_CELL_FLAG_CODES.has(fl)) {
+                flagFrequency[fl] = (flagFrequency[fl] || 0) + 1;
+              }
+            });
             if (meta && typeof meta.strengths === 'string' && meta.strengths.trim()) {
               recordedComments.push({ term: tKey, subject: sub.shortName, context: asg.title, text: `Forces : ${meta.strengths.trim()}` });
             }
@@ -289,17 +440,70 @@
                 text: meta.comment.trim()
               });
             }
+
+            const raw = rec.scores[asg.id] !== undefined ? String(rec.scores[asg.id]).trim() : '';
+            const upper = raw.toUpperCase();
+            const hasTraceFeedback = Boolean(asg.isObservation && meta &&
+              (hasObservationFeedback(meta) || (Array.isArray(meta.checked) && meta.checked.length)));
+            const hasNotEval = Boolean((meta && meta.notEvaluated) || (upper === '-' && !hasTraceFeedback));
+            if (upper === 'NR' || upper === 'REP' || upper === 'JUST' || upper === 'JUS' || flags.includes('ABS')) {
+              const statusCode = upper === 'NR' ? 'NR' : upper === 'REP' ? 'REP' : (upper === 'JUST' || upper === 'JUS') ? 'JUST' : 'ABS';
+              const statusLabel = statusCode === 'NR' ? 'Non remis' : statusCode === 'REP' ? 'En reprise' : statusCode === 'JUST' ? 'Justifié' : 'À reprendre';
+              pendingStatuses.push({
+                term: tKey,
+                subjectId: sub.id,
+                subject: sub.shortName,
+                title: asg.title || 'Évaluation',
+                code: statusCode,
+                label: statusLabel
+              });
+            }
+            if (raw || hasNotEval) {
+              const studentWeight = getAssignmentWeightForLevel(asg, st.gradeLevel, sub, appState.terms[tKey]);
+              let resultDisplay = '';
+              if (upper === 'NR') resultDisplay = 'NR (Non remis)';
+              else if (upper === 'JUST' || upper === 'JUS') resultDisplay = 'JUST (Justifié)';
+              else if (upper === 'REP') resultDisplay = 'REP (En reprise)';
+              else if (hasNotEval) resultDisplay = 'Exempté (-)';
+              else if (asg.isObservation) {
+                if (upper === '-' && hasTraceFeedback) {
+                  resultDisplay = 'En cours';
+                } else {
+                  const num = Number(raw);
+                  const code = (meta && meta.code) ? meta.code : (Number.isFinite(num) ? pctToClosestGradeCode(num) : '');
+                  resultDisplay = Number.isFinite(num) ? `${code} (${Math.round(num)} %)` : raw;
+                }
+              } else {
+                const outOf = getAssignmentOutOf(asg);
+                const num = Number(raw.replace(',', '.'));
+                if (Number.isFinite(num)) {
+                  const pct = outOf > 0 ? Math.round((num / outOf) * 100) : Math.round(num);
+                  resultDisplay = outOf !== 100 ? `${formatScoreNumber(num)}/${formatScoreNumber(outOf)} (${pct} %)` : `${pct} %`;
+                } else {
+                  resultDisplay = raw;
+                }
+              }
+              evalItems.push({
+                term: tKey,
+                title: asg.title || 'Évaluation',
+                isObs: Boolean(asg.isObservation),
+                weight: studentWeight,
+                resultDisplay,
+                flags
+              });
+            }
           });
           if (rec.comment && rec.comment.trim()) {
             domain.latestComment = { term: tKey, text: rec.comment.trim() };
             recordedComments.push({
               term: tKey,
               subject: sub.shortName,
-              context: 'Commentaire général',
+              context: 'Commentaire au bulletin',
               text: rec.comment.trim()
             });
           }
         });
+        evalDetailsBySubject[sub.id] = evalItems;
 
         subjectRows.push({
           sub,
@@ -307,6 +511,7 @@
           t1,
           t2,
           t3,
+          termOverrides,
           annualAvg,
           annualCode: pctToClosestGradeCode(annualAvg),
           delta,
@@ -333,12 +538,21 @@
         const merged = {
           sub: mergedSub,
           sourceSubjectIds: parts.flatMap(part => part.sourceSubjectIds || [part.sub.id]),
-          t1, t2, t3, annualAvg,
+          t1, t2, t3,
+          termOverrides: {
+            '1': { overridden: parts.some(p => p.termOverrides?.['1']?.overridden), avg: null },
+            '2': { overridden: parts.some(p => p.termOverrides?.['2']?.overridden), avg: null },
+            '3': { overridden: parts.some(p => p.termOverrides?.['3']?.overridden), avg: null }
+          },
+          annualAvg,
           annualCode: pctToClosestGradeCode(annualAvg),
           delta: terms.length >= 2 ? terms[terms.length - 1] - terms[0] : null,
           isModified: isSubjectModifiedForStudent(st, mergedSub),
           effectiveLevel: getEffectiveGradeLevel(st, mergedSub)
         };
+        evalDetailsBySubject[groupKey] = parts.flatMap(part =>
+          (evalDetailsBySubject[part.sub.id] || []).map(item => ({ ...item, partLabel: part.sub.partLabel || part.sub.shortName }))
+        );
         const firstIdx = subjectRows.indexOf(parts[0]);
         subjectRows.splice(firstIdx, 0, merged);
         parts.forEach(r => subjectRows.splice(subjectRows.indexOf(r), 1));
@@ -356,7 +570,6 @@
       const overallProvisional = populatedSubjects.length < subjectRows.length ||
         populatedSubjects.some(r => getAnnualResultInfo(r.t1, r.t2, r.t3).provisional);
 
-      // Sort tags by frequency
       const sortedTags = Object.entries(tagFrequency).sort((a, b) => b[1] - a[1]);
 
       const studentCycle = getStudentCycle(st.gradeLevel);
@@ -520,6 +733,7 @@
           ${refAnchor((refSubject && refSubject.cssmbUrl) || 'https://sre.servicescsmb.com/disciplines/', 'Ressources CSSMB')}
         </div>` : '';
 
+      const missingModifiedCount = subjectRows.filter(r => r.isModified && getIncompleteModifiedCompetency(st, r.sub)).length;
       const competencyModuleHtml = st.gradeLevel === 'P' ||
         (typeof isAccueilGroup === 'function' && isAccueilGroup()) ||
         competencyTabs.every(tab => tab.disabled) ? '' : `
@@ -527,7 +741,10 @@
           <summary class="comp-card-summary px-4 py-3 bg-slate-50 cursor-pointer flex flex-col gap-2.5">
             <div class="comp-card-summary-top flex flex-wrap items-center justify-between gap-2 w-full">
               <span>
-                <span class="block text-sm font-bold text-slate-900">Niveaux de compétence</span>
+                <span class="flex flex-wrap items-center gap-2 text-sm font-bold text-slate-900">
+                  <span>Niveaux de compétence</span>
+                  ${missingModifiedCount > 0 ? `<span class="gr-mod-pill">${missingModifiedCount} échelle${missingModifiedCount > 1 ? 's' : ''} à compléter</span>` : ''}
+                </span>
                 <span class="mt-0.5 block text-xs text-slate-600">Échelles du primaire · ${studentCycle ? escapeHtml(CYCLE_LABELS[studentCycle]) : 'Cycle à préciser'}</span>
               </span>
               <span class="inline-flex items-center gap-2 text-xs font-semibold text-slate-600">
@@ -703,133 +920,324 @@
         return `${generalPills}${modPill}`;
       })();
 
-      const showNumericalResults = !(typeof isAccueilGroup === 'function' && isAccueilGroup() && !SUBJECTS_CONFIG.length);
-      container.innerHTML = `
-        <!-- Header Identity Card -->
-        <div class="bg-white text-slate-900 rounded-xl p-4 sm:p-5 shadow-xs border border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div class="gr-identity-main min-w-0 flex-1">
-            <div class="text-xs uppercase tracking-wider text-indigo-700 font-bold">Portrait de l’élève · 2026-2027</div>
-            <div class="gr-identity-title-row">
-              <h3 class="text-xl sm:text-2xl font-extrabold">${escapeHtml(st.name)}</h3>
-              <span class="gr-grade-meta">Niveau : <strong>${GRADE_LEVEL_LABELS[st.gradeLevel] || 'À choisir'}</strong></span>
-            </div>
-            <div class="gr-adaptations-row" aria-label="Adaptations et mesures de soutien">
-              ${adaptationsHtml}
-            </div>
+      const isAccueil = typeof isAccueilGroup === 'function' && isAccueilGroup();
+      const activeGroupObj = appState.groups.find(g => g.id === appState.activeGroupId);
+      const groupNameText = activeGroupObj && !activeGroupObj.placeholder ? activeGroupObj.name : '';
+      const showNumericalResults = subjectRows.length > 0;
+      const getBarToneClass = code => {
+        const fam = String(code || '').charAt(0);
+        return fam === 'A' ? 'is-tone-a' : fam === 'B' ? 'is-tone-b' : fam === 'C' ? 'is-tone-c' : fam === 'D' ? 'is-tone-d' : fam === 'E' ? 'is-tone-e' : '';
+      };
+      const renderTermCell = (val, ovr, termNum) => {
+        if (val === null) return '<span class="gr-empty-cell">—</span>';
+        const code = pctToClosestGradeCode(val);
+        const isAdj = Boolean(ovr && ovr.overridden);
+        const title = isAdj
+          ? `Jugement ajusté manuellement${ovr.avg !== null ? ` (moy. travaux : ${ovr.avg} %)` : ''}`
+          : `Étape ${termNum} : ${val} % (${code})`;
+        return `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(code)}" title="${escapeHtml(title)}">${code} (${val}%)${isAdj ? '<span class="adj-star">*</span>' : ''}</span>`;
+      };
+
+      const strengthTags = [];
+      const challengeTags = [];
+      const otherTags = [];
+      sortedTags.forEach(([tg, count]) => {
+        const grp = groupObservationTags([tg]);
+        if (grp.strengths.length) strengthTags.push([tg, count]);
+        else if (grp.challenges.length) challengeTags.push([tg, count]);
+        else otherTags.push([tg, count]);
+      });
+      const writtenComments = recordedComments.filter(item => !item.fromTags);
+
+      const overallCode = overallAnnualAvg !== null ? pctToClosestGradeCode(overallAnnualAvg) : '';
+      const overallKpiHtml = (showNumericalResults && st.gradeLevel !== 'P') ? `
+        <div class="gr-overall-kpi">
+          <div class="gr-overall-kpi-label">${isAccueil ? 'Moyenne (matières chiffrées)' : 'Moyenne indicative'}</div>
+          <div class="gr-overall-kpi-value" data-num="1">
+            ${overallAnnualAvg !== null
+              ? `<strong>${overallAnnualAvg} %</strong><span class="px-1.5 py-0.5 rounded border text-[11px] font-extrabold ${getBadgeColorClasses(overallCode)}">${overallCode}</span>`
+              : '<span class="gr-empty-cell">—</span>'}
+            ${overallProvisional ? '<span class="gr-prov-badge" title="Certaines étapes manquent : pondération ajustée aux étapes disponibles">Provisoire</span>' : ''}
           </div>
+        </div>` : '';
 
-        </div>
-
-        <!-- Résultats annuels -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <!-- Résultats par matière -->
-          ${showNumericalResults ? `<div class="${st.gradeLevel === 'P' ? 'gr-span-full ps-section' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2">
-              <h4 class="text-sm font-bold text-slate-900">${st.gradeLevel === 'P' ? 'Portrait du développement par domaine' : 'Résultats annuels par matière'}</h4>
-              ${st.gradeLevel === 'P' ? '' : '<span class="text-[10px] font-semibold text-slate-500">Repère vertical : seuil 60 %</span>'}
+      const resultsTableHtml = showNumericalResults ? `
+        ${st.gradeLevel === 'P' ? '<details class="gr-card"><summary class="gr-legacy-summary">Voir les résultats numériques conservés</summary><p class="gr-legacy-note">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
+        <div class="${st.gradeLevel === 'P' ? '' : 'gr-card gr-results-card'}">
+          <div class="gr-results-heading">
+            <div>
+              <h4>Résultats par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
+              ${overallProvisional ? '<p class="gr-provisional-note">Résultats provisoires : la pondération s’ajuste aux étapes complétées.</p>' : ''}
             </div>
-            <div class="space-y-2.5">
-              ${st.gradeLevel === 'P' ? preschoolDomainsHtml : `${chartBarsHtml}<p class="text-xs text-slate-500">Un résultat provisoire utilise uniquement les étapes disponibles; leurs poids sont réajustés proportionnellement.</p>`}
-            </div>
-          </div>` : ''}
-
-          <!-- Synthèse -->
-          <div class="${st.gradeLevel === 'P' || !showNumericalResults ? 'gr-span-full' : 'lg:col-span-6'} bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-              <h4 class="text-sm font-bold text-slate-900">Commentaires de l’enseignant(e)</h4>
-            </div>
-
-            <div class="space-y-2.5 text-xs text-slate-700">
-              <textarea id="grTeacherComment" class="gr-teacher-comment no-print" aria-label="Commentaires de l’enseignant(e)" placeholder="Ajoutez vos commentaires sur le parcours de cet élève.">${escapeHtml(st.reportComment || '')}</textarea>
-              <div id="grTeacherCommentPrint" class="gr-teacher-comment-print">${escapeHtml(st.reportComment || '')}</div>
-
-              <div class="p-2.5 rounded-lg bg-indigo-50/60 border border-indigo-200">
-                <span class="font-bold text-indigo-950">Observations et marqueurs consignés :</span>
-                <div class="mt-1 flex flex-wrap gap-1">
-                  ${sortedFlags.map(([fl, count]) => {
-                    const def = CELL_FLAGS.find(f => f.code === fl);
-                    return `<span class="px-2 py-0.5 rounded bg-slate-200/80 border border-slate-300 text-[11px] font-bold text-slate-800" title="${escapeHtml(def ? def.label : fl)}">${escapeHtml(getCellFlagBadge(fl))} (${count}×)</span>`;
-                  }).join('')}
-                  ${sortedTags.length > 0
-                    ? sortedTags.map(([tg, count]) => {
-                        const group = groupObservationTags([tg]);
-                        const label = group.strengths.length ? 'Force' : group.challenges.length ? 'Défi' : 'Observation précédente';
-                        return `<span class="px-2 py-0.5 rounded-full bg-white border border-indigo-200 text-[11px] font-semibold text-indigo-900">${label} : ${escapeHtml(tg)} (${count}×)</span>`;
-                      }).join('')
-                    : (!sortedFlags.length ? '<span class="text-slate-500">Aucun indicateur ou marqueur rapide consigné pour cet élève pour le moment.</span>' : '')}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tableau récapitulatif des étapes -->
-        ${showNumericalResults ? `${st.gradeLevel === 'P' ? '<details class="bg-white rounded-xl border border-slate-200"><summary class="p-4 text-sm font-bold cursor-pointer">Voir les résultats numériques conservés</summary><p class="px-4 pb-3 text-xs text-slate-600">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
-        <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
-          <div class="gr-results-heading px-4 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-2">
-            <h4 class="text-sm font-bold text-slate-900">Résultats des trois étapes par ${st.gradeLevel === 'P' ? 'compétence' : 'matière'}</h4>
             <span class="gr-weight-label">${st.gradeLevel === 'P' ? 'Calcul local indicatif (20 % / 20 % / 60 %)' : weightModeLabel}</span>
           </div>
-          ${overallProvisional ? '<p class="px-4 py-2 text-xs text-slate-600">Provisoire : une ou plusieurs étapes manquent. La moyenne est calculée sur les poids disponibles, réajustés proportionnellement; elle n’est pas un résultat annuel complet.</p>' : ''}
           <div class="gr-results-scroll">
-          <table class="w-full table-fixed text-left border-collapse text-xs">
+          <table class="gr-table w-full text-left border-collapse text-xs">
             <thead>
-              <tr class="bg-slate-900 text-white text-[11px] uppercase">
-                <th class="p-2.5 w-[28%]">${st.gradeLevel === 'P' ? 'Compétence' : 'Matière / Compétence'}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">Étape 1${weightMode === 'official' ? ' (20 %)' : ''}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">Étape 2${weightMode === 'official' ? ' (20 %)' : ''}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">Étape 3${weightMode === 'official' ? ' (60 %)' : ''}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">${weightMode === 'official' ? 'Résultat annuel' : 'Moyenne des étapes'}</th>
-                <th class="p-2.5 text-center border-l border-slate-800">Tendance (Écart)</th>
+              <tr class="text-[11px] uppercase">
+                <th class="gr-col-subject">${st.gradeLevel === 'P' ? 'Compétence' : 'Matière / Compétence'}</th>
+                <th>Étape 1${weightMode === 'official' ? ' (20 %)' : ''}</th>
+                <th>Étape 2${weightMode === 'official' ? ' (20 %)' : ''}</th>
+                <th>Étape 3${weightMode === 'official' ? ' (60 %)' : ''}</th>
+                <th>${weightMode === 'official' ? 'Annuel' : 'Moyenne'}</th>
+                <th>Évolution</th>
               </tr>
             </thead>
-            <tbody class="divide-y divide-slate-200">
-              ${subjectRows.map((r, i) => `
-                <tr class="${i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'}">
-                  <td class="p-2.5 font-bold text-slate-900">
-                    <span><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${r.sub.officialWeight !== null ? ` <small class="font-semibold text-slate-500">— ${r.sub.officialWeight} % · Bulletin : ${escapeHtml(r.sub.bulletinName || r.sub.shortName)}</small>` : ''}</span>
-                    ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}` : ''}
+            <tbody>
+              ${subjectRows.map((r, i) => {
+                const annualInfo = getAnnualResultInfo(r.t1, r.t2, r.t3);
+                const evalSummary = getStudentAnnualEvaluationSummary(st, r.sourceSubjectIds || [r.sub.id]);
+                const evalDetailList = evalDetailsBySubject[r.sub.id] || [];
+                const evalBreakdown = ['1', '2', '3']
+                  .filter(tk => evalSummary.byTerm[tk] > 0)
+                  .map(tk => `Ét. ${tk} : ${evalSummary.byTerm[tk]}`)
+                  .join(' · ');
+                const pct = r.annualAvg !== null ? r.annualAvg : 0;
+                return `
+                <tr class="${i % 2 === 0 ? 'gr-row-even' : 'gr-row-odd'}">
+                  <td class="gr-col-subject">
+                    <div class="gr-subject-cell">
+                      ${evalDetailList.length > 0 ? `<button type="button" class="gr-drawer-toggle no-print" data-gr-drawer-toggle="${escapeHtml(r.sub.id)}" aria-expanded="false" title="Voir les ${evalDetailList.length} évaluation(s) consignée(s)"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m7.5 5 5 5-5 5"/></svg></button>` : '<span class="gr-drawer-spacer no-print" aria-hidden="true"></span>'}
+                      <div class="gr-subject-info">
+                        <div class="gr-subject-line">
+                          <button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}${r.sub.bulletinName && r.sub.bulletinName !== r.sub.shortName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>
+                          ${r.sub.officialWeight !== null ? `<span class="gr-weight-chip">${r.sub.officialWeight} %</span>` : ''}
+                          ${evalSummary.total > 0 ? `<em class="gr-evaluation-count" title="${escapeHtml(evalBreakdown || 'Évaluations consignées sur l’année')}">${evalSummary.total} éval${evalSummary.total > 1 ? 's' : ''}</em>` : ''}
+                          ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Attentes modifiées : ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}` : ''}
+                        </div>
+                      </div>
+                    </div>
                   </td>
-                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t1 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t1))}">${pctToClosestGradeCode(r.t1)} (${r.t1}%)</span>` : '—'}</td>
-                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t2 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t2))}">${pctToClosestGradeCode(r.t2)} (${r.t2}%)</span>` : '—'}</td>
-                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">${r.t3 !== null ? `<span class="px-1.5 py-0.5 rounded border text-[11px] font-bold ${getBadgeColorClasses(pctToClosestGradeCode(r.t3))}">${pctToClosestGradeCode(r.t3)} (${r.t3}%)</span>` : '—'}</td>
-                  <td class="p-2.5 text-center border-l border-slate-100" data-num="1">
+                  <td data-num="1">${renderTermCell(r.t1, r.termOverrides?.['1'], '1')}</td>
+                  <td data-num="1">${renderTermCell(r.t2, r.termOverrides?.['2'], '2')}</td>
+                  <td data-num="1">${renderTermCell(r.t3, r.termOverrides?.['3'], '3')}</td>
+                  <td data-num="1">
                     ${r.annualAvg !== null
-                      ? `<span class="px-2 py-0.5 rounded border font-extrabold ${getBadgeColorClasses(r.annualCode)}">${r.annualCode} (${r.annualAvg}%)</span>${getAnnualResultInfo(r.t1, r.t2, r.t3).provisional ? `<span class="block mt-1 text-[10px] font-semibold text-slate-600">Provisoire · ${getAnnualResultInfo(r.t1, r.t2, r.t3).weight} % des poids prévus</span>` : ''}`
-                      : '—'}
+                      ? `<div class="gr-annual-cell" title="${annualInfo.provisional ? `Provisoire · ${annualInfo.weight} % des poids prévus` : `Résultat annuel (${r.annualAvg} %)`}">
+                           <span class="px-2 py-0.5 rounded border font-extrabold ${getBadgeColorClasses(r.annualCode)}">${r.annualCode} (${r.annualAvg}%)</span>
+                           <div class="bar-track-wrap gr-mini-bar"><div class="bar-fill-inner ${getBarToneClass(r.annualCode)}" style="width:${pct}%"></div><div class="bar-threshold-60"></div></div>
+                         </div>`
+                      : '<span class="gr-empty-cell">—</span>'}
                   </td>
-                  <td class="p-2.5 text-center border-l border-slate-100">
-                    ${renderTrendBadge(r.delta, r.t1, r.t2, r.t3)}
-                  </td>
+                  <td>${renderTrendBadge(r.delta, r.t1, r.t2, r.t3)}</td>
                 </tr>
-              `).join('')}
+                ${evalDetailList.length > 0 ? `
+                <tr class="gr-eval-drawer-row hidden no-print" data-gr-drawer-row="${escapeHtml(r.sub.id)}">
+                  <td colspan="6">
+                    <div class="gr-eval-drawer">
+                      ${evalDetailList.map(ev => `
+                        <button type="button" class="gr-eval-chip" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" data-jump-term="${escapeHtml(ev.term)}" title="Ouvrir l’étape ${escapeHtml(ev.term)} dans le Carnet">
+                          <span class="gr-eval-term">Ét.${escapeHtml(ev.term)}</span>
+                          <span class="gr-eval-title">${escapeHtml(ev.title)}${ev.partLabel ? ` (${escapeHtml(ev.partLabel)})` : ''}</span>
+                          <span class="gr-eval-meta">${Math.round(ev.weight * 10) / 10}%</span>
+                          <strong class="gr-eval-res">${escapeHtml(ev.resultDisplay)}</strong>
+                          ${ev.flags.length ? `<span class="gr-eval-flags">${ev.flags.map(escapeHtml).join(', ')}</span>` : ''}
+                        </button>`).join('')}
+                    </div>
+                  </td>
+                </tr>` : ''}`;
+              }).join('')}
             </tbody>
             <tfoot>
               <tr class="gr-average-row">
-                <th scope="row">Moyenne indicative</th>
-                ${[avgT1, avgT2, avgT3, overallAnnualAvg].map((value, i) => `<td>${value !== null ? `${value}%${i === 3 && overallProvisional ? ' · provisoire' : ''}` : '—'}</td>`).join('')}
+                <th scope="row" class="gr-col-subject">Moyenne indicative</th>
+                ${[avgT1, avgT2, avgT3, overallAnnualAvg].map(value => `<td>${value !== null ? `<strong>${value}%</strong>` : '—'}</td>`).join('')}
                 <td>—</td>
               </tr>
             </tfoot>
           </table>
           </div>
         </div>
-        ${st.gradeLevel === 'P' ? '</details>' : ''}` : ''}
+        ${st.gradeLevel === 'P' ? '</details>' : ''}` : '';
+
+      const teacherCommentText = st.reportComment || '';
+
+      container.innerHTML = `
+        <!-- En-tête de portrait -->
+        <div class="gr-card gr-identity-card">
+          <div class="gr-identity-main min-w-0 flex-1">
+            <div class="gr-identity-eyebrow">Portrait annuel${groupNameText ? ` · ${escapeHtml(groupNameText)}` : ''} · 2026-2027</div>
+            <div class="gr-identity-title-row">
+              <h3 class="text-xl sm:text-2xl font-extrabold">${escapeHtml(st.name)}</h3>
+              <span class="gr-grade-meta">Niveau : <strong>${GRADE_LEVEL_LABELS[st.gradeLevel] || 'À choisir'}</strong>${studentCycle && studentCycle !== 'P' ? ` · ${escapeHtml(CYCLE_LABELS[studentCycle])}` : ''}</span>
+              <button type="button" id="btnGrEditProfile" class="gr-inline-action no-print" title="Modifier le niveau, les adaptations ou le bulletin modifié">Profil →</button>
+            </div>
+            <div class="gr-adaptations-row" aria-label="Adaptations et mesures de soutien">
+              ${adaptationsHtml}
+            </div>
+          </div>
+          <div class="gr-identity-kpis">
+            ${overallKpiHtml}
+            <button type="button" id="btnGrPrintStudentSheet" class="gr-print-btn no-print" title="Imprimer la fiche synthèse individuelle de ${escapeHtml(st.name)}">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
+              <span>Imprimer cette fiche</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Portrait principal (Préscolaire ou Tableau des résultats) -->
+        ${st.gradeLevel === 'P' ? `
+          <div class="gr-span-full ps-section gr-card">
+            <div class="gr-section-head">
+              <h4>Portrait du développement par domaine</h4>
+            </div>
+            <div class="space-y-2.5">${preschoolDomainsHtml}</div>
+          </div>
+          ${resultsTableHtml}
+        ` : resultsTableHtml}
+
+        <!-- Bloc inférieur : Commentaires, Travaux en suivi et Observations -->
+        <div class="gr-notes-grid">
+          <div class="gr-card gr-notes-comments">
+            <div class="gr-section-head">
+              <h4>Commentaire général</h4>
+              <div class="gr-comment-actions no-print">
+                <span id="grTeacherCommentCount" class="gr-char-count">${teacherCommentText.length} caract.</span>
+                <button type="button" id="btnGrCopyComment" class="gr-mini-btn" title="Copier le commentaire général">Copier</button>
+              </div>
+            </div>
+            <textarea id="grTeacherComment" class="gr-teacher-comment no-print" aria-label="Commentaires de l’enseignant(e)" placeholder="Ajoutez vos commentaires sur le parcours annuel de cet élève...">${escapeHtml(teacherCommentText)}</textarea>
+            <div id="grTeacherCommentPrint" class="gr-teacher-comment-print">${escapeHtml(teacherCommentText)}</div>
+            ${writtenComments.length > 0 ? `
+              <details class="gr-carnet-comments no-print">
+                <summary>Commentaires consignés au carnet (${writtenComments.length})</summary>
+                <div class="gr-carnet-comments-body">
+                  <div class="gr-carnet-filter" role="group" aria-label="Filtrer les commentaires par étape">
+                    <button type="button" class="is-active" data-gr-comment-term="all" aria-pressed="true">Toutes</button>
+                    <button type="button" data-gr-comment-term="1" aria-pressed="false">Ét. 1</button>
+                    <button type="button" data-gr-comment-term="2" aria-pressed="false">Ét. 2</button>
+                    <button type="button" data-gr-comment-term="3" aria-pressed="false">Ét. 3</button>
+                  </div>
+                  <div class="gr-carnet-list">
+                    ${writtenComments.map(c => `
+                      <div class="gr-carnet-item" data-comment-term="${escapeHtml(c.term)}">
+                        <div class="gr-carnet-item-meta">
+                          <strong>Ét. ${escapeHtml(c.term)} · ${escapeHtml(c.subject)}</strong>
+                          <span>${escapeHtml(c.context || '')}</span>
+                          <button type="button" class="gr-insert-comment" data-insert-comment="${escapeHtml(c.text)}" title="Ajouter au commentaire général">+ Insérer</button>
+                        </div>
+                        <p>${escapeHtml(c.text)}</p>
+                      </div>`).join('')}
+                  </div>
+                </div>
+              </details>` : ''}
+          </div>
+
+          <div class="gr-notes-side">
+            ${pendingStatuses.length > 0 ? `
+              <div class="gr-card gr-pending-card">
+                <div class="gr-section-head">
+                  <h4>Travaux en suivi (${pendingStatuses.length})</h4>
+                </div>
+                <div class="gr-pending-list">
+                  ${pendingStatuses.map(p => `
+                    <button type="button" class="gr-pending-item" data-jump-subject="${escapeHtml(p.subjectId)}" data-jump-student="${escapeHtml(st.id)}" data-jump-term="${escapeHtml(p.term)}" title="Ouvrir dans le Carnet (Étape ${escapeHtml(p.term)})">
+                      <span class="gr-pending-code is-${escapeHtml(p.code.toLowerCase())}">${escapeHtml(p.code)}</span>
+                      <span class="gr-pending-text"><strong>Ét. ${escapeHtml(p.term)} · ${escapeHtml(p.subject)}</strong> — ${escapeHtml(p.title)}</span>
+                    </button>`).join('')}
+                </div>
+              </div>` : ''}
+
+            <div class="gr-card gr-signals-card">
+              <div class="gr-section-head">
+                <h4>Observations et mesures d’appui</h4>
+              </div>
+              <div class="gr-signals-groups">
+                ${strengthTags.length ? `
+                  <div class="gr-signal-group">
+                    <span class="gr-signal-label">Forces</span>
+                    <div class="gr-signal-chips">${strengthTags.map(([tg, count]) => `<span class="gr-chip is-strength">${escapeHtml(tg)}${count > 1 ? ` <b>${count}×</b>` : ''}</span>`).join('')}</div>
+                  </div>` : ''}
+                ${challengeTags.length ? `
+                  <div class="gr-signal-group">
+                    <span class="gr-signal-label">Défis</span>
+                    <div class="gr-signal-chips">${challengeTags.map(([tg, count]) => `<span class="gr-chip is-challenge">${escapeHtml(tg)}${count > 1 ? ` <b>${count}×</b>` : ''}</span>`).join('')}</div>
+                  </div>` : ''}
+                ${otherTags.length ? `
+                  <div class="gr-signal-group">
+                    <span class="gr-signal-label">Observations</span>
+                    <div class="gr-signal-chips">${otherTags.map(([tg, count]) => `<span class="gr-chip">${escapeHtml(tg)}${count > 1 ? ` <b>${count}×</b>` : ''}</span>`).join('')}</div>
+                  </div>` : ''}
+                ${sortedFlags.length ? `
+                  <div class="gr-signal-group">
+                    <span class="gr-signal-label">Mesures d’appui</span>
+                    <div class="gr-signal-chips">${sortedFlags.map(([fl, count]) => {
+                      const def = CELL_FLAGS.find(f => f.code === fl);
+                      return `<span class="gr-chip is-flag" title="${escapeHtml(def ? def.label : fl)}">${escapeHtml(getCellFlagBadge(fl))} <b>${count}×</b></span>`;
+                    }).join('')}</div>
+                  </div>` : ''}
+                ${(!strengthTags.length && !challengeTags.length && !otherTags.length && !sortedFlags.length)
+                  ? '<p class="gr-signals-empty">Aucun indicateur ou marqueur rapide consigné pour cet élève pour le moment.</p>'
+                  : ''}
+              </div>
+            </div>
+          </div>
+        </div>
 
         ${competencyModuleHtml}
       `;
 
       if (typeof renderAccueilSummary === 'function') renderAccueilSummary(container, st);
-      document.getElementById('grTeacherComment').addEventListener('input', event => {
+      const commentArea = document.getElementById('grTeacherComment');
+      const commentCountEl = document.getElementById('grTeacherCommentCount');
+      commentArea.addEventListener('input', event => {
         st.reportComment = event.target.value;
         document.getElementById('grTeacherCommentPrint').textContent = event.target.value;
+        if (commentCountEl) commentCountEl.textContent = `${event.target.value.length} caract.`;
         scheduleAppStateSave();
+      });
+      document.getElementById('btnGrCopyComment')?.addEventListener('click', () => {
+        const text = commentArea.value.trim();
+        if (!text) { showToast('Aucun commentaire à copier.'); return; }
+        const done = () => showToast('Commentaire copié');
+        if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done, () => { commentArea.select(); document.execCommand('copy'); done(); });
+        else { commentArea.select(); document.execCommand('copy'); done(); }
+      });
+      document.getElementById('btnGrEditProfile')?.addEventListener('click', () => navigateToView('viewStudents'));
+      document.getElementById('btnGrPrintStudentSheet')?.addEventListener('click', () => {
+        if (typeof printStudentIndividualSheet === 'function') printStudentIndividualSheet(st);
+      });
+      container.querySelectorAll('[data-gr-drawer-toggle]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-gr-drawer-toggle');
+          const row = container.querySelector(`[data-gr-drawer-row="${CSS.escape(id)}"]`);
+          if (!row) return;
+          const open = row.classList.toggle('hidden') === false;
+          btn.setAttribute('aria-expanded', String(open));
+        });
+      });
+      container.querySelectorAll('[data-gr-comment-term]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const term = btn.getAttribute('data-gr-comment-term');
+          container.querySelectorAll('[data-gr-comment-term]').forEach(b => {
+            const active = b === btn;
+            b.classList.toggle('is-active', active);
+            b.setAttribute('aria-pressed', String(active));
+          });
+          container.querySelectorAll('.gr-carnet-item').forEach(item => {
+            item.classList.toggle('hidden', term !== 'all' && item.getAttribute('data-comment-term') !== term);
+          });
+        });
+      });
+      container.querySelectorAll('[data-insert-comment]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const snippet = btn.getAttribute('data-insert-comment') || '';
+          if (!snippet) return;
+          const current = commentArea.value.trim();
+          commentArea.value = current ? `${current} ${snippet}` : snippet;
+          st.reportComment = commentArea.value;
+          document.getElementById('grTeacherCommentPrint').textContent = commentArea.value;
+          if (commentCountEl) commentCountEl.textContent = `${commentArea.value.length} caract.`;
+          scheduleAppStateSave();
+          showToast('Commentaire inséré');
+        });
       });
       container.querySelectorAll('[data-jump-subject]').forEach(button => {
         button.addEventListener('click', () => {
           jumpFromReportToSubject(
             button.getAttribute('data-jump-subject'),
-            button.getAttribute('data-jump-student')
+            button.getAttribute('data-jump-student'),
+            button.getAttribute('data-jump-term')
           );
         });
       });

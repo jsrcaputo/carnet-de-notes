@@ -351,7 +351,11 @@
       const tId = String(termId || appState.activeTerm);
       const subData = appState.terms[tId].subjectData[sub.id];
       const rec = subData.studentRecords[st.id];
-      const sum = computeStudentSubjectSummary(tId, sub.id, st.id);
+      const isIlss = Boolean(sub.isIlss);
+      const sum = isIlss ? null : computeStudentSubjectSummary(tId, sub.id, st.id);
+      const ilssFinal = isIlss && typeof getIlssFinalJudgment === 'function'
+        ? getIlssFinalJudgment(sub, tId, st)
+        : null;
 
       activeCommentBankContext = { studentId: st.id, subjectId: sub.id, termId: tId };
       const modal = document.getElementById('modalCommentBank');
@@ -363,23 +367,29 @@
       if (subtitle) {
         const preschool = getStudentCycle(st.gradeLevel) === 'P';
         const feedbackOnly = getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub));
-        const gradeInfo = preschool ? 'Constat de développement à porter par l’enseignante ou l’enseignant'
+        const gradeInfo = isIlss
+          ? (typeof accueilLabel === 'function' ? accueilLabel(ilssFinal) : 'Suivi ILSS par palier et cote')
+          : preschool ? 'Constat de développement à porter par l’enseignante ou l’enseignant'
           : feedbackOnly ? 'Aucun résultat disciplinaire au 1er cycle'
           : sum.finalPct !== null ? `${sum.finalLetter} (${sum.finalPct} %)` : 'Aucune note finale';
         subtitle.textContent = `${st.name} · ${sub.shortName} · Étape ${tId} · Résultat : ${gradeInfo}`;
       }
       const guidance = document.getElementById('cbBankGuidance');
       if (guidance) {
-        guidance.textContent = getStudentCycle(st.gradeLevel) === 'P'
-          ? 'Choisissez les constats selon vos observations, sans conversion de pourcentage. La synthèse reprend les éléments observés, sans porter de constat global; elle reste vide en l’absence de traces qualitatives. Pour les enfants de 4 ans, vérifiez les défis dans la source CSSDD (surlignage non repris).'
-          : getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))
-            ? 'Aucun résultat disciplinaire en science et technologie ni en univers social au 1er cycle. Seules les observations transversales sont proposées ici; aucune synthèse disciplinaire n’est produite.'
-            : 'Formulations locales à adapter aux apprentissages travaillés. Les observations transversales et les éléments de rétroaction (stratégies, validation, retour réflexif) ne constituent pas des résultats distincts et ne modifient pas les notes.';
+        guidance.textContent = isIlss
+          ? 'Accueil (ILSS) : commentaires qualitatifs selon le palier et les observations, sans conversion en pourcentage.'
+          : getStudentCycle(st.gradeLevel) === 'P'
+            ? 'Choisissez les constats selon vos observations, sans conversion de pourcentage. La synthèse reprend les éléments observés, sans porter de constat global; elle reste vide en l’absence de traces qualitatives. Pour les enfants de 4 ans, vérifiez les défis dans la source CSSDD (surlignage non repris).'
+            : getStudentCycle(st.gradeLevel) === 1 && ['sciences', 'social'].includes(getPrimaryCommentSubjectKey(sub))
+              ? 'Aucun résultat disciplinaire en science et technologie ni en univers social au 1er cycle. Seules les observations transversales sont proposées ici; aucune synthèse disciplinaire n’est produite.'
+              : 'Formulations locales à adapter aux apprentissages travaillés. Les observations transversales et les éléments de rétroaction (stratégies, validation, retour réflexif) ne constituent pas des résultats distincts et ne modifient pas les notes.';
       }
       if (modeSelect) {
         modeSelect.value = st.pronoun || 'prenom';
       }
-      area.value = rec.comment || '';
+      area.value = isIlss
+        ? (st.ilssByTerm?.[tId]?.judgments?.[sub.ilssCompetency]?.comment || '')
+        : ((rec && rec.comment) || '');
       updateCommentBankCharCount();
       renderCommentBankPhrases();
 

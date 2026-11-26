@@ -181,7 +181,7 @@ function startIlssObservationSession(subject, assignmentId = '', focusStudentId 
     session.isIlss = true;
     session.editingAssignmentId = assignment ? assignment.id : null;
     session.title = assignment ? assignment.title || '' : '';
-    session.date = assignment ? assignment.date || '' : '';
+    session.date = assignment ? assignment.date || '' : new Date().toISOString().slice(0, 10);
     session.description = assignment ? assignment.description || '' : '';
     session.evidenceType = assignment ? assignment.evidenceType || 'observation' : 'observation';
     appState.students.forEach(student => {
@@ -220,8 +220,23 @@ function formatIlssResult(result) {
 
 function getIlssResultClasses(result) {
   if (result && result.cote) return getBadgeColorClasses(result.cote);
-  if (result && result.palier) return 'bg-indigo-50 text-indigo-800 border-indigo-200 hover:bg-indigo-100';
-  return 'bg-slate-100 text-slate-400 border-slate-200 hover:bg-amber-50 hover:text-amber-800 hover:border-amber-300';
+  if (result && result.palier) return 'ilss-badge-palier';
+  return 'ilss-badge-empty';
+}
+
+const ILSS_EVIDENCE_LABELS = Object.freeze({
+  observation: 'Observation',
+  conversation: 'Conversation',
+  production: 'Production'
+});
+
+function formatIlssShortDate(isoDate) {
+  if (!isoDate || !/^\d{4}-\d{2}-\d{2}$/.test(isoDate)) return isoDate || '';
+  try {
+    return new Date(`${isoDate}T12:00:00`).toLocaleDateString('fr-CA', { day: 'numeric', month: 'short' });
+  } catch (_) {
+    return isoDate;
+  }
 }
 
 function getIlssJudgmentRecord(student, termId, competency) {
@@ -233,16 +248,29 @@ function getIlssJudgmentRecord(student, termId, competency) {
 }
 
 // Sélecteur palier/cote près du curseur, construit sur le modèle du sélecteur de cotes régulier.
-function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto }) {
+function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto, commentValue, onCommentSave }) {
   closeGradePicker();
   closeMouseBar();
   closeCellFlagPicker();
   hideNewEvalChoicesPopover();
   const state = { palier: current && current.palier || '', cote: current && current.cote || '' };
+  let activeHint = '';
   const el = document.createElement('div');
   el.className = 'grade-picker ilss-picker';
   el.setAttribute('role', 'dialog');
   el.setAttribute('aria-label', 'Choisir un palier et une cote');
+  const getHintText = () => {
+    if (activeHint) return activeHint;
+    if (state.cote) {
+      const found = ILSS_COTES.find(([c]) => c === state.cote);
+      if (found) return `${found[0]} : ${found[1]}`;
+    }
+    if (state.palier) {
+      const desc = (ILSS_PALIERS[current && current.competency] || [])[Number(state.palier) - 1];
+      if (desc) return `P${state.palier} : ${desc}`;
+    }
+    return 'Sélectionnez un palier (1–5) et une cote (A–D).';
+  };
   const render = () => {
     el.innerHTML = '';
     const addLabel = text => {
@@ -252,21 +280,38 @@ function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto }) {
       el.appendChild(label);
     };
     addLabel('Palier');
+    const paliersRow = document.createElement('div');
+    paliersRow.className = 'ilss-picker-paliers';
     ['1', '2', '3', '4', '5'].forEach(palier => {
+      const desc = (ILSS_PALIERS[current && current.competency] || [])[Number(palier) - 1] || `Palier ${palier}`;
       const button = document.createElement('button');
       button.type = 'button';
       button.className = `grade-picker-btn ilss-picker-palier${state.palier === palier ? ' is-current' : ''}`;
       button.textContent = `P${palier}`;
-      button.title = (ILSS_PALIERS[current && current.competency] || [])[Number(palier) - 1] || `Palier ${palier}`;
+      button.title = desc;
       button.setAttribute('aria-pressed', String(state.palier === palier));
+      button.addEventListener('mouseenter', () => {
+        activeHint = `P${palier} : ${desc}`;
+        const hintEl = el.querySelector('.ilss-picker-hint');
+        if (hintEl) hintEl.textContent = activeHint;
+      });
+      button.addEventListener('mouseleave', () => {
+        activeHint = '';
+        const hintEl = el.querySelector('.ilss-picker-hint');
+        if (hintEl) hintEl.textContent = getHintText();
+      });
       button.addEventListener('click', () => {
         state.palier = state.palier === palier ? '' : palier;
         onPick({ palier: state.palier, cote: state.cote });
         render();
       });
-      el.appendChild(button);
+      paliersRow.appendChild(button);
     });
+    el.appendChild(paliersRow);
+
     addLabel('Cote');
+    const cotesRow = document.createElement('div');
+    cotesRow.className = 'ilss-picker-cotes';
     ILSS_COTES.forEach(([cote, description]) => {
       const button = document.createElement('button');
       button.type = 'button';
@@ -274,13 +319,51 @@ function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto }) {
       button.textContent = cote;
       button.title = description;
       button.setAttribute('aria-pressed', String(state.cote === cote));
+      button.addEventListener('mouseenter', () => {
+        activeHint = `${cote} : ${description}`;
+        const hintEl = el.querySelector('.ilss-picker-hint');
+        if (hintEl) hintEl.textContent = activeHint;
+      });
+      button.addEventListener('mouseleave', () => {
+        activeHint = '';
+        const hintEl = el.querySelector('.ilss-picker-hint');
+        if (hintEl) hintEl.textContent = getHintText();
+      });
       button.addEventListener('click', () => {
         state.cote = state.cote === cote ? '' : cote;
         onPick({ palier: state.palier, cote: state.cote });
         render();
       });
-      el.appendChild(button);
+      cotesRow.appendChild(button);
     });
+    el.appendChild(cotesRow);
+
+    const hint = document.createElement('div');
+    hint.className = 'ilss-picker-hint';
+    hint.textContent = getHintText();
+    el.appendChild(hint);
+
+    if (typeof onCommentSave === 'function') {
+      const noteWrap = document.createElement('div');
+      noteWrap.className = 'ilss-picker-note-wrap';
+      const noteInput = document.createElement('input');
+      noteInput.type = 'text';
+      noteInput.autocomplete = 'off';
+      noteInput.className = 'ilss-picker-note-input';
+      noteInput.placeholder = 'Note rapide d’observation…';
+      noteInput.setAttribute('aria-label', 'Note rapide d’observation');
+      noteInput.value = commentValue || '';
+      noteInput.addEventListener('input', () => onCommentSave(noteInput.value));
+      noteInput.addEventListener('keydown', event => {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          closeGradePicker();
+        }
+      });
+      noteWrap.appendChild(noteInput);
+      el.appendChild(noteWrap);
+    }
+
     if (allowAuto) {
       const auto = document.createElement('button');
       auto.type = 'button';
@@ -347,11 +430,13 @@ function setIlssGradebookChrome(isIlss) {
     if (isIlss) element.classList.add('hidden');
   });
   const average = document.getElementById('kpiClassAverage');
-  const averageMetric = average && average.closest('.gradebook-metric');
+  const averageMetric = average && average.closest ? average.closest('.gradebook-metric') : null;
   if (averageMetric) averageMetric.classList.toggle('hidden', isIlss);
+  const ilssMetric = document.getElementById('kpiIlssPositionedMetric');
+  if (ilssMetric) ilssMetric.classList.toggle('hidden', !isIlss);
   const countMetric = document.getElementById('kpiAssignmentCount');
   const countLabel = countMetric && countMetric.previousElementSibling;
-  if (countLabel) countLabel.textContent = isIlss ? 'Évaluations et grilles observables' : 'Travaux et traces observables';
+  if (countLabel) countLabel.textContent = isIlss ? 'Évaluations consignées' : 'Travaux et traces observables';
 }
 
 function renderIlssGradebookView(subject) {
@@ -371,6 +456,23 @@ function renderIlssGradebookView(subject) {
   filterButton.classList.toggle('hidden', !gbFilter);
   filterButton.textContent = gbFilter ? `Recherche : ${gbFilter} ✕` : '';
   document.getElementById('kpiAssignmentCount').textContent = String(assignments.length);
+  const positionedEl = document.getElementById('kpiIlssPositionedCount');
+  if (positionedEl) {
+    const positionedCount = appState.students.filter(st => {
+      const f = getIlssFinalJudgment(subject, termId, st);
+      return Boolean(f.palier || f.cote);
+    }).length;
+    positionedEl.textContent = `${positionedCount} / ${appState.students.length}`;
+  }
+  const hasGroup = typeof hasActiveGroup === 'function' ? hasActiveGroup() : true;
+  const emptyTitle = document.getElementById('emptyRosterTitle');
+  const emptyDesc = document.getElementById('emptyRosterDescription');
+  const emptyBtn = document.getElementById('btnOpenStudentsFromEmpty');
+  if (emptyTitle) emptyTitle.textContent = hasGroup ? 'Votre carnet ILSS est prêt.' : 'Créez d’abord un groupe.';
+  if (emptyDesc) emptyDesc.textContent = hasGroup
+    ? 'Ajoutez vos élèves et choisissez leur année scolaire pour consigner leurs paliers et cotes sans pourcentage.'
+    : 'Un groupe est nécessaire avant d’ajouter des élèves.';
+  if (emptyBtn) emptyBtn.textContent = hasGroup ? 'Ajouter des élèves' : 'Créer un groupe';
 
   const extraHeaders = [
     { label: 'Jugement d’étape', sub: 'Proposé · modifiable en cliquant', minW: 'min-w-[145px]', width: 145 },
@@ -428,13 +530,17 @@ function renderIlssGradebookView(subject) {
     th.className = 'p-2 font-semibold text-center min-w-[162px] border-l border-slate-800 gb-assignment-column-header';
     th.style.width = '162px';
     th.dataset.assignmentColumn = assignment.id;
+    const modeLabel = assignment.isObservation
+      ? 'Observable'
+      : (ILSS_EVIDENCE_LABELS[assignment.evidenceType] || 'Déjà réalisée');
+    const dateShort = formatIlssShortDate(assignment.date);
     th.innerHTML = `
       <div class="flex items-center justify-center gap-1 px-1">
         <button type="button" data-title-view="${escapeHtml(assignment.id)}" class="asg-title-view" title="${assignment.isObservation ? 'Modifier cette évaluation observable, sa grille et ses données' : 'Modifier cette évaluation et ses paramètres'}"><span class="asg-title-text">${escapeHtml(assignment.title || 'Évaluation sans titre')}</span></button>
         <button type="button" data-del-asg="${escapeHtml(assignment.id)}" class="assignment-delete-button text-slate-400 hover:text-red-400 text-xs cursor-pointer no-print" aria-label="Supprimer l’évaluation ${escapeHtml(assignment.title)}" title="Supprimer cette colonne">✕</button>
       </div>
       <div class="mt-1 flex items-center justify-center gap-1 flex-wrap">
-        <span class="text-[10px] font-semibold text-slate-400 normal-case tracking-normal">${assignment.isObservation ? 'Observable' : 'Déjà réalisée'}${assignment.date ? ` · ${escapeHtml(assignment.date)}` : ''}</span>
+        <span class="text-[10px] font-semibold text-slate-400 normal-case tracking-normal">${escapeHtml(modeLabel)}${dateShort ? ` · ${escapeHtml(dateShort)}` : ''}</span>
       </div>`;
     headerRow.appendChild(th);
   });
@@ -541,12 +647,18 @@ function renderIlssGradebookView(subject) {
       const button = document.createElement('button');
       button.type = 'button';
       button.dataset.ilssCell = assignment.id;
-      button.className = `px-2.5 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${getIlssResultClasses(result)}`;
-      const commentCount = result.meta ? (result.meta.quickComments || []).length + (String(result.meta.comment || '').trim() ? 1 : 0) : 0;
-      button.innerHTML = `<span>${escapeHtml(label || '- (Modifier)')}</span>${commentCount ? `<span class="ilss-cell-note" title="${commentCount} observation(s) consignée(s)">${commentCount}</span>` : ''}`;
-      button.title = assignment.isObservation
+      button.className = `px-2.5 py-1.5 rounded-lg border text-xs font-bold transition cursor-pointer inline-flex items-center justify-center gap-1.5 whitespace-nowrap ${getIlssResultClasses(result)}`;
+      const hasNotes = Boolean(result.meta && ((result.meta.quickComments || []).length > 0 || String(result.meta.comment || '').trim()));
+      const noteIcon = hasNotes
+        ? '<svg class="ilss-cell-note-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>'
+        : '';
+      button.innerHTML = `<span>${escapeHtml(label || '—')}</span>${noteIcon}`;
+      const noteText = result.meta && String(result.meta.comment || '').trim()
+        ? `\nObservation : ${String(result.meta.comment).trim()}`
+        : '';
+      button.title = (assignment.isObservation
         ? 'Cliquez pour consulter ou modifier la grille observable de cet élève'
-        : 'Cliquez pour choisir le palier et la cote de cette évaluation';
+        : 'Cliquez pour choisir le palier et la cote de cette évaluation') + noteText;
       button.setAttribute('aria-label', `${student.name}, ${assignment.title} : ${label || 'non évalué'}`);
       button.addEventListener('click', event => {
         if (assignment.isObservation) {
@@ -555,6 +667,13 @@ function renderIlssGradebookView(subject) {
         }
         openIlssPicker(event.clientX || button.getBoundingClientRect().left, event.clientY || button.getBoundingClientRect().bottom, {
           current: { palier: result.palier, cote: result.cote, competency },
+          commentValue: result.meta ? (result.meta.comment || '') : '',
+          onCommentSave: text => {
+            const meta = getIlssAssignmentMeta(subject, termId, assignment.id, student, true);
+            if (!meta) return;
+            meta.comment = text;
+            scheduleAppStateSave();
+          },
           onPick: value => {
             const meta = getIlssAssignmentMeta(subject, termId, assignment.id, student, true);
             if (!meta) return;
@@ -578,12 +697,14 @@ function renderIlssGradebookView(subject) {
     finalButton.type = 'button';
     finalButton.dataset.ilssFinal = student.id;
     const finalLabel = formatIlssResult(final);
-    finalButton.className = `px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${final.palier || final.cote ? getIlssResultClasses(final) : 'bg-slate-100 text-slate-600 border-slate-300 hover:bg-indigo-50 hover:text-indigo-700'}`;
+    finalButton.className = `px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${final.palier || final.cote ? getIlssResultClasses(final) : 'ilss-badge-empty'}`;
     finalButton.innerHTML = `<span>${escapeHtml(finalLabel || 'À établir')}${final.overridden ? '<span class="adj-star" title="Jugement ajusté manuellement par l’enseignant">*</span>' : ''}</span>`;
     const suggestionLabel = formatIlssResult(final.suggestion);
     finalButton.title = final.overridden
       ? `Ajusté manuellement · proposition : ${suggestionLabel || 'aucune'}`
-      : suggestionLabel ? 'Proposé à partir des évaluations (médiane) · cliquer pour ajuster' : 'Aucune évaluation consignée · cliquer pour établir';
+      : suggestionLabel
+        ? 'Proposé à partir des évaluations (médiane) · cliquer pour ajuster'
+        : (assignments.length ? 'Évaluations à compléter · cliquer pour établir' : 'Aucune évaluation consignée · cliquer pour établir');
     finalButton.addEventListener('click', event => {
       openIlssPicker(event.clientX || finalButton.getBoundingClientRect().left, event.clientY || finalButton.getBoundingClientRect().bottom, {
         current: { palier: final.palier, cote: final.cote, competency },
@@ -626,12 +747,18 @@ function renderIlssGradebookView(subject) {
     bankButton.title = 'Banque de commentaires ILSS';
     bankButton.setAttribute('aria-label', `Ouvrir la banque de commentaires pour ${student.name}`);
     bankButton.innerHTML = '<svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>';
-    bankButton.addEventListener('click', () => openIlssCommentBank(bankButton, competency, text => {
-      const current = commentInput.value.trim();
-      commentInput.value = current ? `${current} ${text}` : text;
-      getIlssJudgmentRecord(student, termId, competency).comment = commentInput.value;
-      notifyUpdate('Commentaire ajouté.');
-    }));
+    bankButton.addEventListener('click', () => {
+      if (typeof openCommentBankModal === 'function') {
+        openCommentBankModal(student.id, subject.id, termId);
+      } else {
+        openIlssCommentBank(bankButton, competency, text => {
+          const current = commentInput.value.trim();
+          commentInput.value = current ? `${current} ${text}` : text;
+          getIlssJudgmentRecord(student, termId, competency).comment = commentInput.value;
+          notifyUpdate('Commentaire ajouté.');
+        });
+      }
+    });
     commentWrap.append(commentInput, bankButton);
     tdComment.appendChild(commentWrap);
     tr.appendChild(tdComment);
@@ -723,6 +850,11 @@ function restoreRegularObservationChrome() {
     clearButton.textContent = clearButton.dataset.regularLabel;
     delete clearButton.dataset.regularLabel;
   }
+  const titleInput = document.getElementById('qoSessionTitleInput');
+  if (titleInput && titleInput.dataset.regularPlaceholder) {
+    titleInput.placeholder = titleInput.dataset.regularPlaceholder;
+    delete titleInput.dataset.regularPlaceholder;
+  }
   const sideKicker = document.querySelector('#qoSidePanel .qo-side-kicker');
   if (sideKicker) sideKicker.textContent = 'Observations';
   document.getElementById('qoIlssResultBox')?.remove();
@@ -776,7 +908,18 @@ function renderIlssObservationWorkspace(subject) {
   }
   document.getElementById('btnCommitTopLabel').textContent = 'Enregistrer au carnet';
   const titleInput = document.getElementById('qoSessionTitleInput');
-  if (titleInput && document.activeElement !== titleInput) titleInput.value = session.title || '';
+  if (titleInput) {
+    if (!titleInput.dataset.regularPlaceholder) {
+      titleInput.dataset.regularPlaceholder = titleInput.placeholder || '';
+    }
+    const placeholders = {
+      oral: 'Ex. : Causerie du matin, jeu de rôle, échange guidé...',
+      lecture: 'Ex. : Lecture guidée, album illustré, repérage d’indices...',
+      ecriture: 'Ex. : Court récit, message illustré, phrases sur un thème...'
+    };
+    titleInput.placeholder = placeholders[competency] || 'Ex. : Activité ou trace ILSS observée...';
+    if (document.activeElement !== titleInput) titleInput.value = session.title || '';
+  }
   const clearButton = document.getElementById('btnClearCurrentStudentObs');
   if (clearButton && !clearButton.dataset.regularLabel) {
     clearButton.dataset.regularLabel = clearButton.textContent.trim();
@@ -785,9 +928,13 @@ function renderIlssObservationWorkspace(subject) {
 
   const studentGrid = document.getElementById('qoStudentGrid');
   studentGrid.innerHTML = '';
+  const totalGridCriteria = (ILSS_OBSERVABLE_GRIDS[competency] || []).length;
   appState.students.forEach(item => {
-    const result = getIlssDraftResult(session.studentDrafts[item.id]);
+    const itemDraft = session.studentDrafts[item.id] || {};
+    const result = getIlssDraftResult(itemDraft);
     const label = formatIlssResult(result);
+    const critDone = Object.keys(itemDraft.criteria || {}).length;
+    const hasObsOnly = !label && !critDone && ((itemDraft.quickComments || []).length > 0 || Boolean(String(itemDraft.comment || '').trim()));
     const isSelected = Boolean(student && student.id === item.id);
     const button = document.createElement('button');
     button.type = 'button';
@@ -796,9 +943,14 @@ function renderIlssObservationWorkspace(subject) {
       ? 'w-full px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
       : 'w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
     const shortLevel = isMulti && item.gradeLevel ? ` <span class="opacity-70 text-[10px]">(${escapeHtml(formatShortLevelTag(item.gradeLevel))})</span>` : '';
-    button.innerHTML = `<span class="truncate">${escapeHtml(item.name)}${shortLevel}</span>${label
+    const statusPill = label
       ? `<span class="px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getIlssResultClasses(result)}">${escapeHtml(label)}</span>`
-      : '<span class="px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-500 font-bold">-</span>'}`;
+      : critDone
+        ? `<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">${critDone}/${totalGridCriteria}</span>`
+        : hasObsOnly
+          ? '<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">Obs.</span>'
+          : '<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-empty font-bold">—</span>';
+    button.innerHTML = `<span class="truncate">${escapeHtml(item.name)}${shortLevel}</span>${statusPill}`;
     button.addEventListener('click', () => {
       appState.selectedStudentId = item.id;
       ilssEditorStudentId = item.id;
@@ -914,7 +1066,7 @@ function renderIlssObservationSidePanel(subject, session, student) {
   }
   resultBox.innerHTML = '';
   const computed = draft ? getIlssDraftResult({ criteria: draft.criteria }) : { palier: '', cote: '' };
-  const addSegment = (heading, values, currentValue, onPick, titles) => {
+  const addSegment = (heading, values, currentValue, onPick, titles, getExtraClass) => {
     const wrap = document.createElement('div');
     const label = document.createElement('div');
     label.className = 'qo-ilss-label';
@@ -926,7 +1078,8 @@ function renderIlssObservationSidePanel(subject, session, student) {
     values.forEach((value, index) => {
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'qo-category';
+      const extra = typeof getExtraClass === 'function' ? getExtraClass(value, currentValue === value.id) : '';
+      button.className = `qo-category${extra ? ` ${extra}` : ''}`;
       button.disabled = !draft;
       button.setAttribute('aria-pressed', String(currentValue === value.id));
       button.textContent = value.label;
@@ -937,6 +1090,19 @@ function renderIlssObservationSidePanel(subject, session, student) {
     wrap.append(label, row);
     resultBox.appendChild(wrap);
   };
+  addSegment('Nature de la trace (triangulation)',
+    [
+      { id: 'observation', label: 'Observation' },
+      { id: 'conversation', label: 'Conversation' },
+      { id: 'production', label: 'Production' }
+    ],
+    session.evidenceType || 'observation',
+    value => {
+      session.evidenceType = value;
+      scheduleAppStateSave();
+      renderQuickObsView();
+    },
+    ['Observation directe en classe', 'Échange ou entretien avec l’élève', 'Trace écrite ou réalisation concrète']);
   addSegment('Palier de la tâche',
     [{ id: '', label: computed.palier ? `Auto (P${computed.palier})` : 'Auto' }, ...['1', '2', '3', '4', '5'].map(palier => ({ id: palier, label: `P${palier}` }))],
     draft ? draft.ilssPalier || '' : '',
@@ -954,7 +1120,17 @@ function renderIlssObservationSidePanel(subject, session, student) {
       scheduleAppStateSave();
       renderQuickObsView();
     },
-    ILSS_COTES.map(([, description]) => description));
+    ILSS_COTES.map(([, description]) => description),
+    (value, isCurrent) => `${getBadgeColorClasses(value.id)}${isCurrent ? ' is-current-cote' : ''}`);
+  const activeCoteDesc = draft && draft.ilssCote
+    ? (ILSS_COTES.find(([c]) => c === draft.ilssCote) || [])[1]
+    : '';
+  if (activeCoteDesc) {
+    const descEl = document.createElement('p');
+    descEl.className = 'qo-ilss-cote-desc';
+    descEl.textContent = `${draft.ilssCote} — ${activeCoteDesc}`;
+    resultBox.appendChild(descEl);
+  }
 
   const selectedCount = document.getElementById('qoSelectedTagsCount');
   const tagsContainer = document.getElementById('qoQuickTags');
@@ -1063,7 +1239,7 @@ function renderIlssObservablePrintPage(subject, assignment, student, blank) {
           <p><strong>${escapeHtml(assignment.title || 'Grille d’observation ILSS')}</strong> · ${escapeHtml(subject.fullName)}</p>
           <p>${escapeHtml(group && !group.placeholder ? group.name : '')} · ${escapeHtml(GRADE_LEVEL_LABELS[student.gradeLevel] || '')} · Étape ${escapeHtml(appState.activeTerm)}${date ? ` · ${escapeHtml(date)}` : ''}</p>
         </div>
-        <div class="observable-print-result"><strong>${blank ? 'Grille vierge' : result.palier ? `Palier ${escapeHtml(result.palier)}${result.cote ? ` · cote ${escapeHtml(result.cote)}` : ''}` : 'À compléter'}</strong></div>
+        <div class="observable-print-result"><strong>${blank ? 'Grille vierge' : escapeHtml(accueilLabel(result))}</strong></div>
       </header>
       <table class="observable-print-table">
         <thead><tr><th>Critère observé</th>${[1, 2, 3, 4, 5].map(palier => `<th>Palier ${palier}</th>`).join('')}</tr></thead>
@@ -1078,14 +1254,57 @@ function renderIlssObservablePrintPage(subject, assignment, student, blank) {
 }
 
 function getAccueilSummaryHtml(student) {
-  return `<div class="flex flex-wrap items-start justify-between gap-2"><div><h4 class="font-bold">ILSS (Français) · suivi par compétence</h4><p class="text-xs text-slate-600">Palier de progression et cote A à D, sans conversion en pourcentage.</p></div><a class="text-xs text-indigo-700 underline" href="${ACCUEIL_PALIERS_URL}" target="_blank" rel="noopener noreferrer">Paliers ministériels</a></div>
-    <div class="ilss-summary-grid grid grid-cols-1 gap-2">${ACCUEIL_COMPETENCIES.map(comp => `<section class="rounded-lg border border-slate-200 bg-white p-2"><strong>${escapeHtml(comp.label)}</strong><div class="mt-1 grid grid-cols-1 md:grid-cols-3 gap-2">${['1', '2', '3'].map(term => {
-      const data = student.ilssByTerm && student.ilssByTerm[term];
-      const item = data && data.judgments && data.judgments[comp.id];
-      const subject = ALL_SUBJECTS_CONFIG.find(candidate => candidate.isIlss && candidate.ilssCompetency === comp.id);
-      const final = subject ? getIlssFinalJudgment(subject, term, student) : { palier: item && item.palier, cote: item && item.cote };
-      return `<div class="ilss-summary-term rounded bg-white p-2 text-xs"><strong>Étape ${term}</strong><br><span class="text-indigo-700">${escapeHtml(accueilLabel(final))}${final.overridden ? ' · ajusté' : ''}</span>${item && item.comment ? `<p class="mt-1">${escapeHtml(item.comment)}</p>` : ''}${item && item.culture ? `<p class="mt-1">Culture : ${escapeHtml(item.culture)}</p>` : ''}</div>`;
-    }).join('')}</div></section>`).join('')}</div>
+  const canJump = typeof ALL_SUBJECTS_CONFIG !== 'undefined' && typeof SUBJECTS_CONFIG !== 'undefined';
+  const badgeClassesFn = typeof getIlssResultClasses === 'function'
+    ? getIlssResultClasses
+    : () => '';
+  return `<div class="ilss-summary-head">
+      <div>
+        <h4 class="font-bold">ILSS (Français) · suivi par compétence</h4>
+        <p class="text-xs text-slate-600">Palier de progression (1 à 5) et cote A à D, sans conversion en pourcentage.</p>
+      </div>
+      <a class="text-xs text-indigo-700 underline no-print" href="${ACCUEIL_PALIERS_URL}" target="_blank" rel="noopener noreferrer">Paliers ministériels ↗</a>
+    </div>
+    <div class="ilss-summary-grid grid grid-cols-1 gap-2.5">${ACCUEIL_COMPETENCIES.map(comp => {
+      const subject = typeof ALL_SUBJECTS_CONFIG !== 'undefined'
+        ? ALL_SUBJECTS_CONFIG.find(candidate => candidate.isIlss && candidate.ilssCompetency === comp.id)
+        : null;
+      const evalTotal = subject && typeof getIlssAssignments === 'function' && typeof appState !== 'undefined' && appState.terms
+        ? ['1', '2', '3'].reduce((sum, tk) => sum + getIlssAssignments(subject, tk).length, 0)
+        : 0;
+      const termJudgments = ['1', '2', '3'].map(term => {
+        const data = student.ilssByTerm && student.ilssByTerm[term];
+        const item = data && data.judgments && data.judgments[comp.id];
+        const final = subject && typeof appState !== 'undefined' && appState.terms && typeof getIlssFinalJudgment === 'function'
+          ? getIlssFinalJudgment(subject, term, student)
+          : { palier: item && item.palier, cote: item && item.cote };
+        return { term, item, final };
+      });
+      const paliersTrail = termJudgments.map(t => t.final.palier ? `P${t.final.palier}` : null).filter(Boolean);
+      const progressionChip = paliersTrail.length >= 2
+        ? `<span class="ilss-prog-chip">${paliersTrail.join(' → ')}</span>`
+        : '';
+      const titleHtml = canJump && subject
+        ? `<button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(subject.id)}" data-jump-student="${escapeHtml(student.id || '')}" title="Ouvrir ${escapeHtml(comp.label)} dans le Carnet"><span class="gr-subject-jump-label">${escapeHtml(comp.label)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>`
+        : `<strong>${escapeHtml(comp.label)}</strong>`;
+      return `<section class="ilss-comp-card rounded-lg border border-slate-200 p-2.5">
+        <div class="ilss-comp-card-head">
+          <div class="ilss-comp-card-title">${titleHtml}${evalTotal ? `<em class="gr-evaluation-count">${evalTotal} éval${evalTotal > 1 ? 's' : ''}</em>` : ''}</div>
+          ${progressionChip}
+        </div>
+        <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">${termJudgments.map(({ term, item, final }) => {
+          const badgeClass = final && (final.palier || final.cote) ? badgeClassesFn(final) : 'ilss-badge-empty';
+          return `<div class="ilss-summary-term rounded p-2 text-xs">
+            <div class="ilss-summary-term-top">
+              <strong>Étape ${term}</strong>
+              <span class="ilss-summary-badge px-1.5 py-0.5 rounded border text-[11px] font-bold ${badgeClass}">${escapeHtml(accueilLabel(final))}${final.overridden ? ' · ajusté' : ''}</span>
+            </div>
+            ${item && item.comment ? `<p class="mt-1.5 ilss-summary-comment">${escapeHtml(item.comment)}</p>` : ''}
+            ${item && item.culture ? `<p class="mt-1 ilss-summary-culture">Culture : ${escapeHtml(item.culture)}</p>` : ''}
+          </div>`;
+        }).join('')}</div>
+      </section>`;
+    }).join('')}</div>
     ${getAccueilDisciplineSummaryHtml(student)}`;
 }
 
@@ -1114,7 +1333,9 @@ function renderAccueilSummary(container, student) {
   const section = document.createElement('section');
   section.className = 'ilss-summary-section bg-white rounded-xl border border-slate-200 p-4 space-y-2';
   section.innerHTML = getAccueilSummaryHtml(student);
-  container.prepend(section);
+  const firstChild = container.firstElementChild;
+  if (firstChild) firstChild.after(section);
+  else container.appendChild(section);
 }
 
 function buildAccueilExcelRows(rows, sanitize) {

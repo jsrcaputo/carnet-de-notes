@@ -88,15 +88,6 @@
           when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
         },
         {
-          id: 'dash-privacy',
-          target: '#dashPrivacyToggle',
-          title: 'Masquer pour le TNI',
-          body: 'Avant de projeter votre écran en classe, cliquez ici pour masquer d’un seul coup les notes et noms sensibles.',
-          placement: 'bottom',
-          padding: 8,
-          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0
-        },
-        {
           id: 'dash-tabs',
           target: '#dashTabs',
           fallbackTarget: '#dashOverviewSection',
@@ -133,7 +124,7 @@
     },
 
     students: {
-      label: 'Listes et groupes',
+      label: 'Liste d’élèves',
       autoOffer: true,
       steps: [
         {
@@ -200,7 +191,7 @@
           body: 'Ajustez ici le poids de chaque travail : verrouillez un cadenas sur une évaluation et les autres se rééquilibrent automatiquement.',
           placement: 'bottom',
           padding: 8,
-          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && hasCurrentSubjectAssignments() && !isCurrentGroupPreschool()
+          when: () => typeof appState !== 'undefined' && Array.isArray(appState.students) && appState.students.length > 0 && hasCurrentSubjectAssignments() && !isCurrentGroupPreschool() && !isCurrentSubjectIlss()
         },
         {
           id: 'gb-summary-cols',
@@ -273,7 +264,8 @@
           title: 'Trois modes de grille',
           body: 'Passez ici d’une grille rapide à une grille pondérée ou créez votre propre grille sur mesure selon l’activité observée.',
           placement: 'bottom',
-          padding: 8
+          padding: 8,
+          when: () => !isCurrentSubjectIlss()
         },
         {
           id: 'qo-grid',
@@ -346,7 +338,7 @@
         {
           id: 'gr-portrait',
           target: '#grReportContent .ps-section',
-          fallbackTarget: '#grReportContent > div:nth-child(2)',
+          fallbackTarget: '#grReportContent > :nth-child(2)',
           title: 'Portrait des trois étapes',
           body: () => isCurrentGroupPreschool()
             ? 'Ici, les cinq domaines du préscolaire sont réunis avec leur parcours sur l’année et vos constats, sans pourcentage officiel.'
@@ -364,7 +356,7 @@
           body: 'Pour établir les niveaux de compétence ou préparer un commentaire, ouvrez les échelles ici et cliquez sur les phrases qui décrivent l’élève.',
           placement: 'top',
           padding: 8,
-          when: () => typeof appState !== 'undefined' && Boolean(appState.selectedStudentId) && !isCurrentGroupPreschool()
+          when: () => typeof appState !== 'undefined' && Boolean(appState.selectedStudentId) && !isCurrentGroupPreschool() && !isCurrentGroupAccueil()
         }
       ]
     },

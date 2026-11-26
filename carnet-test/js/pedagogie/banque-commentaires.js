@@ -257,6 +257,9 @@ const PRIMARY_COMMENT_BANKS = {
 function getCommentBankCategories(student, subject) {
   const subjectConfig = typeof subject === 'string'
     ? ALL_SUBJECTS_CONFIG.find(item => item.id === subject) || { id: subject } : subject;
+  if (subjectConfig && subjectConfig.isIlss && typeof ILSS_COMMENT_BANK_STRUCTURED !== 'undefined') {
+    return ILSS_COMMENT_BANK_STRUCTURED[subjectConfig.ilssCompetency] || COMMENT_BANK_CATEGORIES;
+  }
   const gradeLevel = getEffectiveGradeLevel(student, subjectConfig);
   const cycle = getStudentCycle(gradeLevel || (student && student.gradeLevel));
   if (cycle === 'P') {

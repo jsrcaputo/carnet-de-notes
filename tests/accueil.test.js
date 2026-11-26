@@ -368,3 +368,42 @@ test('affiche le niveau sous chaque élève en accueil dans les carnets ILSS et 
   context.renderGradebookView();
   assert.match(elements.get('gradebookBody').children[0].children[0].children[0].textContent, /^1re année \(2\)$/);
 });
+
+test('harmonisation ILSS : banque structurée et animations toujours actives', () => {
+  const classes = new Set(['theme-dark', 'reduce-motion']);
+  const attrs = {};
+  const rootEl = {
+    dataset: {},
+    setAttribute: (k, v) => { attrs[k] = v; },
+    classList: {
+      add: (...tokens) => tokens.forEach((t) => classes.add(t)),
+      remove: (...tokens) => tokens.forEach((t) => classes.delete(t)),
+      contains: (t) => classes.has(t),
+    },
+  };
+  const win = {};
+  const ctx = vm.createContext({
+    console,
+    ALL_SUBJECTS_CONFIG: [],
+    document: { documentElement: rootEl },
+    window: win,
+    localStorage: { getItem: () => JSON.stringify({ animations: false, textSize: 'lg' }) },
+    globalThis: null,
+  });
+  ctx.globalThis = ctx;
+
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'init-theme.js'), 'utf8'), ctx);
+  assert.equal(ctx.window.isReducedMotionEnabled(), false);
+  assert.equal(classes.has('reduce-motion'), false);
+  assert.equal(classes.has('theme-dark'), false);
+  assert.equal(classes.has('ts-lg'), true);
+  assert.equal(attrs['data-palette'], 'ocean');
+
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'pedagogie', 'matieres-ilss.js'), 'utf8'), ctx);
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'pedagogie', 'commentaires-ilss.js'), 'utf8'), ctx);
+  const structured = vm.runInContext('ILSS_COMMENT_BANK_STRUCTURED', ctx);
+  assert.ok(Array.isArray(structured.oral));
+  assert.ok(Array.isArray(structured.lecture));
+  assert.ok(Array.isArray(structured.ecriture));
+  assert.ok(structured.oral.length >= 2);
+});

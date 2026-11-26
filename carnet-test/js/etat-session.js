@@ -122,7 +122,6 @@
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
         if (typeof savedPrefs.coloredColumns === 'boolean') prefs.coloredColumns = savedPrefs.coloredColumns;
-        if (typeof savedPrefs.animations === 'boolean') prefs.animations = savedPrefs.animations;
         if (['select', 'grid'].includes(savedPrefs.summaryStudentListMode)) prefs.summaryStudentListMode = savedPrefs.summaryStudentListMode;
         if (['firstName', 'lastName'].includes(savedPrefs.summaryStudentSort)) prefs.summaryStudentSort = savedPrefs.summaryStudentSort;
       }
@@ -135,7 +134,8 @@
       social: '#9a5b13',
       education_physique: '#15803d',
       anglais: '#2563eb',
-      arts: '#9e2a5b'
+      arts: '#9e2a5b',
+      ilss: '#0f766e'
     };
     let lastSavedFileSnapshot = null;
     let initialEditableSnapshot = null;
@@ -146,9 +146,9 @@
       prefs.palette = activePalette;
       root.setAttribute('data-palette', activePalette);
       root.classList.toggle('theme-dark', prefs.theme === 'dark');
-      const reducedMotion = prefs.animations === false;
-      root.classList.toggle('reduce-motion', reducedMotion);
-      if (document.body) document.body.classList.toggle('reduce-motion', reducedMotion);
+      prefs.animations = true;
+      root.classList.remove('reduce-motion');
+      if (document.body) document.body.classList.remove('reduce-motion');
       ['xs', 'sm', 'lg', 'xl'].forEach(size => root.classList.toggle('ts-' + size, prefs.textSize === size));
       const sizeIndex = ['xs', 'sm', 'md', 'lg', 'xl'].indexOf(prefs.textSize);
       const sizeSlider = document.getElementById('spTextSize');
@@ -219,7 +219,7 @@
         textSize: value.textSize,
         backupReminder: value.backupReminder,
         coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false,
-        animations: typeof value.animations === 'boolean' ? value.animations : (prefs.animations !== false),
+        animations: true,
         summaryStudentListMode: ['select', 'grid'].includes(value.summaryStudentListMode)
           ? value.summaryStudentListMode
           : (prefs.summaryStudentListMode || 'grid'),
