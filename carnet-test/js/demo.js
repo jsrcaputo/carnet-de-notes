@@ -999,11 +999,13 @@
       { id: 'annee6', label: '6e année', groups: [
         { id: 'grp_annee6', name: 'Démo — 6e année', count: 24, level: '6', offset: 13, modified: true }
       ] },
-      { id: 'specialiste', label: 'Spécialiste 2e cycle', groups: [
-        { id: 'grp_specialiste_3a', name: 'Démo — Spécialiste 3e A', count: 22, level: '3', offset: 16, specialist: true },
-        { id: 'grp_specialiste_3b', name: 'Démo — Spécialiste 3e B', count: 21, level: '3', offset: 20, specialist: true },
-        { id: 'grp_specialiste_4a', name: 'Démo — Spécialiste 4e A', count: 21, level: '4', offset: 23, specialist: true },
-        { id: 'grp_specialiste_4b', name: 'Démo — Spécialiste 4e B', count: 20, level: '4', offset: 27, specialist: true }
+      { id: 'specialiste', label: 'Spécialiste — Éducation physique', groups: [
+        { id: 'grp_specialiste_1', name: 'Démo — ÉPS 1re année', count: 19, level: '1', offset: 15, specialist: true },
+        { id: 'grp_specialiste_2', name: 'Démo — ÉPS 2e année', count: 20, level: '2', offset: 18, specialist: true },
+        { id: 'grp_specialiste_3', name: 'Démo — ÉPS 3e année', count: 22, level: '3', offset: 21, specialist: true },
+        { id: 'grp_specialiste_4', name: 'Démo — ÉPS 4e année', count: 21, level: '4', offset: 24, specialist: true },
+        { id: 'grp_specialiste_5', name: 'Démo — ÉPS 5e année', count: 23, level: '5', offset: 27, specialist: true },
+        { id: 'grp_specialiste_6', name: 'Démo — ÉPS 6e année', count: 22, level: '6', offset: 29, specialist: true }
       ] },
       { id: 'multi', label: 'Multi-niveau 5e et 6e', groups: [
         { id: 'grp_multi_5e6e', name: 'Démo — Multi 5e/6e', count: 18, level: '', offset: 6, multi: true, modified: true }
@@ -1028,12 +1030,19 @@
       if (config.level === 'P') return buildDemoPreschoolData();
       if (config.accueil) return buildAccueilDemoData(config);
       const primarySubjects = ALL_SUBJECTS_CONFIG.filter(s => !s.prescoOnly && !s.isIlss);
-      let subjectIds = primarySubjects.map(subject => subject.id);
-      if (['1', '2'].includes(config.level)) {
-        subjectIds = primarySubjects.filter(subject => !['sciences', 'social'].includes(subject.group)).map(subject => subject.id);
-      } else if (config.specialist) {
+      const excludedRegularGroups = ['education_physique', 'anglais', 'musique', 'art_dram'];
+      let subjectIds;
+      if (config.specialist) {
         subjectIds = primarySubjects
-          .filter(subject => ['education_physique', 'anglais', 'art_plast', 'art_dram', 'musique'].includes(subject.group))
+          .filter(subject => subject.group === 'education_physique')
+          .map(subject => subject.id);
+      } else if (['1', '2'].includes(config.level)) {
+        subjectIds = primarySubjects
+          .filter(subject => !excludedRegularGroups.includes(subject.group) && !['sciences', 'social'].includes(subject.group))
+          .map(subject => subject.id);
+      } else {
+        subjectIds = primarySubjects
+          .filter(subject => !excludedRegularGroups.includes(subject.group))
           .map(subject => subject.id);
       }
       const levelPicker = config.multi ? index => index < Math.ceil(config.count / 2) ? '5' : '6' : config.level;
