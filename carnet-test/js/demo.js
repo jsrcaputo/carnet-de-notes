@@ -18,18 +18,18 @@
       ];
 
       const baseScores = [
-        91, 76, 68, 84, 55, 72, 81, 48, 88, 63,
-        73, 95, 58, 79, 65, 86, 52, 75, 92, 69,
-        82, 61, 89, 54
+        91, 85, 76, 71, 59, 78, 86, 56, 68, 74,
+        79, 93, 61, 70, 77, 85, 67, 75, 89, 80,
+        82, 74, 88, 58
       ];
 
-      const multiBaseScores = [76, 72, 80, 74, 67, 82, 75, 69, 77, 73, 81, 68, 78, 79, 71, 83, 65, 76, 74, 80];
+      const multiBaseScores = [86, 84, 77, 71, 59, 82, 85, 56, 67, 75, 88, 78, 61, 70, 79, 87, 68, 76, 84, 80];
       const multiDomainProfiles = [
-        [8, -5, 4, 2, 1, -1], [-3, 8, 2, 6, 3, -2], [5, 2, -5, 0, 4, 3], [2, 6, 1, -4, 0, 7],
-        [-7, 1, 3, 5, 0, 2], [4, 9, 2, 1, 1, -5], [7, -3, 6, 2, 0, 1], [-3, 4, 2, 7, -4, 3],
-        [5, -8, 4, 1, -1, 2], [1, 6, -3, 2, 7, -2], [8, 2, 0, -5, 3, 1], [-5, 7, 3, 1, 2, 5],
-        [3, -4, 8, 4, -2, 1], [2, 2, -5, 7, 6, -1], [-4, 3, 1, 0, -5, 8], [7, 5, -2, 3, 0, -4],
-        [-6, 0, 5, 4, 2, 3], [4, 8, 1, -3, 2, -5], [3, -5, 4, 8, -2, 1], [1, 5, 0, -4, 7, 3]
+        [4, -2, 3, 2, 1, 0], [-2, 4, 2, 3, 2, -1], [3, 1, -3, 0, 3, 2], [2, -2, 1, -2, 0, 4],
+        [-4, -2, 2, 3, 0, 1], [3, 5, 1, 1, 1, -2], [4, -2, 4, 2, 0, 1], [-4, -2, 1, 3, -2, 2],
+        [-2, -3, 3, 2, 1, 3], [1, 4, -2, 1, 4, -1], [5, 2, 0, -2, 2, 1], [-2, 4, 2, 1, 2, 3],
+        [-3, -2, 3, 2, -1, 1], [3, -3, 2, 4, 2, 0], [-2, 2, 1, 0, -2, 4], [4, 3, -1, 2, 0, -2],
+        [-2, 0, 3, 2, 1, 2], [2, 4, 1, -2, 1, -2], [2, -2, 3, 4, -1, 1], [1, 3, 0, -2, 4, 2]
       ];
       const multiSubjectDomains = {
         math_resoudre: 0, math_raisonner: 0,
@@ -43,11 +43,11 @@
         art_plast_c1c2: 5, art_plast_c3: 5, art_dram_c1c2: 5, art_dram_c3: 5
       };
       const domainProfiles = [
-        [14, -10, 4, -12, 15, -7], [-8, 15, -5, 10, -11, 6], [12, -6, -12, 3, 10, -9], [-10, 12, 5, -8, -4, 16],
-        [-12, 2, 14, 8, -5, -9], [5, 16, -10, -7, 9, -12], [15, -12, 7, -4, 2, 11], [-9, 8, -6, 14, -12, 3],
-        [10, -14, 12, -5, 7, -11], [-7, 11, -9, 3, 15, -4], [16, -5, -11, 8, -8, 3], [-12, 14, 4, -9, 5, 10],
-        [3, -11, 16, 5, -7, -10], [-8, 6, -12, 15, 11, -4], [-11, 9, 4, -6, -10, 16], [14, 7, -9, 10, -12, -5],
-        [-13, -4, 11, 13, -6, 7], [6, 15, -8, -11, 4, -12], [10, -12, 5, 16, -8, -3], [-5, 9, -10, -7, 14, 12]
+        [4, -2, 3, -2, 4, 1], [-2, 5, 1, 3, -1, 2], [4, -2, -3, 2, 3, -2], [-2, -2, 3, 1, 2, 5],
+        [-4, -3, 4, 3, 1, -1], [2, 5, -2, -2, 3, -2], [5, -2, 3, 0, 2, 4], [-5, -3, 1, 4, -2, 2],
+        [-2, -3, 4, 2, 3, 2], [-2, 4, -2, 2, 5, 0], [5, -1, -2, 3, -1, 2], [-2, 4, 2, -1, 3, 4],
+        [-4, -3, 5, 2, 0, 1], [3, -3, 2, 4, 3, 0], [-2, 3, 2, -1, -2, 5], [4, 2, -2, 3, -1, 0],
+        [-2, 0, 4, 4, 0, 3], [2, 5, -2, -2, 2, -2], [3, -2, 2, 5, -1, 0], [-1, 3, -2, -1, 4, 4]
       ];
 
       const subjectOffsets = {
@@ -312,19 +312,19 @@
       };
 
       const overrides = type === 'regulier' ? [
-        { term: '1', sub: 'math_resoudre', idx: 0, val: '90', reason: 'Excellente constance et autonomie en fin d’étape.' },
-        { term: '1', sub: 'fra_ecriture', idx: 7, val: '60', reason: 'Ateliers de soutien et adaptations efficaces. Seuil atteint.' },
-        { term: '2', sub: 'fra_lecture', idx: 3, val: '78', reason: 'Belle progression dans l’utilisation du temps supplémentaire.' },
-        { term: '2', sub: 'univers_social', idx: 17, val: '72', reason: 'Progrès marqués dans le repérage cartographique.' },
-        { term: '3', sub: 'sciences_global', idx: 13, val: '85', reason: 'Rigueur exemplaire dans la démarche de projet final.' },
-        { term: '3', sub: 'fra_oral', idx: 2, val: '88', reason: 'Aisance et vocabulaire riche lors de la causerie finale.' }
+        { term: '1', sub: 'math_resoudre', idx: 0, val: '95', reason: 'Excellente constance et autonomie en fin d’étape.' },
+        { term: '1', sub: 'fra_ecriture', idx: 7, val: '55', reason: 'Soutien soutenu et adaptations en place; les bases se consolident.' },
+        { term: '2', sub: 'fra_lecture', idx: 3, val: '75', reason: 'Belle progression grâce au temps supplémentaire.' },
+        { term: '2', sub: 'univers_social', idx: 17, val: '75', reason: 'Progrès marqués dans le repérage cartographique.' },
+        { term: '3', sub: 'sciences_global', idx: 13, val: '80', reason: 'Bonne rigueur dans la démarche de projet final.' },
+        { term: '3', sub: 'fra_oral', idx: 2, val: '80', reason: 'Aisance et vocabulaire plus précis lors de la causerie finale.' }
       ] : [
         { term: '1', sub: 'math_resoudre', idx: 0, val: '90', reason: 'Excellente maîtrise des fractions et décomposition.' },
-        { term: '1', sub: 'fra_ecriture', idx: 8, val: '72', reason: 'Objectifs adaptés de 4e année du PI atteints avec succès.' },
-        { term: '2', sub: 'fra_lecture', idx: 6, val: '80', reason: 'Inférences fines démontrées lors des cercles de lecture.' },
+        { term: '1', sub: 'fra_ecriture', idx: 8, val: '70', reason: 'Objectifs adaptés du bulletin modifié atteints avec soutien.' },
+        { term: '2', sub: 'fra_lecture', idx: 6, val: '85', reason: 'Inférences fines démontrées lors des cercles de lecture.' },
         { term: '2', sub: 'univers_social', idx: 16, val: '75', reason: 'S’appuie bien sur les documents d’enquête historique.' },
-        { term: '3', sub: 'sciences_global', idx: 11, val: '96', reason: 'Qualité remarquable du rapport d’enquête et autonomie.' },
-        { term: '3', sub: 'math_resoudre', idx: 18, val: '95', reason: 'Résolution exemplaire des situations-problèmes d’envergure.' }
+        { term: '3', sub: 'sciences_global', idx: 11, val: '85', reason: 'Qualité remarquable du rapport d’enquête et autonomie.' },
+        { term: '3', sub: 'math_resoudre', idx: 15, val: '95', reason: 'Résolution exemplaire des situations-problèmes d’envergure.' }
       ];
 
       const subjectComments = {
@@ -488,18 +488,18 @@
               const offsetList = subjectOffsets[subId] || [];
               const offset = offsetList[stIdx % offsetList.length] || 0;
               const variation = type === 'multi' && !legacySeed
-                ? ((stIdx * 11 + planIdx * 7 + subjectIds.indexOf(subId) * 5 + Number(termKey) * 3) % 15) - 7
-                : ((stIdx * 7 + planIdx * 5 + subjectIds.indexOf(subId) * 3 + Number(termKey)) % 17) - 8;
+                ? ((stIdx * 11 + planIdx * 7 + subjectIds.indexOf(subId) * 5 + Number(termKey) * 3) % 9) - 4
+                : ((stIdx * 7 + planIdx * 5 + subjectIds.indexOf(subId) * 3 + Number(termKey)) % 9) - 4;
               const domainIndex = multiSubjectDomains[subId];
               const domainOffset = legacySeed ? 0 : previousSeed
                 ? (type === 'multi' ? multiDomainProfiles[stIdx % multiDomainProfiles.length][domainIndex] : 0)
                 : domainProfiles[stIdx % domainProfiles.length][domainIndex];
-              const competencyOffset = legacySeed || previousSeed ? 0 : ((stIdx * 3 + subjectIds.indexOf(subId) * 5) % 11) - 5;
+              const competencyOffset = legacySeed || previousSeed ? 0 : ((stIdx * 3 + subjectIds.indexOf(subId) * 5) % 5) - 2;
               const termGrowth = type === 'multi' && !legacySeed
                 ? (termKey === '1' ? 0 : termKey === '2' ? 1 : 3)
                 : termProgression;
               let studentPct = Math.min(type === 'multi' && !legacySeed ? 97 : 98,
-                Math.max(type === 'multi' && !legacySeed ? 38 : 40, base + offset + domainOffset + competencyOffset + termGrowth + variation));
+                Math.max(type === 'multi' && !legacySeed ? 45 : 46, base + offset + domainOffset + competencyOffset + termGrowth + variation));
 
               if (st.modifiedExpectations && st.modifiedExpectations[subId]) {
                 studentPct = legacySeed
@@ -526,7 +526,8 @@
                 'Prédicteur de mots': 'OUTIL',
                 'Synthèse vocale': 'OUTIL',
                 'Pauses planifiées': 'AIDE',
-                'PIA': 'OUTIL'
+                'PIA': 'OUTIL',
+                'Plan d’intervention': 'OUTIL'
               };
               const flags = (st.adaptations || []).map(flag =>
                 legacySeed || previousSeed || VALID_CELL_FLAG_CODES.has(flag)
@@ -553,14 +554,22 @@
                 const subject = ALL_SUBJECTS_CONFIG.find(item => item.id === subId);
                 const criteria = subject ? getCriteriaForGradeLevel(subject, getEffectiveGradeLevel(st, subject)) : [];
                 const family = GRADE_MAP[gradeCode].family;
+                const isBorderlineAtRisk = stIdx === 16;
+                const obsTags = isBorderlineAtRisk
+                  ? (studentPct >= 75
+                    ? ['Persévère lorsqu’un obstacle se présente', 'A besoin de soutien pour planifier les étapes']
+                    : ['A besoin d’une relance pour amorcer la tâche', 'A besoin de repères pour suivre les étapes'])
+                  : studentPct >= 82
+                    ? ['Amorce la tâche sans relance', 'Réutilise une stratégie enseignée']
+                    : studentPct >= 70
+                      ? ['Persévère lorsqu’un obstacle se présente', 'Collabore avec ses pairs']
+                      : studentPct >= 60
+                        ? ['Persévère lorsqu’un obstacle se présente', 'A besoin d’une relance pour amorcer la tâche']
+                        : ['A besoin d’une relance pour amorcer la tâche', 'A besoin de soutien pour planifier les étapes'];
                 rec.scoreMeta[asgId] = {
                   overrideCode: null,
                   checked: getScoredObservableCriteria(criteria).map(criterion => `${criterion.id}_${family}_0`),
-                  tags: studentPct >= 85
-                    ? ['Amorce la tâche sans relance', 'Réutilise une stratégie enseignée']
-                    : studentPct >= 75
-                      ? ['Persévère lorsqu’un obstacle se présente', 'Collabore avec ses pairs']
-                      : ['A besoin d’une relance pour amorcer la tâche'],
+                  tags: obsTags,
                   flags,
                   comment: workComment || (type !== 'multi' || legacySeed
                     ? studentPct >= 85 ? 'Démontre une autonomie constante.' : 'Progression observée lors des ateliers.'
@@ -666,12 +675,15 @@
       return buildDemoNames(count, nameOffset).map((name, index) => {
         const [firstName, lastName] = name.split(' ');
         const gradeLevel = typeof levels === 'function' ? levels(index) : levels;
-        const modified = index === modifiedIndex && String(gradeLevel) !== 'P';
-        const adaptations = modified
-          ? ['Lecture des consignes', 'Temps supplémentaire', 'Bulletin modifié']
-          : index === 3 ? ['Temps supplémentaire']
-            : index === 7 ? ['Consignes fractionnées']
-              : index === 13 ? ['Correcteur'] : [];
+        const isPresco = String(gradeLevel) === 'P';
+        const modified = index === modifiedIndex && !isPresco;
+        const adaptations = isPresco
+          ? (index === 7 || index === 4 ? ['Plan d’intervention'] : [])
+          : modified
+            ? ['Plan d’intervention', 'Bulletin modifié']
+            : (index === 4 || index === 7)
+              ? ['Plan d’intervention']
+              : [];
         const modifiedExpectations = modified
           ? { fra_ecriture: String(Number(gradeLevel) - 1), math_resoudre: String(Number(gradeLevel) - 1) }
           : {};
@@ -848,7 +860,7 @@
                 ? ['Accomplit les routines de façon autonome', 'Explore et pose des questions avec curiosité']
                 : resultStage === 2
                   ? ['Partage le matériel et attend son tour', 'Classe, compare et dénombre des objets']
-                  : ['A besoin d’un accompagnement pour garder son calme devant une difficulté'],
+                  : ['A besoin d’un accompagnement pour garder son calme devant une difficulté', 'A besoin d’une relance pour amorcer la tâche'],
               flags: [],
               comment: leaveWorkComment ? `Pendant le ${context.activity}, ${context.notes[resultStage]}` : ''
             };
@@ -876,16 +888,19 @@
         lecture: 'Lecture guidée d’un court texte illustré',
         ecriture: 'Production d’un court texte avec outils de soutien'
       };
-      const cotes = ['B', 'C', 'B', 'A', 'C', 'D', 'B', 'C', 'A'];
+      const palierByProfile = [4, 3, 2, 2, 1, 3, 4, 1, 2, 2, 3, 4, 1, 2, 3, 4, 2];
+      const coteByProfile = ['A', 'B', 'B', 'C', 'D', 'B', 'A', 'D', 'B', 'C', 'B', 'A', 'C', 'C', 'B', 'A', 'C'];
       students.forEach((student, studentIndex) => {
         student.ilssByTerm = {};
         ['1', '2', '3'].forEach(termId => {
           const judgments = {};
           const assessments = [];
           ['oral', 'lecture', 'ecriture'].forEach((competency, competencyIndex) => {
-            const basePalier = 1 + ((studentIndex + competencyIndex) % 4);
-            const palier = String(Math.min(5, basePalier + (Number(termId) === 3 ? 1 : 0)));
-            const cote = cotes[(studentIndex + competencyIndex + Number(termId)) % cotes.length];
+            const basePalier = palierByProfile[studentIndex % palierByProfile.length];
+            const compShift = competency === 'oral' ? 0 : competency === 'lecture' ? 0 : (basePalier > 1 ? -1 : 0);
+            const palier = String(Math.min(5, Math.max(1, basePalier + compShift + (Number(termId) === 3 ? 1 : 0))));
+            const baseCote = coteByProfile[studentIndex % coteByProfile.length];
+            const cote = (baseCote === 'D' && competency === 'oral' && Number(termId) === 3) ? 'C' : baseCote;
             judgments[competency] = {
               palier: '',
               cote: '',
@@ -934,13 +949,17 @@
             const demoCote = student.ilssByTerm[termId].assessments
               .find(item => item.competency === ilssSubject.competency).cote;
             const pairs = (typeof ILSS_OBSERVATION_PAIRS !== 'undefined' && ILSS_OBSERVATION_PAIRS[ilssSubject.competency]) || [];
-            const pair = pairs[(studentIndex + subjectIndex) % Math.max(1, pairs.length)];
-            const quickComment = pair ? pair[(demoCote === 'C' || demoCote === 'D') ? 1 : 0] : '';
+            const pair1 = pairs[(studentIndex + subjectIndex) % Math.max(1, pairs.length)];
+            const pair2 = pairs[(studentIndex + subjectIndex + 1) % Math.max(1, pairs.length)];
+            const isIlssChallenge = demoCote === 'D' || (demoCote === 'C' && (studentIndex === 3 || studentIndex === 9 || studentIndex === 12));
+            const quickComments = isIlssChallenge
+              ? [pair1 && pair1[1], pair2 && pair2[1]].filter(Boolean)
+              : (pair1 ? [pair1[demoCote === 'C' ? 1 : 0]] : []);
             subData.studentRecords[student.id].scoreMeta[id] = {
               ilssPalier: '',
               ilssCote: demoCote,
               comment: `Appui observé au palier ${demoPalier} lors de l’activité.`,
-              quickComments: quickComment ? [quickComment] : [],
+              quickComments,
               criteria: Object.fromEntries(
                 ILSS_OBSERVABLE_GRIDS[ilssSubject.competency].map(criterion => [criterion.id, demoPalier])
               )

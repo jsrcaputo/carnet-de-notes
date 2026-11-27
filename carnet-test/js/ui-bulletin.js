@@ -73,7 +73,7 @@
       const targetId = resolveJumpSubjectId(rawSubId);
       const targetSub = SUBJECTS_CONFIG.find(s => s.id === targetId);
       if (!targetSub) return;
-      const navigated = navigateToView('viewGradebook', () => {
+      navigateToView('viewGradebook', () => {
         if (targetTerm && ['1', '2', '3'].includes(String(targetTerm))) {
           appState.activeTerm = String(targetTerm);
         }
@@ -81,10 +81,7 @@
         expandedSubjectGroup = (targetSub.group && targetSub.group !== 'presco') ? targetSub.group : null;
         gbFilter = '';
         gbLevelFilter = 'ALL';
-      }, { skipScrollTop: true });
-      if (navigated) {
-        window.requestAnimationFrame(() => flashGradebookStudentRow(studentId));
-      }
+      }, { skipScrollTop: true, flashStudentId: studentId });
     }
 
     function getStudentAnnualEvaluationSummary(student, subjectIds) {
@@ -316,7 +313,151 @@
       return students;
     }
 
+    let grCommentPopoverEl = null;
+    let grCommentPopoverAnchor = null;
+    function closeGrBulletinCommentPopover() {
+      if (grCommentPopoverEl) {
+        grCommentPopoverEl.remove();
+        grCommentPopoverEl = null;
+      }
+      if (grCommentPopoverAnchor) {
+        grCommentPopoverAnchor.setAttribute('aria-expanded', 'false');
+        grCommentPopoverAnchor.classList.remove('is-open');
+        grCommentPopoverAnchor = null;
+      }
+      if (document.removeEventListener) {
+        document.removeEventListener('mousedown', onGrCommentPopoverOutside, true);
+        document.removeEventListener('keydown', onGrCommentPopoverKey, true);
+      }
+      if (window.removeEventListener) {
+        window.removeEventListener('resize', closeGrBulletinCommentPopover);
+      }
+    }
+    function onGrCommentPopoverOutside(event) {
+      if (!grCommentPopoverEl) return;
+      if (grCommentPopoverEl.contains(event.target)) return;
+      if (grCommentPopoverAnchor && grCommentPopoverAnchor.contains(event.target)) return;
+      closeGrBulletinCommentPopover();
+    }
+    function onGrCommentPopoverKey(event) {
+      if (event.key === 'Escape') {
+        const anchor = grCommentPopoverAnchor;
+        closeGrBulletinCommentPopover();
+        if (anchor && anchor.isConnected) anchor.focus({ preventScroll: true });
+      }
+    }
+    function openGrBulletinCommentPopover(anchorBtn, subjectId, subjectLabel, commentsList, studentId, onInsert) {
+      const sameAnchor = grCommentPopoverAnchor === anchorBtn;
+      closeGrBulletinCommentPopover();
+      if (sameAnchor || !commentsList || !commentsList.length) return;
+
+      const pop = document.createElement('div');
+      pop.className = 'gr-comment-popover';
+      pop.setAttribute('role', 'dialog');
+      pop.setAttribute('aria-label', `Commentaires au bulletin — ${subjectLabel}`);
+
+      const header = document.createElement('div');
+      header.className = 'gr-comment-popover-head';
+      header.innerHTML = `
+        <div class="gr-comment-popover-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div>
+            <strong>${escapeHtml(subjectLabel)}</strong>
+            <span>Commentaire${commentsList.length > 1 ? 's' : ''} au bulletin</span>
+          </div>
+        </div>
+        <button type="button" class="gr-comment-popover-close" aria-label="Fermer" title="Fermer">✕</button>
+      `;
+      header.querySelector('.gr-comment-popover-close').addEventListener('click', closeGrBulletinCommentPopover);
+      pop.appendChild(header);
+
+      const list = document.createElement('div');
+      list.className = 'gr-comment-popover-list';
+      commentsList.forEach(entry => {
+        const card = document.createElement('div');
+        card.className = 'gr-comment-popover-item';
+
+        const meta = document.createElement('div');
+        meta.className = 'gr-comment-popover-meta';
+        meta.innerHTML = `<span class="gr-comment-popover-term">Étape ${escapeHtml(entry.term)}${entry.partLabel ? ` · ${escapeHtml(entry.partLabel)}` : ''}</span>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'gr-comment-popover-actions';
+
+        const copyBtn = document.createElement('button');
+        copyBtn.type = 'button';
+        copyBtn.className = 'gr-comment-popover-btn';
+        copyBtn.textContent = 'Copier';
+        copyBtn.addEventListener('click', () => {
+          const done = () => { if (typeof showToast === 'function') showToast('Commentaire copié'); };
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(entry.text).then(done, done);
+          } else {
+            done();
+          }
+        });
+        actions.appendChild(copyBtn);
+
+        if (typeof onInsert === 'function') {
+          const insBtn = document.createElement('button');
+          insBtn.type = 'button';
+          insBtn.className = 'gr-comment-popover-btn is-accent';
+          insBtn.textContent = '+ Insérer';
+          insBtn.title = 'Insérer dans le commentaire général';
+          insBtn.addEventListener('click', () => onInsert(entry.text));
+          actions.appendChild(insBtn);
+        }
+
+        const editBtn = document.createElement('button');
+        editBtn.type = 'button';
+        editBtn.className = 'gr-comment-popover-btn';
+        editBtn.textContent = 'Carnet →';
+        editBtn.title = `Ouvrir ${subjectLabel} (Étape ${entry.term}) dans le carnet`;
+        editBtn.addEventListener('click', () => {
+          closeGrBulletinCommentPopover();
+          jumpFromReportToSubject(entry.sourceSubjectId || subjectId, studentId, entry.term);
+        });
+        actions.appendChild(editBtn);
+
+        meta.appendChild(actions);
+        const body = document.createElement('p');
+        body.className = 'gr-comment-popover-text';
+        body.textContent = entry.text;
+
+        card.append(meta, body);
+        list.appendChild(card);
+      });
+      pop.appendChild(list);
+
+      pop.style.visibility = 'hidden';
+      document.body.appendChild(pop);
+      const rect = anchorBtn.getBoundingClientRect();
+      const popW = pop.offsetWidth;
+      const popH = pop.offsetHeight;
+      const margin = 12;
+      let left = rect.left;
+      if (left + popW + margin > window.innerWidth) {
+        left = Math.max(margin, window.innerWidth - popW - margin);
+      }
+      let top = rect.bottom + 8;
+      if (top + popH + margin > window.innerHeight) {
+        top = Math.max(margin, rect.top - popH - 8);
+      }
+      pop.style.left = `${Math.round(left)}px`;
+      pop.style.top = `${Math.round(top)}px`;
+      pop.style.visibility = '';
+
+      grCommentPopoverEl = pop;
+      grCommentPopoverAnchor = anchorBtn;
+      anchorBtn.setAttribute('aria-expanded', 'true');
+      anchorBtn.classList.add('is-open');
+      document.addEventListener('mousedown', onGrCommentPopoverOutside, true);
+      document.addEventListener('keydown', onGrCommentPopoverKey, true);
+      window.addEventListener('resize', closeGrBulletinCommentPopover);
+    }
+
     function renderGlobalReportView() {
+      closeGrBulletinCommentPopover();
       const band = document.getElementById('grStudentBand');
       const container = document.getElementById('grReportContent');
       if (!band || !container) return;
@@ -345,6 +486,7 @@
       const tagFrequency = {};
       const flagFrequency = {};
       const recordedComments = [];
+      const bulletinCommentsBySubject = {};
       const pendingStatuses = [];
       const evalDetailsBySubject = {};
       const preschoolDomains = {};
@@ -352,10 +494,13 @@
       SUBJECTS_CONFIG.forEach(sub => {
         if (!isSubjectApplicableForStudent(sub, st)) return;
         if (sub.isIlss) {
+          const ilssBulletins = [];
           ['1', '2', '3'].forEach(tKey => {
             const j = st.ilssByTerm?.[tKey]?.judgments?.[sub.ilssCompetency];
             if (j && j.comment && j.comment.trim()) {
-              recordedComments.push({ term: tKey, subject: sub.shortName, context: 'Jugement d’étape', text: j.comment.trim() });
+              const text = j.comment.trim();
+              recordedComments.push({ term: tKey, subject: sub.shortName, context: 'Jugement d’étape', text });
+              ilssBulletins.push({ term: tKey, sourceSubjectId: sub.id, partLabel: '', text });
             }
             const sd = appState.terms?.[tKey]?.subjectData?.[sub.id];
             const rec = sd?.studentRecords?.[st.id];
@@ -372,6 +517,7 @@
               });
             }
           });
+          if (ilssBulletins.length) bulletinCommentsBySubject[sub.id] = ilssBulletins;
           return;
         }
         sub = getSubjectDisplayConfig(sub, getEffectiveGradeLevel(st, sub) || st.gradeLevel);
@@ -494,12 +640,20 @@
             }
           });
           if (rec.comment && rec.comment.trim()) {
-            domain.latestComment = { term: tKey, text: rec.comment.trim() };
+            const trimmedComment = rec.comment.trim();
+            domain.latestComment = { term: tKey, text: trimmedComment };
             recordedComments.push({
               term: tKey,
               subject: sub.shortName,
               context: 'Commentaire au bulletin',
-              text: rec.comment.trim()
+              text: trimmedComment
+            });
+            if (!bulletinCommentsBySubject[sub.id]) bulletinCommentsBySubject[sub.id] = [];
+            bulletinCommentsBySubject[sub.id].push({
+              term: tKey,
+              sourceSubjectId: sub.id,
+              partLabel: '',
+              text: trimmedComment
             });
           }
         });
@@ -553,6 +707,24 @@
         evalDetailsBySubject[groupKey] = parts.flatMap(part =>
           (evalDetailsBySubject[part.sub.id] || []).map(item => ({ ...item, partLabel: part.sub.partLabel || part.sub.shortName }))
         );
+        const mergedBulletinComments = [];
+        const seenMergedComments = new Set();
+        const partsWithComments = parts.filter(part => (bulletinCommentsBySubject[part.sub.id] || []).length > 0);
+        parts.forEach(part => {
+          (bulletinCommentsBySubject[part.sub.id] || []).forEach(entry => {
+            const dedupeKey = `${entry.term}::${entry.text}`;
+            if (seenMergedComments.has(dedupeKey)) return;
+            seenMergedComments.add(dedupeKey);
+            mergedBulletinComments.push({
+              term: entry.term,
+              sourceSubjectId: part.sub.id,
+              partLabel: partsWithComments.length > 1 ? (part.sub.partLabel || part.sub.shortName) : '',
+              text: entry.text
+            });
+          });
+        });
+        mergedBulletinComments.sort((a, b) => Number(a.term) - Number(b.term));
+        if (mergedBulletinComments.length) bulletinCommentsBySubject[groupKey] = mergedBulletinComments;
         const firstIdx = subjectRows.indexOf(parts[0]);
         subjectRows.splice(firstIdx, 0, merged);
         parts.forEach(r => subjectRows.splice(subjectRows.indexOf(r), 1));
@@ -816,30 +988,6 @@
         return `<span class="trend-badge trend-flat" data-num="1"${titleAttr}><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8h10M9.5 4.5 13 8l-3.5 3.5"/></svg>${sign} %</span>`;
       };
 
-      const chartBarsHtml = subjectRows.map(r => {
-        const pct = r.annualAvg !== null ? r.annualAvg : 0;
-        const info = getAnnualResultInfo(r.t1, r.t2, r.t3);
-        const evaluationCount = getStudentCompetencyEvaluationCount(st, r.sourceSubjectIds || [r.sub.id]);
-        const displayName = r.sub.group === 'anglais'
-          ? r.sub.shortName.replace(/\s*\([^)]*\)\s*$/, '')
-          : r.sub.shortName;
-        const modTag = r.isModified
-          ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Bulletin modifié : attentes de ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}`
-          : '';
-        return `
-          <div class="space-y-1">
-            <div class="flex items-center justify-between text-xs gap-2">
-              <span class="gr-bar-subject-wrap font-semibold text-slate-700 flex items-center min-w-0 flex-1 gap-1"><button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(displayName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(displayName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button><em class="gr-evaluation-count" title="Évaluations de l’élève à l’étape ${escapeHtml(appState.activeTerm)}">${evaluationCount} éval${evaluationCount > 1 ? 's' : ''}</em>${r.sub.group !== 'anglais' && r.sub.officialWeight !== null ? ` <small class="text-slate-500 truncate min-w-0">(${r.sub.officialWeight} %${r.sub.bulletinName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''})</small>` : ''}${modTag}</span>
-              <span class="font-extrabold text-slate-900 shrink-0" data-num="1">${r.annualAvg !== null ? `${r.annualAvg}% (${r.annualCode})${info.provisional ? ' · provisoire' : ''}` : '—'}</span>
-            </div>
-            <div class="bar-track-wrap">
-              <div class="bar-fill-inner" style="width: ${pct}%;"></div>
-              <div class="bar-threshold-60" title="Seuil de réussite ministériel : 60 %"></div>
-            </div>
-          </div>
-        `;
-      }).join('');
-
       const weightModeLabel = weightMode === 'official'
         ? 'Pondéré MEQ (20 % / 20 % / 60 %)'
         : 'Moyenne simple des étapes';
@@ -876,12 +1024,16 @@
         const strengths = tagChips(domain.strengths, 3);
         const challenges = tagChips(domain.challenges, 3);
         const descriptor = (sub.shortName || '').replace(`${sub.partLabel || ''} — `, '');
+        const domainBulletinComments = bulletinCommentsBySubject[sub.id] || [];
+        const domainCommentIconHtml = domainBulletinComments.length > 0
+          ? `<button type="button" class="gr-comment-icon-btn no-print" data-gr-bulletin-comment="${escapeHtml(sub.id)}" aria-expanded="false" aria-label="Lire le commentaire au bulletin pour ${escapeHtml(sub.partLabel || sub.shortName)}" title="Commentaire au bulletin (${domainBulletinComments.length} étape${domainBulletinComments.length > 1 ? 's' : ''}) — cliquer pour lire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${domainBulletinComments.length > 1 ? `<span class="gr-comment-icon-count">${domainBulletinComments.length}</span>` : ''}</button>`
+          : '';
         return {
           sub, latest, html: `
           <article class="ps-row" data-domain="${escapeHtml(sub.id)}">
             <div class="ps-row-main">
               <span class="ps-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${PRESCHOOL_DOMAIN_ICONS[sub.id] || ''}</svg></span>
-              <span class="ps-title"><button type="button" class="gr-subject-jump gr-subject-jump--presco" data-jump-subject="${escapeHtml(sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(sub.partLabel || sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(sub.partLabel || sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${descriptor && descriptor !== sub.partLabel ? `<small>${escapeHtml(descriptor)}</small>` : ''}</span>
+              <span class="ps-title"><span class="inline-flex items-center gap-1.5 flex-wrap"><button type="button" class="gr-subject-jump gr-subject-jump--presco" data-jump-subject="${escapeHtml(sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(sub.partLabel || sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}"><span class="gr-subject-jump-label">${escapeHtml(sub.partLabel || sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>${domainCommentIconHtml}</span>${descriptor && descriptor !== sub.partLabel ? `<small>${escapeHtml(descriptor)}</small>` : ''}</span>
               <ol class="ps-path" aria-label="Parcours de l’année">
                 ${steps.map(step => `<li class="ps-k${step.rank}" title="Étape ${step.term} : ${step.rank ? PRESCHOOL_CONSTATS[step.rank].label : 'aucune trace cotée'}"><i></i><span>É${step.term}</span></li>`).join('')}
               </ol>
@@ -908,16 +1060,20 @@
 
       const adaptSummary = getStudentAdaptationSummary(st);
       const adaptationsHtml = (() => {
-        if (!adaptSummary.adaptations.length && !adaptSummary.hasModifiedBulletin) {
-          return '<span class="gr-adapt-empty">Aucune adaptation consignée</span>';
+        const pills = [];
+        if (adaptSummary.hasPia) {
+          pills.push('<span class="gr-pia-pill">Plan d’intervention</span>');
         }
-        const generalPills = adaptSummary.adaptations
-          .map(item => `<span class="gr-adapt-pill">${escapeHtml(item)}</span>`)
-          .join('');
-        const modPill = adaptSummary.hasModifiedBulletin
-          ? `<span class="gr-mod-pill">${adaptSummary.modifiedItems.length ? `Bulletin modifié · ${adaptSummary.modifiedItems.map(m => `${escapeHtml(m.label)} (${escapeHtml(m.levelLabel)})`).join(', ')}` : 'Bulletin modifié'}</span>`
-          : '';
-        return `${generalPills}${modPill}`;
+        if (adaptSummary.hasModifiedBulletin) {
+          const modLabel = adaptSummary.modifiedItems.length
+            ? `Bulletin modifié · ${adaptSummary.modifiedItems.map(m => `${escapeHtml(m.label)} (${escapeHtml(m.levelLabel)})`).join(', ')}`
+            : 'Bulletin modifié';
+          pills.push(`<span class="gr-mod-pill">${modLabel}</span>`);
+        }
+        adaptSummary.adaptations
+          .filter(item => item !== 'Plan d’intervention')
+          .forEach(item => pills.push(`<span class="gr-adapt-pill">${escapeHtml(item)}</span>`));
+        return pills.join('');
       })();
 
       const isAccueil = typeof isAccueilGroup === 'function' && isAccueilGroup();
@@ -949,18 +1105,6 @@
       });
       const writtenComments = recordedComments.filter(item => !item.fromTags);
 
-      const overallCode = overallAnnualAvg !== null ? pctToClosestGradeCode(overallAnnualAvg) : '';
-      const overallKpiHtml = (showNumericalResults && st.gradeLevel !== 'P') ? `
-        <div class="gr-overall-kpi">
-          <div class="gr-overall-kpi-label">${isAccueil ? 'Moyenne (matières chiffrées)' : 'Moyenne indicative'}</div>
-          <div class="gr-overall-kpi-value" data-num="1">
-            ${overallAnnualAvg !== null
-              ? `<strong>${overallAnnualAvg} %</strong><span class="px-1.5 py-0.5 rounded border text-[11px] font-extrabold ${getBadgeColorClasses(overallCode)}">${overallCode}</span>`
-              : '<span class="gr-empty-cell">—</span>'}
-            ${overallProvisional ? '<span class="gr-prov-badge" title="Certaines étapes manquent : pondération ajustée aux étapes disponibles">Provisoire</span>' : ''}
-          </div>
-        </div>` : '';
-
       const resultsTableHtml = showNumericalResults ? `
         ${st.gradeLevel === 'P' ? '<details class="gr-card"><summary class="gr-legacy-summary">Voir les résultats numériques conservés</summary><p class="gr-legacy-note">Calcul local indicatif seulement : les pondérations 20/20/60 et le seuil de 60 % ne constituent pas une méthode officielle pour le préscolaire.</p>' : ''}
         <div class="${st.gradeLevel === 'P' ? '' : 'gr-card gr-results-card'}">
@@ -988,6 +1132,10 @@
                 const annualInfo = getAnnualResultInfo(r.t1, r.t2, r.t3);
                 const evalSummary = getStudentAnnualEvaluationSummary(st, r.sourceSubjectIds || [r.sub.id]);
                 const evalDetailList = evalDetailsBySubject[r.sub.id] || [];
+                const subjectComments = bulletinCommentsBySubject[r.sub.id] || [];
+                const commentIconHtml = subjectComments.length > 0
+                  ? `<button type="button" class="gr-comment-icon-btn no-print" data-gr-bulletin-comment="${escapeHtml(r.sub.id)}" aria-expanded="false" aria-label="Lire le commentaire au bulletin pour ${escapeHtml(r.sub.shortName)}" title="Commentaire au bulletin (${subjectComments.length} étape${subjectComments.length > 1 ? 's' : ''}) — cliquer pour lire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${subjectComments.length > 1 ? `<span class="gr-comment-icon-count">${subjectComments.length}</span>` : ''}</button>`
+                  : '';
                 const evalBreakdown = ['1', '2', '3']
                   .filter(tk => evalSummary.byTerm[tk] > 0)
                   .map(tk => `Ét. ${tk} : ${evalSummary.byTerm[tk]}`)
@@ -1001,6 +1149,7 @@
                       <div class="gr-subject-info">
                         <div class="gr-subject-line">
                           <button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(r.sub.id)}" data-jump-student="${escapeHtml(st.id)}" title="Ouvrir ${escapeHtml(r.sub.shortName)} dans le Carnet pour ${escapeHtml(st.name)}${r.sub.bulletinName && r.sub.bulletinName !== r.sub.shortName ? ` · Bulletin : ${escapeHtml(r.sub.bulletinName)}` : ''}"><span class="gr-subject-jump-label">${escapeHtml(r.sub.shortName)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>
+                          ${commentIconHtml}
                           ${r.sub.officialWeight !== null ? `<span class="gr-weight-chip">${r.sub.officialWeight} %</span>` : ''}
                           ${evalSummary.total > 0 ? `<em class="gr-evaluation-count" title="${escapeHtml(evalBreakdown || 'Évaluations consignées sur l’année')}">${evalSummary.total} éval${evalSummary.total > 1 ? 's' : ''}</em>` : ''}
                           ${r.isModified ? `<span class="gr-mod-pill gr-mod-pill--compact" title="Attentes modifiées : ${GRADE_LEVEL_LABELS[r.effectiveLevel]}">MOD. · ${GRADE_LEVEL_LABELS[r.effectiveLevel]}</span>${competencyWarningHtml(r)}` : ''}
@@ -1038,13 +1187,6 @@
                 </tr>` : ''}`;
               }).join('')}
             </tbody>
-            <tfoot>
-              <tr class="gr-average-row">
-                <th scope="row" class="gr-col-subject">Moyenne indicative</th>
-                ${[avgT1, avgT2, avgT3, overallAnnualAvg].map(value => `<td>${value !== null ? `<strong>${value}%</strong>` : '—'}</td>`).join('')}
-                <td>—</td>
-              </tr>
-            </tfoot>
           </table>
           </div>
         </div>
@@ -1060,14 +1202,11 @@
             <div class="gr-identity-title-row">
               <h3 class="text-xl sm:text-2xl font-extrabold">${escapeHtml(st.name)}</h3>
               <span class="gr-grade-meta">Niveau : <strong>${GRADE_LEVEL_LABELS[st.gradeLevel] || 'À choisir'}</strong>${studentCycle && studentCycle !== 'P' ? ` · ${escapeHtml(CYCLE_LABELS[studentCycle])}` : ''}</span>
-              <button type="button" id="btnGrEditProfile" class="gr-inline-action no-print" title="Modifier le niveau, les adaptations ou le bulletin modifié">Profil →</button>
+              <button type="button" id="btnGrEditProfile" class="gr-inline-action no-print" title="Modifier le niveau, le plan d’intervention ou le bulletin modifié">Profil →</button>
             </div>
-            <div class="gr-adaptations-row" aria-label="Adaptations et mesures de soutien">
-              ${adaptationsHtml}
-            </div>
+            ${adaptationsHtml ? `<div class="gr-adaptations-row" aria-label="Plan d’intervention et bulletin modifié">${adaptationsHtml}</div>` : ''}
           </div>
           <div class="gr-identity-kpis">
-            ${overallKpiHtml}
             <button type="button" id="btnGrPrintStudentSheet" class="gr-print-btn no-print" title="Imprimer la fiche synthèse individuelle de ${escapeHtml(st.name)}">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 9V3h10v6"/><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"/><rect x="7" y="14" width="10" height="7" rx="1"/></svg>
               <span>Imprimer cette fiche</span>
@@ -1230,6 +1369,29 @@
           if (commentCountEl) commentCountEl.textContent = `${commentArea.value.length} caract.`;
           scheduleAppStateSave();
           showToast('Commentaire inséré');
+        });
+      });
+      const subjectLabelLookup = new Map(subjectRows.map(r => [r.sub.id, r.sub.shortName]));
+      SUBJECTS_CONFIG.forEach(s => {
+        if (!subjectLabelLookup.has(s.id)) subjectLabelLookup.set(s.id, s.partLabel || s.shortName);
+      });
+      container.querySelectorAll('[data-gr-bulletin-comment]').forEach(btn => {
+        btn.addEventListener('click', event => {
+          event.stopPropagation();
+          const subId = btn.getAttribute('data-gr-bulletin-comment');
+          const list = bulletinCommentsBySubject[subId] || [];
+          const label = subjectLabelLookup.get(subId) || 'Matière';
+          openGrBulletinCommentPopover(btn, subId, label, list, st.id, snippet => {
+            if (!snippet || !commentArea) return;
+            const current = commentArea.value.trim();
+            commentArea.value = current ? `${current} ${snippet}` : snippet;
+            st.reportComment = commentArea.value;
+            const printEl = document.getElementById('grTeacherCommentPrint');
+            if (printEl) printEl.textContent = commentArea.value;
+            if (commentCountEl) commentCountEl.textContent = `${commentArea.value.length} caract.`;
+            scheduleAppStateSave();
+            if (typeof showToast === 'function') showToast('Commentaire inséré');
+          });
         });
       });
       container.querySelectorAll('[data-jump-subject]').forEach(button => {

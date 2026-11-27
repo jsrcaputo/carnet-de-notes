@@ -122,13 +122,16 @@
 
     function normalizeAdaptationLabel(label) {
       const value = String(label || '').trim();
-      return value === 'WordQ Écriture' ? 'Prédicteur de mots' : value;
+      if (value === 'WordQ Écriture') return 'Prédicteur de mots';
+      if (value === 'PIA' || value === "Plan d'intervention" || value === 'Plan d’intervention') return 'Plan d’intervention';
+      return value;
     }
 
     function getStudentAdaptationSummary(st) {
       const raw = Array.isArray(st && st.adaptations)
         ? [...new Set(st.adaptations.map(normalizeAdaptationLabel).filter(Boolean))]
         : [];
+      const hasPia = raw.includes('Plan d’intervention');
       const adaptations = raw.filter(a => a !== 'Bulletin modifié');
       const customAdapt = st && st.customAdapt ? st.customAdapt.trim() : '';
       if (customAdapt && !adaptations.includes(customAdapt)) {
@@ -137,6 +140,7 @@
       const modList = typeof getStudentModifiedSummaryList === 'function' ? getStudentModifiedSummaryList(st) : [];
       const hasModifiedBulletin = Boolean(st && st.gradeLevel !== 'P' && raw.includes('Bulletin modifié'));
       return {
+        hasPia,
         adaptations,
         customAdapt,
         hasModifiedBulletin,
@@ -146,14 +150,18 @@
 
     function formatStudentAdaptations(st) {
       const summary = getStudentAdaptationSummary(st);
-      const list = summary.adaptations.slice();
+      const list = [];
+      if (summary.hasPia) list.push('Plan d’intervention');
+      summary.adaptations.forEach(item => {
+        if (item !== 'Plan d’intervention') list.push(item);
+      });
       if (summary.hasModifiedBulletin) {
         const label = summary.modifiedItems.length > 0
           ? `Bulletin modifié (${summary.modifiedItems.map(m => `${m.label} : ${m.levelLabel}`).join(', ')})`
           : 'Bulletin modifié';
         list.push(label);
       }
-      return list.length > 0 ? list.join(' • ') : 'Aucune adaptation';
+      return list.length > 0 ? list.join(' • ') : 'Aucune mesure consignée';
     }
 
     // ---- Gestion Multi-Niveau (ex. 5e et 6e année dans le même groupe) ----
@@ -266,6 +274,168 @@
       const base = Math.floor(totalUnits / count);
       const rem = totalUnits - base * count;
       return Array.from({ length: count }, (_, idx) => base + (idx >= count - rem ? 1 : 0));
+    }
+
+    function scaleIntegersProportionally(weights, targetSum) {
+      const n = weights.length;
+      if (n === 0) return [];
+      const target = Math.max(0, Math.round(targetSum));
+      if (target === 0) return Array(n).fill(0);
+      const clean = weights.map(w => Math.max(0, Number(w) || 0));
+      const total = clean.reduce((sum, w) => sum + w, 0);
+      if (total <= 0) return distributeIntegersEqually(target, n);
+      const exact = clean.map(w => (w / total) * target);
+      const floors = exact.map(v => Math.floor(v));
+      const rem = target - floors.reduce((sum, v) => sum + v, 0);
+      const order = exact
+        .map((v, idx) => ({ idx, frac: v - floors[idx], orig: clean[idx] }))
+        .sort((a, b) => (b.frac - a.frac) || (b.orig - a.orig) || (a.idx - b.idx));
+      for (let i = 0; i < rem; i++) {
+        floors[order[i % n].idx] += 1;
+      }
+      return floors;
+    }
+
+    function rebalanceWeightsTo100(subObj, options = {}) {
+      if (!subObj || !Array.isArray(subObj.assignments)) return { ok: true, blockedByLocks: false };
+      const allAsgs = subObj.assignments;
+      if (allAsgs.length === 0) return { ok: true, blockedByLocks: false };
+
+      const preferred = options.preferredAssignment || null;
+      const hasDesired = options.desiredWeight !== null && options.desiredWeight !== undefined && options.desiredWeight !== '' && Number.isFinite(Number(options.desiredWeight));
+      const desired = hasDesired ? Math.max(0, Math.min(100, Math.round(Number(options.desiredWeight)))) : null;
+      const forceAll = Boolean(options.forceAll);
+      if (forceAll) {
+        allAsgs.forEach(a => {
+          lockedWeights.delete(a.id);
+          autoLockedWeights.delete(a.id);
+        });
+      }
+
+      const present = getPresentStudentLevels();
+      const isMulti = present.length > 1;
+      const levelList = isMulti ? present : [''];
+      let blockedByLocks = false;
+
+      if (isMulti) {
+        allAsgs.forEach(a => {
+          if (!a.weightByLevel || typeof a.weightByLevel !== 'object') {
+            const baseVal = Number.isFinite(Number(a.weight)) ? Math.round(Number(a.weight)) : 100;
+            a.weightByLevel = {};
+            present.forEach(lvl => {
+              if (isAssignmentForLevel(a, lvl)) a.weightByLevel[lvl] = baseVal;
+            });
+          } else {
+            present.forEach(lvl => {
+              if (!isAssignmentForLevel(a, lvl)) {
+                delete a.weightByLevel[lvl];
+              } else if (a.weightByLevel[lvl] === undefined) {
+                a.weightByLevel[lvl] = Number.isFinite(Number(a.weight)) ? Math.round(Number(a.weight)) : 100;
+              }
+            });
+          }
+        });
+      }
+
+      const writeWeight = (asg, lvl, val) => {
+        const cleanVal = Math.max(0, Math.round(val));
+        if (isMulti && lvl) {
+          asg.weightByLevel = (asg.weightByLevel && typeof asg.weightByLevel === 'object') ? asg.weightByLevel : {};
+          asg.weightByLevel[lvl] = cleanVal;
+        } else {
+          delete asg.weightByLevel;
+          asg.weight = cleanVal;
+        }
+      };
+
+      const readWeight = (asg, lvl) => {
+        const w = getAssignmentWeightForLevel(asg, lvl);
+        return Number.isFinite(w) ? Math.max(0, Math.round(w)) : 0;
+      };
+
+      levelList.forEach(lvl => {
+        const applicable = lvl ? allAsgs.filter(a => isAssignmentForLevel(a, lvl)) : allAsgs.slice();
+        if (!applicable.length) return;
+        if (applicable.length === 1) {
+          writeWeight(applicable[0], lvl, 100);
+          return;
+        }
+
+        const hasPreferred = Boolean(preferred && applicable.includes(preferred));
+        const pinnedInPool = applicable.filter(a => !forceAll && lockedWeights.has(a.id) && (!hasPreferred || a !== preferred));
+
+        if (subObj.equalWeights && !hasDesired && pinnedInPool.length === 0) {
+          const shares = distributeIntegersEqually(100, applicable.length);
+          applicable.forEach((a, idx) => writeWeight(a, lvl, shares[idx]));
+          return;
+        }
+
+        if (hasPreferred && hasDesired) {
+          const peers = applicable.filter(a => a !== preferred);
+          const pinnedPeers = peers.filter(a => !forceAll && lockedWeights.has(a.id));
+          const freePeers = peers.filter(a => forceAll || !lockedWeights.has(a.id));
+          const pinnedSum = pinnedPeers.reduce((sum, a) => sum + readWeight(a, lvl), 0);
+          const budget = 100 - desired - pinnedSum;
+          writeWeight(preferred, lvl, desired);
+          if (freePeers.length > 0 && budget >= 0) {
+            const scaled = scaleIntegersProportionally(freePeers.map(a => readWeight(a, lvl)), budget);
+            freePeers.forEach((a, idx) => writeWeight(a, lvl, scaled[idx]));
+          } else if (budget !== 0) {
+            blockedByLocks = true;
+          }
+          return;
+        }
+
+        if (hasPreferred) {
+          const peers = applicable.filter(a => a !== preferred);
+          const pinnedPeers = peers.filter(a => !forceAll && lockedWeights.has(a.id));
+          const freePeers = peers.filter(a => forceAll || !lockedWeights.has(a.id));
+          const pinnedSum = pinnedPeers.reduce((sum, a) => sum + readWeight(a, lvl), 0);
+          const available = Math.max(0, 100 - pinnedSum);
+          if (freePeers.length === 0) {
+            writeWeight(preferred, lvl, available);
+            if (pinnedSum > 100) blockedByLocks = true;
+            return;
+          }
+          const newShare = Math.round(available / (freePeers.length + 1));
+          const remainingBudget = Math.max(0, available - newShare);
+          writeWeight(preferred, lvl, newShare);
+          const scaled = scaleIntegersProportionally(freePeers.map(a => readWeight(a, lvl)), remainingBudget);
+          freePeers.forEach((a, idx) => writeWeight(a, lvl, scaled[idx]));
+          return;
+        }
+
+        // Rééquilibrage sans nouvelle colonne ciblée (suppression, changement de niveaux ou correction manuelle)
+        const pinned = applicable.filter(a => !forceAll && lockedWeights.has(a.id));
+        const free = applicable.filter(a => forceAll || !lockedWeights.has(a.id));
+        const pinnedSum = pinned.reduce((sum, a) => sum + readWeight(a, lvl), 0);
+        const budget = 100 - pinnedSum;
+        if (free.length > 0 && budget >= 0) {
+          const scaled = scaleIntegersProportionally(free.map(a => readWeight(a, lvl)), budget);
+          free.forEach((a, idx) => writeWeight(a, lvl, scaled[idx]));
+        } else if (pinnedSum !== 100) {
+          blockedByLocks = true;
+        }
+      });
+
+      if (isMulti) {
+        allAsgs.forEach(a => {
+          const vals = Object.values(a.weightByLevel || {});
+          if (vals.length > 0) {
+            a.weight = vals[0];
+            if (vals.every(v => v === vals[0]) && getAssignmentTargetLevels(a).length === 1) {
+              delete a.weightByLevel;
+            }
+          } else {
+            a.weight = 100;
+          }
+        });
+      }
+
+      if (hasDesired) {
+        subObj.equalWeights = false;
+      }
+      return { ok: isWeightSumValid100(subObj), blockedByLocks };
     }
 
     function recalculateEqualWeights(subObj) {

@@ -38,15 +38,71 @@
         bindGradebookArrowRepeat('gbScrollNext', 1);
         let arrowFrame = 0;
         window.addEventListener('scroll', () => {
-          if (arrowFrame) return;
+          if (appState.activeView !== 'viewGradebook' || arrowFrame) return;
           arrowFrame = requestAnimationFrame(() => { arrowFrame = 0; positionGradebookArrows(); });
-        }, { capture: true, passive: true });
+        }, { passive: true });
         if (window.ResizeObserver) {
           const observer = new ResizeObserver(updateGradebookTopScroll);
           observer.observe(gradebookScroll);
           observer.observe(gradebookScroll.querySelector('table'));
         }
         window.addEventListener('resize', updateGradebookTopScroll);
+
+        // Glisser-déplacer libre dans les zones neutres du carnet (façon écran tactile, 2 axes).
+        const INTERACTIVE_PAN_SELECTOR = 'input, textarea, select, button, a, label, [contenteditable], .cell-flag-chip, .column-color-popover, .grade-picker, .flag-picker, .mouse-bar';
+        let panState = null;
+        let suppressPanClick = false;
+        const stopGradebookPan = () => {
+          if (!panState) return;
+          const wasDragging = panState.dragging;
+          panState = null;
+          document.documentElement.classList.remove('is-gb-panning');
+          window.removeEventListener('mousemove', handleGradebookPanMove);
+          window.removeEventListener('mouseup', stopGradebookPan);
+          window.removeEventListener('blur', stopGradebookPan);
+          if (wasDragging) {
+            suppressPanClick = true;
+            window.setTimeout(() => { suppressPanClick = false; }, 0);
+          }
+        };
+        const handleGradebookPanMove = event => {
+          if (!panState) return;
+          if (!(event.buttons & 1)) { stopGradebookPan(); return; }
+          const dx = event.clientX - panState.startX;
+          const dy = event.clientY - panState.startY;
+          if (!panState.dragging) {
+            if (Math.hypot(dx, dy) < 5) return;
+            panState.dragging = true;
+            if (typeof gradebookScrollAnim !== 'undefined' && gradebookScrollAnim) {
+              cancelAnimationFrame(gradebookScrollAnim.frame);
+              gradebookScrollAnim = null;
+            }
+            document.documentElement.classList.add('is-gb-panning');
+          }
+          event.preventDefault();
+          gradebookScroll.scrollLeft = panState.startScrollLeft - dx;
+          window.scrollTo(window.scrollX, Math.max(0, panState.startScrollY - dy));
+        };
+        gradebookScroll.addEventListener('mousedown', event => {
+          if (event.button !== 0 || event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+          if (event.target && event.target.closest(INTERACTIVE_PAN_SELECTOR)) return;
+          panState = {
+            startX: event.clientX,
+            startY: event.clientY,
+            startScrollLeft: gradebookScroll.scrollLeft,
+            startScrollY: window.scrollY,
+            dragging: false
+          };
+          window.addEventListener('mousemove', handleGradebookPanMove, { passive: false });
+          window.addEventListener('mouseup', stopGradebookPan);
+          window.addEventListener('blur', stopGradebookPan);
+        });
+        gradebookScroll.addEventListener('click', event => {
+          if (!suppressPanClick) return;
+          event.preventDefault();
+          event.stopPropagation();
+          suppressPanClick = false;
+        }, true);
       }
       const homePortal = document.getElementById('homePortal');
       const homeDropZone = document.getElementById('homeDropZone');
@@ -117,7 +173,11 @@
       });
       bindClick('homeDemoLaunch', () => {
         const checked = document.querySelector('#homeDemoChoices input[type="radio"]:checked');
-        launchDemoOption(checked ? checked.value : '');
+        if (!checked) {
+          showToast('Choisissez d’abord une classe de démonstration.');
+          return;
+        }
+        launchDemoOption(checked.value);
       });
 
       if (homePortal) {
@@ -826,7 +886,10 @@
       const applyIlssAssignmentModalMode = (evidenceType = 'production') => {
         const current = getCurrentSubjectConfig();
         const isIlss = Boolean(current && current.isIlss);
+        const isPresco = Boolean(current && current.prescoOnly);
         document.getElementById('asgOutOfBox').classList.toggle('hidden', isIlss);
+        const weightBox = document.getElementById('asgWeightBox');
+        if (weightBox) weightBox.classList.toggle('hidden', isIlss || isPresco);
         const evidenceBox = document.getElementById('asgIlssEvidenceBox');
         if (evidenceBox) evidenceBox.classList.toggle('hidden', !isIlss);
         const titleInput = document.getElementById('inputAssignmentTitle');
@@ -849,6 +912,32 @@
         document.getElementById('asgTargetLevelsBox')?.classList.add('hidden');
         document.getElementById('asgLinkedPartsBox').classList.add('hidden');
         modalAddAsgTargetLevels = [];
+      };
+      const syncModalAssignmentWeightField = (editingAsg = null) => {
+        const weightIn = document.getElementById('inputAssignmentWeight');
+        const weightHint = document.getElementById('asgWeightHint');
+        if (!weightIn || !weightHint) return;
+        const subData = getActiveTermData().subjectData[appState.activeSubjectId];
+        const existingCount = subData && Array.isArray(subData.assignments) ? subData.assignments.length : 0;
+        if (editingAsg) {
+          const filterLvl = isMultiLevelGroup() && gbLevelFilter !== 'ALL' ? gbLevelFilter : '';
+          const curW = Math.round(getAssignmentWeightForLevel(editingAsg, filterLvl));
+          weightIn.value = String(curW);
+          weightIn.placeholder = String(curW);
+          weightHint.textContent = existingCount <= 1
+            ? 'Seule évaluation de l’étape (100 %).'
+            : 'Si modifié, les autres évaluations non figées s’ajusteront automatiquement à 100 %.';
+          return;
+        }
+        weightIn.value = '';
+        if (existingCount === 0) {
+          weightIn.placeholder = '100';
+          weightHint.textContent = 'Première évaluation de l’étape : elle vaudra automatiquement 100 %.';
+        } else {
+          const suggested = Math.round(100 / (existingCount + 1));
+          weightIn.placeholder = `Auto (${suggested} %)`;
+          weightHint.textContent = 'Vide = rééquilibrage automatique à 100 %, ou entrez un % précis (les autres s’ajusteront au prorata).';
+        }
       };
       const renderModalAddAsgTargetLevels = () => {
         const box = document.getElementById('asgTargetLevelsBox');
@@ -924,7 +1013,8 @@
           linkList.appendChild(label);
         });
         document.getElementById('inputAssignmentDate').value = new Date().toISOString().slice(0, 10);
-        applyIlssAssignmentModalMode(assignment.evidenceType || 'production');
+        syncModalAssignmentWeightField(null);
+        applyIlssAssignmentModalMode('production');
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
         setTimeout(() => titleIn.focus(), 50);
@@ -963,6 +1053,7 @@
           label.append(checkbox, document.createTextNode(getSubjectContextDisplay(subject).partLabel));
           linkList.appendChild(label);
         });
+        syncModalAssignmentWeightField(assignment);
         applyIlssAssignmentModalMode(assignment.evidenceType || 'production');
         modalAsg.classList.remove('hidden');
         modalAsg.classList.add('flex');
@@ -998,7 +1089,7 @@
         }
       });
 
-      ['inputAssignmentTitle', 'inputAssignmentOutOf', 'inputAssignmentDate'].forEach(id => {
+      ['inputAssignmentTitle', 'inputAssignmentOutOf', 'inputAssignmentWeight', 'inputAssignmentDate'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.addEventListener('keydown', (e) => {
@@ -1049,6 +1140,18 @@
           document.getElementById('inputAssignmentOutOf').focus();
           return;
         }
+        const weightInputEl = document.getElementById('inputAssignmentWeight');
+        const weightRawStr = weightInputEl ? String(weightInputEl.value || '').trim().replace(',', '.') : '';
+        let desiredWeight = null;
+        if (weightRawStr !== '' && !(activeSub && activeSub.prescoOnly)) {
+          const parsedWeight = Number(weightRawStr);
+          if (!Number.isFinite(parsedWeight) || parsedWeight < 0 || parsedWeight > 100) {
+            showToast('La pondération doit être un nombre entre 0 et 100 %.');
+            if (weightInputEl) weightInputEl.focus();
+            return;
+          }
+          desiredWeight = Math.round(parsedWeight);
+        }
         if (modalEditingAssignmentId) {
           const termData = getActiveTermData();
           const subData = termData.subjectData[appState.activeSubjectId];
@@ -1058,20 +1161,32 @@
             showToast('Cette évaluation n’existe plus.');
             return;
           }
+          const prevTargetsKey = getAssignmentTargetLevels(assignment).join(',');
+          const prevWeight = Math.round(getAssignmentWeightForLevel(assignment, isMultiLevelGroup() && gbLevelFilter !== 'ALL' ? gbLevelFilter : ''));
           const targetLevels = (isMultiLevelGroup() && modalAddAsgTargetLevels.length > 0)
             ? modalAddAsgTargetLevels.slice()
             : [];
-          const linked = assignment.linkId
+          const linkedEntries = assignment.linkId
             ? Object.values(termData.subjectData).flatMap(data =>
-                (data.assignments || []).filter(item => item.linkId === assignment.linkId))
-            : [assignment];
-          linked.forEach(item => {
+                (data.assignments || []).filter(item => item.linkId === assignment.linkId).map(item => ({ subData: data, item })))
+            : [{ subData, item: assignment }];
+          linkedEntries.forEach(({ item }) => {
             item.title = title;
             item.date = date;
             item.outOf = outOfRaw;
             if (targetLevels.length) item.targetLevels = targetLevels.slice();
             else delete item.targetLevels;
           });
+          const targetsChanged = prevTargetsKey !== targetLevels.join(',');
+          const weightChanged = desiredWeight !== null && desiredWeight !== prevWeight;
+          if (targetsChanged || weightChanged) {
+            linkedEntries.forEach(({ subData: sd, item }) => {
+              rebalanceWeightsTo100(sd, {
+                preferredAssignment: item,
+                desiredWeight: item === assignment && weightChanged ? desiredWeight : null
+              });
+            });
+          }
           closeAsgModal();
           notifyUpdate(`Évaluation "${title}" modifiée`);
           renderAll();
@@ -1085,6 +1200,7 @@
         const targetLevels = (isMultiLevelGroup() && modalAddAsgTargetLevels.length > 0)
           ? modalAddAsgTargetLevels.slice()
           : [];
+        let blockedByLocks = false;
         targetIds.forEach(subId => {
           const subData = termData.subjectData[subId];
           const entry = {
@@ -1098,13 +1214,19 @@
           if (targetLevels.length) entry.targetLevels = targetLevels.slice();
           if (linkId) { entry.linkId = linkId; entry.linkOrigin = subId === appState.activeSubjectId; }
           subData.assignments.push(entry);
-          if (subData.equalWeights) recalculateEqualWeights(subData);
+          const reb = rebalanceWeightsTo100(subData, {
+            preferredAssignment: entry,
+            desiredWeight: subId === appState.activeSubjectId ? desiredWeight : null
+          });
+          if (reb && reb.blockedByLocks) blockedByLocks = true;
         });
         closeAsgModal();
         const lvlSuffix = targetLevels.length ? ` (${formatShortLevelTag(targetLevels[0])})` : '';
-        notifyUpdate(targetIds.length > 1
-          ? `Évaluation "${title}"${lvlSuffix} ajoutée à ${targetIds.length} compétences`
-          : `Travail "${title}"${lvlSuffix} ajouté au carnet`);
+        notifyUpdate(blockedByLocks
+          ? `Travail « ${title} » ajouté (colonnes figées : cliquez sur « Rééquilibrer à 100 % » si besoin)`
+          : targetIds.length > 1
+            ? `Évaluation "${title}"${lvlSuffix} ajoutée à ${targetIds.length} compétences`
+            : `Travail "${title}"${lvlSuffix} ajouté au carnet`);
         renderAll();
       });
 
@@ -1662,11 +1784,26 @@
           scheduleAppStateSave();
         });
       }
-      settingsPanel.querySelectorAll('[data-palette-val]').forEach(b => b.addEventListener('click', () => {
-        prefs.palette = b.getAttribute('data-palette-val');
-        applyPrefs();
-        scheduleAppStateSave();
-      }));
+      const accentColorInput = document.getElementById('spAccentColor');
+      if (accentColorInput) {
+        accentColorInput.addEventListener('input', event => {
+          prefs.accentColor = event.target.value;
+          applyPrefs();
+        });
+        accentColorInput.addEventListener('change', event => {
+          prefs.accentColor = event.target.value;
+          applyPrefs();
+          scheduleAppStateSave();
+        });
+      }
+      const resetAccentBtn = document.getElementById('btnResetAccentColor');
+      if (resetAccentBtn) {
+        resetAccentBtn.addEventListener('click', () => {
+          prefs.accentColor = DEFAULT_ACCENT_COLOR;
+          applyPrefs();
+          scheduleAppStateSave();
+        });
+      }
       settingsPanel.querySelectorAll('[data-pref-check]').forEach(cb => cb.addEventListener('change', () => {
         const key = cb.getAttribute('data-pref-check');
         prefs[key] = cb.checked;

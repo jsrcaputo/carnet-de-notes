@@ -87,12 +87,16 @@
       el.setAttribute('role', 'dialog');
       el.setAttribute('aria-label', 'Choisir une cote');
       GRADE_SCALE.forEach(g => {
+        const isCurrent = current === g.code;
         const b = document.createElement('button');
         b.type = 'button';
-        b.className = `grade-picker-btn border ${getBadgeColorClasses(g.code)}${current === g.code ? ' is-current' : ''}`;
+        b.className = `grade-picker-btn border ${getBadgeColorClasses(g.code)}${isCurrent ? ' is-current' : ''}`;
+        b.setAttribute('aria-pressed', String(isCurrent));
         b.textContent = `${g.code} ${g.pct}`;
-        b.title = `${g.code} (${g.pct}%)`;
-        b.addEventListener('click', () => { closeGradePicker(); onPick(g); });
+        b.title = isCurrent
+          ? `${g.code} (${g.pct}%) — cliquer à nouveau pour revenir au calcul automatique`
+          : `${g.code} (${g.pct}%)`;
+        b.addEventListener('click', () => { closeGradePicker(); onPick(isCurrent ? null : g); });
         el.appendChild(b);
       });
       const auto = document.createElement('button');
@@ -423,6 +427,20 @@
 
       if (btnWeight) btnWeight.classList.toggle('is-weight-error', !valid100);
 
+      const fixBtnHtml = ' <button type="button" class="weight-fix-btn" data-rebalance-100="1">Rééquilibrer à 100 %</button>';
+      const bindFixBtn = () => {
+        if (!warnBanner) return;
+        const fixBtn = warnBanner.querySelector('[data-rebalance-100]');
+        if (!fixBtn) return;
+        fixBtn.addEventListener('click', () => {
+          const targetData = subData || (getActiveTermData().subjectData[appState.activeSubjectId]);
+          if (!targetData) return;
+          rebalanceWeightsTo100(targetData, { forceAll: true });
+          notifyUpdate('Pondérations rééquilibrées automatiquement à 100 %');
+          renderAll();
+        });
+      };
+
       if (isMulti && subData) {
         const levelBreakdown = presentLevels.map(lvl => {
           const count = subData.assignments.filter(a => isAssignmentForLevel(a, lvl)).length;
@@ -434,7 +452,8 @@
         if (warnBanner) {
           if (!valid100) {
             warnBanner.classList.remove('hidden');
-            warnBanner.innerHTML = `Erreur pondération : ${levelBreakdown.map(b => `${escapeHtml(b.short)} : <strong>${b.tot} %</strong>${b.ok ? ' ✓' : (b.tot > 100 ? ' (dépasse 100 %)' : ' (≠ 100 %)')}`).join(' · ')}`;
+            warnBanner.innerHTML = `<span>Pondération : ${levelBreakdown.map(b => `${escapeHtml(b.short)} : <strong>${b.tot} %</strong>${b.ok ? ' ✓' : ''}`).join(' · ')}</span>${fixBtnHtml}`;
+            bindFixBtn();
           } else {
             warnBanner.classList.add('hidden');
           }
@@ -443,9 +462,13 @@
       } else {
         if (warnBanner) {
           const dispTotal = Math.round(Number(totalW) || 0);
-          warnBanner.innerHTML = `Total : <span id="weightTotalVal">${escapeHtml(String(dispTotal))}</span> % ${dispTotal > 100 ? '(dépasse 100 %)' : '(doit donner 100 %)'}`;
-          if (!valid100) warnBanner.classList.remove('hidden');
-          else warnBanner.classList.add('hidden');
+          warnBanner.innerHTML = `<span>Total : <span id="weightTotalVal">${escapeHtml(String(dispTotal))}</span> % (doit donner 100 %)</span>${fixBtnHtml}`;
+          if (!valid100) {
+            warnBanner.classList.remove('hidden');
+            bindFixBtn();
+          } else {
+            warnBanner.classList.add('hidden');
+          }
         }
       }
     }
@@ -475,7 +498,7 @@
         const finalBadge = document.getElementById(`cell_final_badge_${st.id}`);
         if (finalBadge) {
           const recNow = appState.terms[appState.activeTerm].subjectData[sub.id].studentRecords[st.id];
-          finalBadge.className = `px-1.5 py-0.5 rounded border text-[11px] font-extrabold whitespace-nowrap ${getBadgeColorClasses(summary.finalLetter)}`;
+          finalBadge.className = `final-grade-btn px-1.5 py-0.5 rounded border text-[11px] font-extrabold whitespace-nowrap ${getBadgeColorClasses(summary.finalLetter)}`;
           finalBadge.textContent = summary.finalPct !== null ? `${summary.finalLetter} (${summary.finalPct}%)${recNow.finalJudgmentOverride !== '' ? '*' : ''}` : '—';
         }
       });

@@ -24,7 +24,7 @@
         }
       };
       row.addEventListener('animationend', cleanup);
-      gradebookFlashTimer = window.setTimeout(cleanup, 2200);
+      gradebookFlashTimer = window.setTimeout(cleanup, 1750);
     }
 
     function renderGradebookView() {
@@ -86,7 +86,7 @@
       const extraHeaders = [
         { label: 'Moy. Travaux', sub: 'Pondérée /100', minW: 'min-w-[115px]', width: 115 },
         { label: 'Jugement professionnel', sub: 'Barème et repères', minW: 'min-w-[145px]', width: 145 },
-        { label: 'Note finale', sub: 'Note modifiable en cliquant dessus', minW: 'min-w-[135px]', width: 135 },
+        { label: 'Note finale', sub: 'Modifiable', minW: 'min-w-[135px]', width: 135 },
         { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
       ];
       const extraColsWidth = extraHeaders.reduce((sum, eh) => sum + eh.width, 0);
@@ -338,12 +338,12 @@
               linked.forEach(l => {
                 discardAssignmentData(l.subData, l.asg);
                 l.subData.assignments = l.subData.assignments.filter(a => a !== l.asg);
-                if (l.subData.equalWeights) recalculateEqualWeights(l.subData);
+                rebalanceWeightsTo100(l.subData);
               });
             }
             discardAssignmentData(subData, delTarget);
             subData.assignments = subData.assignments.filter(a => a.id !== asgId);
-            if (subData.equalWeights) recalculateEqualWeights(subData);
+            rebalanceWeightsTo100(subData);
             if (!everywhere && linked.length) {
               const remainingOrigin = linked.find(l => l.asg.linkOrigin !== false);
               if (!remainingOrigin && linked.length > 1) {
@@ -454,12 +454,10 @@
           getLinkedAssignments(asg).forEach(l => {
             l.asg.targetLevels = asg.targetLevels.slice();
           });
-          if (subData.equalWeights) {
-            recalculateEqualWeights(subData);
-            getLinkedAssignments(asg).forEach(l => {
-              if (l.subData.equalWeights) recalculateEqualWeights(l.subData);
-            });
-          }
+          rebalanceWeightsTo100(subData);
+          getLinkedAssignments(asg).forEach(l => {
+            rebalanceWeightsTo100(l.subData);
+          });
           close();
           notifyUpdate(`Niveaux mis à jour pour « ${asg.title} »`);
           renderAll();
@@ -967,10 +965,14 @@
         inputFinal.addEventListener('click', openFinalPicker);
         inputFinal.addEventListener('keydown', ev => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openFinalPicker(null); } });
 
-        const badgeFinal = document.createElement('span');
+        const badgeFinal = document.createElement('button');
+        badgeFinal.type = 'button';
         badgeFinal.id = `cell_final_badge_${st.id}`;
-        badgeFinal.className = `px-1.5 py-0.5 rounded border text-[11px] font-extrabold whitespace-nowrap ${getBadgeColorClasses(summary.finalLetter)}`;
+        badgeFinal.title = 'Cliquer pour modifier la note finale';
+        badgeFinal.setAttribute('aria-label', `Modifier la note finale de ${st.name}`);
+        badgeFinal.className = `final-grade-btn px-1.5 py-0.5 rounded border text-[11px] font-extrabold whitespace-nowrap ${getBadgeColorClasses(summary.finalLetter)}`;
         badgeFinal.textContent = summary.finalPct !== null ? `${summary.finalLetter} (${summary.finalPct}%)${rec.finalJudgmentOverride !== '' ? '*' : ''}` : '—';
+        badgeFinal.addEventListener('click', openFinalPicker);
 
         finalWrap.appendChild(inputFinal);
         finalWrap.appendChild(badgeFinal);

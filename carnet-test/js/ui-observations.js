@@ -215,11 +215,10 @@
         modeSegment.appendChild(customAction);
       }
       if (modeSubtitle) {
-        modeSubtitle.textContent = effectiveObsMode === 'weighted'
-          ? ''
-          : effectiveObsMode === 'custom'
-            ? `${activeCustomRubric ? activeCustomRubric.title : 'Grille personnelle'} · pondération et descripteurs personnalisés.`
-            : 'Portrait descriptif par critère (1 choix par rangée).';
+        modeSubtitle.textContent = effectiveObsMode === 'custom'
+          ? `${activeCustomRubric ? activeCustomRubric.title : 'Grille personnelle'} · pondération et descripteurs personnalisés.`
+          : '';
+        modeSubtitle.classList.toggle('hidden', !modeSubtitle.textContent);
       }
       if (inspirationCaption) {
         inspirationCaption.textContent = effectiveObsMode === 'weighted'
@@ -431,23 +430,8 @@
         ? `${st.name} — ${GRADE_LEVEL_LABELS[draft.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}${isModSub ? ` [Bulletin modifié · inscrit en ${GRADE_LEVEL_LABELS[st.gradeLevel] || '—'}]` : ''}`
         : 'Sélectionner un nom';
       document.getElementById('qoBottomStudentName').textContent = st ? st.name : 'Sélectionner un nom';
-      const modeBadge = document.getElementById('qoEditModeBadge');
       const topCommitLbl = document.getElementById('btnCommitTopLabel');
-
-      if (session.editingAssignmentId) {
-        if (modeBadge) {
-          modeBadge.classList.remove('hidden');
-          modeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
-          modeBadge.textContent = `Mode modification : ${session.title || 'Trace observable'}`;
-        }
-        if (topCommitLbl) topCommitLbl.textContent = 'Enregistrer au carnet';
-      } else {
-        if (modeBadge) {
-          modeBadge.classList.add('hidden');
-          modeBadge.textContent = '';
-        }
-        if (topCommitLbl) topCommitLbl.textContent = 'Enregistrer au carnet';
-      }
+      if (topCommitLbl) topCommitLbl.textContent = 'Enregistrer au carnet';
 
       const titleInput = document.getElementById('qoSessionTitleInput');
       if (titleInput && document.activeElement !== titleInput) {
@@ -507,21 +491,19 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.setAttribute('aria-pressed', String(isSel));
-        btn.className = isSel
-          ? 'w-full px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
-          : 'w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
+        btn.className = `qo-student-btn w-full flex items-center justify-between gap-1 truncate${isSel ? ' is-selected' : ''}`;
         const shortLvl = isMulti && student.gradeLevel ? ` <span class="opacity-70 text-[10px]">(${escapeHtml(formatShortLevelTag(student.gradeLevel))})</span>` : '';
         btn.innerHTML = `
-          <span class="truncate">${escapeHtml(student.name)}${shortLvl}</span>
+          <span class="qo-student-name truncate">${escapeHtml(student.name)}${shortLvl}</span>
           ${stuRes.isNotEvaluated
-            ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-600 font-bold">N/A</span>`
+            ? `<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-600 font-bold">N/A</span>`
             : stuRes.hasFinalGrade
-            ? `<span class="px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getBadgeColorClasses(stuRes.code)}">${stuRes.code} (${stuRes.pct}%)${d.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement">*</span>' : ''}</span>`
+            ? `<span class="qo-student-status px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getBadgeColorClasses(stuRes.code)}">${stuRes.code} (${stuRes.pct}%)${d.overrideCode ? '<span class="adj-star" title="Note ajustée manuellement">*</span>' : ''}</span>`
             : stuRes.hasData
-              ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-900 font-bold">${stuRes.total}/${getScoredObservableCriteria(studentCriteria).length}</span>`
+              ? `<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] bg-amber-100 text-amber-900 font-bold">${stuRes.total}/${getScoredObservableCriteria(studentCriteria).length}</span>`
             : stuRes.hasEvidence || hasObservationFeedback(d)
-              ? `<span class="px-1.5 py-0.2 rounded text-[10px] bg-indigo-100 text-indigo-800 font-bold">Obs.</span>`
-              : `<span class="px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-500 font-bold">-</span>`
+              ? `<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] bg-indigo-100 text-indigo-800 font-bold">Obs.</span>`
+              : `<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] bg-slate-200 text-slate-500 font-bold">-</span>`
           }
         `;
         btn.addEventListener('click', () => {
@@ -912,9 +894,12 @@
           else delete existingAsg.criteriaWeights;
           if (savedCustomRubric) existingAsg.customRubric = cloneCustomRubric(savedCustomRubric);
           else delete existingAsg.customRubric;
+          const prevTargetsKey = getAssignmentTargetLevels(existingAsg).join(',');
           if (targetLevels.length) existingAsg.targetLevels = targetLevels.slice();
           else delete existingAsg.targetLevels;
-          if (subData.equalWeights) recalculateEqualWeights(subData);
+          if (prevTargetsKey !== targetLevels.join(',')) {
+            rebalanceWeightsTo100(subData);
+          }
         } else {
           targetAsgId = 'obs_asg_' + Date.now();
           const newEntry = {
@@ -930,7 +915,7 @@
           if (savedCustomRubric) newEntry.customRubric = cloneCustomRubric(savedCustomRubric);
           if (targetLevels.length) newEntry.targetLevels = targetLevels.slice();
           subData.assignments.push(newEntry);
-          if (subData.equalWeights) recalculateEqualWeights(subData);
+          rebalanceWeightsTo100(subData, { preferredAssignment: newEntry });
         }
       } else {
         targetAsgId = 'obs_asg_' + Date.now();
@@ -947,9 +932,7 @@
         if (savedCustomRubric) newEntry.customRubric = cloneCustomRubric(savedCustomRubric);
         if (targetLevels.length) newEntry.targetLevels = targetLevels.slice();
         subData.assignments.push(newEntry);
-        if (subData.equalWeights) {
-          recalculateEqualWeights(subData);
-        }
+        rebalanceWeightsTo100(subData, { preferredAssignment: newEntry });
       }
 
       const origAsg = subData.assignments.find(a => a.id === targetAsgId);
@@ -1034,7 +1017,7 @@
           if (savedCustomRubric && linkedMode === 'custom') linkedAsg.customRubric = cloneCustomRubric(savedCustomRubric);
           if (targetLevels.length) linkedAsg.targetLevels = targetLevels.slice();
           sd.assignments.push(linkedAsg);
-          if (sd.equalWeights) recalculateEqualWeights(sd);
+          rebalanceWeightsTo100(sd, { preferredAssignment: linkedAsg });
         });
         getLinkedAssignments(origAsg).forEach(({ sub: otherSubObj, subData: otherData, asg: other }) => {
           const otherSubId = otherSubObj.id;
@@ -1062,9 +1045,10 @@
           } else {
             delete other.criteriaWeights;
           }
+          const prevOtherTargets = getAssignmentTargetLevels(other).join(',');
           if (targetLevels.length) other.targetLevels = targetLevels.slice();
           else delete other.targetLevels;
-          if (otherData.equalWeights) recalculateEqualWeights(otherData);
+          if (prevOtherTargets !== targetLevels.join(',')) rebalanceWeightsTo100(otherData);
           appState.students.forEach(st => {
             const src = subData.studentRecords[st.id];
             const dst = otherData.studentRecords[st.id];

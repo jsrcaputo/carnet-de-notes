@@ -19,7 +19,7 @@
     // =========================================================================
     let dashActiveTab = 'todo';
     let dashFollowupMode = 'student';
-    let dashRadarFilter = 'watch';
+    let dashRadarFilter = 'all';
     let dashRadarLevel = 'ALL';
     let dashPrivacyMasked = false;
     const dashOpenSubjectGroups = new Set();
@@ -370,11 +370,14 @@
           student: st,
           adaptSummary: typeof getStudentAdaptationSummary === 'function'
             ? getStudentAdaptationSummary(st)
-            : { adaptations: [], hasModified: false },
+            : { hasPia: false, adaptations: [], hasModifiedBulletin: false, modifiedItems: [] },
           pills: [],
           below60: [],
           drops: [],
+          minNumericalPct: null,
           aidePlusCount: 0,
+          strengthTotal: 0,
+          challengeTotal: 0,
           challengeCounts: new Map(),
           followupItems: [],
           incompleteModified: [],
@@ -520,16 +523,25 @@
               radarEntry.evalsWithClassWork += 1;
               if (hasScore || isPartialTrace) radarEntry.evalsCompletedByStudent += 1;
               if (flags.includes('AIDE+') || flags.includes('AIDE1')) radarEntry.aidePlusCount += 1;
-              if (meta && Array.isArray(meta.tags) && typeof groupObservationTags === 'function') {
+              if (meta && !isLinkedPending && Array.isArray(meta.tags) && typeof groupObservationTags === 'function') {
                 const grouped = groupObservationTags(meta.tags);
+                radarEntry.strengthTotal += (grouped.strengths || []).length;
                 (grouped.challenges || []).forEach(tag => {
+                  radarEntry.challengeTotal += 1;
                   radarEntry.challengeCounts.set(tag, (radarEntry.challengeCounts.get(tag) || 0) + 1);
                 });
+              }
+              if (meta && !isLinkedPending && !(Array.isArray(meta.tags) && meta.tags.length)) {
+                if (typeof meta.strengths === 'string' && meta.strengths.trim()) radarEntry.strengthTotal += 1;
+                if (typeof meta.challenges === 'string' && meta.challenges.trim()) radarEntry.challengeTotal += 1;
               }
               if (sub.isIlss && meta && Array.isArray(meta.quickComments) && typeof ILSS_OBSERVATION_PAIRS !== 'undefined') {
                 const pairs = ILSS_OBSERVATION_PAIRS[sub.ilssCompetency] || [];
                 meta.quickComments.forEach(txt => {
-                  if (pairs.some(pair => pair[1] === txt)) {
+                  if (pairs.some(pair => pair[0] === txt)) {
+                    radarEntry.strengthTotal += 1;
+                  } else if (pairs.some(pair => pair[1] === txt)) {
+                    radarEntry.challengeTotal += 1;
                     radarEntry.challengeCounts.set(txt, (radarEntry.challengeCounts.get(txt) || 0) + 1);
                   }
                 });
@@ -683,7 +695,7 @@
               if (prevTermId && rank > 0) {
                 const prevSum = computeStudentSubjectSummary(prevTermId, sub.id, st.id);
                 const prevRank = getPreschoolConstatRank(prevSum ? prevSum.finalPct : null);
-                if (prevRank > 0 && rank < prevRank) {
+                if (prevRank > 0 && rank < prevRank && rank <= 2) {
                   radarEntry.drops.push({ subjectId: sub.id, label, diff: rank - prevRank, isPresco: true });
                 }
               }
@@ -717,14 +729,20 @@
                 isPresco: false,
                 isModified
               });
+              if (!isFeedbackOnly && finalPct !== null) {
+                radarEntry.minNumericalPct = radarEntry.minNumericalPct === null
+                  ? finalPct
+                  : Math.min(radarEntry.minNumericalPct, finalPct);
+              }
               if (!isFeedbackOnly && finalPct !== null && finalPct < 60) {
                 radarEntry.below60.push({ subjectId: sub.id, label, pct: finalPct, code });
               }
               if (!isFeedbackOnly && prevTermId && finalPct !== null) {
                 const prevSum = computeStudentSubjectSummary(prevTermId, sub.id, st.id);
                 const prevPct = prevSum && prevSum.finalPct !== null && Number.isFinite(prevSum.finalPct) ? prevSum.finalPct : null;
-                if (prevPct !== null && (finalPct - prevPct) <= -5) {
-                  radarEntry.drops.push({ subjectId: sub.id, label, diff: Math.round(finalPct - prevPct), isPresco: false });
+                const diff = prevPct !== null ? Math.round(finalPct - prevPct) : 0;
+                if (prevPct !== null && ((diff <= -12 && finalPct < 68) || (diff <= -18 && finalPct < 72))) {
+                  radarEntry.drops.push({ subjectId: sub.id, label, diff, isPresco: false });
                 }
               }
             }
@@ -815,7 +833,7 @@
 
       inProgress.sort((a, b) => b.orderScore - a.orderScore);
 
-      // Ajouter les défis répétés issus du journal d'observations libres
+      // Ajouter les forces et défis issus du journal d'observations libres
       const freeObs = Array.isArray(termData.observations) ? termData.observations : [];
       freeObs.forEach(obs => {
         if (!obs || !obs.studentId) return;
@@ -824,23 +842,36 @@
         radarEntry.evalsCompletedByStudent += 1;
         if (Array.isArray(obs.tags) && typeof groupObservationTags === 'function') {
           const grouped = groupObservationTags(obs.tags);
+          radarEntry.strengthTotal += (grouped.strengths || []).length;
           (grouped.challenges || []).forEach(tag => {
+            radarEntry.challengeTotal += 1;
             radarEntry.challengeCounts.set(tag, (radarEntry.challengeCounts.get(tag) || 0) + 1);
           });
         }
       });
 
+      const AT_RISK_MIN_OBS = 4;
+      const AT_RISK_MIN_CHALLENGES = 3;
+      const AT_RISK_MIN_RATIO = 0.6;
       const studentRadar = [...studentSignalsMap.values()].map(entry => {
-        const repeatedChallenges = [...entry.challengeCounts.entries()]
-          .filter(([, count]) => count >= 2)
-          .sort((a, b) => b[1] - a[1]);
-        const hasAdaptations = entry.adaptSummary.adaptations.length > 0;
-        const hasModified = entry.adaptSummary.hasModified;
-        const supportHeavy = entry.aidePlusCount >= 2 || repeatedChallenges.length > 0;
+        const hasPia = Boolean(entry.adaptSummary.hasPia);
+        const hasAdaptations = hasPia || entry.adaptSummary.adaptations.length > 0;
+        const hasModified = Boolean(entry.adaptSummary.hasModifiedBulletin || entry.adaptSummary.hasModified);
         const hasDrop = entry.drops.length > 0;
         const hasBelow60 = entry.below60.length > 0;
         const hasFollowups = entry.followupItems.length > 0;
         const lowObs = entry.evalsWithClassWork >= 2 && entry.evalsCompletedByStudent <= Math.floor(entry.evalsWithClassWork / 2);
+
+        const obsTotal = entry.strengthTotal + entry.challengeTotal;
+        const challengeRatio = obsTotal > 0 ? (entry.challengeTotal / obsTotal) : 0;
+        const challengeRatioPct = Math.round(challengeRatio * 100);
+        const topChallenges = [...entry.challengeCounts.entries()]
+          .sort((a, b) => (b[1] - a[1]) || a[0].localeCompare(b[0], 'fr'))
+          .slice(0, 3)
+          .map(([label, count]) => ({ label, count }));
+        const isAtRisk = obsTotal >= AT_RISK_MIN_OBS &&
+          entry.challengeTotal >= AT_RISK_MIN_CHALLENGES &&
+          challengeRatio >= AT_RISK_MIN_RATIO;
 
         const signals = [];
         entry.below60.forEach(item => {
@@ -862,15 +893,12 @@
             onClick: () => jumpFromReportToSubject(drop.subjectId, entry.student.id)
           });
         });
-        if (entry.aidePlusCount >= 2) {
+        if (isAtRisk) {
           signals.push({
-            tone: hasAdaptations ? 'neutral' : 'brand',
-            text: hasAdaptations ? `${entry.aidePlusCount}× AIDE+` : `${entry.aidePlusCount}× AIDE+ (sans adaptation consignée)`
+            tone: 'brand',
+            text: `${entry.challengeTotal} défis · ${entry.strengthTotal} force${entry.strengthTotal > 1 ? 's' : ''} (${challengeRatioPct} %)`,
+            title: `Critère À risque : minimum ${AT_RISK_MIN_OBS} observations, au moins ${AT_RISK_MIN_CHALLENGES} défis et ≥ ${Math.round(AT_RISK_MIN_RATIO * 100)} % de défis`
           });
-        }
-        if (repeatedChallenges.length > 0) {
-          const [topTag, topCount] = repeatedChallenges[0];
-          signals.push({ tone: 'neutral', text: `${topTag} · ${topCount}×` });
         }
         if (hasFollowups) {
           signals.push({
@@ -885,26 +913,25 @@
             text: `MOD. sans échelle (${entry.incompleteModified.length})`
           });
         }
-        if (lowObs && !hasBelow60) {
-          signals.push({
-            tone: 'muted',
-            text: entry.evalsCompletedByStudent === 0 ? 'Aucune trace consignée' : `Peu observé (${entry.evalsCompletedByStudent}/${entry.evalsWithClassWork})`
-          });
-        }
 
-        const isWatch = hasBelow60 || hasDrop || (supportHeavy && !hasAdaptations) || entry.incompleteModified.length > 0;
-        const isSupport = hasAdaptations || hasModified || supportHeavy;
+        const isWatch = hasBelow60 || hasDrop;
+        const isSupport = hasPia || hasModified;
 
         return {
           ...entry,
+          hasPia,
           hasAdaptations,
           hasModified,
-          supportHeavy,
+          obsTotal,
+          challengeRatio,
+          challengeRatioPct,
+          topChallenges,
           hasBelow60,
           hasDrop,
           hasFollowups,
           lowObs,
           isWatch,
+          isAtRisk,
           isSupport,
           signals
         };
@@ -912,6 +939,8 @@
 
       const todoCount = blockers.length + inProgress.length + followups.length;
       const watchCount = studentRadar.filter(entry => entry.isWatch).length;
+      const atRiskCount = studentRadar.filter(entry => entry.isAtRisk).length;
+      const vigieAttentionCount = studentRadar.filter(entry => entry.isWatch || entry.isAtRisk).length;
 
       return {
         termId,
@@ -929,7 +958,9 @@
         priorityComments,
         studentRadar,
         todoCount,
-        watchCount
+        watchCount,
+        atRiskCount,
+        vigieAttentionCount
       };
     }
 
@@ -1166,11 +1197,7 @@
             const summary = document.createElement('summary');
             const name = document.createElement('strong');
             name.textContent = comp.sub.groupLabel || comp.displaySub.shortName || comp.label;
-            const count = document.createElement('span');
-            count.className = 'dash-subject-count';
-            const countValue = data.competencies.filter(item => (item.sub.group || item.sub.id) === subjectKey).length;
-            count.textContent = `${countValue} compétence${countValue > 1 ? 's' : ''}`;
-            summary.append(name, count);
+            summary.append(name);
             const rows = document.createElement('div');
             rows.className = 'dash-subject-competencies';
             group.append(summary, rows);
@@ -1325,12 +1352,11 @@
         : data.studentRadar;
 
       const filters = [
-        { id: 'watch', label: 'À surveiller', count: baseRoster.filter(e => e.isWatch).length },
-        { id: 'support', label: 'Soutien / PIA', count: baseRoster.filter(e => e.isSupport).length },
-        { id: 'followups', label: 'Reprises / NR', count: baseRoster.filter(e => e.hasFollowups).length },
-        { id: 'lowObs', label: 'Peu observés', count: baseRoster.filter(e => e.lowObs).length },
-        { id: 'all', label: 'Toute la classe', count: baseRoster.length }
+        { id: 'all', label: 'Toute la classe', count: baseRoster.length, title: 'Afficher l’ensemble des élèves du groupe' },
+        { id: 'watch', label: 'À surveiller', count: baseRoster.filter(e => e.isWatch).length, title: 'Difficultés marquées : résultat < 60 %, cote D, constat 1–2 ou baisse importante' },
+        { id: 'atRisk', label: 'À risque', count: baseRoster.filter(e => e.isAtRisk).length, title: 'Basé sur les observations (forces vs défis) : minimum 4 observations, au moins 3 défis et ≥ 60 % de défis' }
       ];
+      if (!filters.some(f => f.id === dashRadarFilter)) dashRadarFilter = 'all';
 
       filtersBar.replaceChildren();
       filters.forEach(f => {
@@ -1338,6 +1364,7 @@
         btn.type = 'button';
         btn.className = 'dash-radar-filter-pill';
         btn.setAttribute('aria-pressed', String(dashRadarFilter === f.id));
+        if (f.title) btn.title = f.title;
         const txt = document.createElement('span');
         txt.textContent = f.label;
         const cnt = document.createElement('span');
@@ -1373,26 +1400,158 @@
 
       const visibleEntries = baseRoster.filter(entry => {
         if (dashRadarFilter === 'watch') return entry.isWatch;
-        if (dashRadarFilter === 'support') return entry.isSupport;
-        if (dashRadarFilter === 'followups') return entry.hasFollowups;
-        if (dashRadarFilter === 'lowObs') return entry.lowObs;
+        if (dashRadarFilter === 'atRisk') return entry.isAtRisk;
         return true;
       });
+      if (dashRadarFilter === 'watch') {
+        visibleEntries.sort((a, b) =>
+          (b.below60.length - a.below60.length) ||
+          (b.drops.length - a.drops.length) ||
+          ((a.minNumericalPct ?? 100) - (b.minNumericalPct ?? 100))
+        );
+      } else if (dashRadarFilter === 'atRisk') {
+        visibleEntries.sort((a, b) =>
+          (b.challengeRatio - a.challengeRatio) ||
+          (b.challengeTotal - a.challengeTotal) ||
+          ((a.minNumericalPct ?? 100) - (b.minNumericalPct ?? 100))
+        );
+      }
 
       radarList.replaceChildren();
+
+      if (dashRadarFilter === 'watch' || dashRadarFilter === 'atRisk') {
+        const explain = document.createElement('div');
+        explain.className = `dash-radar-explain is-${dashRadarFilter === 'watch' ? 'watch' : 'risk'}`;
+        if (dashRadarFilter === 'watch') {
+          explain.innerHTML = data.isPrescoGroup
+            ? '<strong>Critère « À surveiller » :</strong> au moins un domaine au constat <em>Certaines difficultés</em> ou <em>Difficultés importantes</em> (ou une régression marquée).'
+            : '<strong>Critère « À surveiller » :</strong> difficulté scolaire marquée — au moins une matière <strong>sous 60 %</strong>, une <strong>cote D</strong> (ILSS) ou une <strong>baisse marquée</strong> par rapport à l’étape précédente.';
+        } else {
+          explain.innerHTML = '<strong>Critère « À risque » :</strong> basé sur vos observations (forces vs défis) — minimum <strong>4 observations</strong> consignées, dont au moins <strong>3 défis</strong> et <strong>≥ 60 % de défis</strong>.';
+        }
+        radarList.appendChild(explain);
+      }
+
       if (!visibleEntries.length) {
         const empty = document.createElement('p');
         empty.className = 'dash-calm-card';
         empty.textContent = dashRadarFilter === 'watch'
-          ? 'Aucun signal de fragilité détecté dans cette sélection pour le moment.'
-          : 'Aucun élève ne correspond à ce filtre.';
+          ? 'Aucune difficulté majeure détectée (< 60 %, baisse marquée ou cote D) dans cette sélection.'
+          : dashRadarFilter === 'atRisk'
+            ? 'Aucun élève à risque détecté selon vos observations (forces vs défis).'
+            : 'Aucun élève ne correspond à ce filtre.';
         radarList.appendChild(empty);
         return;
       }
 
+      const buildWatchDiagnostic = entry => {
+        const box = document.createElement('div');
+        box.className = 'dash-reason-block is-watch';
+
+        const header = document.createElement('div');
+        header.className = 'dash-reason-head';
+        const titleParts = [];
+        if (entry.below60.length > 0) {
+          const isIlssOnly = entry.below60.every(item => item.ilssCote);
+          const isPrescoOnly = entry.below60.every(item => item.constatRank);
+          if (isIlssOnly) {
+            titleParts.push(`${entry.below60.length} compétence${entry.below60.length > 1 ? 's' : ''} en cote D`);
+          } else if (isPrescoOnly) {
+            titleParts.push(`${entry.below60.length} domaine${entry.below60.length > 1 ? 's' : ''} à soutenir`);
+          } else {
+            titleParts.push(`${entry.below60.length} matière${entry.below60.length > 1 ? 's' : ''} sous 60 %`);
+          }
+        }
+        if (entry.drops.length > 0) {
+          titleParts.push(`${entry.drops.length} baisse${entry.drops.length > 1 ? 's' : ''} marquée${entry.drops.length > 1 ? 's' : ''}`);
+        }
+        const label = document.createElement('span');
+        label.className = 'dash-reason-kicker';
+        label.textContent = 'Pourquoi à surveiller';
+        const summary = document.createElement('strong');
+        summary.className = 'dash-reason-summary';
+        summary.textContent = titleParts.join(' · ') || 'Difficulté détectée';
+        header.append(label, summary);
+        box.appendChild(header);
+
+        const chips = document.createElement('div');
+        chips.className = 'dash-reason-chips';
+        entry.below60.forEach(item => {
+          const shortSubject = item.label.split('•').pop().trim();
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dash-reason-chip is-alert';
+          btn.textContent = item.ilssCote
+            ? `${shortSubject} · ${item.ilssLabel || 'Cote D'}`
+            : item.pct !== null
+              ? `${shortSubject} · ${item.pct} %`
+              : `${item.label} · ${PRESCHOOL_CONSTAT_SHORT[item.constatRank]}`;
+          btn.title = `Ouvrir ${item.label} au carnet pour ${entry.student.name}`;
+          btn.addEventListener('click', () => jumpFromReportToSubject(item.subjectId, entry.student.id));
+          chips.appendChild(btn);
+        });
+        entry.drops.forEach(drop => {
+          const shortSubject = drop.label.split('•').pop().trim();
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dash-reason-chip is-drop';
+          btn.textContent = drop.isPresco ? `Baisse · ${drop.label}` : `${drop.diff} % · ${shortSubject}`;
+          btn.title = `Ouvrir ${drop.label} au carnet pour ${entry.student.name}`;
+          btn.addEventListener('click', () => jumpFromReportToSubject(drop.subjectId, entry.student.id));
+          chips.appendChild(btn);
+        });
+        box.appendChild(chips);
+        return box;
+      };
+
+      const buildRiskDiagnostic = entry => {
+        const box = document.createElement('div');
+        box.className = 'dash-reason-block is-risk';
+
+        const header = document.createElement('div');
+        header.className = 'dash-reason-head';
+        const label = document.createElement('span');
+        label.className = 'dash-reason-kicker';
+        label.textContent = 'Pourquoi à risque';
+        const summary = document.createElement('strong');
+        summary.className = 'dash-reason-summary';
+        summary.textContent = `${entry.challengeTotal} défi${entry.challengeTotal > 1 ? 's' : ''} · ${entry.strengthTotal} force${entry.strengthTotal > 1 ? 's' : ''}`;
+        const pctBadge = document.createElement('span');
+        pctBadge.className = 'dash-risk-pct';
+        pctBadge.textContent = `${entry.challengeRatioPct} % défis (${entry.obsTotal} obs.)`;
+        header.append(label, summary, pctBadge);
+        box.appendChild(header);
+
+        const barWrap = document.createElement('div');
+        barWrap.className = 'dash-risk-bar';
+        barWrap.setAttribute('aria-hidden', 'true');
+        const barFill = document.createElement('span');
+        barFill.className = 'dash-risk-bar-fill';
+        barFill.style.width = `${Math.min(100, Math.max(0, entry.challengeRatioPct))}%`;
+        barWrap.appendChild(barFill);
+        box.appendChild(barWrap);
+
+        if (entry.topChallenges && entry.topChallenges.length > 0) {
+          const tagsLine = document.createElement('div');
+          tagsLine.className = 'dash-risk-tags';
+          const lead = document.createElement('span');
+          lead.className = 'dash-risk-tags-lead';
+          lead.textContent = 'Défis récurrents :';
+          tagsLine.appendChild(lead);
+          entry.topChallenges.forEach(item => {
+            const chip = document.createElement('span');
+            chip.className = 'dash-risk-tag-chip';
+            chip.textContent = `${item.label}${item.count > 1 ? ` (${item.count}×)` : ''}`;
+            tagsLine.appendChild(chip);
+          });
+          box.appendChild(tagsLine);
+        }
+        return box;
+      };
+
       visibleEntries.forEach(entry => {
         const row = document.createElement('article');
-        row.className = 'dash-radar-row';
+        row.className = `dash-radar-row${entry.isWatch ? ' is-watch-card' : entry.isAtRisk ? ' is-risk-card' : ''}`;
 
         const top = document.createElement('div');
         top.className = 'dash-radar-top';
@@ -1410,21 +1569,35 @@
         });
         identity.appendChild(nameBtn);
 
+        if (entry.isWatch) {
+          const watchTag = document.createElement('span');
+          watchTag.className = 'dash-status-pill is-watch';
+          watchTag.textContent = 'À surveiller';
+          identity.appendChild(watchTag);
+        }
+        if (entry.isAtRisk) {
+          const riskTag = document.createElement('span');
+          riskTag.className = 'dash-status-pill is-risk';
+          riskTag.textContent = 'À risque';
+          identity.appendChild(riskTag);
+        }
         if (data.isMulti && entry.student.gradeLevel) {
           const lvlChip = document.createElement('span');
           lvlChip.className = 'dash-chip is-demo';
           lvlChip.textContent = entry.student.gradeLevel === '1' ? '1re' : `${entry.student.gradeLevel}e`;
           identity.appendChild(lvlChip);
         }
-        if (entry.hasAdaptations) {
-          const adChip = document.createElement('span');
-          adChip.className = 'dash-chip is-active';
-          adChip.textContent = `${entry.adaptSummary.adaptations.length} adapt.`;
-          identity.appendChild(adChip);
+        if (entry.hasPia) {
+          const piaChip = document.createElement('span');
+          piaChip.className = 'dash-chip is-active';
+          piaChip.title = 'Plan d’intervention';
+          piaChip.textContent = 'PIA';
+          identity.appendChild(piaChip);
         }
         if (entry.hasModified) {
           const modChip = document.createElement('span');
           modChip.className = 'dash-chip is-warn';
+          modChip.title = 'Bulletin modifié';
           modChip.textContent = 'MOD.';
           identity.appendChild(modChip);
         }
@@ -1442,23 +1615,19 @@
         top.append(identity, synthBtn);
         row.appendChild(top);
 
-        if (entry.signals.length > 0) {
-          const sigRow = document.createElement('div');
-          sigRow.className = 'dash-radar-signals';
-          entry.signals.slice(0, 4).forEach(sig => {
-            const el = document.createElement(sig.onClick ? 'button' : 'span');
-            if (sig.onClick) {
-              el.type = 'button';
-              el.addEventListener('click', sig.onClick);
-            }
-            el.className = `dash-signal-chip is-${sig.tone || 'neutral'}`;
-            el.textContent = dashPrivacyMasked && sig.maskedText ? sig.maskedText : sig.text;
-            sigRow.appendChild(el);
-          });
-          row.appendChild(sigRow);
+        // Diagnostic explicite (prioritaire et jamais tronqué)
+        if (dashRadarFilter === 'watch') {
+          if (entry.isWatch) row.appendChild(buildWatchDiagnostic(entry));
+          if (entry.isAtRisk) row.appendChild(buildRiskDiagnostic(entry));
+        } else if (dashRadarFilter === 'atRisk') {
+          if (entry.isAtRisk) row.appendChild(buildRiskDiagnostic(entry));
+          if (entry.isWatch) row.appendChild(buildWatchDiagnostic(entry));
+        } else {
+          if (entry.isWatch) row.appendChild(buildWatchDiagnostic(entry));
+          if (entry.isAtRisk) row.appendChild(buildRiskDiagnostic(entry));
         }
 
-        if (entry.pills.length > 0) {
+        if (entry.pills.length > 0 && dashRadarFilter === 'all') {
           const pillRow = document.createElement('div');
           pillRow.className = 'dash-radar-pills';
           entry.pills.forEach(pill => {
@@ -1469,7 +1638,7 @@
               if (pill.isPresco) {
                 tone = pill.rank >= 3 ? 'ok' : pill.rank === 2 ? 'warn' : pill.rank === 1 ? 'alert' : 'neutral';
               } else if (pill.isIlss) {
-                tone = (pill.ilssCote === 'A' || pill.ilssCote === 'B') ? 'ok' : pill.ilssCote === 'C' ? 'mid' : pill.ilssCote === 'D' ? 'warn' : 'neutral';
+                tone = (pill.ilssCote === 'A' || pill.ilssCote === 'B') ? 'ok' : pill.ilssCote === 'C' ? 'mid' : pill.ilssCote === 'D' ? 'alert' : 'neutral';
               } else if (pill.pct !== null) {
                 tone = pill.pct >= 75 ? 'ok' : pill.pct >= 60 ? 'mid' : 'alert';
               }
@@ -1512,7 +1681,7 @@
       meta.textContent = `${levelLabel ? `${levelLabel} · ` : ''}${studentCount} élève${studentCount > 1 ? 's' : ''} · Étape ${data.termId}`;
 
       if (todoCountEl) todoCountEl.textContent = String(data.todoCount);
-      if (watchCountEl) watchCountEl.textContent = String(data.watchCount);
+      if (watchCountEl) watchCountEl.textContent = String(data.vigieAttentionCount);
 
       if (studentCount === 0) {
         if (tabsWrap) tabsWrap.classList.add('hidden');
@@ -1602,8 +1771,7 @@
       const dashTitle = document.getElementById('dashTitle');
       const grid = document.getElementById('dashGroupsGrid');
       const countEl = document.getElementById('dashGroupsCount');
-      const summaryMeta = document.getElementById('dashSummaryMeta');
-      if (!grid || !countEl || !summaryMeta) return;
+      if (!grid || !countEl) return;
 
       dashPrivacyMasked = false;
       document.querySelectorAll('[data-dash-term]').forEach(button =>
@@ -1617,17 +1785,11 @@
 
       const groupsSection = document.getElementById('dashGroupsSection');
       if (groupsSection) groupsSection.hidden = groups.length <= 1;
-      let totalStudents = 0;
       const statsByGroupId = new Map();
       groups.forEach(g => {
-        const stats = getGroupDashboardStats(g);
-        statsByGroupId.set(g.id, stats);
-        totalStudents += stats.studentCount;
+        statsByGroupId.set(g.id, getGroupDashboardStats(g));
       });
 
-      summaryMeta.textContent = groups.length === 1
-        ? `${groups[0].name} · ${totalStudents} élève${totalStudents > 1 ? 's' : ''} · Étape ${appState.activeTerm}`
-        : `${groups.length} groupes · ${totalStudents} élève${totalStudents > 1 ? 's' : ''} · Étape ${appState.activeTerm}`;
       countEl.textContent = String(groups.length);
       updateSidebarDashboardBadge();
       renderHomeSaveCard();
@@ -1749,32 +1911,53 @@
       if (hasGroup && !showPortal) renderHomeDashboard();
     }
 
+    let lastGradebookStickyW = -1;
+    let lastGradebookArrowY = -1;
+
     function updateGradebookTopScroll() {
       const top = document.getElementById('gradebookTopScroll');
       const bottom = document.getElementById('gradebookScrollContainer');
       if (!top || !bottom) return;
       const table = bottom.querySelector('table');
-      top.firstElementChild.style.width = `${table.scrollWidth}px`;
+      if (!table) return;
+      const targetWidth = `${table.scrollWidth}px`;
+      if (top.firstElementChild.style.width !== targetWidth) {
+        top.firstElementChild.style.width = targetWidth;
+      }
       const scrollable = bottom.scrollWidth > bottom.clientWidth + 1;
       top.classList.toggle('is-visible', scrollable);
       if (Math.abs(top.scrollLeft - bottom.scrollLeft) > 1) top.scrollLeft = bottom.scrollLeft;
       const frame = document.getElementById('gradebookFrame');
       if (!frame) return;
       const stickyCell = bottom.querySelector('thead th');
+      const stickyW = stickyCell ? stickyCell.offsetWidth : 0;
+      if (stickyW !== lastGradebookStickyW) {
+        lastGradebookStickyW = stickyW;
+        frame.style.setProperty('--gb-sticky-w', `${stickyW}px`);
+      }
       const max = bottom.scrollWidth - bottom.clientWidth;
-      frame.style.setProperty('--gb-sticky-w', `${stickyCell ? stickyCell.offsetWidth : 0}px`);
-      frame.classList.toggle('gb-can-left', scrollable && bottom.scrollLeft > 2);
-      frame.classList.toggle('gb-can-right', scrollable && bottom.scrollLeft < max - 2);
-      positionGradebookArrows();
+      const canLeft = scrollable && bottom.scrollLeft > 2;
+      const canRight = scrollable && bottom.scrollLeft < max - 2;
+      frame.classList.toggle('gb-can-left', canLeft);
+      frame.classList.toggle('gb-can-right', canRight);
+      if (canLeft || canRight) positionGradebookArrows();
     }
 
-    // Garde les flèches au centre de la portion visible du carnet.
+    // Garde les flèches au centre de la portion visible du carnet sans invalider les styles du tableau.
     function positionGradebookArrows() {
       const frame = document.getElementById('gradebookFrame');
       if (!frame || !frame.offsetParent) return;
+      if (!frame.classList.contains('gb-can-left') && !frame.classList.contains('gb-can-right')) return;
       const rect = frame.getBoundingClientRect();
       const middle = (Math.max(rect.top, 0) + Math.min(rect.bottom, window.innerHeight)) / 2 - rect.top;
-      frame.style.setProperty('--gb-arrow-y', `${Math.max(28, Math.min(rect.height - 28, middle))}px`);
+      const nextY = Math.round(Math.max(28, Math.min(rect.height - 28, middle)));
+      if (nextY === lastGradebookArrowY) return;
+      lastGradebookArrowY = nextY;
+      const yValue = `${nextY}px`;
+      const prevBtn = document.getElementById('gbScrollPrev');
+      const nextBtn = document.getElementById('gbScrollNext');
+      if (prevBtn) prevBtn.style.setProperty('--gb-arrow-y', yValue);
+      if (nextBtn) nextBtn.style.setProperty('--gb-arrow-y', yValue);
     }
 
     let gradebookScrollAnim = null;

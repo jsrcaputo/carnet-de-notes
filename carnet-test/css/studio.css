@@ -40,9 +40,6 @@
 
     html.design-studio body {
       background-color: var(--studio-bg) !important;
-      background-image:
-        radial-gradient(circle at 10% 0%, rgba(35, 92, 70, 0.06), transparent 40%),
-        radial-gradient(circle at 90% 4%, rgba(188, 128, 68, 0.055), transparent 38%) !important;
       color: var(--studio-text) !important;
     }
 
@@ -147,7 +144,7 @@
     html.design-studio #subjectTabsContainer > button:hover {
       color: var(--studio-text) !important;
       transform: translateY(-1px);
-      border-color: rgba(35, 92, 70, 0.35) !important;
+      border-color: color-mix(in srgb, var(--brand) 32%, var(--studio-border)) !important;
     }
     html.design-studio #subjectTabsContainer > button[aria-pressed="true"] {
       background: var(--studio-text) !important;
@@ -253,6 +250,6 @@
       padding-bottom: 0.62rem !important;
     }
     html.design-studio #gradebookBody tr:hover td {
-      background-color: rgba(35, 92, 70, 0.04) !important;
+      background-color: color-mix(in srgb, var(--brand) 4%, var(--studio-surface)) !important;
     }
   

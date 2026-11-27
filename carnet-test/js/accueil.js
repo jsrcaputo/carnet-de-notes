@@ -302,6 +302,11 @@ function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto, commentV
       });
       button.addEventListener('click', () => {
         state.palier = state.palier === palier ? '' : palier;
+        if (allowAuto && !state.palier && !state.cote) {
+          closeGradePicker();
+          onPick(null);
+          return;
+        }
         onPick({ palier: state.palier, cote: state.cote });
         render();
       });
@@ -331,6 +336,11 @@ function openIlssPicker(x, y, { current, suggestion, onPick, allowAuto, commentV
       });
       button.addEventListener('click', () => {
         state.cote = state.cote === cote ? '' : cote;
+        if (allowAuto && !state.palier && !state.cote) {
+          closeGradePicker();
+          onPick(null);
+          return;
+        }
         onPick({ palier: state.palier, cote: state.cote });
         render();
       });
@@ -475,7 +485,7 @@ function renderIlssGradebookView(subject) {
   if (emptyBtn) emptyBtn.textContent = hasGroup ? 'Ajouter des élèves' : 'Créer un groupe';
 
   const extraHeaders = [
-    { label: 'Jugement d’étape', sub: 'Proposé · modifiable en cliquant', minW: 'min-w-[145px]', width: 145 },
+    { label: 'Jugement d’étape', sub: 'Modifiable', minW: 'min-w-[145px]', width: 145 },
     { label: 'Commentaires au bulletin', sub: 'Rédaction ou banque de choix', minW: '', width: 420 }
   ];
   const extraColsWidth = extraHeaders.reduce((sum, header) => sum + header.width, 0);
@@ -697,7 +707,7 @@ function renderIlssGradebookView(subject) {
     finalButton.type = 'button';
     finalButton.dataset.ilssFinal = student.id;
     const finalLabel = formatIlssResult(final);
-    finalButton.className = `px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${final.palier || final.cote ? getIlssResultClasses(final) : 'ilss-badge-empty'}`;
+    finalButton.className = `final-grade-btn px-2.5 py-1 rounded-lg border text-[11px] font-bold transition cursor-pointer inline-flex items-center justify-center gap-1 whitespace-nowrap ${final.palier || final.cote ? getIlssResultClasses(final) : 'ilss-badge-empty'}`;
     finalButton.innerHTML = `<span>${escapeHtml(finalLabel || 'À établir')}${final.overridden ? '<span class="adj-star" title="Jugement ajusté manuellement par l’enseignant">*</span>' : ''}</span>`;
     const suggestionLabel = formatIlssResult(final.suggestion);
     finalButton.title = final.overridden
@@ -897,15 +907,6 @@ function renderIlssObservationWorkspace(subject) {
     ? `${student.name} — ${GRADE_LEVEL_LABELS[student.gradeLevel] || 'niveau à choisir'}${cycle ? ` (${CYCLE_LABELS[cycle]})` : ''}`
     : 'Sélectionner un nom';
   document.getElementById('qoBottomStudentName').textContent = student ? student.name : 'Sélectionner un nom';
-  const modeBadge = document.getElementById('qoEditModeBadge');
-  if (session.editingAssignmentId) {
-    modeBadge.classList.remove('hidden');
-    modeBadge.className = 'px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300';
-    modeBadge.textContent = `Mode modification : ${session.title || 'Trace observable'}`;
-  } else {
-    modeBadge.classList.add('hidden');
-    modeBadge.textContent = '';
-  }
   document.getElementById('btnCommitTopLabel').textContent = 'Enregistrer au carnet';
   const titleInput = document.getElementById('qoSessionTitleInput');
   if (titleInput) {
@@ -939,18 +940,16 @@ function renderIlssObservationWorkspace(subject) {
     const button = document.createElement('button');
     button.type = 'button';
     button.setAttribute('aria-pressed', String(isSelected));
-    button.className = isSelected
-      ? 'w-full px-2.5 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-xs transition cursor-pointer flex items-center justify-between gap-1 truncate'
-      : 'w-full px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-800 transition cursor-pointer flex items-center justify-between gap-1 truncate';
+    button.className = `qo-student-btn w-full flex items-center justify-between gap-1 truncate${isSelected ? ' is-selected' : ''}`;
     const shortLevel = isMulti && item.gradeLevel ? ` <span class="opacity-70 text-[10px]">(${escapeHtml(formatShortLevelTag(item.gradeLevel))})</span>` : '';
     const statusPill = label
-      ? `<span class="px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getIlssResultClasses(result)}">${escapeHtml(label)}</span>`
+      ? `<span class="qo-student-status px-1.5 py-0.2 rounded border text-[10px] font-extrabold ${getIlssResultClasses(result)}">${escapeHtml(label)}</span>`
       : critDone
-        ? `<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">${critDone}/${totalGridCriteria}</span>`
+        ? `<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">${critDone}/${totalGridCriteria}</span>`
         : hasObsOnly
-          ? '<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">Obs.</span>'
-          : '<span class="px-1.5 py-0.2 rounded text-[10px] ilss-badge-empty font-bold">—</span>';
-    button.innerHTML = `<span class="truncate">${escapeHtml(item.name)}${shortLevel}</span>${statusPill}`;
+          ? '<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] ilss-badge-palier font-bold">Obs.</span>'
+          : '<span class="qo-student-status px-1.5 py-0.2 rounded text-[10px] ilss-badge-empty font-bold">—</span>';
+    button.innerHTML = `<span class="qo-student-name truncate">${escapeHtml(item.name)}${shortLevel}</span>${statusPill}`;
     button.addEventListener('click', () => {
       appState.selectedStudentId = item.id;
       ilssEditorStudentId = item.id;
@@ -1287,9 +1286,13 @@ function getAccueilSummaryHtml(student) {
       const titleHtml = canJump && subject
         ? `<button type="button" class="gr-subject-jump" data-jump-subject="${escapeHtml(subject.id)}" data-jump-student="${escapeHtml(student.id || '')}" title="Ouvrir ${escapeHtml(comp.label)} dans le Carnet"><span class="gr-subject-jump-label">${escapeHtml(comp.label)}</span><span class="gr-subject-jump-arrow" aria-hidden="true">→</span></button>`
         : `<strong>${escapeHtml(comp.label)}</strong>`;
+      const ilssCommentsCount = termJudgments.filter(t => t.item && typeof t.item.comment === 'string' && t.item.comment.trim()).length;
+      const commentBtnHtml = (subject && ilssCommentsCount > 0)
+        ? `<button type="button" class="gr-comment-icon-btn no-print" data-gr-bulletin-comment="${escapeHtml(subject.id)}" aria-label="Lire le commentaire au bulletin pour ${escapeHtml(comp.label)}" title="Commentaire au bulletin (${ilssCommentsCount} étape${ilssCommentsCount > 1 ? 's' : ''}) — cliquer pour lire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>${ilssCommentsCount > 1 ? `<span class="gr-comment-icon-count">${ilssCommentsCount}</span>` : ''}</button>`
+        : '';
       return `<section class="ilss-comp-card rounded-lg border border-slate-200 p-2.5">
         <div class="ilss-comp-card-head">
-          <div class="ilss-comp-card-title">${titleHtml}${evalTotal ? `<em class="gr-evaluation-count">${evalTotal} éval${evalTotal > 1 ? 's' : ''}</em>` : ''}</div>
+          <div class="ilss-comp-card-title">${titleHtml}${commentBtnHtml}${evalTotal ? `<em class="gr-evaluation-count">${evalTotal} éval${evalTotal > 1 ? 's' : ''}</em>` : ''}</div>
           ${progressionChip}
         </div>
         <div class="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">${termJudgments.map(({ term, item, final }) => {

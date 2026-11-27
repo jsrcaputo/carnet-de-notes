@@ -419,71 +419,57 @@
         left.appendChild(profileRow);
 
         const studentUiState = renderStudentsView._state || (renderStudentsView._state = {
-          adaptStudentId: null,
           modStudentId: null,
           outsideBound: false
         });
         if (!studentUiState.outsideBound) {
           studentUiState.outsideBound = true;
-          document.addEventListener('click', (e) => {
-            if (!studentUiState.adaptStudentId) return;
-            if (e.target && e.target.closest && (e.target.closest('.student-adapt-drawer') || e.target.closest('.btn-student-adapt'))) {
-              return;
-            }
-            studentUiState.adaptStudentId = null;
-            renderStudentsView();
-          });
           document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && studentUiState.adaptStudentId) {
-              studentUiState.adaptStudentId = null;
+            if (e.key === 'Escape' && studentUiState.modStudentId) {
+              studentUiState.modStudentId = null;
               renderStudentsView();
             }
           });
         }
 
         const adaptSummary = getStudentAdaptationSummary(st);
-        const hasAdaptations = adaptSummary.adaptations.length > 0;
-        const isAdaptOpen = studentUiState.adaptStudentId === st.id;
+        const hasPia = Boolean(adaptSummary.hasPia);
         const hasModifiedBulletin = st.gradeLevel !== 'P' && st.adaptations.includes('Bulletin modifié');
+        const isModOpen = hasModifiedBulletin && studentUiState.modStudentId === st.id;
 
         const actionsBar = document.createElement('div');
         actionsBar.className = 'student-options-bar flex flex-wrap items-center gap-1.5';
 
-        const adaptBtn = document.createElement('button');
-        adaptBtn.type = 'button';
-        adaptBtn.className = `student-option-btn btn-student-adapt${hasAdaptations ? ' is-active' : ''}${isAdaptOpen ? ' is-open' : ''}`;
-        adaptBtn.setAttribute('aria-expanded', String(isAdaptOpen));
-        adaptBtn.setAttribute('aria-pressed', String(hasAdaptations));
-        const syncAdaptButtonLabel = (summaryObj) => {
-          const count = summaryObj.adaptations.length;
-          adaptBtn.classList.toggle('is-active', count > 0);
-          adaptBtn.setAttribute('aria-pressed', String(count > 0));
-          adaptBtn.innerHTML = '';
-          const txt = document.createElement('span');
-          txt.textContent = 'Adaptations';
-          adaptBtn.appendChild(txt);
-          if (count > 0) {
-            const cnt = document.createElement('span');
-            cnt.className = 'student-option-count';
-            cnt.textContent = String(count);
-            adaptBtn.appendChild(cnt);
+        const piaBtn = document.createElement('button');
+        piaBtn.type = 'button';
+        piaBtn.dataset.studentPiaId = st.id;
+        piaBtn.className = `student-option-btn btn-student-pia${hasPia ? ' is-active' : ''}`;
+        piaBtn.setAttribute('aria-pressed', String(hasPia));
+        piaBtn.innerHTML = `${hasPia ? '<svg class="student-option-check" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3.5 8.5 6.5 11.5 12.5 4.5"/></svg>' : ''}<span>Plan d’intervention</span>`;
+        piaBtn.addEventListener('click', () => {
+          const normalized = (st.adaptations || []).map(normalizeAdaptationLabel);
+          const alreadyHas = normalized.includes('Plan d’intervention');
+          if (alreadyHas) {
+            st.adaptations = normalized.filter(item => item !== 'Plan d’intervention');
+            notifyUpdate(`Plan d’intervention retiré pour ${st.name}`);
+          } else {
+            st.adaptations = [...new Set([...normalized, 'Plan d’intervention'])];
+            notifyUpdate(`Plan d’intervention activé pour ${st.name}`);
           }
-        };
-        syncAdaptButtonLabel(adaptSummary);
-        adaptBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          studentUiState.adaptStudentId = isAdaptOpen ? null : st.id;
-          renderStudentsView();
+          renderAll();
+          [...document.querySelectorAll('[data-student-pia-id]')]
+            .find(button => button.dataset.studentPiaId === st.id)
+            ?.focus({ preventScroll: true });
         });
-        actionsBar.appendChild(adaptBtn);
+        actionsBar.appendChild(piaBtn);
 
         if (st.gradeLevel !== 'P') {
           const modBtn = document.createElement('button');
           modBtn.type = 'button';
           modBtn.dataset.studentModId = st.id;
-          modBtn.className = `student-option-btn btn-student-mod${hasModifiedBulletin ? ' is-active' : ''}`;
+          modBtn.className = `student-option-btn btn-student-mod${hasModifiedBulletin ? ' is-active' : ''}${isModOpen ? ' is-open' : ''}`;
           modBtn.setAttribute('aria-pressed', String(hasModifiedBulletin));
-          modBtn.setAttribute('aria-expanded', String(studentUiState.modStudentId === st.id));
+          modBtn.setAttribute('aria-expanded', String(isModOpen));
           if (hasModifiedBulletin) modBtn.setAttribute('aria-controls', `modified-expectations-${st.id}`);
           const modCount = adaptSummary.modifiedItems.length;
           const modText = document.createElement('span');
@@ -495,18 +481,22 @@
             modCnt.textContent = String(modCount);
             modBtn.appendChild(modCnt);
           }
+          if (hasModifiedBulletin) {
+            const chev = document.createElement('span');
+            chev.className = 'student-option-caret';
+            chev.setAttribute('aria-hidden', 'true');
+            chev.textContent = isModOpen ? '▴' : '▾';
+            modBtn.appendChild(chev);
+          }
           modBtn.addEventListener('click', () => {
             if (st.adaptations.includes('Bulletin modifié')) {
-              studentUiState.modStudentId = studentUiState.modStudentId === st.id ? null : st.id;
+              studentUiState.modStudentId = isModOpen ? null : st.id;
             } else {
               st.adaptations.push('Bulletin modifié');
               studentUiState.modStudentId = st.id;
               notifyUpdate(`Bulletin modifié activé pour ${st.name}`);
             }
-            if (studentUiState.adaptStudentId === st.id) {
-              studentUiState.adaptStudentId = null;
-            }
-            renderStudentsView();
+            renderAll();
             [...document.querySelectorAll('[data-student-mod-id]')]
               .find(button => button.dataset.studentModId === st.id)
               ?.focus({ preventScroll: true });
@@ -516,185 +506,164 @@
 
         left.appendChild(actionsBar);
 
-        if (isAdaptOpen) {
-          const drawer = document.createElement('div');
-          drawer.className = 'student-adapt-drawer flex flex-wrap items-center gap-1.5';
-          drawer.addEventListener('click', (e) => e.stopPropagation());
-
-          ADAPTATION_PRESETS.forEach(preset => {
-            const hasIt = adaptSummary.adaptations.includes(preset);
-            const pBtn = document.createElement('button');
-            pBtn.type = 'button';
-            pBtn.className = `student-adapt-pill${hasIt ? ' is-active' : ''}`;
-            pBtn.textContent = `${hasIt ? '✓ ' : '+ '}${preset}`;
-            pBtn.addEventListener('click', () => {
-              st.adaptations = st.adaptations.map(normalizeAdaptationLabel);
-              const idx = st.adaptations.indexOf(preset);
-              if (idx >= 0) st.adaptations.splice(idx, 1);
-              else st.adaptations.push(preset);
-              studentUiState.adaptStudentId = st.id;
-              notifyUpdate(`Adaptations mises à jour pour ${st.name}`);
-              renderAll();
-            });
-            drawer.appendChild(pBtn);
-          });
-
-          const customInput = document.createElement('input');
-          customInput.type = 'text';
-          customInput.autocomplete = 'off';
-          customInput.placeholder = 'Autre adaptation...';
-          customInput.value = st.customAdapt || '';
-          customInput.className = 'student-adapt-custom px-2 py-1 rounded-lg border border-slate-200 text-xs w-40';
-          customInput.addEventListener('input', (e) => {
-            st.customAdapt = e.target.value;
-            syncAdaptButtonLabel(getStudentAdaptationSummary(st));
-            renderGradebookView();
-            if (typeof renderGlobalReportView === 'function') renderGlobalReportView();
-          });
-          customInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              studentUiState.adaptStudentId = null;
-              renderStudentsView();
-            }
-          });
-          drawer.appendChild(customInput);
-
-          left.appendChild(drawer);
-        }
-
-        // Option 2 — Bulletin modifié (Modification des attentes du PFEQ par matière)
+        // Bulletin modifié (Modification des attentes du PFEQ par matière)
         if (hasModifiedBulletin) {
           st.modifiedExpectations = (st.modifiedExpectations && typeof st.modifiedExpectations === 'object') ? st.modifiedExpectations : {};
           const modSummaryList = getStudentModifiedSummaryList(st);
-          const modDetails = document.createElement('details');
-          modDetails.id = `modified-expectations-${st.id}`;
-          modDetails.className = 'modified-expectations mt-1 rounded-lg border border-slate-200 bg-slate-50/70 px-2.5 py-1.5 text-xs';
-          if (studentUiState.modStudentId === st.id) {
-            modDetails.open = true;
-          }
-          modDetails.addEventListener('toggle', () => {
-            if (modDetails.open) {
-              studentUiState.modStudentId = st.id;
-            } else if (studentUiState.modStudentId === st.id) {
-              studentUiState.modStudentId = null;
-            }
-          });
-          const modSummary = document.createElement('summary');
-          modSummary.className = 'cursor-pointer font-semibold text-slate-700 flex flex-wrap items-center justify-between gap-2 select-none';
-          const summaryLeft = document.createElement('span');
-          summaryLeft.className = 'inline-flex flex-wrap items-center gap-1.5';
-          summaryLeft.textContent = modSummaryList.length
-            ? `Attentes modifiées : ${modSummaryList.map(item => `${item.label} (${item.levelLabel})`).join(' · ')}`
-            : 'Attentes modifiées par matière (aucune sélectionnée)';
-          modSummary.appendChild(summaryLeft);
-          const removeMod = document.createElement('button');
-          removeMod.type = 'button';
-          removeMod.className = 'text-rose-700 hover:text-rose-800 underline';
-          removeMod.textContent = 'Retirer le bulletin modifié';
-          removeMod.setAttribute('aria-label', `Retirer le bulletin modifié de ${st.name}`);
-          removeMod.addEventListener('click', event => {
-            event.preventDefault();
-            event.stopPropagation();
-            if (removeMod.dataset.confirm !== 'yes') {
-              removeMod.dataset.confirm = 'yes';
-              removeMod.textContent = 'Confirmer le retrait';
-              setTimeout(() => {
-                if (!removeMod.isConnected) return;
-                delete removeMod.dataset.confirm;
-                removeMod.textContent = 'Retirer le bulletin modifié';
-              }, 4000);
-              return;
-            }
-            st.adaptations = st.adaptations.filter(adaptation => adaptation !== 'Bulletin modifié');
-            st.modifiedExpectations = {};
-            studentUiState.modStudentId = null;
-            notifyUpdate(`Bulletin modifié retiré pour ${st.name}`);
-            renderAll();
-            [...document.querySelectorAll('[data-student-mod-id]')]
-              .find(button => button.dataset.studentModId === st.id)
-              ?.focus({ preventScroll: true });
-          });
-          modSummary.appendChild(removeMod);
-          modDetails.appendChild(modSummary);
 
-          const modGrid = document.createElement('div');
-          modGrid.className = 'mt-2 pt-2 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2';
-
-          // Liste des matières / compétences configurables pour ce groupe
-          const modTargets = [];
-          const seenGroups = new Set();
-          getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(s => {
-            if (s.prescoOnly || s.isIlss) return;
-            if (s.group && s.singleResult) {
-              if (seenGroups.has(s.group)) return;
-              seenGroups.add(s.group);
-              modTargets.push({ key: s.group, label: s.groupLabel || s.bulletinLabel || s.shortName });
+          if (!isModOpen) {
+            const compactStrip = document.createElement('button');
+            compactStrip.type = 'button';
+            compactStrip.id = `modified-expectations-${st.id}`;
+            compactStrip.className = 'mod-summary-strip';
+            compactStrip.title = 'Cliquer pour choisir ou modifier les matières';
+            if (modSummaryList.length) {
+              compactStrip.innerHTML = `${modSummaryList.map(item =>
+                `<span class="mod-summary-chip"><strong>${escapeHtml(item.label)}</strong> → ${escapeHtml(item.levelLabel)}</span>`
+              ).join('')}<span class="mod-summary-edit">Modifier</span>`;
             } else {
-              modTargets.push({ key: s.id, label: s.shortName });
+              compactStrip.innerHTML = '<span class="mod-summary-placeholder">Aucune matière sélectionnée — cliquer pour préciser</span>';
             }
-          });
-
-          modTargets.forEach(target => {
-            const itemWrap = document.createElement('label');
-            itemWrap.className = 'mod-expectation-item flex items-center justify-between gap-2 bg-white px-2 py-1 rounded border border-slate-200';
-            const lbl = document.createElement('span');
-            lbl.className = 'text-[11px] font-semibold text-slate-700 truncate';
-            lbl.textContent = target.label;
-            const sel = document.createElement('select');
-            sel.className = 'px-1.5 py-0.5 rounded border border-slate-300 bg-white text-[11px] font-bold text-slate-800';
-            const optReg = document.createElement('option');
-            optReg.value = '';
-            optReg.textContent = st.gradeLevel ? `Niveau régulier (${GRADE_LEVEL_LABELS[st.gradeLevel]})` : 'Niveau régulier';
-            sel.appendChild(optReg);
-            ['1', '2', '3', '4', '5', '6'].forEach(lvl => {
-              if (lvl === String(st.gradeLevel)) return;
-              const opt = document.createElement('option');
-              opt.value = lvl;
-              opt.textContent = `MOD. → ${GRADE_LEVEL_LABELS[lvl]}`;
-              sel.appendChild(opt);
-            });
-            const currentVal = st.modifiedExpectations[target.key] && st.modifiedExpectations[target.key] !== String(st.gradeLevel)
-              ? String(st.modifiedExpectations[target.key])
-              : '';
-            sel.value = currentVal;
-            if (currentVal) {
-              itemWrap.classList.add('is-modified', 'border-amber-300', 'bg-amber-50/40');
-            }
-            sel.addEventListener('change', () => {
-              if (!sel.value || sel.value === String(st.gradeLevel)) {
-                delete st.modifiedExpectations[target.key];
-              } else {
-                st.modifiedExpectations[target.key] = sel.value;
-              }
+            compactStrip.addEventListener('click', () => {
               studentUiState.modStudentId = st.id;
-              notifyUpdate(`Attentes mises à jour pour ${st.name} (${target.label})`);
-              renderAll();
+              renderStudentsView();
             });
-            itemWrap.append(lbl, sel);
-            modGrid.appendChild(itemWrap);
-          });
+            left.appendChild(compactStrip);
+          } else {
+            const modPanel = document.createElement('div');
+            modPanel.id = `modified-expectations-${st.id}`;
+            modPanel.className = 'mod-panel';
 
-          modDetails.appendChild(modGrid);
-          left.appendChild(modDetails);
+            const panelHead = document.createElement('div');
+            panelHead.className = 'mod-panel-head';
+
+            const headCopy = document.createElement('div');
+            headCopy.className = 'mod-panel-copy';
+            const headTitle = document.createElement('strong');
+            headTitle.textContent = 'Attentes modifiées par matière';
+            const headSub = document.createElement('span');
+            headSub.textContent = st.gradeLevel
+              ? `Choisissez un niveau différent du niveau régulier (${GRADE_LEVEL_LABELS[st.gradeLevel]})`
+              : 'Choisissez le niveau visé pour les matières modifiées';
+            headCopy.append(headTitle, headSub);
+
+            const headActions = document.createElement('div');
+            headActions.className = 'mod-panel-actions';
+
+            const removeMod = document.createElement('button');
+            removeMod.type = 'button';
+            removeMod.className = 'mod-panel-remove';
+            removeMod.textContent = 'Désactiver';
+            removeMod.setAttribute('aria-label', `Retirer le bulletin modifié de ${st.name}`);
+            removeMod.addEventListener('click', () => {
+              if (removeMod.dataset.confirm !== 'yes') {
+                removeMod.dataset.confirm = 'yes';
+                removeMod.textContent = 'Confirmer ?';
+                setTimeout(() => {
+                  if (!removeMod.isConnected) return;
+                  delete removeMod.dataset.confirm;
+                  removeMod.textContent = 'Désactiver';
+                }, 4000);
+                return;
+              }
+              st.adaptations = st.adaptations.filter(adaptation => adaptation !== 'Bulletin modifié');
+              st.modifiedExpectations = {};
+              studentUiState.modStudentId = null;
+              notifyUpdate(`Bulletin modifié retiré pour ${st.name}`);
+              renderAll();
+              [...document.querySelectorAll('[data-student-mod-id]')]
+                .find(button => button.dataset.studentModId === st.id)
+                ?.focus({ preventScroll: true });
+            });
+
+            const closeModBtn = document.createElement('button');
+            closeModBtn.type = 'button';
+            closeModBtn.className = 'mod-panel-close';
+            closeModBtn.textContent = 'Fermer';
+            closeModBtn.addEventListener('click', () => {
+              studentUiState.modStudentId = null;
+              renderStudentsView();
+            });
+
+            headActions.append(removeMod, closeModBtn);
+            panelHead.append(headCopy, headActions);
+            modPanel.appendChild(panelHead);
+
+            const modGrid = document.createElement('div');
+            modGrid.className = 'mod-subject-grid';
+
+            const modTargets = [];
+            const seenGroups = new Set();
+            getVisibleSubjectsForContext(SUBJECTS_CONFIG).forEach(s => {
+              if (s.prescoOnly || s.isIlss) return;
+              if (s.group && s.singleResult) {
+                if (seenGroups.has(s.group)) return;
+                seenGroups.add(s.group);
+                modTargets.push({ key: s.group, label: s.groupLabel || s.bulletinLabel || s.shortName });
+              } else {
+                modTargets.push({ key: s.id, label: s.shortName });
+              }
+            });
+
+            modTargets.forEach(target => {
+              const itemWrap = document.createElement('label');
+              itemWrap.className = 'mod-subject-row';
+              const lbl = document.createElement('span');
+              lbl.className = 'mod-subject-label';
+              lbl.textContent = target.label;
+              const sel = document.createElement('select');
+              sel.className = 'mod-subject-select';
+              const optReg = document.createElement('option');
+              optReg.value = '';
+              optReg.textContent = 'Régulier';
+              sel.appendChild(optReg);
+              ['1', '2', '3', '4', '5', '6'].forEach(lvl => {
+                if (lvl === String(st.gradeLevel)) return;
+                const opt = document.createElement('option');
+                opt.value = lvl;
+                opt.textContent = GRADE_LEVEL_LABELS[lvl];
+                sel.appendChild(opt);
+              });
+              const currentVal = st.modifiedExpectations[target.key] && st.modifiedExpectations[target.key] !== String(st.gradeLevel)
+                ? String(st.modifiedExpectations[target.key])
+                : '';
+              sel.value = currentVal;
+              if (currentVal) itemWrap.classList.add('is-modified');
+              sel.addEventListener('change', () => {
+                if (!sel.value || sel.value === String(st.gradeLevel)) {
+                  delete st.modifiedExpectations[target.key];
+                } else {
+                  st.modifiedExpectations[target.key] = sel.value;
+                }
+                studentUiState.modStudentId = st.id;
+                notifyUpdate(`Attentes mises à jour pour ${st.name} (${target.label})`);
+                renderAll();
+              });
+              itemWrap.append(lbl, sel);
+              modGrid.appendChild(itemWrap);
+            });
+
+            modPanel.appendChild(modGrid);
+            left.appendChild(modPanel);
+          }
         }
 
         row.appendChild(left);
 
         const delBtn = document.createElement('button');
         delBtn.type = 'button';
-        delBtn.className = 'student-remove px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer self-start sm:self-center';
+        delBtn.className = 'student-remove px-1 py-0.5 text-xs font-medium cursor-pointer self-start sm:self-center';
         delBtn.textContent = 'Retirer';
         delBtn.addEventListener('click', () => {
           if (delBtn.getAttribute("data-confirm") !== "yes") {
             delBtn.setAttribute("data-confirm", "yes");
             delBtn.textContent = "Confirmer ?";
-            delBtn.className = "student-remove px-2.5 py-1 rounded-lg text-xs font-bold cursor-pointer self-start sm:self-center";
+            delBtn.className = "student-remove px-1 py-0.5 text-xs font-bold cursor-pointer self-start sm:self-center";
             setTimeout(() => {
               if (delBtn.isConnected) {
                 delBtn.removeAttribute("data-confirm");
                 delBtn.textContent = "Retirer";
-                delBtn.className = "student-remove px-2.5 py-1 rounded-lg text-xs font-semibold cursor-pointer self-start sm:self-center";
+                delBtn.className = "student-remove px-1 py-0.5 text-xs font-medium cursor-pointer self-start sm:self-center";
               }
             }, 3000);
             return;

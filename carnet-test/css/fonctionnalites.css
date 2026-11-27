@@ -107,9 +107,6 @@
     #viewQuickObs .qo-category:active,
     #viewQuickObs .qo-choice:active,
     #viewQuickObs .qo-selected-chip button:active { transform: scale(.97); }
-    #viewQuickObs .qo-category[aria-pressed="true"] {
-      box-shadow: inset 0 -2px 0 var(--brand);
-    }
     #viewQuickObs .qo-choice:has(input:checked) {
       animation: observationChoicePulse .26s ease-out;
       border-color: var(--brand);
@@ -179,7 +176,7 @@
     }
     header .hdr-icobtn svg { width: 16px; height: 16px; }
     .hdr-sep { width: 1px; height: 22px; background: var(--line); margin: 0 .15rem; }
-    #settingsPanel { position: absolute; right: 0; top: calc(100% + 8px); width: 270px; z-index: 60; background: #fffefa; color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 30px rgba(40, 48, 42, .16); padding: .85rem .9rem; font-size: 12.5px; }
+    #settingsPanel { position: absolute; right: 0; top: calc(100% + 8px); width: 270px; z-index: 60; background: var(--studio-surface, #ffffff); color: var(--ink); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 12px 30px rgba(15, 23, 42, .14); padding: .85rem .9rem; font-size: 12.5px; }
     #settingsPanel.hidden { display: none; }
     #settingsPanel .sp-title { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem; }
     #settingsPanel .sp-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .25rem 0; font-weight: 600; }
@@ -313,8 +310,8 @@
     html.theme-dark #gradebookScrollContainer tbody tr:hover td.gb-colored-column {
       background: color-mix(in srgb, var(--assignment-column-color) 19%, var(--surface, #111827)) !important;
     }
-    #gradebookBody .final-grade-trigger { width: 3.5rem; flex: none; }
-    .grade-picker { position: fixed; z-index: 90; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; width: min(210px, calc(100vw - 16px)); padding: 6px; background: #fffefa; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(40, 52, 46, .22); animation: pickerIn .1s ease-out; }
+    #gradebookBody .final-grade-trigger { width: 3.35rem; flex: none; }
+    .grade-picker { position: fixed; z-index: 90; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 3px; width: min(210px, calc(100vw - 16px)); padding: 6px; background: var(--studio-surface, #ffffff); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 10px 30px rgba(15, 23, 42, .18); animation: pickerIn .1s ease-out; }
     .grade-picker-btn { min-width: 0; padding: 5px 1px; border-radius: 7px; font-size: 10px; font-weight: 800; white-space: nowrap; cursor: pointer; transition: transform .1s ease; }
     .grade-picker-btn:hover { transform: scale(1.06); }
     .grade-picker-btn.is-current { outline: 2px solid var(--brand-deep); outline-offset: 1px; }
@@ -369,8 +366,26 @@
     .student-name-field { flex: 1 1 11rem; min-width: 0; max-width: 100%; }
     .student-add-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: .5rem; }
     .student-add-row input { width: 100%; }
-    .student-remove, main .student-remove:hover { color: #923d3c !important; background: #faeae8 !important; border: 1px solid #efceca !important; }
-    main .student-remove:hover { background: #f5dcd9 !important; }
+    .student-remove {
+      color: #b91c1c !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      opacity: .76;
+      text-decoration: none;
+      transition: color .14s ease, opacity .14s ease;
+    }
+    main .student-remove:hover,
+    main .student-remove:focus-visible,
+    main .student-remove[data-confirm="yes"] {
+      color: #991b1b !important;
+      background: transparent !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      opacity: 1;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
     .trace-print { color: var(--muted); padding: .35rem; border-radius: 8px; border: 1px solid var(--studio-border-strong, var(--line)); background: var(--studio-surface-soft, #f8fafc); }
     .trace-print:hover { background: var(--brand-soft); color: var(--brand-deep); }
     .print-menu-anchor { position: relative; }
@@ -498,30 +513,30 @@
     #qoToolModeBar > div:first-child { flex: 1 1 auto; min-width: 0; }
     #qoModeSegment { flex: 0 1 auto; min-width: 0; }
     #qoModeSegment .qo-mode-choice, #qoModeSegment > button:not(.qo-custom-rubric-action) {
-      border: 1px solid var(--studio-border, var(--line));
-      border-radius: 999px;
-      background: var(--studio-surface-soft, #f8fafc);
-      box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+      border: 1px solid var(--studio-border-strong, var(--line));
+      border-radius: 10px;
+      background: var(--studio-surface, #fff);
+      box-shadow: none;
     }
     .qo-personal-rubric-wrap {
-      display: inline-flex; align-items: stretch; max-width: min(18rem, 100%); height: 26px;
-      border: 1px solid var(--studio-border, var(--line)); border-radius: 999px; overflow: hidden;
-      background: var(--studio-surface-soft, #f8fafc);
+      display: inline-flex; align-items: stretch; max-width: min(18rem, 100%); min-height: 32px;
+      border: 1px solid var(--studio-border-strong, var(--line)); border-radius: 10px; overflow: hidden;
+      background: var(--studio-surface, #fff);
     }
     #qoModeSegment .qo-personal-rubric-button {
-      min-width: 0; max-width: 15.5rem; height: 24px; overflow: hidden; padding: 0 .55rem;
+      min-width: 0; max-width: 15.5rem; min-height: 30px; overflow: hidden; padding: .28rem .65rem;
       border: 0; border-radius: 0; background: transparent; box-shadow: none; text-overflow: ellipsis; white-space: nowrap;
-      color: var(--studio-text-muted, #475569); font-family: inherit; font-size: .75rem; font-weight: 600; line-height: 16px; letter-spacing: normal;
+      color: var(--brand-deep); font-family: inherit; font-size: .78rem; font-weight: 600; line-height: 1.2; letter-spacing: normal;
     }
-    #qoModeSegment .qo-personal-rubric-button.is-active { background: #4f46e5; color: #fff; }
+    #qoModeSegment .qo-personal-rubric-button.is-active { background: var(--brand-soft); color: var(--brand-deep); }
     .qo-personal-rubric-edit {
-      flex: 0 0 1.65rem; width: 1.65rem; border-left: 1px solid var(--studio-border, var(--line));
+      flex: 0 0 1.85rem; width: 1.85rem; border-left: 1px solid var(--studio-border, var(--line));
       color: var(--brand-deep); font-size: .78rem; font-weight: 800; cursor: pointer;
     }
     .qo-personal-rubric-edit:hover, .qo-personal-rubric-edit:focus-visible { background: var(--brand-soft); outline: none; }
     #qoModeSegment .qo-custom-rubric-action {
-      box-sizing: border-box !important; min-height: 26px !important; height: 26px !important; padding: 0 .72rem !important; border: 1px dashed color-mix(in srgb, var(--brand) 58%, var(--line));
-      border-radius: 999px; background: transparent; color: var(--brand-deep); font-size: .75rem; font-weight: 600; line-height: 16px; cursor: pointer;
+      box-sizing: border-box !important; min-height: 32px !important; padding: .28rem .72rem !important; border: 1px dashed color-mix(in srgb, var(--brand) 58%, var(--line));
+      border-radius: 10px; background: var(--studio-surface, #fff); color: var(--brand-deep); font-size: .78rem; font-weight: 600; line-height: 1.2; cursor: pointer;
     }
     #qoModeSegment .qo-custom-rubric-action:hover, #qoModeSegment .qo-custom-rubric-action:focus-visible {
       background: var(--brand-soft); border-style: solid; outline: none;
@@ -927,9 +942,9 @@
     .cb-tab-btn {
       padding: .35rem .7rem;
       border-radius: 8px;
-      border: 1px solid var(--line);
-      background: #f7f7f2;
-      color: #56615b;
+      border: 1px solid var(--studio-border, var(--line));
+      background: var(--studio-surface-soft, #f8f9fa);
+      color: var(--studio-text-muted, #52525b);
       font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;

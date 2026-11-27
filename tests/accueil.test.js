@@ -407,3 +407,203 @@ test('harmonisation ILSS : banque structurée et animations toujours actives', (
   assert.ok(Array.isArray(structured.ecriture));
   assert.ok(structured.oral.length >= 2);
 });
+
+test('synthèse affiche la fiche élève au clic et le bouton Déjà réalisée n’a pas de référence invalide', () => {
+  const makeNode = (id = '') => {
+    const classes = new Set();
+    const attrs = {};
+    const listeners = {};
+    const node = {
+      id,
+      innerHTML: '',
+      textContent: '',
+      value: '',
+      className: '',
+      disabled: false,
+      style: { props: {}, setProperty(k, v) { this.props[k] = v; }, removeProperty(k) { delete this.props[k]; } },
+      children: [],
+      get childElementCount() { return this.children.length; },
+      classList: {
+        add: (...t) => t.forEach(x => classes.add(x)),
+        remove: (...t) => t.forEach(x => classes.delete(x)),
+        toggle: (t, force) => {
+          const on = force === undefined ? !classes.has(t) : Boolean(force);
+          if (on) classes.add(t); else classes.delete(t);
+          return on;
+        },
+        contains: (t) => classes.has(t),
+      },
+      setAttribute: (k, v) => { attrs[k] = String(v); },
+      getAttribute: (k) => attrs[k] || null,
+      addEventListener: (ev, fn) => { (listeners[ev] ||= []).push(fn); },
+      appendChild(child) { this.children.push(child); return child; },
+      querySelector: () => null,
+      querySelectorAll: () => [],
+      _listeners: listeners,
+    };
+    return node;
+  };
+
+  const els = new Map([
+    ['grStudentBand', makeNode('grStudentBand')],
+    ['grReportContent', makeNode('grReportContent')],
+    ['grGroupNamePill', makeNode('grGroupNamePill')],
+    ['grStudentCounter', makeNode('grStudentCounter')],
+    ['grStudentSearchWrap', makeNode('grStudentSearchWrap')],
+    ['grStudentSearch', makeNode('grStudentSearch')],
+    ['btnGrPrevStudent', makeNode('btnGrPrevStudent')],
+    ['btnGrNextStudent', makeNode('btnGrNextStudent')],
+    ['grTeacherComment', makeNode('grTeacherComment')],
+    ['grTeacherCommentCount', makeNode('grTeacherCommentCount')],
+    ['grTeacherCommentPrint', makeNode('grTeacherCommentPrint')],
+  ]);
+
+  const student = { id: 's1', name: 'Camille Tremblay', firstName: 'Camille', lastName: 'Tremblay', gradeLevel: '4', adaptations: [], reportComment: '' };
+  const maths = { id: 'math_c1', shortName: 'Math C1', fullName: 'Mathématique C1', group: 'maths', officialWeight: 30, bulletinName: 'Résoudre' };
+  const termData = {
+    subjectData: {
+      math_c1: {
+        assignments: [{ id: 'a1', title: 'Problème 1', weight: 100, outOf: 20 }],
+        studentRecords: {
+          s1: { scores: { a1: '17' }, scoreMeta: {}, finalJudgmentOverride: '', comment: 'Beau travail.' },
+        },
+      },
+    },
+  };
+  const ctx = vm.createContext({
+    console,
+    CSS: { escape: s => s },
+    OWN: Object.prototype.hasOwnProperty,
+    document: {
+      getElementById: (id) => els.get(id) || null,
+      createElement: () => makeNode(),
+      querySelector: () => null,
+    },
+    window: { scrollY: 0, scrollTo() {} },
+    prefs: { summaryStudentListMode: 'grid', summaryStudentSort: 'lastName' },
+    SUBJECTS_CONFIG: [maths],
+    GRADE_LEVEL_LABELS: { '4': '4e année' },
+    CYCLE_LABELS: { 2: '2e cycle' },
+    CYCLE_SCALE_URLS: {},
+    CELL_FLAGS: [],
+    VALID_CELL_FLAG_CODES: new Set(),
+    appState: {
+      activeGroupId: 'g1',
+      activeTerm: '1',
+      selectedStudentId: null,
+      annualWeightMode: 'official',
+      groups: [{ id: 'g1', name: '401', level: '4' }],
+      students: [student],
+      terms: { '1': termData, '2': termData, '3': termData },
+    },
+    competencyPanelOpen: false,
+    competencySubjectSelected: null,
+    competencyScaleSelected: {},
+    escapeHtml: s => String(s ?? ''),
+    isAccueilGroup: () => false,
+    isSubjectApplicableForStudent: () => true,
+    getSubjectDisplayConfig: sub => sub,
+    getEffectiveGradeLevel: st => st.gradeLevel,
+    getStudentCycle: () => 2,
+    getPresentStudentLevels: () => ['4'],
+    computeStudentSubjectSummary: () => ({ finalPct: 85, assignmentsAvg: 85 }),
+    computeWeightedAnnualAverage: (a) => a,
+    computeDisciplineAverageForSummary: () => 85,
+    getAnnualResultInfo: () => ({ provisional: false, weight: 100 }),
+    pctToClosestGradeCode: () => 'B+',
+    getBadgeColorClasses: () => 'badge-b',
+    isSubjectModifiedForStudent: () => false,
+    isAssignmentForStudent: () => true,
+    getAssignmentWeightForLevel: () => 100,
+    getAssignmentOutOf: () => 20,
+    formatScoreNumber: n => String(n),
+    getCellFlags: () => [],
+    getCellFlagBadge: c => c,
+    groupObservationTags: () => ({ strengths: [], challenges: [], previous: [] }),
+    hasObservationFeedback: () => false,
+    getStudentAdaptationSummary: () => ({ adaptations: [], hasModifiedBulletin: false, modifiedItems: [] }),
+    getCompetencyTabs: () => [],
+    getAnnualCompetencyPicks: () => ({}),
+    computeCompetencyResult: () => null,
+    scheduleAppStateSave() {},
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'ui-bulletin.js'), 'utf8'), ctx);
+
+  // Clic sur la pastille élève dans la bande Synthèse
+  student.adaptations = ['Plan d’intervention'];
+  ctx.getStudentAdaptationSummary = () => ({ hasPia: true, adaptations: ['Plan d’intervention'], hasModifiedBulletin: false, modifiedItems: [] });
+  ctx.renderGlobalReportView();
+  const studentBtn = els.get('grStudentBand').children[0];
+  assert.ok(studentBtn, 'un bouton élève doit être créé');
+  studentBtn._listeners.click[0]();
+
+  assert.equal(ctx.appState.selectedStudentId, 's1');
+  const html = els.get('grReportContent').innerHTML;
+  assert.match(html, /Camille Tremblay/);
+  assert.match(html, /Math C1/);
+  assert.match(html, /85\s*%/);
+  assert.doesNotMatch(html, /Moyenne indicative/);
+  assert.match(html, /Plan d’intervention/);
+  assert.match(html, /data-gr-bulletin-comment="math_c1"/);
+
+  // Vérification que btnOpenAddAssignment n'appelle plus assignment.evidenceType (ReferenceError)
+  const eventsSrc = fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'demarrage-evenements.js'), 'utf8');
+  const openAddBlock = eventsSrc.slice(eventsSrc.indexOf("getElementById('btnOpenAddAssignment')"), eventsSrc.indexOf('window.openAssignmentForEditing'));
+  assert.ok(openAddBlock.includes("applyIlssAssignmentModalMode('production')"));
+  assert.ok(!openAddBlock.includes('assignment.evidenceType'));
+
+  // Vérification qu'un clic sur la note déjà modifiée dans openGradePicker remet à Auto (null)
+  const outilsSrc = fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'ui-carnet-outils.js'), 'utf8');
+  assert.match(outilsSrc, /onPick\(isCurrent \? null : g\)/);
+});
+
+test('rééquilibrage automatique intelligent des pondérations à 100 %', () => {
+  const ctx = vm.createContext({
+    console, Math, Number, String, Array, Object, Set, Map,
+    SUBJECTS_CONFIG: [{ id: 'math_resoudre', singleResult: false }],
+    GRADE_LEVEL_LABELS: { '4': '4e année', '5': '5e année', '6': '6e année' },
+    appState: {
+      activeSubjectId: 'math_resoudre',
+      students: [{ id: 's1', gradeLevel: '4' }],
+      terms: { '1': { subjectData: {} } }
+    },
+    getLinkedAssignments: () => [],
+    getCurrentSubjectConfig: () => ({ id: 'math_resoudre', singleResult: false }),
+    showToast() {},
+    notifyUpdate() {},
+    updateWeightIndicatorsUI() {},
+    renderGradebookView() {},
+    openMouseBar() {}
+  });
+  vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'carnet-test', 'js', 'etat-ponderations.js'), 'utf8'), ctx);
+
+  // 1) Ajout sans poids personnalisé sur un carnet 60 / 40 -> 40 / 27 / 33 = 100 %
+  const a1 = { id: 'a1', weight: 60 }, a2 = { id: 'a2', weight: 40 }, a3 = { id: 'a3', weight: 100 };
+  const sub1 = { assignments: [a1, a2, a3], equalWeights: false };
+  ctx.rebalanceWeightsTo100(sub1, { preferredAssignment: a3 });
+  assert.deepEqual(sub1.assignments.map(a => a.weight), [40, 27, 33]);
+  assert.equal(ctx.isWeightSumValid100(sub1), true);
+
+  // 2) Ajout avec poids précis (20 %) sur 60 / 40 -> 48 / 32 / 20 = 100 %
+  const b1 = { id: 'b1', weight: 60 }, b2 = { id: 'b2', weight: 40 }, b3 = { id: 'b3', weight: 100 };
+  const sub2 = { assignments: [b1, b2, b3], equalWeights: false };
+  ctx.rebalanceWeightsTo100(sub2, { preferredAssignment: b3, desiredWeight: 20 });
+  assert.deepEqual(sub2.assignments.map(a => a.weight), [48, 32, 20]);
+  assert.equal(ctx.isWeightSumValid100(sub2), true);
+
+  // 3) Suppression d'une colonne de 20 % sur 50 / 30 / 20 -> 63 / 37 = 100 %
+  const c1 = { id: 'c1', weight: 50 }, c2 = { id: 'c2', weight: 30 };
+  const sub3 = { assignments: [c1, c2], equalWeights: false };
+  ctx.rebalanceWeightsTo100(sub3);
+  assert.deepEqual(sub3.assignments.map(a => a.weight), [63, 37]);
+  assert.equal(ctx.isWeightSumValid100(sub3), true);
+
+  // 4) Respect d'une colonne figée (cadenas) lors d'un ajout
+  const d1 = { id: 'd1', weight: 50 }, d2 = { id: 'd2', weight: 50 }, d3 = { id: 'd3', weight: 100 };
+  const sub4 = { assignments: [d1, d2, d3], equalWeights: false };
+  ctx.toggleWeightPin('d1');
+  ctx.rebalanceWeightsTo100(sub4, { preferredAssignment: d3 });
+  assert.deepEqual(sub4.assignments.map(a => a.weight), [50, 25, 25]);
+  assert.equal(ctx.isWeightSumValid100(sub4), true);
+  ctx.toggleWeightPin('d1');
+});

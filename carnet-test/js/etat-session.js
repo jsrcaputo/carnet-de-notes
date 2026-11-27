@@ -104,21 +104,128 @@
       }
     }
 
-    const VALID_PALETTES = ['ocean', 'foret', 'boreal', 'terracotta', 'prune', 'ambre', 'graphite'];
-    const PALETTE_LABELS = {
-      ocean: 'Bleu Océan',
-      foret: 'Vert Forêt',
-      boreal: 'Indigo Boréal',
-      terracotta: 'Argile & Terracotta',
-      prune: 'Prune Éditoriale',
-      ambre: 'Ocre & Ambre',
-      graphite: 'Graphite & Encre'
+    const DEFAULT_ACCENT_COLOR = '#1d4ed8';
+    const LEGACY_PALETTE_COLORS = {
+      ocean: '#1d4ed8',
+      foret: '#276749',
+      boreal: '#4338ca',
+      terracotta: '#b04332',
+      prune: '#6b2f7a',
+      ambre: '#a64d09',
+      graphite: '#334155',
+      azur: '#0369a1'
     };
-    const prefs = { theme: 'light', palette: 'ocean', textSize: 'md', backupReminder: true, coloredColumns: false, animations: true, summaryStudentListMode: 'grid', summaryStudentSort: 'lastName' };
+    const VALID_PALETTES = ['ocean', 'foret', 'boreal', 'terracotta', 'prune', 'ambre', 'graphite'];
+    const isValidHexColor = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value.trim());
+    const normalizeAccentHex = (color, fallbackPalette) => {
+      if (isValidHexColor(color)) return color.trim().toLowerCase();
+      if (fallbackPalette && LEGACY_PALETTE_COLORS[fallbackPalette]) return LEGACY_PALETTE_COLORS[fallbackPalette];
+      return DEFAULT_ACCENT_COLOR;
+    };
+    function hexToHsl(hex) {
+      const clean = normalizeAccentHex(hex).slice(1);
+      const r = parseInt(clean.slice(0, 2), 16) / 255;
+      const g = parseInt(clean.slice(2, 4), 16) / 255;
+      const b = parseInt(clean.slice(4, 6), 16) / 255;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      let h = 0;
+      let s = 0;
+      const l = (max + min) / 2;
+      if (max !== min) {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+        else if (max === g) h = ((b - r) / d + 2) / 6;
+        else h = ((r - g) / d + 4) / 6;
+      }
+      return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+    }
+    function hslToHex(h, s, l) {
+      const hh = ((h % 360) + 360) % 360;
+      const ss = Math.max(0, Math.min(100, s)) / 100;
+      const ll = Math.max(0, Math.min(100, l)) / 100;
+      const c = (1 - Math.abs(2 * ll - 1)) * ss;
+      const x = c * (1 - Math.abs(((hh / 60) % 2) - 1));
+      const m = ll - c / 2;
+      let r = 0, g = 0, b = 0;
+      if (hh < 60) { r = c; g = x; }
+      else if (hh < 120) { r = x; g = c; }
+      else if (hh < 180) { g = c; b = x; }
+      else if (hh < 240) { g = x; b = c; }
+      else if (hh < 300) { r = x; b = c; }
+      else { r = c; b = x; }
+      const toHex = n => Math.round((n + m) * 255).toString(16).padStart(2, '0');
+      return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+    }
+    function applyAccentColorVariables(root, hex, isDark) {
+      const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+      const { h, s, l } = hexToHsl(hex);
+      const isNeutral = s < 10;
+      const sBrand = isNeutral ? s : clamp(s, 42, 78);
+      const sMist = isNeutral ? Math.min(s, 12) : clamp(s + 8, 48, 86);
+      const compHue = (h + 26) % 360;
+      if (isDark) {
+        const darkBrandL = (h >= 42 && h <= 165) ? 44 : 52;
+        const brand = hslToHex(h, isNeutral ? Math.min(s, 14) : clamp(sBrand, 48, 78), darkBrandL);
+        const brandDeep = hslToHex(h, isNeutral ? Math.min(s, 14) : clamp(sBrand + 6, 52, 88), 80);
+        const brandSoft = hslToHex(h, isNeutral ? Math.min(s, 12) : clamp(Math.round(sBrand * 0.52), 20, 46), 21);
+        const accent = hslToHex(compHue, isNeutral ? Math.min(s, 12) : clamp(sBrand, 48, 82), 60);
+        const mistA = hslToHex(h, sMist, 54);
+        const mistB = hslToHex(compHue, isNeutral ? Math.min(s, 10) : clamp(sMist - 6, 44, 80), 58);
+        root.style.setProperty('--brand', brand);
+        root.style.setProperty('--brand-deep', brandDeep);
+        root.style.setProperty('--brand-soft', brandSoft);
+        root.style.setProperty('--accent', accent);
+        root.style.setProperty('--mist-a', mistA);
+        root.style.setProperty('--mist-b', mistB);
+        root.style.setProperty('--studio-accent', brand);
+        root.style.setProperty('--studio-accent-deep', brandDeep);
+        root.style.setProperty('--studio-accent-soft', brandSoft);
+        ['--paper', '--studio-bg', '--sidebar-bg-top', '--sidebar-bg-bottom', '--sidebar-border', '--sidebar-brand-border', '--studio-shadow-sm', '--studio-shadow-md']
+          .forEach(prop => root.style.removeProperty(prop));
+        return;
+      }
+      // Thème clair : texte neutre net, surfaces propres légèrement vivifiées, accent franc et dégradés équilibrés
+      const lightBrandL = (h >= 42 && h <= 165) ? clamp(l, 32, 41) : clamp(l, 36, 47);
+      const brand = hslToHex(h, sBrand, lightBrandL);
+      const brandDeep = hslToHex(h, isNeutral ? s : clamp(sBrand + 6, 44, 82), clamp(lightBrandL - 13, 21, 30));
+      const brandSoft = hslToHex(h, isNeutral ? Math.min(s, 12) : clamp(sBrand + 6, 48, 86), 93);
+      const accent = hslToHex(compHue, isNeutral ? s : clamp(sBrand, 42, 78), 44);
+      const mistA = hslToHex(h, sMist, 58);
+      const mistB = hslToHex(compHue, isNeutral ? Math.min(s, 10) : clamp(sMist - 6, 42, 78), 64);
+      const bgSat = isNeutral ? Math.min(s, 8) : Math.min(26, Math.round(sBrand * 0.34));
+      const sideTopSat = isNeutral ? Math.min(s, 8) : Math.min(34, Math.round(sBrand * 0.44));
+      const sideBotSat = isNeutral ? Math.min(s, 10) : Math.min(38, Math.round(sBrand * 0.5));
+      const borderSat = isNeutral ? Math.min(s, 10) : Math.min(24, Math.round(sBrand * 0.32));
+      const bgHex = hslToHex(h, bgSat, 95.5);
+      const sideTopHex = hslToHex(h, sideTopSat, 97.4);
+      const sideBotHex = hslToHex(h, sideBotSat, 94.6);
+      const sideBorderHex = hslToHex(h, borderSat, 86.5);
+      root.style.setProperty('--brand', brand);
+      root.style.setProperty('--brand-deep', brandDeep);
+      root.style.setProperty('--brand-soft', brandSoft);
+      root.style.setProperty('--accent', accent);
+      root.style.setProperty('--mist-a', mistA);
+      root.style.setProperty('--mist-b', mistB);
+      root.style.setProperty('--studio-accent', brand);
+      root.style.setProperty('--studio-accent-deep', brandDeep);
+      root.style.setProperty('--studio-accent-soft', brandSoft);
+      root.style.setProperty('--paper', bgHex);
+      root.style.setProperty('--studio-bg', bgHex);
+      root.style.setProperty('--sidebar-bg-top', sideTopHex);
+      root.style.setProperty('--sidebar-bg-bottom', sideBotHex);
+      root.style.setProperty('--sidebar-border', sideBorderHex);
+      root.style.setProperty('--sidebar-brand-border', sideBorderHex);
+      root.style.setProperty('--studio-shadow-sm', `0 2px 8px -2px color-mix(in srgb, ${brand} 9%, rgba(15, 23, 42, .05)), 0 1px 2px rgba(15, 23, 42, .04)`);
+      root.style.setProperty('--studio-shadow-md', `0 14px 32px -12px color-mix(in srgb, ${brand} 14%, rgba(15, 23, 42, .08)), 0 4px 12px -4px rgba(15, 23, 42, .05)`);
+    }
+    const prefs = { theme: 'light', palette: 'ocean', accentColor: DEFAULT_ACCENT_COLOR, textSize: 'md', backupReminder: true, coloredColumns: false, animations: true, summaryStudentListMode: 'grid', summaryStudentSort: 'lastName' };
     try {
       const savedPrefs = JSON.parse(window.localStorage.getItem('carnet_notes_prefs_2026_v1') || 'null');
       if (savedPrefs && typeof savedPrefs === 'object') {
-        // Thème et palette viennent du carnet ouvert : un carnet vierge démarre en clair, palette bleue.
+        if (isValidHexColor(savedPrefs.accentColor)) prefs.accentColor = savedPrefs.accentColor.toLowerCase();
+        else if (savedPrefs.palette && LEGACY_PALETTE_COLORS[savedPrefs.palette]) prefs.accentColor = LEGACY_PALETTE_COLORS[savedPrefs.palette];
         if (['xs', 'sm', 'md', 'lg', 'xl'].includes(savedPrefs.textSize)) prefs.textSize = savedPrefs.textSize;
         if (typeof savedPrefs.backupReminder === 'boolean') prefs.backupReminder = savedPrefs.backupReminder;
         if (typeof savedPrefs.coloredColumns === 'boolean') prefs.coloredColumns = savedPrefs.coloredColumns;
@@ -142,10 +249,13 @@
     function applyPrefs() {
       const root = document.documentElement;
       root.classList.add('design-studio');
-      const activePalette = VALID_PALETTES.includes(prefs.palette) ? prefs.palette : 'ocean';
-      prefs.palette = activePalette;
-      root.setAttribute('data-palette', activePalette);
-      root.classList.toggle('theme-dark', prefs.theme === 'dark');
+      const activeColor = normalizeAccentHex(prefs.accentColor, prefs.palette);
+      prefs.accentColor = activeColor;
+      prefs.palette = 'ocean';
+      root.setAttribute('data-palette', 'ocean');
+      const isDark = prefs.theme === 'dark';
+      root.classList.toggle('theme-dark', isDark);
+      applyAccentColorVariables(root, activeColor, isDark);
       prefs.animations = true;
       root.classList.remove('reduce-motion');
       if (document.body) document.body.classList.remove('reduce-motion');
@@ -164,13 +274,12 @@
           seg.querySelectorAll('button').forEach(b => b.classList.toggle('is-on', b.getAttribute('data-val') === prefs[key]));
         }
       });
-      const paletteNameEl = document.getElementById('spPaletteName');
-      if (paletteNameEl) paletteNameEl.textContent = PALETTE_LABELS[activePalette] || 'Bleu Océan';
-      document.querySelectorAll('#settingsPanel [data-palette-val]').forEach(btn => {
-        const isOn = btn.getAttribute('data-palette-val') === activePalette;
-        btn.classList.toggle('is-active', isOn);
-        btn.setAttribute('aria-pressed', String(isOn));
-      });
+      const colorInput = document.getElementById('spAccentColor');
+      const colorHexEl = document.getElementById('spAccentHex');
+      const colorResetBtn = document.getElementById('btnResetAccentColor');
+      if (colorInput && colorInput.value.toLowerCase() !== activeColor) colorInput.value = activeColor;
+      if (colorHexEl) colorHexEl.textContent = activeColor.toUpperCase();
+      if (colorResetBtn) colorResetBtn.disabled = activeColor === DEFAULT_ACCENT_COLOR;
       document.querySelectorAll('#settingsPanel [data-pref-check]').forEach(cb => {
         cb.checked = !!prefs[cb.getAttribute('data-pref-check')];
       });
@@ -212,10 +321,11 @@
           typeof value.backupReminder !== 'boolean') {
         throw new Error('Les paramètres d’affichage de ce fichier sont invalides.');
       }
-      const palette = value.palette === 'azur' ? 'ocean' : (VALID_PALETTES.includes(value.palette) ? value.palette : (prefs.palette || 'ocean'));
+      const accentColor = normalizeAccentHex(value.accentColor, value.palette);
       return {
         theme: value.theme,
-        palette,
+        palette: 'ocean',
+        accentColor,
         textSize: value.textSize,
         backupReminder: value.backupReminder,
         coloredColumns: typeof value.coloredColumns === 'boolean' ? value.coloredColumns : false,
@@ -329,6 +439,11 @@
         const changedView = appState.activeView !== viewId;
         const previousSubjectId = appState.activeSubjectId;
         const previousTerm = appState.activeTerm;
+        const flashStudentId = options.flashStudentId || (
+          appState.activeView === 'viewGlobalReport' && viewId === 'viewGradebook' && appState.selectedStudentId
+            ? appState.selectedStudentId
+            : null
+        );
         if (viewId === 'viewGlobalReport' && appState.activeView !== 'viewGlobalReport') {
           competencyPanelOpen = false;
         }
@@ -341,7 +456,11 @@
         if (viewId === 'viewStudents' || viewId === 'viewGlobalReport' || viewId === 'viewHome') expandedSubjectGroup = null;
         appState.activeView = viewId;
         renderWithCarnetMerge(renderAll, changedSubject || changedTerm);
-        if (!options.skipScrollTop && (changedView || updateState)) {
+        if (flashStudentId && viewId === 'viewGradebook') {
+          window.setTimeout(() => {
+            if (typeof flashGradebookStudentRow === 'function') flashGradebookStudentRow(flashStudentId);
+          }, 50);
+        } else if (!options.skipScrollTop && (changedView || updateState)) {
           const reducedMotion = isReducedMotionEnabled();
           window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
         }

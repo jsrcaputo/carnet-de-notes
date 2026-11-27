@@ -1,21 +1,21 @@
 
     @media screen {
-      /* 1. BLEU OCÉAN (Défaut — Ardoise fraîche & Bleu royal, sidebar albâtre pâle) */
+      /* 1. BLEU OCÉAN (Défaut — Neutres ardoise propres & Bleu royal éditorial) */
       html.design-studio,
       html.design-studio[data-palette="ocean"] {
         --ink: #0f172a;
         --muted: #64748b;
         --line: #e2e8f0;
-        --paper: #f1f5f9;
-        --surface: #fff;
+        --paper: #f4f6f9;
+        --surface: #ffffff;
         --brand: #1d4ed8;
         --brand-deep: #1e3a8a;
         --brand-soft: #eff6ff;
         --accent: #0284c7;
-        --mist-a: #38bdf8;
+        --mist-a: #60a5fa;
         --mist-b: #818cf8;
-        --studio-bg: #f1f5f9;
-        --studio-surface: #fff;
+        --studio-bg: #f4f6f9;
+        --studio-surface: #ffffff;
         --studio-surface-soft: #f8fafc;
         --studio-border: #e2e8f0;
         --studio-border-strong: #cbd5e1;
@@ -24,217 +24,218 @@
         --studio-accent: #1d4ed8;
         --studio-accent-deep: #1e3a8a;
         --studio-accent-soft: #eff6ff;
-        --studio-shadow-sm: 0 2px 8px -2px rgba(29, 78, 216, .08), 0 1px 2px rgba(15, 23, 42, .04);
-        --studio-shadow-md: 0 14px 32px -12px rgba(29, 78, 216, .14), 0 4px 12px -4px rgba(15, 23, 42, .05);
-        --sidebar-bg-top: #f8f9fb;
-        --sidebar-bg-bottom: #f1f4f8;
-        --sidebar-border: #dde3ec;
-        --sidebar-brand-border: #e2e7f0;
+        --studio-shadow-sm: 0 1px 3px rgba(15, 23, 42, .05), 0 1px 2px -1px rgba(15, 23, 42, .04);
+        --studio-shadow-md: 0 12px 28px -10px rgba(15, 23, 42, .10), 0 4px 10px -4px rgba(15, 23, 42, .05);
+        --sidebar-bg-top: #f9fafc;
+        --sidebar-bg-bottom: #f3f5f9;
+        --sidebar-border: #e2e8f0;
+        --sidebar-brand-border: #e2e8f0;
       }
 
-      /* 1b. VERT FORÊT (Sauge douce, ardoise naturelle & vert sapin professionnel) */
+      /* 1b. VERT FORÊT (Neutres zinc propres & Vert sapin éditorial en accent) */
       html.design-studio[data-palette="foret"] {
-        --ink: #16221b;
-        --muted: #5a6d62;
-        --line: #dce5df;
-        --paper: #f4f7f5;
+        --ink: #18181b;
+        --muted: #64676f;
+        --line: #e4e6ea;
+        --paper: #f4f5f6;
         --surface: #ffffff;
-        --brand: #2f6b4f;
-        --brand-deep: #1b4632;
-        --brand-soft: #e6f2eb;
-        --accent: #1f7a68;
-        --mist-a: #34d399;
-        --mist-b: #38bdf8;
-        --studio-bg: #f4f7f5;
+        --brand: #276749;
+        --brand-deep: #194331;
+        --brand-soft: #eef6f1;
+        --accent: #1f7a64;
+        --mist-a: #52a382;
+        --mist-b: #7aa3a8;
+        --studio-bg: #f4f5f6;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #f7faf8;
-        --studio-border: #dce5df;
-        --studio-border-strong: #c2d1c8;
-        --studio-text: #16221b;
-        --studio-text-muted: #4d5f54;
-        --studio-accent: #2f6b4f;
-        --studio-accent-deep: #1b4632;
-        --studio-accent-soft: #e6f2eb;
-        --sidebar-bg-top: #eff8f2;
-        --sidebar-bg-bottom: #e4f0e9;
-        --sidebar-border: #d8e2dc;
-        --sidebar-brand-border: #dde7e0;
+        --studio-surface-soft: #f8f9fa;
+        --studio-border: #e4e6ea;
+        --studio-border-strong: #cdd1d8;
+        --studio-text: #18181b;
+        --studio-text-muted: #52525b;
+        --studio-accent: #276749;
+        --studio-accent-deep: #194331;
+        --studio-accent-soft: #eef6f1;
+        --sidebar-bg-top: #fafafa;
+        --sidebar-bg-bottom: #f4f5f7;
+        --sidebar-border: #e4e6ea;
+        --sidebar-brand-border: #e4e6ea;
       }
 
-      /* 2. INDIGO BORÉAL (Calme académique, lavande ardoise & indigo profond) */
+      /* 2. INDIGO BORÉAL (Neutres ardoise propres & Indigo profond académique) */
       html.design-studio[data-palette="boreal"] {
-        --ink: #131629;
-        --muted: #636682;
-        --line: #e2e4ef;
-        --paper: #f3f4f8;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e6ee;
+        --paper: #f4f5f8;
         --surface: #ffffff;
         --brand: #4338ca;
         --brand-deep: #312e81;
-        --brand-soft: #eef2ff;
-        --accent: #6366f1;
-        --mist-a: #818cf8;
-        --mist-b: #c084fc;
-        --studio-bg: #f3f4f8;
+        --brand-soft: #f0f2fe;
+        --accent: #4f46e5;
+        --mist-a: #7c8cf8;
+        --mist-b: #a5b4fc;
+        --studio-bg: #f4f5f8;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #f8f9fc;
-        --studio-border: #e2e4ef;
-        --studio-border-strong: #c9cde0;
-        --studio-text: #131629;
-        --studio-text-muted: #4b4e6d;
+        --studio-surface-soft: #f8f9fb;
+        --studio-border: #e2e6ee;
+        --studio-border-strong: #cbd2df;
+        --studio-text: #0f172a;
+        --studio-text-muted: #475569;
         --studio-accent: #4338ca;
         --studio-accent-deep: #312e81;
-        --studio-accent-soft: #eef2ff;
-        --sidebar-bg-top: #f3f1fc;
-        --sidebar-bg-bottom: #e9e7f7;
-        --sidebar-border: #e1dfeb;
-        --sidebar-brand-border: #e6e4f0;
+        --studio-accent-soft: #f0f2fe;
+        --sidebar-bg-top: #fafafd;
+        --sidebar-bg-bottom: #f3f4f8;
+        --sidebar-border: #e2e6ee;
+        --sidebar-brand-border: #e2e6ee;
       }
 
-      /* 3. AZUR NORDIQUE (Cristal aérien, bleu fjord & brume polaire) */
+      /* 3. AZUR NORDIQUE (Masquée dans le sélecteur, maintenue cohérente) */
       html.design-studio[data-palette="azur"] {
-        --ink: #0c1924;
-        --muted: #586f82;
-        --line: #dce6ee;
-        --paper: #eff4f8;
+        --ink: #0f172a;
+        --muted: #64748b;
+        --line: #e2e8f0;
+        --paper: #f4f6f9;
         --surface: #ffffff;
         --brand: #0369a1;
         --brand-deep: #0c4a6e;
-        --brand-soft: #edf7fc;
+        --brand-soft: #eef7fc;
         --accent: #0284c7;
         --mist-a: #38bdf8;
-        --mist-b: #2dd4bf;
-        --studio-bg: #eff4f8;
+        --mist-b: #5eead4;
+        --studio-bg: #f4f6f9;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #f7fafc;
-        --studio-border: #dce6ee;
-        --studio-border-strong: #c2d3e0;
-        --studio-text: #0c1924;
-        --studio-text-muted: #3f5668;
+        --studio-surface-soft: #f8fafc;
+        --studio-border: #e2e8f0;
+        --studio-border-strong: #cbd5e1;
+        --studio-text: #0f172a;
+        --studio-text-muted: #475569;
         --studio-accent: #0369a1;
         --studio-accent-deep: #0c4a6e;
-        --studio-accent-soft: #edf7fc;
-        --sidebar-bg-top: #f7fafc;
-        --sidebar-bg-bottom: #edf3f7;
-        --sidebar-border: #d9e3eb;
-        --sidebar-brand-border: #dfe8ef;
+        --studio-accent-soft: #eef7fc;
+        --sidebar-bg-top: #f9fafc;
+        --sidebar-bg-bottom: #f3f5f9;
+        --sidebar-border: #e2e8f0;
+        --sidebar-brand-border: #e2e8f0;
       }
 
-      /* 4. ARGILE & TERRACOTTA (Chaleureux, terre cuite feutrée & pierre rosée) */
+      /* 4. ARGILE & TERRACOTTA (Papier neutre chaud & Terre cuite feutrée en accent) */
       html.design-studio[data-palette="terracotta"] {
-        --ink: #231917;
-        --muted: #786661;
-        --line: #e8dfdc;
-        --paper: #f6f3f1;
+        --ink: #1c1917;
+        --muted: #6c6761;
+        --line: #e6e3de;
+        --paper: #f5f4f2;
         --surface: #ffffff;
-        --brand: #b84a39;
-        --brand-deep: #7f2d20;
-        --brand-soft: #fdf2f0;
-        --accent: #d96b43;
-        --mist-a: #f59e0b;
-        --mist-b: #f472b6;
-        --studio-bg: #f6f3f1;
+        --brand: #b04332;
+        --brand-deep: #7a2c20;
+        --brand-soft: #fbf2ef;
+        --accent: #c45b3e;
+        --mist-a: #d97757;
+        --mist-b: #d6a48e;
+        --studio-bg: #f5f4f2;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #fbf9f8;
-        --studio-border: #e8dfdc;
-        --studio-border-strong: #d5c7c2;
-        --studio-text: #231917;
-        --studio-text-muted: #5c4b47;
-        --studio-accent: #b84a39;
-        --studio-accent-deep: #7f2d20;
-        --studio-accent-soft: #fdf2f0;
-        --sidebar-bg-top: #fdf2ef;
-        --sidebar-bg-bottom: #f7e7e1;
-        --sidebar-border: #e4dad4;
-        --sidebar-brand-border: #e9e0db;
+        --studio-surface-soft: #faf9f7;
+        --studio-border: #e6e3de;
+        --studio-border-strong: #d3cec6;
+        --studio-text: #1c1917;
+        --studio-text-muted: #57534e;
+        --studio-accent: #b04332;
+        --studio-accent-deep: #7a2c20;
+        --studio-accent-soft: #fbf2ef;
+        --sidebar-bg-top: #fcfbf9;
+        --sidebar-bg-bottom: #f5f3ef;
+        --sidebar-border: #e6e3de;
+        --sidebar-brand-border: #e6e3de;
       }
 
-      /* 5. PRUNE ÉDITORIALE (Littéraire, aubergine veloutée & brume mauve douce) */
+      /* 5. PRUNE ÉDITORIALE (Neutres zinc propres & Aubergine littéraire en accent) */
       html.design-studio[data-palette="prune"] {
-        --ink: #1f1624;
-        --muted: #6e6075;
-        --line: #e6e0ea;
-        --paper: #f5f2f7;
+        --ink: #18181b;
+        --muted: #64676f;
+        --line: #e4e6ea;
+        --paper: #f4f5f7;
         --surface: #ffffff;
         --brand: #6b2f7a;
         --brand-deep: #4a1d56;
-        --brand-soft: #f8f0fa;
-        --accent: #8b3d9e;
-        --mist-a: #c084fc;
-        --mist-b: #f472b6;
-        --studio-bg: #f5f2f7;
+        --brand-soft: #f7f1f9;
+        --accent: #863c99;
+        --mist-a: #a474c4;
+        --mist-b: #b39ddb;
+        --studio-bg: #f4f5f7;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #faf8fb;
-        --studio-border: #e6e0ea;
-        --studio-border-strong: #d1c7d8;
-        --studio-text: #1f1624;
-        --studio-text-muted: #54465c;
+        --studio-surface-soft: #f8f9fa;
+        --studio-border: #e4e6ea;
+        --studio-border-strong: #cdd1d8;
+        --studio-text: #18181b;
+        --studio-text-muted: #52525b;
         --studio-accent: #6b2f7a;
         --studio-accent-deep: #4a1d56;
-        --studio-accent-soft: #f8f0fa;
-        --sidebar-bg-top: #f9f0fa;
-        --sidebar-bg-bottom: #f1e4f3;
-        --sidebar-border: #e2dae7;
-        --sidebar-brand-border: #e7e0ec;
+        --studio-accent-soft: #f7f1f9;
+        --sidebar-bg-top: #fafafa;
+        --sidebar-bg-bottom: #f4f5f7;
+        --sidebar-border: #e4e6ea;
+        --sidebar-brand-border: #e4e6ea;
       }
 
-      /* 6. OCRE & AMBRE (Lumineux, bronze doré & papier ivoire léger) */
+      /* 6. OCRE & AMBRE (Papier neutre chaud & Ambre doré profond en accent) */
       html.design-studio[data-palette="ambre"] {
-        --ink: #211a12;
-        --muted: #756756;
-        --line: #e8e1d7;
-        --paper: #f6f3ee;
+        --ink: #1c1917;
+        --muted: #6c6761;
+        --line: #e6e3de;
+        --paper: #f5f4f1;
         --surface: #ffffff;
-        --brand: #b45309;
+        --brand: #a64d09;
         --brand-deep: #78350f;
-        --brand-soft: #fef7ec;
-        --accent: #d97706;
-        --mist-a: #fbbf24;
-        --mist-b: #fb923c;
-        --studio-bg: #f6f3ee;
+        --brand-soft: #fcf6ec;
+        --accent: #c2650e;
+        --mist-a: #d99b38;
+        --mist-b: #d4a574;
+        --studio-bg: #f5f4f1;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #fbf9f5;
-        --studio-border: #e8e1d7;
-        --studio-border-strong: #d6cbbd;
-        --studio-text: #211a12;
-        --studio-text-muted: #594d3f;
-        --studio-accent: #b45309;
+        --studio-surface-soft: #faf9f7;
+        --studio-border: #e6e3de;
+        --studio-border-strong: #d3cec6;
+        --studio-text: #1c1917;
+        --studio-text-muted: #57534e;
+        --studio-accent: #a64d09;
         --studio-accent-deep: #78350f;
-        --studio-accent-soft: #fef7ec;
-        --sidebar-bg-top: #fdf7e9;
-        --sidebar-bg-bottom: #f7ecd5;
-        --sidebar-border: #e4ddd1;
-        --sidebar-brand-border: #e9e3d8;
+        --studio-accent-soft: #fcf6ec;
+        --sidebar-bg-top: #fcfbf9;
+        --sidebar-bg-bottom: #f5f3ef;
+        --sidebar-border: #e6e3de;
+        --sidebar-brand-border: #e6e3de;
       }
 
-      /* 7. GRAPHITE & ENCRE (Monochrome minimaliste type Notion / iA Writer) */
+      /* 7. GRAPHITE & ENCRE (Minimaliste éditorial type Notion / Linear) */
       html.design-studio[data-palette="graphite"] {
         --ink: #18181b;
-        --muted: #64656d;
+        --muted: #64676f;
         --line: #e4e4e7;
-        --paper: #f3f4f6;
+        --paper: #f4f5f6;
         --surface: #ffffff;
         --brand: #334155;
         --brand-deep: #0f172a;
-        --brand-soft: #f1f5f9;
+        --brand-soft: #eef1f5;
         --accent: #475569;
         --mist-a: #94a3b8;
         --mist-b: #cbd5e1;
-        --studio-bg: #f3f4f6;
+        --studio-bg: #f4f5f6;
         --studio-surface: #ffffff;
-        --studio-surface-soft: #f9fafb;
+        --studio-surface-soft: #f8f9fa;
         --studio-border: #e4e4e7;
-        --studio-border-strong: #cfd0d6;
+        --studio-border-strong: #d1d5db;
         --studio-text: #18181b;
-        --studio-text-muted: #4b4c53;
+        --studio-text-muted: #52525b;
         --studio-accent: #334155;
         --studio-accent-deep: #0f172a;
-        --studio-accent-soft: #f1f5f9;
-        --sidebar-bg-top: #f8f8f9;
-        --sidebar-bg-bottom: #f0f1f3;
-        --sidebar-border: #e0e1e5;
-        --sidebar-brand-border: #e5e6ea;
+        --studio-accent-soft: #eef1f5;
+        --sidebar-bg-top: #fafafa;
+        --sidebar-bg-bottom: #f4f4f6;
+        --sidebar-border: #e4e4e7;
+        --sidebar-brand-border: #e4e4e7;
       }
 
+      /* THÈME SOMBRE — Surfaces neutres communes + accents conformes WCAG AA/AAA */
       html.design-studio.theme-dark,
       html.design-studio.theme-dark[data-palette="ocean"] {
         color-scheme: dark;
@@ -243,11 +244,12 @@
         --line: #444746;
         --paper: #131314;
         --surface: #1e1f20;
-        --brand: #3b82f6;
+        --brand: #2563eb;
         --brand-deep: #a8c7fa;
-        --brand-soft: #26364d;
-        --mist-a: #38bdf8;
-        --mist-b: #818cf8;
+        --brand-soft: #20324a;
+        --accent: #38bdf8;
+        --mist-a: #3b82f6;
+        --mist-b: #6366f1;
         --studio-bg: #131314;
         --studio-surface: #1e1f20;
         --studio-surface-soft: #292a2d;
@@ -255,78 +257,87 @@
         --studio-border-strong: #5f6368;
         --studio-text: #e3e3e3;
         --studio-text-muted: #c4c7c5;
-        --studio-accent: #3b82f6;
+        --studio-accent: #2563eb;
         --studio-accent-deep: #a8c7fa;
-        --studio-accent-soft: #26364d;
+        --studio-accent-soft: #20324a;
+        --studio-shadow-sm: 0 2px 8px rgba(0, 0, 0, .28);
+        --studio-shadow-md: 0 16px 36px rgba(0, 0, 0, .38);
         --sidebar-bg-top: #1a1c1e;
         --sidebar-bg-bottom: #141618;
         --sidebar-border: #2e3134;
         --sidebar-brand-border: #2e3134;
       }
       html.design-studio.theme-dark[data-palette="foret"] {
-        --brand: #3ea379;
+        --brand: #2b8560;
         --brand-deep: #a7e3c8;
-        --brand-soft: #1b362b;
-        --mist-a: #34d399;
-        --mist-b: #22d3ee;
-        --studio-accent: #3ea379;
+        --brand-soft: #193228;
+        --accent: #34b888;
+        --mist-a: #34b888;
+        --mist-b: #38a3a5;
+        --studio-accent: #2b8560;
         --studio-accent-deep: #a7e3c8;
-        --studio-accent-soft: #1b362b;
+        --studio-accent-soft: #193228;
       }
       html.design-studio.theme-dark[data-palette="boreal"] {
-        --brand: #6366f1;
-        --brand-deep: #a5b4fc;
-        --brand-soft: #25274d;
-        --mist-a: #818cf8;
-        --mist-b: #c084fc;
-        --studio-accent: #6366f1;
-        --studio-accent-deep: #a5b4fc;
-        --studio-accent-soft: #25274d;
+        --brand: #5558e6;
+        --brand-deep: #b4c2ff;
+        --brand-soft: #23264a;
+        --accent: #818cf8;
+        --mist-a: #6366f1;
+        --mist-b: #818cf8;
+        --studio-accent: #5558e6;
+        --studio-accent-deep: #b4c2ff;
+        --studio-accent-soft: #23264a;
       }
       html.design-studio.theme-dark[data-palette="azur"] {
-        --brand: #0284c7;
+        --brand: #0374b0;
         --brand-deep: #7dd3fc;
         --brand-soft: #163247;
-        --mist-a: #38bdf8;
+        --accent: #38bdf8;
+        --mist-a: #0ea5e9;
         --mist-b: #2dd4bf;
-        --studio-accent: #0284c7;
+        --studio-accent: #0374b0;
         --studio-accent-deep: #7dd3fc;
         --studio-accent-soft: #163247;
       }
       html.design-studio.theme-dark[data-palette="terracotta"] {
-        --brand: #e06d53;
-        --brand-deep: #f5b0a1;
-        --brand-soft: #3d241f;
-        --mist-a: #f97316;
-        --mist-b: #f472b6;
-        --studio-accent: #e06d53;
-        --studio-accent-deep: #f5b0a1;
-        --studio-accent-soft: #3d241f;
+        --brand: #c4533b;
+        --brand-deep: #f5b4a5;
+        --brand-soft: #3a231e;
+        --accent: #e07a5f;
+        --mist-a: #d97757;
+        --mist-b: #c98a73;
+        --studio-accent: #c4533b;
+        --studio-accent-deep: #f5b4a5;
+        --studio-accent-soft: #3a231e;
       }
       html.design-studio.theme-dark[data-palette="prune"] {
-        --brand: #a855f7;
-        --brand-deep: #d8b4fe;
-        --brand-soft: #362147;
-        --mist-a: #c084fc;
-        --mist-b: #f472b6;
-        --studio-accent: #a855f7;
-        --studio-accent-deep: #d8b4fe;
-        --studio-accent-soft: #362147;
+        --brand: #984ab0;
+        --brand-deep: #ddb8f8;
+        --brand-soft: #332142;
+        --accent: #c084fc;
+        --mist-a: #a872cc;
+        --mist-b: #9f88d6;
+        --studio-accent: #984ab0;
+        --studio-accent-deep: #ddb8f8;
+        --studio-accent-soft: #332142;
       }
       html.design-studio.theme-dark[data-palette="ambre"] {
-        --brand: #d97706;
+        --brand: #b45b08;
         --brand-deep: #fcd34d;
-        --brand-soft: #3b2a14;
-        --mist-a: #f59e0b;
-        --mist-b: #fb923c;
-        --studio-accent: #d97706;
+        --brand-soft: #382814;
+        --accent: #f59e0b;
+        --mist-a: #d99b38;
+        --mist-b: #c78b4e;
+        --studio-accent: #b45b08;
         --studio-accent-deep: #fcd34d;
-        --studio-accent-soft: #3b2a14;
+        --studio-accent-soft: #382814;
       }
       html.design-studio.theme-dark[data-palette="graphite"] {
         --brand: #64748b;
         --brand-deep: #cbd5e1;
         --brand-soft: #272c35;
+        --accent: #94a3b8;
         --mist-a: #64748b;
         --mist-b: #94a3b8;
         --studio-accent: #64748b;
@@ -334,20 +345,35 @@
         --studio-accent-soft: #272c35;
       }
       html.design-studio body {
+        position: relative;
+        isolation: isolate;
         padding: 0 !important;
         background-color: var(--studio-bg) !important;
-        background-image:
-          radial-gradient(ellipse 68% 48% at 14% -6%, color-mix(in srgb, var(--mist-a, var(--accent)) 14%, transparent), transparent 68%),
-          radial-gradient(ellipse 62% 46% at 88% 4%, color-mix(in srgb, var(--mist-b, var(--brand)) 11%, transparent), transparent 66%),
-          linear-gradient(165deg, color-mix(in srgb, var(--mist-a, var(--brand)) 5%, var(--studio-bg)) 0%, var(--studio-bg) 52%, color-mix(in srgb, var(--mist-b, var(--brand)) 6%, var(--studio-bg)) 100%) !important;
-        background-attachment: fixed !important;
+        background-image: none !important;
+        background-attachment: scroll !important;
         color: var(--studio-text) !important;
       }
-      html.design-studio.theme-dark body {
+      /* Halos d'ambiance vivifiés et équilibrés : couleur bien présente, texte net et lisible */
+      html.design-studio body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        transform: translateZ(0);
+        contain: strict;
+        background-color: var(--studio-bg);
         background-image:
-          radial-gradient(ellipse 65% 48% at 16% -6%, color-mix(in srgb, var(--mist-a, var(--brand)) 14%, transparent), transparent 68%),
-          radial-gradient(ellipse 58% 46% at 88% 4%, color-mix(in srgb, var(--mist-b, var(--brand)) 11%, transparent), transparent 68%),
-          linear-gradient(165deg, color-mix(in srgb, var(--mist-a, var(--brand)) 4%, var(--studio-bg)) 0%, var(--studio-bg) 56%, color-mix(in srgb, var(--mist-b, var(--brand)) 5%, var(--studio-bg)) 100%) !important;
+          radial-gradient(ellipse 68% 52% at 10% -8%, color-mix(in srgb, var(--mist-a, var(--brand)) 16%, transparent), transparent 70%),
+          radial-gradient(ellipse 60% 48% at 90% -2%, color-mix(in srgb, var(--mist-b, var(--accent)) 13%, transparent), transparent 68%),
+          radial-gradient(ellipse 52% 40% at 76% 106%, color-mix(in srgb, var(--mist-a, var(--brand)) 8%, transparent), transparent 72%);
+      }
+      html.design-studio.theme-dark body::before {
+        background-color: var(--studio-bg);
+        background-image:
+          radial-gradient(ellipse 66% 50% at 14% -8%, color-mix(in srgb, var(--mist-a, var(--brand)) 17%, transparent), transparent 68%),
+          radial-gradient(ellipse 58% 46% at 88% 2%, color-mix(in srgb, var(--mist-b, var(--brand)) 13%, transparent), transparent 68%),
+          radial-gradient(ellipse 50% 38% at 78% 104%, color-mix(in srgb, var(--mist-a, var(--brand)) 8%, transparent), transparent 72%);
       }
       #printMeta { display: none; }
       html.design-studio body, html.design-studio button, html.design-studio input, html.design-studio select, html.design-studio textarea { font-family: "Segoe UI", system-ui, sans-serif; }
@@ -439,12 +465,12 @@
         border-color: var(--brand);
       }
       html.design-studio.theme-dark .test-single-group.is-create-trigger {
-        color: #f1f5f9;
-        background: rgba(99, 102, 241, 0.16);
-        border-color: rgba(129, 140, 248, 0.42);
+        color: var(--brand-deep);
+        background: var(--brand-soft);
+        border-color: color-mix(in srgb, var(--brand) 45%, transparent);
       }
       html.design-studio.theme-dark .test-single-group.is-create-trigger:hover {
-        background: rgba(99, 102, 241, 0.26);
+        border-color: var(--brand);
       }
       .test-sidebar #headerGroupSelect { width: 0; min-height: 2.35rem; padding: .5rem .65rem; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--studio-text-muted); font-size: .81rem; font-weight: 600; cursor: pointer; }
       .test-sidebar #headerGroupSelect:hover { background: var(--studio-surface-soft); }
@@ -518,9 +544,16 @@
       html.design-studio #subjectTabsContainer > button[aria-expanded="true"]:not([aria-pressed="true"]) { background: var(--studio-surface-soft) !important; color: var(--studio-text) !important; }
       html.design-studio .test-sidebar button:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
       #headerStudentCount { margin-left: auto; background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
-      .test-sidebar .subject-icon { flex: 0 0 1rem; width: 1rem; height: 1rem; color: var(--brand); }
+      .test-sidebar .subject-icon { flex: 0 0 1rem; width: 1rem; height: 1rem; color: var(--studio-text-muted); opacity: .82; transition: color .15s ease, opacity .15s ease; }
       html.design-studio .test-sidebar-nav > :is(button, a) { gap: .5rem !important; }
-      html.design-studio .test-sidebar-nav > :is(button, a) > svg { flex: 0 0 auto; color: var(--brand) !important; }
+      html.design-studio .test-sidebar-nav > :is(button, a) > svg { flex: 0 0 auto; color: var(--studio-text-muted) !important; opacity: .82; transition: color .15s ease, opacity .15s ease; }
+      html.design-studio .test-sidebar-nav > :is(button, a):hover > svg,
+      html.design-studio #subjectTabsContainer > button:hover .subject-icon,
+      html.design-studio .test-sidebar-nav > button:is([aria-pressed="true"], .bg-indigo-500, .bg-indigo-600, .bg-amber-400) > svg,
+      html.design-studio #subjectTabsContainer > button[aria-pressed="true"] .subject-icon {
+        color: var(--brand) !important;
+        opacity: 1;
+      }
       .test-sidebar #subjectTabsContainer { display: flex !important; flex-direction: column; align-items: stretch !important; gap: .2rem !important; }
       .test-subject-empty { width: 100%; padding: .25rem .55rem; color: #94a3b8; font-size: .81rem; font-weight: 400; text-align: center; }
       .test-subject-empty.hidden, .test-sidebar-nav.is-unavailable { display: none; }
@@ -584,6 +617,8 @@
         width: calc(100% - 246px);
         margin-left: 246px;
         background: var(--sidebar-bg-top, #f8f9fb) !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
         color: var(--studio-text) !important;
         border-bottom: 1px solid var(--sidebar-border, #dde3ec) !important;
         box-shadow: none !important;
@@ -804,7 +839,7 @@
       #studentListTools[hidden] { display: none !important; }
       .no-group-notice:not(.hidden) { padding: .7rem .8rem; border-radius: 8px; background: var(--studio-surface-soft); color: var(--studio-text-muted); font-size: .85rem; line-height: 1.45; }
       html.design-studio .gradebook-toolbar h2 { white-space: normal; overflow: visible; }
-      html.design-studio .gradebook-toolbar > div:nth-of-type(2) { background: transparent; border: 0; box-shadow: none; padding: 0; overflow: visible !important; }
+      html.design-studio .gradebook-toolbar > div:nth-of-type(2) { background: transparent; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; border: 0; box-shadow: none; padding: 0; overflow: visible !important; }
       .new-eval-popover-wrap { position: relative; display: inline-flex; align-items: center; }
       html.design-studio #btnNewEvaluation {
         display: inline-flex;
@@ -887,7 +922,8 @@
       html.design-studio #btnWeightMode:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
       html.design-studio #weightWarningBanner { background: #fee2e2 !important; color: #991b1b !important; border-color: #fca5a5 !important; }
       html.design-studio #gradebookScrollContainer thead th { background: var(--studio-surface-soft) !important; color: var(--studio-text-muted) !important; }
-      html.design-studio #gradebookScrollContainer thead button:not(.weight-lock) { background: var(--studio-surface-soft) !important; border-color: var(--studio-border-strong) !important; color: var(--brand-deep) !important; }
+      html.design-studio #gradebookScrollContainer thead button:not(.weight-lock) { background: var(--studio-surface-soft) !important; border-color: var(--studio-border-strong) !important; color: var(--studio-text) !important; }
+      html.design-studio #gradebookScrollContainer thead button:not(.weight-lock):hover { background: var(--brand-soft) !important; color: var(--brand-deep) !important; border-color: var(--brand) !important; }
       html.design-studio #gradebookScrollContainer thead button.weight-lock.is-pinned { background: #fef3c7 !important; border-color: #f59e0b !important; color: #92400e !important; box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.25); }
       html.design-studio #gradebookScrollContainer thead button.weight-lock:not(.is-pinned) { background: #ffffff !important; border-color: #cbd5e1 !important; color: #475569 !important; }
       html.design-studio #gradebookScrollContainer thead button.weight-lock:hover { border-color: var(--brand) !important; }
@@ -936,7 +972,7 @@
       html.design-studio #gradebookHeaderRow > th:first-child { z-index: 20; }
       html.design-studio #gradebookBody tr > td:first-child { background: var(--studio-surface) !important; }
       html.design-studio #gradebookBody tr:nth-child(even) > td:first-child { background: var(--studio-surface-soft) !important; }
-      html.design-studio #gradebookBody tr:hover > td:first-child { background: var(--brand-soft) !important; }
+      html.design-studio #gradebookBody tr:hover > td:first-child { background: color-mix(in srgb, var(--brand) 4%, var(--studio-surface)) !important; }
       html.design-studio .linked-grade-warning { display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem; border-radius: 50%; background: #fef3c7; color: #92400e; font-weight: 800; }
       html.design-studio .gr-weight-label { color: var(--studio-text); font-size: .75rem; font-weight: 700; }
       html.design-studio .comp-recap-print { display: inline-flex; align-items: center; justify-content: center; width: 1.75rem; height: 1.75rem; border: 1px solid var(--studio-border); border-radius: 7px; background: var(--studio-surface); color: var(--brand-deep); cursor: pointer; }
@@ -973,59 +1009,76 @@
       html.design-studio .gr-grade-meta { font-size: .8rem; color: var(--studio-text-muted); }
       html.design-studio .gr-grade-meta strong { color: var(--studio-text); }
       html.design-studio .gr-adaptations-row { display: flex; flex-wrap: wrap; align-items: center; gap: .38rem; }
+      html.design-studio .gr-pia-pill,
       html.design-studio .gr-adapt-pill {
         display: inline-flex;
         align-items: center;
-        padding: .16rem .56rem;
-        border-radius: 999px;
+        gap: .3rem;
+        padding: .2rem .6rem;
+        border-radius: 10px;
         font-size: .72rem;
-        font-weight: 600;
+        line-height: 1.35;
+        font-weight: 700;
         background: var(--brand-soft);
         color: var(--brand-deep);
-        border: 1px solid var(--studio-border-strong);
+        border: 1px solid color-mix(in srgb, var(--brand) 30%, var(--studio-border-strong));
       }
       html.design-studio .gr-mod-pill {
         display: inline-flex;
         align-items: center;
-        padding: .2rem .58rem;
+        padding: .2rem .6rem;
         border-radius: 10px;
         font-size: .72rem;
         line-height: 1.35;
-        font-weight: 600;
+        font-weight: 700;
         background: #fbf4df;
         color: #765315;
         border: 1px solid #dfcd9a;
       }
       html.design-studio .gr-mod-pill--compact { flex-shrink: 0; margin-left: .35rem; padding: .12rem .4rem; border-radius: 6px; font-size: .65rem; font-weight: 700; }
       html.design-studio .gr-adapt-empty { font-size: .75rem; color: var(--studio-text-muted); font-style: italic; }
-      html.design-studio .student-options-bar { margin-top: .22rem; }
+      html.design-studio .student-options-bar { margin-top: .28rem; }
       html.design-studio .student-option-btn {
         display: inline-flex;
         align-items: center;
         gap: .38rem;
-        padding: .28rem .65rem;
-        border-radius: 8px;
+        padding: .3rem .68rem;
+        border-radius: 10px;
         border: 1px solid var(--studio-border-strong);
-        background: var(--studio-surface-soft);
+        background: var(--studio-surface);
         color: var(--studio-text-muted);
         font-size: .74rem;
         font-weight: 600;
         cursor: pointer;
-        transition: background .14s ease, border-color .14s ease, color .14s ease;
+        transition: background-color .14s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease, transform .14s ease;
       }
-      html.design-studio .student-option-btn:hover { border-color: var(--brand); color: var(--studio-text); }
-      html.design-studio .student-option-btn.is-open { border-color: var(--brand); box-shadow: 0 0 0 2px var(--brand-soft); }
+      html.design-studio .student-option-btn:hover {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand-deep);
+        transform: translateY(-1px);
+      }
+      html.design-studio .student-option-btn.is-open { border-color: var(--brand); box-shadow: 0 0 0 1px var(--brand); }
+      html.design-studio .student-option-check { width: .85rem; height: .85rem; flex: 0 0 auto; }
+      html.design-studio .student-option-caret { font-size: .68rem; opacity: .75; margin-left: .05rem; }
+      html.design-studio .student-option-btn.btn-student-pia.is-active,
       html.design-studio .student-option-btn.btn-student-adapt.is-active {
         background: var(--brand-soft);
-        border-color: var(--brand);
+        border-color: var(--brand-deep);
         color: var(--brand-deep);
         font-weight: 700;
+        box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent);
       }
       html.design-studio .student-option-btn.btn-student-mod.is-active {
         background: #fef3c7;
         border-color: #d97706;
         color: #92400e;
         font-weight: 700;
+      }
+      html.design-studio .student-option-btn.btn-student-mod.is-active:hover {
+        background: #fde68a;
+        border-color: #b45309;
+        color: #78350f;
       }
       html.design-studio .student-option-count {
         display: inline-flex;
@@ -1044,37 +1097,169 @@
       html.design-studio .student-option-btn.btn-student-mod.is-active .student-option-count {
         background: #b45309;
       }
-      html.design-studio .student-adapt-drawer {
-        margin-top: .28rem;
-        padding: .48rem .6rem;
+      /* Panneau ergonomique Bulletin modifié */
+      html.design-studio .mod-summary-strip {
+        display: inline-flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .35rem;
+        margin-top: .32rem;
+        padding: .3rem .55rem;
         border-radius: 10px;
-        background: var(--studio-surface-soft);
-        border: 1px solid var(--studio-border-strong);
-        box-shadow: 0 4px 12px rgba(15, 23, 42, .06);
-      }
-      html.design-studio .student-adapt-pill {
-        padding: .24rem .58rem;
-        border-radius: 999px;
-        font-size: .73rem;
-        font-weight: 600;
-        border: 1px solid var(--studio-border);
-        background: var(--studio-surface);
-        color: var(--studio-text-muted);
+        border: 1px dashed #e2c67e;
+        background: #fffbeb;
+        color: #78350f;
+        font-size: .72rem;
+        text-align: left;
         cursor: pointer;
-        transition: all .12s ease;
+        transition: background-color .14s ease, border-color .14s ease;
       }
-      html.design-studio .student-adapt-pill:hover { border-color: var(--brand); color: var(--studio-text); }
-      html.design-studio .student-adapt-pill.is-active {
-        background: var(--brand);
-        border-color: var(--brand);
-        color: #fff;
+      html.design-studio .mod-summary-strip:hover {
+        background: #fef3c7;
+        border-color: #d97706;
+      }
+      html.design-studio .mod-summary-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .2rem;
+        padding: .1rem .42rem;
+        border-radius: 6px;
+        background: rgba(255, 255, 255, .82);
+        border: 1px solid #ead49b;
+        color: #78350f;
+        font-size: .7rem;
+      }
+      html.design-studio .mod-summary-edit {
+        margin-left: .2rem;
         font-weight: 700;
+        color: #b45309;
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
-      html.design-studio .student-adapt-custom {
-        width: 10.5rem;
-        padding: .24rem .55rem;
+      html.design-studio .mod-summary-placeholder {
+        color: #92400e;
+        font-style: italic;
+      }
+      html.design-studio .mod-panel {
+        margin-top: .45rem;
+        width: min(100%, 860px);
+        padding: .75rem .85rem;
+        border-radius: 12px;
+        border: 1px solid color-mix(in srgb, #d97706 32%, var(--studio-border));
+        background: var(--studio-surface);
+        box-shadow: var(--studio-shadow-sm);
+      }
+      html.design-studio .mod-panel-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .5rem .85rem;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid var(--studio-border);
+      }
+      html.design-studio .mod-panel-copy {
+        display: flex;
+        flex-direction: column;
+        gap: .12rem;
+      }
+      html.design-studio .mod-panel-copy strong {
+        font-size: .78rem;
+        font-weight: 800;
+        color: var(--studio-text);
+      }
+      html.design-studio .mod-panel-copy span {
+        font-size: .7rem;
+        color: var(--studio-text-muted);
+      }
+      html.design-studio .mod-panel-actions {
+        display: inline-flex;
+        align-items: center;
+        gap: .6rem;
+      }
+      html.design-studio .mod-panel-remove {
+        border: 0;
+        background: transparent;
+        padding: .2rem .25rem;
+        color: #b91c1c;
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        opacity: .84;
+        transition: opacity .14s ease, color .14s ease;
+      }
+      html.design-studio .mod-panel-remove:hover {
+        opacity: 1;
+        color: #991b1b;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      html.design-studio .mod-panel-close {
+        padding: .24rem .6rem;
         border-radius: 8px;
-        font-size: .74rem;
+        border: 1px solid var(--studio-border-strong);
+        background: var(--studio-surface-soft);
+        color: var(--studio-text);
+        font-size: .72rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color .14s ease, border-color .14s ease, color .14s ease;
+      }
+      html.design-studio .mod-panel-close:hover {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand-deep);
+      }
+      html.design-studio .mod-subject-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: .45rem;
+        margin-top: .65rem;
+      }
+      html.design-studio .mod-subject-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        min-width: 0;
+        padding: .36rem .5rem;
+        border-radius: 9px;
+        border: 1px solid var(--studio-border);
+        background: var(--studio-surface-soft);
+        transition: background-color .14s ease, border-color .14s ease;
+      }
+      html.design-studio .mod-subject-row.is-modified {
+        background: #fffbeb;
+        border-color: #eab308;
+      }
+      html.design-studio .mod-subject-label {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: .72rem;
+        font-weight: 650;
+        color: var(--studio-text);
+      }
+      html.design-studio .mod-subject-row.is-modified .mod-subject-label {
+        color: #78350f;
+        font-weight: 750;
+      }
+      html.design-studio .mod-subject-select {
+        flex: 0 0 auto;
+        min-width: 6.2rem;
+        padding: .2rem .35rem;
+        border-radius: 7px;
+        border: 1px solid var(--studio-border-strong);
+        background: var(--studio-surface);
+        color: var(--studio-text);
+        font-size: .7rem;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      html.design-studio .mod-subject-row.is-modified .mod-subject-select {
+        border-color: #d97706;
+        color: #92400e;
       }
       html.design-studio .gr-results-scroll { overflow-x: auto; }
       html.design-studio .gr-results-scroll table { min-width: 650px; }
@@ -1130,10 +1315,11 @@
       .qo-category:focus-visible, .qo-choice:focus-within { outline: 2px solid var(--brand); outline-offset: 2px; }
       .qo-category-count { padding: .05rem .35rem; border-radius: 99px; background: var(--brand); color: #fff; font-size: .65rem; }
       .qo-observation-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .7rem; }
-      .qo-choice-column { min-width: 0; display: grid; align-content: start; gap: .35rem; padding: .65rem; border: 1px solid var(--studio-border); border-radius: 10px; background: var(--studio-surface-soft); }
+      .qo-choice-column { min-width: 0; display: grid; align-content: start; gap: .38rem; padding: .7rem; border: 1px solid var(--studio-border); border-radius: 12px; background: var(--studio-surface-soft); }
       .qo-choice-column legend { padding: 0 .25rem; color: var(--brand-deep); font-size: .78rem; font-weight: 800; }
-      .qo-choice { display: flex; align-items: flex-start; gap: .55rem; padding: .45rem .55rem; border: 1px solid transparent; border-radius: 7px; color: var(--studio-text); font-size: .76rem; line-height: 1.4; cursor: pointer; transition: background-color .15s ease, border-color .15s ease; }
-      .qo-choice:hover, .qo-choice:has(input:checked) { border-color: var(--studio-border-strong); background: var(--brand-soft); }
+      .qo-choice { display: flex; align-items: flex-start; gap: .55rem; padding: .48rem .62rem; border: 1px solid var(--studio-border); border-radius: 10px; background: var(--studio-surface); color: var(--studio-text); font-size: .76rem; line-height: 1.4; cursor: pointer; transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+      .qo-choice:hover { border-color: var(--brand); background: var(--brand-soft); color: var(--brand-deep); }
+      .qo-choice:has(input:checked) { border-color: var(--brand-deep); background: var(--brand-soft); color: var(--brand-deep); box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 32%, transparent); font-weight: 600; }
       .qo-choice input { flex: 0 0 auto; margin-top: .16rem; accent-color: var(--brand); }
       .qo-selected-observations { display: grid; gap: .35rem; color: var(--studio-text-muted); font-size: .7rem; }
       .qo-selected-chip { display: inline-flex; align-items: center; gap: .35rem; margin: .15rem .25rem .15rem 0; padding: .2rem .4rem; border: 1px solid var(--studio-border); border-radius: 6px; background: var(--studio-surface-soft); color: var(--studio-text); }
@@ -1341,59 +1527,81 @@
         display: none;
       }
 
-      /* Sélecteur de palettes dans le menu d'options (#settingsPanel) */
-      #settingsPanel .sp-row.sp-row-palette {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 7px;
-        padding: 7px 0 9px;
-      }
-      #settingsPanel .sp-palette-header {
-        display: flex;
+      /* Sélecteur de couleur adaptative unique dans le menu d'options (#settingsPanel) */
+      #settingsPanel .sp-row.sp-row-color {
         align-items: center;
         justify-content: space-between;
-        width: 100%;
+        gap: 8px;
+        padding: 8px 0;
       }
-      .sp-palette-active-name {
-        font-size: 11px;
-        font-weight: 700;
-        color: var(--brand);
-      }
-      .sp-palette-swatches {
-        display: flex;
+      .sp-color-controls {
+        display: inline-flex;
         align-items: center;
-        justify-content: flex-start;
-        flex-wrap: wrap;
-        gap: 5px;
-        padding: 2px 1px;
+        gap: 6px;
+        flex-shrink: 0;
       }
-      .sp-swatch {
-        position: relative;
-        width: 22px;
-        height: 22px;
-        border-radius: 999px;
-        border: 2px solid var(--sw-soft, #e2e8f0);
-        background: var(--sw-brand, #1d4ed8);
+      .sp-color-picker-wrap {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        padding: 2px;
+        border-radius: 9px;
+        border: 1px solid var(--studio-border-strong);
+        background: var(--studio-surface);
         cursor: pointer;
+        box-shadow: var(--studio-shadow-sm);
+        transition: border-color .14s ease, transform .14s ease;
+      }
+      .sp-color-picker-wrap:hover {
+        border-color: var(--brand);
+        transform: scale(1.05);
+      }
+      #spAccentColor {
+        width: 100%;
+        height: 100%;
         padding: 0;
-        transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
-        box-shadow: inset 0 0 0 1px rgba(15, 23, 42, .12);
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        border-radius: 6px;
       }
-      .sp-swatch:hover {
-        transform: translateY(-1px) scale(1.06);
+      #spAccentColor::-webkit-color-swatch-wrapper { padding: 0; }
+      #spAccentColor::-webkit-color-swatch { border: 0; border-radius: 6px; }
+      #spAccentColor::-moz-color-swatch { border: 0; border-radius: 6px; }
+      .sp-color-hex {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--studio-text-muted);
+        letter-spacing: .02em;
+        min-width: 54px;
+        text-align: center;
       }
-      .sp-swatch.is-active {
-        border-color: var(--studio-surface);
-        box-shadow: 0 0 0 2px var(--sw-brand, var(--brand)), 0 2px 6px rgba(15, 23, 42, .18);
-        transform: scale(1.08);
+      .sp-color-reset {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        border: 1px solid var(--studio-border-strong);
+        background: var(--studio-surface-soft);
+        color: var(--studio-text-muted);
+        font-size: 13px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background-color .14s ease, border-color .14s ease, color .14s ease;
       }
-      .sp-swatch.is-active::after {
-        content: "";
-        position: absolute;
-        inset: 5px;
-        border-radius: 999px;
-        background: #ffffff;
-        opacity: .92;
+      .sp-color-reset:hover:not(:disabled) {
+        border-color: var(--brand);
+        background: var(--brand-soft);
+        color: var(--brand-deep);
+      }
+      .sp-color-reset:disabled {
+        opacity: .4;
+        cursor: default;
       }
 
       /* Tâche 2 : Espacement net entre les boutons Sauvegarde JSON dans l'engrenage */
@@ -1632,13 +1840,21 @@
         color: var(--brand-deep) !important;
       }
       html.design-studio.theme-dark #studentManagerList .student-remove {
-        background: rgba(239, 68, 68, .15) !important;
-        border-color: rgba(248, 113, 113, .38) !important;
-        color: #fca5a5 !important;
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        color: #f87171 !important;
+        opacity: .8;
       }
-      html.design-studio.theme-dark #studentManagerList .student-remove:hover {
-        background: rgba(239, 68, 68, .28) !important;
-        color: #fecaca !important;
+      html.design-studio.theme-dark #studentManagerList .student-remove:hover,
+      html.design-studio.theme-dark #studentManagerList .student-remove:focus-visible,
+      html.design-studio.theme-dark #studentManagerList .student-remove[data-confirm="yes"] {
+        background: transparent !important;
+        border: 0 !important;
+        color: #fca5a5 !important;
+        opacity: 1;
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
       html.design-studio.theme-dark .student-option-btn {
         background: rgba(255, 255, 255, .04);
@@ -1647,11 +1863,13 @@
       }
       html.design-studio.theme-dark .student-option-btn:hover {
         border-color: var(--brand);
-        color: var(--ink);
+        background: var(--brand-soft);
+        color: var(--brand-deep);
       }
+      html.design-studio.theme-dark .student-option-btn.btn-student-pia.is-active,
       html.design-studio.theme-dark .student-option-btn.btn-student-adapt.is-active {
         background: var(--brand-soft);
-        border-color: var(--brand);
+        border-color: var(--brand-deep);
         color: var(--brand-deep);
       }
       html.design-studio.theme-dark .student-option-btn.btn-student-mod.is-active {
@@ -1663,39 +1881,46 @@
         background: #d97706;
         color: #fff;
       }
-      html.design-studio.theme-dark .student-adapt-drawer {
+      html.design-studio.theme-dark .mod-summary-strip {
+        background: rgba(245, 158, 11, .12);
+        border-color: rgba(251, 191, 36, .35);
+        color: #fde68a;
+      }
+      html.design-studio.theme-dark .mod-summary-strip:hover {
+        background: rgba(245, 158, 11, .2);
+        border-color: rgba(251, 191, 36, .55);
+      }
+      html.design-studio.theme-dark .mod-summary-chip {
+        background: rgba(255, 255, 255, .06);
+        border-color: rgba(251, 191, 36, .28);
+        color: #fde68a;
+      }
+      html.design-studio.theme-dark .mod-summary-edit,
+      html.design-studio.theme-dark .mod-summary-placeholder {
+        color: #fcd34d;
+      }
+      html.design-studio.theme-dark .mod-panel {
         background: #1f2226;
+        border-color: rgba(251, 191, 36, .32);
+      }
+      html.design-studio.theme-dark .mod-panel-remove {
+        color: #f87171;
+      }
+      html.design-studio.theme-dark .mod-panel-remove:hover {
+        color: #fca5a5;
+      }
+      html.design-studio.theme-dark .mod-subject-row {
+        background: var(--studio-surface-soft);
         border-color: var(--dark-hairline);
-        box-shadow: 0 6px 18px rgba(0, 0, 0, .35);
       }
-      html.design-studio.theme-dark .student-adapt-pill {
-        background: var(--studio-surface);
-        border-color: var(--dark-hairline);
-        color: #cbd5e1;
+      html.design-studio.theme-dark .mod-subject-row.is-modified {
+        background: rgba(245, 158, 11, .16);
+        border-color: rgba(251, 191, 36, .42);
       }
-      html.design-studio.theme-dark .student-adapt-pill:hover { border-color: var(--brand); color: var(--ink); }
-      html.design-studio.theme-dark .student-adapt-pill.is-active {
-        background: var(--brand);
-        border-color: var(--brand);
-        color: #fff;
-      }
-      html.design-studio.theme-dark .modified-expectations {
-        background: #1f2226 !important;
-        border-color: var(--dark-hairline) !important;
-        color: var(--ink) !important;
-      }
-      html.design-studio.theme-dark .modified-expectations summary {
-        color: var(--ink) !important;
-      }
-      html.design-studio.theme-dark .mod-expectation-item {
-        background: var(--studio-surface-soft) !important;
-        border-color: var(--dark-hairline) !important;
-        color: var(--ink) !important;
-      }
-      html.design-studio.theme-dark .mod-expectation-item.is-modified {
-        background: rgba(245, 158, 11, .16) !important;
-        border-color: rgba(251, 191, 36, .35) !important;
-        color: #fde68a !important;
+      html.design-studio.theme-dark .mod-subject-row.is-modified .mod-subject-label,
+      html.design-studio.theme-dark .mod-subject-row.is-modified .mod-subject-select {
+        color: #fde68a;
+        border-color: rgba(251, 191, 36, .42);
       }
       html.design-studio.theme-dark #modalTargetLevelsList label {
         background: var(--studio-surface-soft) !important;
@@ -1785,9 +2010,10 @@
         border-color: var(--dark-hairline) !important;
       }
       html.design-studio.theme-dark :is(#baremeStudentPills, #qoStudentGrid) button[aria-pressed="true"] {
-        background: var(--brand) !important;
-        color: #fff !important;
-        border-color: var(--brand) !important;
+        background: var(--brand-soft) !important;
+        color: var(--brand-deep) !important;
+        border-color: var(--brand-deep) !important;
+        box-shadow: 0 0 0 1px var(--brand-deep) !important;
       }
 
       /* Mode sombre : pastilles Vert → Rouge & en-têtes A–E lisibles */
@@ -1928,16 +2154,38 @@
       color: var(--brand-deep) !important;
       border-color: var(--studio-border-strong) !important;
     }
-    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) .rubric-matrix-table tbody td:first-child,
-    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row {
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#viewBareme, #viewQuickObs) .rubric-matrix-table tbody td:first-child {
       background: var(--studio-surface-soft) !important;
       color: var(--studio-text) !important;
       border-color: var(--studio-border) !important;
     }
-    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .qo-badge-formative {
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row {
+      background: color-mix(in srgb, var(--studio-surface-soft) 84%, var(--brand-soft)) !important;
+      border-color: var(--studio-border) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row td {
+      background: transparent !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row td.qo-formative-title {
+      background: color-mix(in srgb, var(--studio-surface-soft) 72%, var(--brand-soft)) !important;
+      border-left: 3px dashed color-mix(in srgb, var(--brand) 52%, var(--studio-border-strong)) !important;
+      color: var(--studio-text-muted) !important;
+      font-style: italic;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row .rubric-stmt-btn {
+      font-style: italic;
+      border-style: dashed !important;
+      background: color-mix(in srgb, var(--studio-surface) 88%, var(--studio-surface-soft)) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .rubric-matrix-table tr.qo-formative-row .rubric-stmt-btn[aria-pressed="true"] {
+      border-style: solid !important;
       background: var(--brand-soft) !important;
-      color: var(--brand-deep) !important;
-      border-color: var(--studio-border-strong) !important;
+    }
+    html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewQuickObs .qo-badge-formative {
+      background: transparent !important;
+      color: var(--studio-text-muted) !important;
+      border: 1px dashed color-mix(in srgb, var(--brand) 48%, var(--studio-border-strong)) !important;
+      font-style: italic;
     }
 
     #addStudentDialog label { display: block; margin-top: .75rem; font-weight: 700; }
@@ -2463,12 +2711,6 @@
 html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   #gradebookScrollContainer thead .gb-level-seg button.is-active,
   main table thead .gb-level-seg button.is-active,
-  #grStudentBand button[aria-pressed="true"],
-  #qoStudentGrid button.bg-indigo-600,
-  #qoModeSegment button[aria-pressed="true"],
-  #qoWeightPresetBar button[aria-pressed="true"],
-  #qoTargetLevelsBox .qo-target-btn.is-active,
-  #qoQuickTags button.bg-indigo-600,
   #competencyPositioning .comp-tab.is-active,
   .test-sidebar-nav > button[aria-pressed="true"],
   .test-sidebar-nav > button.bg-indigo-500,
@@ -2476,8 +2718,7 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   .test-sidebar-nav > button.bg-amber-400,
   .test-sidebar #subjectTabsContainer > button[aria-pressed="true"],
   .test-sidebar #subjectSubTabsContainer > button[aria-pressed="true"],
-  #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnCommitObsSessionToGradebook,
-  #btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents
+  #btnBackToGradebookFromStudents
 ) {
   background: color-mix(in srgb, var(--brand-soft) 55%, var(--studio-surface, #fff)) !important;
   color: var(--brand-deep) !important;
@@ -2486,10 +2727,8 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 45%, transparent) !important;
   font-weight: 600 !important;
 }
-html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#grStudentBand button[aria-pressed="true"], #qoStudentGrid button.bg-indigo-600) :is(span, b) { color: inherit; }
 html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
-  #btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnCommitObsSessionToGradebook,
-  #btnBackToGradebookFromBareme, #btnBackToGradebookFromTrace, #btnBackToGradebookFromStudents
+  #btnBackToGradebookFromStudents
 ):hover:not(:disabled) {
   background: color-mix(in srgb, var(--brand) 10%, var(--studio-surface)) !important;
 }
@@ -2498,13 +2737,9 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
   .test-sidebar #subjectTabsContainer > button,
   .test-sidebar #subjectSubTabsContainer > button,
   #competencyPositioning .comp-tab,
-  #grStudentBand button,
-  #qoStudentGrid button,
-  #qoModeSegment button,
-  #qoWeightPresetBar button[aria-pressed],
   .gb-level-seg button
 ) { border-radius: 999px !important; }
-html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoModeSegment, .gb-level-seg) { border-radius: 999px !important; }
+html.design-studio:is(.theme-dark, :not(.theme-dark)) .gb-level-seg { border-radius: 999px !important; }
 html.design-studio #qoModeSegment .qo-weight-badge,
 html.design-studio #viewQuickObs .qo-weight-badge {
   background: var(--brand-soft) !important;
@@ -2536,7 +2771,7 @@ html.design-studio #weightControls button {
   border-radius: 8px !important;
   border-color: var(--studio-border-strong) !important;
   background: var(--studio-surface-soft) !important;
-  color: var(--brand-deep) !important;
+  color: var(--studio-text) !important;
   box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--brand) 25%, transparent);
 }
 html.design-studio #weightControls button:hover {
@@ -2672,6 +2907,7 @@ html.design-studio.theme-dark #gradebookScrollContainer tbody tr:hover td.gb-col
     /* Impressions : aucun décor d'écran, fond blanc, une seule fiche à la fois */
     @media print {
       html, html.design-studio, html body, html.design-studio body, html.design-studio body main.site-layout { background: #fff !important; background-image: none !important; }
+      html.design-studio body::before { display: none !important; }
       html body #gbSubjectIcon { display: none !important; }
       body:not(.print-student-sheet) #studentIndividualPrintSheet,
       body:not(.print-students) #studentPrintSheet,
@@ -2682,12 +2918,12 @@ html.design-studio.theme-dark #gradebookScrollContainer tbody tr:hover td.gb-col
       body.print-observation-grid #observationPrintGrid .qo-checklist-card { break-inside: avoid; }
     }
 
-/* Choix « Déjà réalisée / Observable » : pastilles flottantes, sans boîte, à la largeur du texte */
+/* Choix « Déjà réalisée / Observable » : boutons rectangulaires alignés sur la barre d’outils */
 html.design-studio .new-evaluation-choices:not(.hidden) {
-  align-items: flex-start;
+  align-items: center;
   min-width: 0;
-  padding: 0;
-  gap: .35rem;
+  padding: 2px 2px 4px;
+  gap: .4rem;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -2695,21 +2931,18 @@ html.design-studio .new-evaluation-choices:not(.hidden) {
 html.design-studio #newEvaluationChoices > button {
   width: auto;
   white-space: nowrap;
-  padding: .35rem .9rem;
-  filter: drop-shadow(0 3px 8px rgba(15, 23, 42, .12));
 }
 
 /* « Nouvelle évaluation » : les choix glissent de gauche à droite sur la même ligne et poussent le reste */
-html.design-studio .new-eval-popover-wrap { gap: .35rem; }
+html.design-studio .new-eval-popover-wrap { gap: .4rem; }
 html.design-studio .new-evaluation-choices:not(.hidden) {
   position: static;
   flex-direction: row;
   align-items: center;
-  gap: .35rem;
-  overflow: hidden;
-  animation: newEvalSlide .28s ease-out both;
+  gap: .4rem;
+  overflow: visible;
+  animation: newEvalSlide .24s ease-out both;
 }
-html.design-studio #newEvaluationChoices > button { filter: none; }
 @keyframes newEvalSlide {
   from { max-width: 0; opacity: 0; transform: translateX(-10px); }
   to { max-width: 360px; opacity: 1; transform: none; }
@@ -2835,8 +3068,7 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #gradebookScrollContainer 
     z-index: 25;
     height: auto;
     padding: 4px 10px;
-    background: color-mix(in srgb, var(--studio-surface, #fff) 90%, transparent);
-    backdrop-filter: blur(4px);
+    background: var(--studio-surface, #fff);
     border-top: 1px solid var(--studio-border, #e2e8f0);
     border-bottom: 0;
     scrollbar-width: thin;
@@ -2862,6 +3094,7 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #gradebookScrollContainer 
     position: absolute;
     top: var(--gb-arrow-y, 50%);
     z-index: 30;
+    contain: layout style paint;
     display: grid;
     place-items: center;
     width: 36px;
@@ -3183,27 +3416,38 @@ html.design-studio .gr-subject-jump-arrow {
   justify-content: space-between;
   gap: .35rem;
   width: 100%;
-  padding: .42rem .62rem;
-  border-radius: 9px;
-  border: 1px solid var(--studio-border);
-  background: var(--studio-surface-soft);
+  min-height: 34px;
+  padding: .38rem .64rem;
+  border-radius: 10px;
+  border: 1px solid var(--studio-border-strong);
+  background: var(--studio-surface);
   color: var(--studio-text);
   font-size: .76rem;
-  font-weight: 650;
+  font-weight: 600;
   text-align: left;
   cursor: pointer;
-  transition: background-color .14s ease, border-color .14s ease, color .14s ease;
+  transition: transform .15s ease, background-color .15s ease, border-color .15s ease, box-shadow .15s ease, color .15s ease;
 }
 .gr-student-pill:hover {
-  border-color: color-mix(in srgb, var(--brand) 38%, var(--studio-border));
+  transform: translateY(-1px);
+  border-color: var(--brand);
   background: var(--brand-soft);
   color: var(--brand-deep);
+  box-shadow: 0 4px 10px rgba(15, 23, 42, .08);
 }
 .gr-student-pill.is-selected {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: #fff;
-  font-weight: 800;
+  background: var(--brand-soft);
+  border-color: var(--brand-deep);
+  color: var(--brand-deep);
+  box-shadow: 0 0 0 1px var(--brand-deep);
+  font-weight: 750;
+}
+.gr-student-pill.is-selected:hover {
+  transform: none;
+  border-color: var(--brand-deep);
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  box-shadow: 0 0 0 1px var(--brand-deep);
 }
 .gr-student-pill-name {
   min-width: 0;
@@ -3229,7 +3473,176 @@ html.design-studio .gr-subject-jump-arrow {
 }
 .gr-student-dot.is-warn { background: #d97706; }
 .gr-student-dot.is-alert { background: #dc2626; }
-.gr-student-pill.is-selected .gr-student-dot { box-shadow: 0 0 0 1.5px #fff; }
+.gr-student-pill.is-selected .gr-student-dot { box-shadow: 0 0 0 1.5px var(--studio-surface); }
+
+/* Icône cliquable + pop-up harmonieux de commentaire au bulletin dans Synthèse */
+.gr-comment-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .18rem;
+  flex: 0 0 auto;
+  height: 1.45rem;
+  padding: 0 .34rem;
+  border-radius: 7px;
+  border: 1px solid color-mix(in srgb, var(--brand) 28%, var(--studio-border-strong));
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  cursor: pointer;
+  transition: transform .14s ease, background-color .14s ease, border-color .14s ease, box-shadow .14s ease;
+}
+.gr-comment-icon-btn svg {
+  width: .82rem;
+  height: .82rem;
+  flex: 0 0 auto;
+}
+.gr-comment-icon-btn:hover,
+.gr-comment-icon-btn.is-open {
+  transform: translateY(-1px);
+  border-color: var(--brand-deep);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 42%, transparent);
+}
+.gr-comment-icon-count {
+  font-size: .62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.gr-comment-popover {
+  position: fixed;
+  z-index: 90;
+  width: min(390px, calc(100vw - 24px));
+  max-height: min(420px, calc(100vh - 24px));
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  border: 1px solid var(--studio-border-strong);
+  background: var(--studio-surface);
+  color: var(--studio-text);
+  box-shadow: 0 18px 42px -12px rgba(15, 23, 42, .24), 0 4px 14px rgba(15, 23, 42, .08);
+  overflow: hidden;
+  animation: grPopoverIn .16s ease-out;
+}
+@keyframes grPopoverIn {
+  from { opacity: 0; transform: translateY(4px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.gr-comment-popover-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  padding: .7rem .85rem;
+  background: var(--studio-surface-soft);
+  border-bottom: 1px solid var(--studio-border);
+}
+.gr-comment-popover-title {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-width: 0;
+}
+.gr-comment-popover-title svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  color: var(--brand);
+}
+.gr-comment-popover-title > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.gr-comment-popover-title strong {
+  font-size: .8rem;
+  font-weight: 800;
+  color: var(--studio-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gr-comment-popover-title span {
+  font-size: .68rem;
+  color: var(--studio-text-muted);
+}
+.gr-comment-popover-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--studio-text-muted);
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.gr-comment-popover-close:hover {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+.gr-comment-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  padding: .75rem .85rem;
+  overflow-y: auto;
+}
+.gr-comment-popover-item {
+  padding: .62rem .72rem;
+  border-radius: 10px;
+  border: 1px solid var(--studio-border);
+  background: var(--studio-surface-soft);
+}
+.gr-comment-popover-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: .4rem;
+  margin-bottom: .42rem;
+}
+.gr-comment-popover-term {
+  display: inline-flex;
+  align-items: center;
+  padding: .12rem .48rem;
+  border-radius: 999px;
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-size: .67rem;
+  font-weight: 800;
+}
+.gr-comment-popover-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+}
+.gr-comment-popover-btn {
+  padding: .16rem .45rem;
+  border-radius: 7px;
+  border: 1px solid var(--studio-border-strong);
+  background: var(--studio-surface);
+  color: var(--studio-text-muted);
+  font-size: .67rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .13s ease, border-color .13s ease, color .13s ease;
+}
+.gr-comment-popover-btn:hover,
+.gr-comment-popover-btn.is-accent {
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--studio-border-strong));
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+}
+.gr-comment-popover-text {
+  margin: 0;
+  font-size: .79rem;
+  line-height: 1.52;
+  color: var(--studio-text);
+  white-space: pre-wrap;
+}
 .gr-empty-card,
 .gr-card {
   border-radius: var(--studio-radius-xl, 18px);
@@ -3264,7 +3677,7 @@ html.design-studio .gr-subject-jump-arrow {
   border-radius: 999px;
   border: 1px solid var(--studio-border-strong);
   background: var(--studio-surface-soft);
-  color: var(--brand-deep);
+  color: var(--studio-text);
   font-size: .71rem;
   font-weight: 700;
   cursor: pointer;
@@ -3272,6 +3685,7 @@ html.design-studio .gr-subject-jump-arrow {
 .gr-inline-action:hover {
   background: var(--brand-soft);
   border-color: var(--brand);
+  color: var(--brand-deep);
 }
 .gr-identity-kpis {
   display: flex;
@@ -3320,11 +3734,11 @@ html.design-studio .gr-subject-jump-arrow {
   border-radius: 10px;
   border: 1px solid var(--studio-border-strong);
   background: var(--studio-surface-soft);
-  color: var(--brand-deep);
+  color: var(--studio-text);
   font-size: .77rem;
   font-weight: 750;
   cursor: pointer;
-  transition: background-color .15s ease, border-color .15s ease;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
 }
 .gr-print-btn svg { width: .95rem; height: .95rem; }
 .gr-print-btn:hover { background: var(--brand-soft); border-color: var(--brand); }
@@ -3456,12 +3870,12 @@ html.design-studio .gr-subject-jump-arrow {
   border-radius: 7px;
   border: 1px solid var(--studio-border-strong);
   background: var(--studio-surface-soft);
-  color: var(--brand-deep);
+  color: var(--studio-text);
   font-size: .71rem;
   font-weight: 700;
   cursor: pointer;
 }
-.gr-mini-btn:hover { background: var(--brand-soft); border-color: var(--brand); }
+.gr-mini-btn:hover { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-deep); }
 .gr-carnet-comments {
   border: 1px solid var(--studio-border);
   border-radius: 10px;
@@ -3503,12 +3917,12 @@ html.design-studio .gr-subject-jump-arrow {
   border-radius: 6px;
   border: 1px solid var(--studio-border-strong);
   background: var(--studio-surface-soft);
-  color: var(--brand-deep);
+  color: var(--studio-text);
   font-size: .68rem;
   font-weight: 700;
   cursor: pointer;
 }
-.gr-insert-comment:hover { background: var(--brand-soft); border-color: var(--brand); }
+.gr-insert-comment:hover { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-deep); }
 .gr-carnet-item p { margin: 0; color: var(--studio-text); line-height: 1.45; }
 .gr-pending-list { display: grid; gap: .4rem; }
 .gr-pending-item {
@@ -3700,34 +4114,40 @@ html.design-studio.theme-dark .gr-subject-jump:focus-visible {
   }
 }
 
-/* Carnet : clignotement 3x d'une rangée élève ciblée depuis la Synthèse */
+/* Carnet : flash bref (2 pulsations nettes) sur la rangée de l'élève ciblé depuis la Synthèse */
 @keyframes gbStudentRowFlash {
   0%, 100% {
     box-shadow: none;
   }
-  45% {
+  42% {
     box-shadow:
-      inset 0 2px 0 color-mix(in srgb, var(--brand) 65%, transparent),
-      inset 0 -2px 0 color-mix(in srgb, var(--brand) 65%, transparent),
-      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 20%, transparent);
+      inset 0 2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
+      inset 0 -2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
+      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 26%, transparent);
   }
 }
 @keyframes gbStudentRowFlashDark {
   0%, 100% {
     box-shadow: none;
   }
-  45% {
+  42% {
     box-shadow:
-      inset 0 2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
-      inset 0 -2px 0 color-mix(in srgb, var(--brand) 85%, transparent),
-      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 30%, transparent);
+      inset 0 2px 0 color-mix(in srgb, var(--brand-deep) 90%, transparent),
+      inset 0 -2px 0 color-mix(in srgb, var(--brand-deep) 90%, transparent),
+      inset 0 0 0 9999px color-mix(in srgb, var(--brand) 38%, transparent);
   }
 }
 html.design-studio #gradebookBody tr.gb-row-flash > td {
-  animation: gbStudentRowFlash .55s ease-in-out 3 !important;
+  animation: gbStudentRowFlash .7s ease-in-out 2 !important;
+}
+html.design-studio #gradebookBody tr.gb-row-flash > td:first-child {
+  border-left: 4px solid var(--brand) !important;
 }
 html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td {
-  animation: gbStudentRowFlashDark .55s ease-in-out 3 !important;
+  animation: gbStudentRowFlashDark .7s ease-in-out 2 !important;
+}
+html.design-studio.theme-dark #gradebookBody tr.gb-row-flash > td:first-child {
+  border-left: 4px solid var(--brand-deep) !important;
 }
 html.design-studio.reduce-motion #gradebookBody tr.gb-row-flash > td,
 html.design-studio.theme-dark.reduce-motion #gradebookBody tr.gb-row-flash > td {
@@ -3785,13 +4205,19 @@ html.design-studio.no-active-group aside.test-sidebar,
 html.design-studio.no-active-group header.test-topbar {
   display: none !important;
 }
-html.design-studio.no-active-group body {
+html.design-studio.no-active-group body::before {
+  background-color: var(--studio-bg);
   background-image:
-    radial-gradient(ellipse 64% 52% at 18% 8%, color-mix(in srgb, var(--mist-a, var(--accent)) 18%, transparent), transparent 68%),
-    radial-gradient(ellipse 58% 50% at 86% 14%, color-mix(in srgb, var(--mist-b, var(--brand)) 15%, transparent), transparent 68%),
-    radial-gradient(ellipse 52% 40% at 50% 96%, color-mix(in srgb, var(--mist-a, var(--brand)) 9%, transparent), transparent 72%),
-    linear-gradient(155deg, color-mix(in srgb, var(--mist-a, var(--brand)) 6%, var(--studio-bg)) 0%, var(--studio-bg) 48%, color-mix(in srgb, var(--mist-b, var(--brand)) 8%, var(--studio-bg)) 100%) !important;
-  background-attachment: fixed !important;
+    radial-gradient(ellipse 58% 46% at 18% 4%, color-mix(in srgb, var(--mist-a, var(--brand)) 9.5%, transparent), transparent 68%),
+    radial-gradient(ellipse 54% 44% at 86% 10%, color-mix(in srgb, var(--mist-b, var(--accent)) 7.5%, transparent), transparent 68%),
+    radial-gradient(ellipse 48% 36% at 50% 98%, color-mix(in srgb, var(--mist-a, var(--brand)) 4.5%, transparent), transparent 72%);
+}
+html.design-studio.theme-dark.no-active-group body::before {
+  background-color: var(--studio-bg);
+  background-image:
+    radial-gradient(ellipse 60% 48% at 18% 6%, color-mix(in srgb, var(--mist-a, var(--brand)) 13%, transparent), transparent 68%),
+    radial-gradient(ellipse 56% 46% at 86% 12%, color-mix(in srgb, var(--mist-b, var(--accent)) 10%, transparent), transparent 68%),
+    radial-gradient(ellipse 48% 38% at 50% 96%, color-mix(in srgb, var(--mist-a, var(--brand)) 6%, transparent), transparent 72%);
 }
 html.design-studio.no-active-group main.site-layout {
   width: 100% !important;
@@ -3928,21 +4354,22 @@ html.design-studio.no-active-group #viewHome {
 #viewHome .home-btn-secondary:active {
   transform: translateY(0) scale(.985);
 }
-#viewHome .home-actions-grid .home-btn {
+#viewHome .home-actions-grid .home-btn-primary {
   background: var(--brand-soft);
   color: var(--brand-deep);
   border-color: color-mix(in srgb, var(--brand) 38%, transparent);
   box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 42%, transparent);
 }
-#viewHome .home-actions-grid .home-btn:hover {
+#viewHome .home-actions-grid .home-btn-primary:hover {
   background: var(--brand-soft);
   color: var(--brand-deep);
   border-color: var(--brand);
   box-shadow: inset 0 -1.5px 0 color-mix(in srgb, var(--brand) 55%, transparent), 0 4px 12px color-mix(in srgb, var(--brand) 14%, transparent);
 }
-#viewHome .home-actions-grid .home-btn:active {
+#viewHome .home-actions-grid .home-btn-secondary:hover {
   background: var(--brand-soft);
   color: var(--brand-deep);
+  border-color: var(--brand);
 }
 #viewHome :is(.home-btn, .dash-inline-link, .dash-subject-card, .dash-followup-item, .dash-group-open, .dash-group-edit):focus-visible {
   outline: 2px solid var(--brand);
@@ -4370,7 +4797,7 @@ html.design-studio.theme-dark .home-legacy-banner {
   border: 1px solid var(--studio-border, #e2e8f0);
 }
 .gb-grade-group-start > td {
-  border-top: 2px solid #c7d2fe;
+  border-top: 2px solid color-mix(in srgb, var(--brand) 30%, var(--studio-border));
 }
 .gb-grade-group-label {
   display: inline-flex;
@@ -4379,7 +4806,7 @@ html.design-studio.theme-dark .home-legacy-banner {
   padding: 0 5px;
   border: 1px solid var(--studio-border, #e2e8f0);
   border-radius: 4px;
-  color: var(--brand, #4f46e5);
+  color: var(--brand-deep);
   background: var(--brand-soft, #eef2ff);
   font-size: 9.5px;
   font-weight: 700;
@@ -4499,7 +4926,7 @@ html:not(.no-active-group) .home-portal-main {
   padding: 1.25rem 1.3rem;
   border: 1px solid var(--studio-border);
   border-radius: 14px;
-  background: color-mix(in srgb, var(--studio-surface) 90%, transparent);
+  background: color-mix(in srgb, var(--studio-surface) 96%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--studio-shadow-sm);
@@ -4549,7 +4976,7 @@ html:not(.no-active-group) .home-portal-main {
 .home-resume-band {
   justify-content: flex-start;
   border-style: solid;
-  background: color-mix(in srgb, var(--studio-surface) 90%, transparent);
+  background: color-mix(in srgb, var(--studio-surface) 96%, transparent);
 }
 .home-resume-band.is-dragover {
   border-color: var(--brand);
@@ -4572,7 +4999,7 @@ html:not(.no-active-group) .home-portal-main {
   padding: .58rem 1.05rem;
   border: 1px solid var(--studio-border);
   border-radius: 10px;
-  background: color-mix(in srgb, var(--studio-surface) 82%, transparent);
+  background: color-mix(in srgb, var(--studio-surface) 92%, transparent);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   box-shadow: var(--studio-shadow-sm);
@@ -5086,6 +5513,7 @@ html.design-studio.theme-dark .dash-badge.is-warn {
 .dash-subject-group summary::-webkit-details-marker { display: none; }
 .dash-subject-group summary::after {
   content: '›';
+  margin-left: auto;
   color: var(--brand-deep);
   font-size: 1.2rem;
   line-height: 1;
@@ -5399,22 +5827,223 @@ html.design-studio.theme-dark .dash-signal-chip.is-warn {
   background: var(--brand-soft);
   color: var(--brand-deep);
 }
-.dash-subj-pill.is-warn,
-.dash-subj-pill.is-alert {
+.dash-radar-explain {
+  padding: .62rem .85rem;
+  border-radius: 11px;
+  border: 1px solid var(--studio-border);
+  background: var(--studio-surface-soft);
+  color: var(--studio-text-muted);
+  font-size: .76rem;
+  line-height: 1.45;
+}
+.dash-radar-explain strong { color: var(--studio-text); }
+.dash-radar-explain.is-watch {
+  border-color: rgba(220, 38, 38, .26);
+  background: rgba(254, 242, 242, .75);
+}
+.dash-radar-explain.is-risk {
+  border-color: rgba(217, 119, 6, .3);
+  background: rgba(255, 251, 235, .82);
+}
+html.design-studio.theme-dark .dash-radar-explain.is-watch {
+  border-color: rgba(248, 113, 113, .32);
+  background: rgba(239, 68, 68, .12);
+}
+html.design-studio.theme-dark .dash-radar-explain.is-risk {
+  border-color: rgba(251, 191, 36, .32);
+  background: rgba(245, 158, 11, .12);
+}
+.dash-radar-row.is-watch-card {
+  border-left: 3px solid #dc2626;
+}
+.dash-radar-row.is-risk-card {
+  border-left: 3px solid #d97706;
+}
+.dash-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: .12rem .48rem;
+  border-radius: 999px;
+  font-size: .67rem;
+  font-weight: 800;
+  letter-spacing: .01em;
+}
+.dash-status-pill.is-watch {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+.dash-status-pill.is-risk {
+  background: #fef3c7;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+html.design-studio.theme-dark .dash-status-pill.is-watch {
+  background: rgba(239, 68, 68, .2);
+  color: #fca5a5;
+  border-color: rgba(248, 113, 113, .42);
+}
+html.design-studio.theme-dark .dash-status-pill.is-risk {
+  background: rgba(245, 158, 11, .2);
+  color: #fcd34d;
+  border-color: rgba(251, 191, 36, .42);
+}
+.dash-reason-block {
+  display: grid;
+  gap: .45rem;
+  padding: .62rem .75rem;
+  border-radius: 10px;
+  border: 1px solid var(--studio-border);
+  background: var(--studio-surface);
+}
+.dash-reason-block.is-watch {
+  border-color: rgba(220, 38, 38, .24);
+  background: #fff8f8;
+}
+.dash-reason-block.is-risk {
+  border-color: rgba(217, 119, 6, .28);
+  background: #fffdf5;
+}
+html.design-studio.theme-dark .dash-reason-block.is-watch {
+  border-color: rgba(248, 113, 113, .28);
+  background: rgba(239, 68, 68, .09);
+}
+html.design-studio.theme-dark .dash-reason-block.is-risk {
+  border-color: rgba(251, 191, 36, .28);
+  background: rgba(245, 158, 11, .09);
+}
+.dash-reason-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .55rem;
+}
+.dash-reason-kicker {
+  font-size: .68rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  color: var(--studio-text-muted);
+}
+.dash-reason-block.is-watch .dash-reason-kicker { color: #b91c1c; }
+.dash-reason-block.is-risk .dash-reason-kicker { color: #b45309; }
+html.design-studio.theme-dark .dash-reason-block.is-watch .dash-reason-kicker { color: #fca5a5; }
+html.design-studio.theme-dark .dash-reason-block.is-risk .dash-reason-kicker { color: #fcd34d; }
+.dash-reason-summary {
+  font-size: .8rem;
+  font-weight: 800;
+  color: var(--studio-text);
+}
+.dash-risk-pct {
+  margin-left: auto;
+  padding: .12rem .5rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  color: #92400e;
+  font-size: .7rem;
+  font-weight: 800;
+}
+html.design-studio.theme-dark .dash-risk-pct {
+  background: rgba(245, 158, 11, .2);
+  border-color: rgba(251, 191, 36, .4);
+  color: #fde68a;
+}
+.dash-reason-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+.dash-reason-chip {
+  padding: .22rem .55rem;
+  border-radius: 8px;
+  font-size: .72rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: transform .13s ease, border-color .13s ease, background-color .13s ease;
+}
+.dash-reason-chip:hover { transform: translateY(-1px); }
+.dash-reason-chip.is-alert {
+  border: 1px solid #fca5a5;
+  background: #fee2e2;
+  color: #991b1b;
+}
+.dash-reason-chip.is-alert:hover {
+  border-color: #dc2626;
+  background: #fecaca;
+}
+.dash-reason-chip.is-drop {
+  border: 1px solid #fcd34d;
+  background: #fef3c7;
+  color: #92400e;
+}
+html.design-studio.theme-dark .dash-reason-chip.is-alert {
+  border-color: rgba(248, 113, 113, .45);
+  background: rgba(239, 68, 68, .22);
+  color: #fecaca;
+}
+html.design-studio.theme-dark .dash-reason-chip.is-drop {
+  border-color: rgba(251, 191, 36, .42);
+  background: rgba(245, 158, 11, .2);
+  color: #fde68a;
+}
+.dash-risk-bar {
+  height: 7px;
+  width: 100%;
+  border-radius: 999px;
+  background: rgba(22, 163, 74, .22);
+  overflow: hidden;
+}
+.dash-risk-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f59e0b 0%, #dc2626 100%);
+}
+.dash-risk-tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .3rem;
+}
+.dash-risk-tags-lead {
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--studio-text-muted);
+}
+.dash-risk-tag-chip {
+  padding: .14rem .48rem;
+  border-radius: 7px;
+  border: 1px solid var(--studio-border);
+  background: var(--studio-surface-soft);
+  color: var(--studio-text);
+  font-size: .7rem;
+  font-weight: 600;
+}
+.dash-subj-pill.is-warn {
   border-color: rgba(217, 119, 6, .34);
   background: #fffbeb;
   color: #92400e;
+}
+.dash-subj-pill.is-alert {
+  border-color: rgba(220, 38, 38, .36);
+  background: #fef2f2;
+  color: #991b1b;
 }
 html.design-studio.theme-dark .dash-subj-pill.is-ok {
   background: rgba(34, 197, 94, .14);
   border-color: rgba(134, 239, 172, .28);
   color: #86efac;
 }
-html.design-studio.theme-dark .dash-subj-pill.is-warn,
-html.design-studio.theme-dark .dash-subj-pill.is-alert {
+html.design-studio.theme-dark .dash-subj-pill.is-warn {
   background: rgba(245, 158, 11, .14);
   border-color: rgba(251, 191, 36, .3);
   color: #fde68a;
+}
+html.design-studio.theme-dark .dash-subj-pill.is-alert {
+  background: rgba(239, 68, 68, .18);
+  border-color: rgba(248, 113, 113, .38);
+  color: #fecaca;
 }
 
 /* Grille des groupes du carnet */
@@ -5747,17 +6376,22 @@ html.reduce-motion .home-action-card:hover {
     display: none !important;
   }
 }
-/* Boutons du carnet alignés sur la barre des tâches : rectangle arrondi, surbrillance au survol, contour marine une fois actif. */
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):not(.hidden) {
+/* Boutons du carnet et des grilles alignés sur la barre des tâches : rectangle arrondi, surbrillance au survol, contour marine une fois actif. */
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights),
+  #viewQuickObs :is(#btnBackToGradebookFromTrace, #btnCommitObsSessionToGradebook, #btnClearCurrentStudentObs, #qoModeSegment > button, #qoWeightPresetBar button:not(.qo-save-perso-btn), #qoWeightPresetBar .qo-save-perso-btn, #qoTargetLevelsBox .qo-target-btn, #qoStudentGrid button, #qoCategoryTabs .qo-category, #qoIlssResultBox .qo-category),
+  #viewBareme :is(#btnBackToGradebookFromBareme, #btnClearStudentBareme, #baremeStudentPills button)
+):not(.hidden) {
   display: inline-flex !important;
   align-items: center;
+  justify-content: center;
   gap: .3rem;
   min-height: 34px;
-  padding: .36rem .7rem !important;
+  padding: .36rem .72rem !important;
   border: 1px solid var(--studio-border-strong) !important;
   border-radius: 10px !important;
   background: var(--studio-surface, #fff) !important;
-  color: var(--brand-deep) !important;
+  color: var(--studio-text) !important;
   box-shadow: none !important;
   font-size: 12.5px !important;
   font-weight: 600 !important;
@@ -5766,20 +6400,92 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-
   cursor: pointer;
   transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease, color .16s ease !important;
 }
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):hover:not(:disabled) {
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#btnNewEvaluation, #btnCommitObsSessionToGradebook):not(.hidden) {
+  background: color-mix(in srgb, var(--brand-soft) 65%, var(--studio-surface, #fff)) !important;
+  border-color: color-mix(in srgb, var(--brand) 38%, var(--studio-border-strong)) !important;
+  color: var(--brand-deep) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoStudentGrid button, #baremeStudentPills button):not(.hidden) {
+  justify-content: space-between;
+  min-height: 34px;
+  padding: .34rem .62rem !important;
+  font-size: 12px !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #qoWeightPresetBar .qo-save-perso-btn:not(.hidden) {
+  padding: 0 !important;
+  width: 34px;
+  min-height: 34px;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #qoModeSegment #btnOpenCustomRubric:not(.hidden) {
+  border-style: dashed !important;
+  border-color: color-mix(in srgb, var(--brand) 55%, var(--studio-border-strong)) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #qoModeSegment .qo-personal-rubric-wrap {
+  min-height: 34px;
+  border: 1px solid var(--studio-border-strong) !important;
+  border-radius: 10px !important;
+  background: var(--studio-surface, #fff) !important;
+  transition: transform .16s ease, background-color .16s ease, border-color .16s ease, box-shadow .16s ease !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #qoModeSegment .qo-personal-rubric-wrap:hover {
   transform: translateY(-1px);
   border-color: var(--brand) !important;
   background: var(--brand-soft) !important;
   box-shadow: 0 5px 12px rgba(15, 23, 42, .13) !important;
 }
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):active:not(:disabled) {
-  transform: translateY(0) scale(.97);
-}
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode)[aria-expanded="true"],
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnResetEqualWeights, #btnUnlockAllWeights):is(:active, :focus-visible) {
+html.design-studio:is(.theme-dark, :not(.theme-dark)) #qoModeSegment .qo-personal-rubric-wrap:has(.is-active) {
   border-color: var(--brand-deep) !important;
   background: var(--brand-soft) !important;
   box-shadow: 0 0 0 1px var(--brand-deep) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights),
+  #viewQuickObs :is(#btnBackToGradebookFromTrace, #btnCommitObsSessionToGradebook, #btnClearCurrentStudentObs, #qoModeSegment > button, #qoWeightPresetBar button:not(.qo-save-perso-btn), #qoWeightPresetBar .qo-save-perso-btn, #qoTargetLevelsBox .qo-target-btn, #qoStudentGrid button, #qoCategoryTabs .qo-category, #qoIlssResultBox .qo-category),
+  #viewBareme :is(#btnBackToGradebookFromBareme, #btnClearStudentBareme, #baremeStudentPills button)
+):hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: var(--brand) !important;
+  border-style: solid !important;
+  background: var(--brand-soft) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: 0 5px 12px rgba(15, 23, 42, .13) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights),
+  #viewQuickObs :is(#btnBackToGradebookFromTrace, #btnCommitObsSessionToGradebook, #btnClearCurrentStudentObs, #qoModeSegment > button, #qoWeightPresetBar button:not(.qo-save-perso-btn), #qoWeightPresetBar .qo-save-perso-btn, #qoTargetLevelsBox .qo-target-btn, #qoStudentGrid button, #qoCategoryTabs .qo-category, #qoIlssResultBox .qo-category),
+  #viewBareme :is(#btnBackToGradebookFromBareme, #btnClearStudentBareme, #baremeStudentPills button)
+):active:not(:disabled) {
+  transform: translateY(0) scale(.97);
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode)[aria-expanded="true"],
+  #viewGradebook .gradebook-toolbar :is(#btnResetEqualWeights, #btnUnlockAllWeights):is(:active, :focus-visible),
+  #viewQuickObs :is(#qoModeSegment > button[aria-pressed="true"], #qoWeightPresetBar button[aria-pressed="true"], #qoTargetLevelsBox .qo-target-btn.is-active, #qoStudentGrid button.is-selected, #qoStudentGrid button[aria-pressed="true"], #qoCategoryTabs .qo-category[aria-pressed="true"], #qoIlssResultBox .qo-category[aria-pressed="true"]),
+  #viewBareme #baremeStudentPills button[aria-pressed="true"]
+) {
+  border-color: var(--brand-deep) !important;
+  background: var(--brand-soft) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: 0 0 0 1px var(--brand-deep) !important;
+  font-weight: 700 !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoStudentGrid button[aria-pressed="true"], #baremeStudentPills button[aria-pressed="true"]),
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoStudentGrid button[aria-pressed="true"], #baremeStudentPills button[aria-pressed="true"]):hover {
+  transform: none;
+  border-color: var(--brand-deep) !important;
+  background: color-mix(in srgb, var(--brand) 16%, var(--studio-surface)) !important;
+  color: var(--brand-deep) !important;
+  box-shadow: inset 3.5px 0 0 var(--brand), 0 0 0 1px var(--brand-deep) !important;
+  font-weight: 800 !important;
+}
+html.design-studio.theme-dark :is(#qoStudentGrid button[aria-pressed="true"], #baremeStudentPills button[aria-pressed="true"]),
+html.design-studio.theme-dark :is(#qoStudentGrid button[aria-pressed="true"], #baremeStudentPills button[aria-pressed="true"]):hover {
+  background: color-mix(in srgb, var(--brand) 28%, var(--studio-surface)) !important;
+  box-shadow: inset 3.5px 0 0 var(--brand-deep), 0 0 0 1px var(--brand-deep) !important;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(#qoStudentGrid button[aria-pressed="true"], #baremeStudentPills button[aria-pressed="true"]) > .qo-student-name {
+  color: var(--brand-deep) !important;
+  font-weight: 800 !important;
 }
 html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar #btnWeightMode.is-weight-error {
   border-color: #ef4444 !important;
@@ -5787,11 +6493,44 @@ html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-
   color: #991b1b !important;
   box-shadow: 0 0 0 1px rgba(239, 68, 68, .3) !important;
 }
-html.design-studio:is(.theme-dark, :not(.theme-dark)) #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights):focus-visible {
+html.design-studio #weightWarningBanner:not(.hidden) {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .4rem;
+}
+html.design-studio .weight-fix-btn {
+  padding: .16rem .5rem;
+  border-radius: 7px;
+  border: 1px solid #dc2626;
+  background: #fff;
+  color: #991b1b;
+  font-size: .68rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background-color .14s ease, color .14s ease;
+}
+html.design-studio .weight-fix-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
+html.design-studio.theme-dark .weight-fix-btn {
+  background: rgba(255, 255, 255, .1);
+  border-color: rgba(248, 113, 113, .6);
+  color: #fecaca;
+}
+html.design-studio.theme-dark .weight-fix-btn:hover {
+  background: #dc2626;
+  color: #fff;
+}
+html.design-studio:is(.theme-dark, :not(.theme-dark)) :is(
+  #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnOpenAddAssignment, #btnAddVisualTraceFromGb, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights),
+  #viewQuickObs :is(#btnBackToGradebookFromTrace, #btnCommitObsSessionToGradebook, #btnClearCurrentStudentObs, #qoModeSegment > button, #qoWeightPresetBar button, #qoTargetLevelsBox .qo-target-btn, #qoStudentGrid button, #qoCategoryTabs .qo-category, #qoIlssResultBox .qo-category),
+  #viewBareme :is(#btnBackToGradebookFromBareme, #btnClearStudentBareme, #baremeStudentPills button)
+):focus-visible {
   outline: 2px solid var(--brand);
   outline-offset: 2px;
 }
-html.reduce-motion #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btnWeightMode, #btnResetEqualWeights, #btnUnlockAllWeights) { transform: none !important; }
 #viewGradebook .gradebook-toolbar :is(.gradebook-metric, #btnWeightMode).hidden { display: none !important; }
 
 /* Grille ILSS : les paliers décrivent une progression linguistique, pas une qualité; dégradé de bleus neutres, sans beige. */
@@ -5833,3 +6572,63 @@ html.reduce-motion #viewGradebook .gradebook-toolbar :is(#btnNewEvaluation, #btn
 .ilss-summary-culture { color: var(--studio-text-muted); font-style: italic; }
 .mouse-bar.ilss-comment-bank { flex-direction: column; align-items: stretch; width: min(420px, calc(100vw - 16px)); }
 .mouse-bar.ilss-comment-bank button { white-space: normal; text-align: left; line-height: 1.35; font-weight: 600; }
+
+/* Note finale / Jugement d'étape : affordance discrète mais claire de bouton cliquable */
+html.design-studio #gradebookBody .final-grade-trigger {
+  background: var(--studio-surface, #fff);
+  border-color: var(--studio-border-strong);
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+  color: var(--studio-text);
+  transition: border-color .14s ease, background-color .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+html.design-studio #gradebookBody .final-grade-trigger:hover {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .09);
+  transform: translateY(-1px);
+}
+html.design-studio #gradebookBody .final-grade-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .26rem;
+  border-radius: 7px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+  cursor: pointer;
+  transition: border-color .14s ease, filter .14s ease, box-shadow .14s ease, transform .14s ease;
+}
+html.design-studio #gradebookBody .final-grade-btn::after {
+  content: "▾";
+  font-size: .64rem;
+  line-height: 1;
+  opacity: .56;
+  transition: opacity .14s ease, transform .14s ease;
+}
+html.design-studio #gradebookBody .final-grade-btn:hover {
+  border-color: var(--brand);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, .11);
+  transform: translateY(-1px);
+}
+html.design-studio #gradebookBody .final-grade-btn:hover::after {
+  opacity: 1;
+  transform: translateY(1px);
+}
+html.design-studio #gradebookBody .final-grade-btn:focus-visible {
+  outline: 2px solid var(--brand);
+  outline-offset: 2px;
+}
+@media print {
+  html.design-studio #gradebookBody .final-grade-btn::after { display: none !important; }
+}
+
+/* Carnet : curseur de saisie libre (glisser-déplacer sur les zones neutres) */
+@media screen and (pointer: fine) {
+  html.design-studio #gradebookScrollContainer { cursor: grab; }
+  html.design-studio #gradebookScrollContainer :is(input, textarea) { cursor: text; }
+  html.design-studio #gradebookScrollContainer :is(input.final-grade-trigger, button, a, select, label, .cell-flag-chip) { cursor: pointer; }
+  html.design-studio.is-gb-panning,
+  html.design-studio.is-gb-panning * {
+    cursor: grabbing !important;
+    user-select: none !important;
+  }
+}
